@@ -2,315 +2,147 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
-  BUILD_PATHS,
-  CORE_NPCS,
-  RARITY,
-  ageIntel,
-  createIntel,
-  createMineBattle,
-  createCycleLegacy,
-  createRealityAnchor,
-  deriveBuildSynergies,
-  deriveSettlementTraits,
-  deriveTraitSynergies,
-  generateOpeningSets,
-  migrateSaveData,
-  evaluateFinaleOptions,
-  evaluateNpcAlliance,
-  resolveFinalEnding,
-  restoreRealityAnchor,
-  resolveCompanionOffer,
-  resolveMineBattleTurn,
-  scoreSettlement,
-  upsertIntel,
+  FATE_PATHS,
+  MASTERY_STAGES,
+  ageMemories,
+  availableTheses,
+  createMemory,
+  deriveFateMarks,
+  evaluatePathConditions,
+  evaluateThesis,
+  getActionDepth,
+  getMasteryStage,
+  upsertMemory,
 } from "../web/game-core.mjs";
 
-test("opening draw is deterministic and provides three stable/risky pairs", () => {
-  const first = generateOpeningSets("balance-42", 0);
-  const again = generateOpeningSets("balance-42", 0);
-  assert.deepEqual(first, again);
-  assert.equal(first.length, 3);
-  assert.deepEqual(first.map((set) => set.group), ["root", "talent", "fate"]);
-  for (const set of first) {
-    assert.equal(set.choices.length, 2);
-    assert.equal(set.choices[0].volatility, "stable");
-    assert.equal(set.choices[1].volatility, "risky");
-    assert.notEqual(set.choices[0].id, set.choices[1].id);
-  }
-  const goldCount = first
-    .flatMap((set) => set.choices)
-    .filter((trait) => trait.rarity === "gold").length;
-  assert.ok(goldCount <= 1);
+test("all lived information persists independently from settlement rewards", () => {
+  let memories = [];
+  memories = upsertMemory(memories, createMemory({ id: "well", title: "井水", detail: "酉时换水" }));
+  memories = upsertMemory(memories, createMemory({ id: "well", title: "井水", detail: "现实查实酉时换水", level: "verified" }));
+  assert.equal(memories.length, 1);
+  assert.equal(memories[0].level, "verified");
+  assert.match(memories[0].detail, /现实查实/);
 });
 
-test("the one allowed reroll produces a different deterministic set", () => {
-  const original = generateOpeningSets("balance-42", 0);
-  const rerolled = generateOpeningSets("balance-42", 1);
-  assert.notDeepEqual(
-    original.map((set) => set.choices.map((trait) => trait.id)),
-    rerolled.map((set) => set.choices.map((trait) => trait.id)),
-  );
-  assert.deepEqual(rerolled, generateOpeningSets("balance-42", 1));
+test("weaker inference never overwrites a verified fact", () => {
+  const verified = createMemory({ id: "roster", title: "名册", detail: "现实查实", level: "verified" });
+  const inferred = createMemory({ id: "roster", title: "名册", detail: "新的猜测", level: "inferred" });
+  assert.deepEqual(upsertMemory([verified], inferred), [verified]);
 });
 
-test("settlement pool derives candidates from actions and honors blue guarantee", () => {
-  const candidates = deriveSettlementTraits({
-    seed: "balance-42",
-    tags: ["poison", "observe", "survival"],
-    rating: "丙",
-  });
+test("world-line deviation marks precise old information as stale without deleting it", () => {
+  const memory = createMemory({ id: "timing", title: "酉时二刻", detail: "旧时序" });
+  const aged = ageMemories([memory], ["timing"]);
+  assert.equal(aged[0].level, "stale");
+  assert.match(aged[0].source, /世界线已偏转/);
+});
+
+test("new theses unlock from lived memories rather than reward selection", () => {
+  assert.deepEqual(availableTheses({ memories: [] }).map((item) => item.id), ["poison_source"]);
+  const memories = [createMemory({ id: "poison_source", title: "入口", detail: "井水" })];
+  assert.deepEqual(availableTheses({ memories }).map((item) => item.id), ["poison_source", "kill_list", "fallback_plan"]);
+});
+
+test("a poison-source death answers the proposition and reveals a deeper mechanism", () => {
+  const report = evaluateThesis({ thesisId: "poison_source", action: "taste", feastAction: "feign", endedBy: "death" });
+  const ids = report.memories.map((item) => item.id);
+  assert.match(report.verdict, /证实/);
+  assert.ok(ids.includes("poison_source"));
+  assert.ok(ids.includes("well_timing"));
+  assert.ok(ids.includes("poison_peak"));
+  assert.ok(ids.includes("feign_death"));
+  assert.equal(report.depth, 2);
+});
+
+test("active closure keeps the answer but returns less depth than death", () => {
+  const active = evaluateThesis({ thesisId: "kill_list", action: "roster", feastAction: null, endedBy: "active" });
+  const death = evaluateThesis({ thesisId: "kill_list", action: "roster", feastAction: "feign", endedBy: "death" });
+  assert.equal(active.depth, 1);
+  assert.equal(death.depth, 2);
+  assert.ok(!active.memories.some((item) => item.id === "registry_rule"));
+  assert.ok(death.memories.some((item) => item.id === "registry_rule"));
+});
+
+test("fate-mark candidates derive from behavior and do not repeat owned marks", () => {
+  const candidates = deriveFateMarks({ tags: ["feign", "death", "deceive"], existing: [] });
   assert.equal(candidates.length, 3);
-  assert.equal(new Set(candidates.map((trait) => trait.id)).size, 3);
-  assert.ok(candidates.some((trait) => RARITY[trait.rarity].rank >= 2));
-  assert.ok(candidates.every((trait) => trait.tags.some((tag) => ["poison", "observe", "survival"].includes(tag))));
+  assert.equal(candidates[0].id, "breath_hider");
+  const next = deriveFateMarks({ tags: ["feign", "death", "deceive"], existing: ["breath_hider"] });
+  assert.ok(next.every((item) => item.id !== "breath_hider"));
 });
 
-test("settlement rating rewards varied meaningful behavior", () => {
-  assert.equal(scoreSettlement(["poison"], 0), "丁");
-  assert.equal(scoreSettlement(["poison", "observe", "survival"], 1), "丙");
-  assert.equal(
-    scoreSettlement(["poison", "observe", "survival", "protect", "deceive"], 2),
-    "乙",
-  );
+test("the same poison-tasting action reaches different depths by build", () => {
+  assert.equal(getActionDepth({ action: "taste" }).depth, 1);
+  assert.equal(getActionDepth({ action: "taste", marks: ["venom_delay"] }).depth, 2);
+  assert.equal(getActionDepth({ action: "taste", fixedResults: ["poison_delay"] }).depth, 3);
 });
 
-test("intel moves from rumor to confirmation and becomes stale after deviation", () => {
-  let intel = [createIntel({
-    id: "mine_bell",
-    title: "封井钟",
-    detail: "三响后封井",
-    status: "rumor",
-  })];
-  intel = upsertIntel(intel, createIntel({
-    id: "mine_bell",
-    title: "封井钟",
-    detail: "第三响前傀儡会先亮膝印",
-    status: "confirmed",
-    source: "矿底亲历",
-    gainedAtDeviation: 1,
-    expiresAtDeviation: 2,
-  }));
-  assert.equal(intel.length, 1);
-  assert.equal(intel[0].status, "confirmed");
-  assert.equal(ageIntel(intel, 1)[0].status, "confirmed");
-  assert.equal(ageIntel(intel, 2)[0].status, "stale");
+test("the same roster action becomes deeper with an observation mark", () => {
+  assert.equal(getActionDepth({ action: "roster" }).depth, 1);
+  const deep = getActionDepth({ action: "roster", marks: ["crisis_gaze"] });
+  assert.equal(deep.depth, 3);
+  assert.match(deep.label, /临危静观/);
 });
 
-test("two independent trait combinations unlock rule-level mine actions", () => {
-  const herbal = deriveTraitSynergies(["herbal_tongue"], ["scent_thread"]);
-  const feign = deriveTraitSynergies(["borrowed_life"], ["breath_hider"]);
-  assert.ok(herbal.some((item) => item.id === "herbal_trail" && item.unlock === "vent"));
-  assert.ok(feign.some((item) => item.id === "borrowed_stillness" && item.unlock === "feign"));
-  assert.deepEqual(deriveTraitSynergies(["herbal_tongue"], ["breath_hider"]), []);
+test("path board exposes explicit missing conditions", () => {
+  const state = { memories: [], marks: [], fixedResults: [], preparations: [], flags: [] };
+  const path = evaluatePathConditions("replace", state);
+  assert.equal(path.enabled, false);
+  assert.deepEqual(path.conditions.map((item) => item.met), [false, false, false]);
 });
 
-test("companions accept evidence and retain explicit refusal conditions", () => {
-  const accepted = resolveCompanionOffer({
-    companion: "wen",
-    clues: ["下毒杂役的家人被囚于白石镇废染坊。"],
-  });
-  const refused = resolveCompanionOffer({ companion: "wen", clues: [] });
-  const pei = resolveCompanionOffer({ companion: "pei", rewardType: "dao" });
-  assert.equal(accepted.accepted, true);
-  assert.match(accepted.boundary, /救人/);
-  assert.equal(refused.accepted, false);
-  assert.match(refused.boundary, /确证/);
-  assert.equal(pei.accepted, true);
-});
-
-test("mine battle is deterministic and confirmed intel changes its rules", () => {
-  const first = createMineBattle({
-    seed: "balance-42",
-    entry: "main",
-    envy: 2,
-    intelStatus: "confirmed",
-  });
-  assert.deepEqual(first, createMineBattle({
-    seed: "balance-42",
-    entry: "main",
-    envy: 2,
-    intelStatus: "confirmed",
-  }));
-  const countered = resolveMineBattleTurn(first, "counter");
-  assert.equal(countered.enemyWard, 0);
-  assert.equal(countered.resolve, first.resolve);
-
-  const stale = createMineBattle({
-    seed: "balance-42",
-    entry: "main",
-    intelStatus: "stale",
-  });
-  const failed = resolveMineBattleTurn(stale, "counter");
-  assert.equal(failed.intelFailed, true);
-  assert.ok(failed.resolve < stale.resolve);
-});
-
-test("short battle supports companion and synergy routes without stat grinding", () => {
-  let battle = createMineBattle({
-    seed: "battle-route",
-    entry: "vent",
-    intelStatus: "rumor",
-  });
-  battle = resolveMineBattleTurn(battle, "synergy", {
-    synergyIds: ["herbal_trail"],
-    companion: "wen",
-  });
-  assert.equal(battle.enemyWard, 0);
-  battle = resolveMineBattleTurn(battle, "companion", {
-    synergyIds: ["herbal_trail"],
-    companion: "wen",
-  });
-  assert.equal(battle.companionUsed, true);
-  battle = resolveMineBattleTurn(battle, "strike");
-  battle = resolveMineBattleTurn(battle, "strike");
-  assert.equal(battle.outcome, "won");
-});
-
-test("observation persists into the next turn and counters unverified intel", () => {
-  let battle = createMineBattle({ seed: "observe-route", intelStatus: "rumor" });
-  battle = resolveMineBattleTurn(battle, "observe");
-  assert.equal(battle.insight, 1);
-  const countered = resolveMineBattleTurn(battle, "counter");
-  assert.equal(countered.enemyWard, 0);
-  assert.equal(countered.insight, 0);
-});
-
-test("envy prepares the enemy and materially increases burst damage", () => {
-  const base = createMineBattle({ seed: "envy-route", envy: 0 });
-  const prepared = createMineBattle({ seed: "envy-route", envy: 2 });
-  base.intents = ["burst"];
-  prepared.intents = ["burst"];
-  const baseHit = resolveMineBattleTurn(base, "strike");
-  const preparedHit = resolveMineBattleTurn(prepared, "strike");
-  assert.equal(baseHit.resolve - preparedHit.resolve, 1);
-  assert.equal(prepared.enemyPrepared, true);
-});
-
-test("v1 P0 ending save migrates to the complete P1 mine approach", () => {
-  const defaults = {
-    version: 2,
-    seed: "legacy",
-    screen: "landing",
-    character: { name: "", origin: null },
-    timeline: { feast: "unknown", mine: "hidden" },
-    intel: [],
-    activeSynergies: [],
-    p1Path: [],
+test("replace-water path supports a system-rule preparation", () => {
+  const state = {
+    memories: [
+      createMemory({ id: "poison_source", title: "入口", detail: "井水" }),
+      createMemory({ id: "well_timing", title: "时刻", detail: "酉时" }),
+    ],
+    marks: [], fixedResults: [], preparations: ["well_access"], flags: [],
   };
-  const migrated = migrateSaveData({
-    version: 1,
-    seed: "legacy",
-    screen: "ending",
-    character: { name: "沈砚", origin: "herbalist" },
-    timeline: { feast: "shifted", mine: "revealed" },
-    mineChoice: "touch",
-  }, defaults);
-  assert.equal(migrated.version, 3);
-  assert.equal(migrated.screen, "mineApproach");
-  assert.equal(migrated.character.name, "沈砚");
-  assert.equal(migrated.timeline.feast, "shifted");
-  assert.equal(migrated.mineChoice, null);
-  assert.match(migrated.p1Path[0], /P0 存档/);
-  assert.equal(migrateSaveData({ version: 99, seed: "bad", screen: "ending" }, defaults), null);
+  assert.equal(evaluatePathConditions("replace", state).enabled, true);
 });
 
-test("complete demo exposes four rule-changing build paths", () => {
-  assert.equal(BUILD_PATHS.length, 4);
-  assert.equal(new Set(BUILD_PATHS.map((build) => build.id)).size, 4);
-  assert.ok(BUILD_PATHS.every((build) => build.effect && build.cost && build.unlock));
-});
-
-test("all four core NPCs cross their boundaries only with relevant evidence or choices", () => {
-  assert.equal(CORE_NPCS.length, 4);
-  const wen = evaluateNpcAlliance({ npcId: "wen", p1Choice: "rescue" });
-  const pei = evaluateNpcAlliance({ npcId: "pei", confirmedIntelIds: ["founding_deed", "array_heart"] });
-  const song = evaluateNpcAlliance({ npcId: "song", archiveChoice: "audit" });
-  const ayen = evaluateNpcAlliance({ npcId: "ayen", archiveChoice: "free_ayen" });
-  assert.ok([wen, pei, song, ayen].every((result) => result.allied));
-  assert.equal(evaluateNpcAlliance({ npcId: "song", archiveChoice: "accuse" }).state, "hostile");
-  assert.equal(evaluateNpcAlliance({ npcId: "ayen" }).allied, false);
-});
-
-test("builds form at least three distinct rule-level synergies", () => {
-  const ink = deriveBuildSynergies({
-    buildId: "seal_breaker",
-    openingTraitIds: ["perfect_memory"],
-    confirmedIntelIds: ["mine_old_seal"],
-  });
-  const poison = deriveBuildSynergies({
-    buildId: "fate_breath",
-    openingTraitIds: ["herbal_tongue"],
-    acquiredTraitIds: ["scent_thread"],
-  });
-  const people = deriveBuildSynergies({
-    buildId: "living_ledger",
-    alliedNpcIds: ["wen", "song"],
-  });
-  assert.equal(ink[0].id, "ink_breaks_array");
-  assert.equal(poison[0].id, "poison_reads_life");
-  assert.equal(people[0].id, "people_form_array");
-});
-
-test("finale options open from evidence, allies, build, envy and prior choices", () => {
-  const context = {
-    confirmedIntelIds: ["sacrifice_ledger", "array_heart", "founder_phrase"],
-    alliedNpcIds: ["wen", "song", "ayen"],
-    buildId: "seal_breaker",
-    envy: 2,
-    deviation: 3,
-    archiveChoice: "free_ayen",
-    year5Choice: "ayen",
+test("fake-death path accepts knowledge, construction, relationship, and target conditions", () => {
+  const state = {
+    memories: [
+      createMemory({ id: "poison_peak", title: "峰值", detail: "四十息" }),
+      createMemory({ id: "feign_death", title: "确认", detail: "七息" }),
+      createMemory({ id: "kill_list", title: "名单", detail: "朱点" }),
+    ],
+    marks: [], fixedResults: [], preparations: ["trusted_partner"], flags: [],
   };
-  const options = evaluateFinaleOptions(context);
-  assert.deepEqual(options.map((option) => option.enabled), [true, true, true]);
-  assert.equal(resolveFinalEnding("exile", context).name, "携火离山");
-  assert.equal(resolveFinalEnding("sever", context).name, "斩祖散门");
-  assert.equal(resolveFinalEnding("seize", context).name, "夺盘续世");
-  assert.equal(resolveFinalEnding("sever", { ...context, alliedNpcIds: ["wen"] }), null);
-  assert.equal(evaluateFinaleOptions({ ...context, year5Choice: "pei" }).find((option) => option.id === "seize").enabled, false);
+  const path = evaluatePathConditions("feign", state);
+  assert.equal(path.enabled, true);
+  assert.ok(path.conditions.every((item) => item.met));
 });
 
-test("reality anchor restores the last safe state after a real death", () => {
-  const state = { version: 3, screen: "year1Archive", envy: 2, clues: ["旧印"], realityAnchor: null };
-  const anchor = createRealityAnchor(state, "year1Approach");
-  state.envy = 9;
-  state.clues.push("不应保留");
-  const restored = restoreRealityAnchor(anchor);
-  assert.equal(restored.screen, "year1Approach");
-  assert.equal(restored.envy, 2);
-  assert.deepEqual(restored.clues, ["旧印"]);
-  assert.equal(restoreRealityAnchor(null), null);
-});
-
-test("v2 P1 ending migrates into the compressed seven-year finale", () => {
-  const defaults = {
-    version: 3,
-    seed: "p1-save",
-    screen: "landing",
-    character: { name: "", origin: null },
-    timeline: { feast: "unknown", mine: "hidden" },
-    npcStates: {},
-    p2Path: [],
+test("stale memories remain recorded but cannot satisfy a live path condition", () => {
+  const state = {
+    memories: [createMemory({ id: "kill_list", title: "名单", detail: "旧名单", level: "stale" })],
+    marks: ["venom_delay", "breath_hider"], fixedResults: [], preparations: ["trusted_partner"], flags: [],
   };
-  const migrated = migrateSaveData({
-    version: 2,
-    seed: "p1-save",
-    screen: "ending",
-    character: { name: "沈砚", origin: "herbalist" },
-    timeline: { feast: "shifted", mine: "shifted" },
-    p1Payoff: "矿难已偏转",
-  }, defaults);
-  assert.equal(migrated.version, 3);
-  assert.equal(migrated.screen, "p2Interlude");
-  assert.match(migrated.p2Path[0], /P1 完成存档/);
+  assert.equal(evaluatePathConditions("feign", state).conditions.find((item) => item.id === "kill_list").met, false);
 });
 
-test("each ending creates a distinct playable second-cycle legacy", () => {
-  const exile = createCycleLegacy("exile");
-  const sever = createCycleLegacy("sever");
-  const seize = createCycleLegacy("seize");
-  assert.equal(new Set([exile.id, sever.id, seize.id]).size, 3);
-  assert.equal(exile.npcReaction, "wen");
-  assert.equal(sever.openingIntel, "old_seal_memory");
-  assert.equal(seize.envy, 1);
+test("reverse-list route stays hidden until the enemy contact is taken over", () => {
+  const base = { memories: [], marks: [], fixedResults: [], preparations: [], flags: [] };
+  assert.equal(evaluatePathConditions("reverse", base).hidden, true);
+  const revealed = evaluatePathConditions("reverse", { ...base, flags: ["enemy_contact"] });
+  assert.equal(revealed.hidden, false);
+  assert.equal(revealed.enabled, false);
+});
+
+test("reverse-list route requires contact, false report, and the registry rule", () => {
+  const state = {
+    memories: [createMemory({ id: "registry_rule", title: "身份规则", detail: "正式门人" })],
+    marks: [], fixedResults: [], preparations: [], flags: ["enemy_contact", "false_report"],
+  };
+  assert.equal(evaluatePathConditions("reverse", state).enabled, true);
+});
+
+test("mastery is a six-step climb from suffering to control", () => {
+  assert.deepEqual(MASTERY_STAGES, ["受劫", "识劫", "避劫", "破劫", "借劫", "驭劫"]);
+  assert.equal(getMasteryStage(-1), "受劫");
+  assert.equal(getMasteryStage(99), "驭劫");
+  assert.equal(FATE_PATHS.length, 4);
 });
