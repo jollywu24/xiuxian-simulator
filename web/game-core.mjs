@@ -6,6 +6,146 @@ export const RARITY = {
   gold: { label: "金", rank: 4 },
 };
 
+export const INTEL_LEVELS = {
+  rumor: { label: "传闻", rank: 0 },
+  confirmed: { label: "确证", rank: 2 },
+  stale: { label: "过期确证", rank: 1 },
+};
+
+export const TRAIT_SYNERGIES = [
+  {
+    id: "herbal_trail",
+    name: "药性寻脉",
+    openingAny: ["herbal_tongue", "keen_eye"],
+    acquiredAny: ["herb_reader", "scent_thread"],
+    effect: "从矿尘药味中找到旧通风井，绕过正门守卫并削弱傀儡护印。",
+    cost: "必须贴近受污染的风脉，心蚀风险提高。",
+    unlock: "vent",
+  },
+  {
+    id: "borrowed_stillness",
+    name: "借息藏锋",
+    openingAny: ["fortunate_crisis", "borrowed_life", "broken_meridian"],
+    acquiredAny: ["venom_delay", "breath_hider"],
+    effect: "封脉杀招落下时可伪装气绝，立即拆除一层护印且不承受反击。",
+    cost: "本次战斗结束后天妒提高一层。",
+    unlock: "feign",
+  },
+  {
+    id: "echoed_ink",
+    name: "墨痕回声",
+    openingAny: ["perfect_memory", "truth_compulsion"],
+    acquiredAny: ["last_echo", "crisis_gaze"],
+    effect: "把名册暗印与傀儡口令相互印证，可在战斗前确认第一道杀招。",
+    cost: "强记前世细节会令过期确证更难辨认。",
+    unlock: "intent",
+  },
+];
+
+export const BUILD_PATHS = [
+  {
+    id: "fate_breath",
+    name: "观命归息篇",
+    discipline: "推演",
+    effect: "进入关键场景前，可把一条传闻与现场征兆互证，避免照搬过期确证。",
+    cost: "每次强行推演都会提高偏差。",
+    unlock: "foresee",
+  },
+  {
+    id: "seal_breaker",
+    name: "拆阵问隙诀",
+    discipline: "阵法",
+    effect: "把确证转化为阵法缺口，开放破坏护山阵与祖师祭盘的规则级行动。",
+    cost: "拆阵会同时毁坏归尘门传承与庇护。",
+    unlock: "sever",
+  },
+  {
+    id: "shadow_crossing",
+    name: "无影渡",
+    discipline: "潜行",
+    effect: "绕过身份门槛潜入旧档案与敌宗暗线，并可与阿厌分头行动。",
+    cost: "公开证词更难取信于人。",
+    unlock: "infiltrate",
+  },
+  {
+    id: "living_ledger",
+    name: "众生谱",
+    discipline: "关系",
+    effect: "把同伴的自主行动编入同一方案，开放多人撤离与并行破阵。",
+    cost: "任何同伴被牺牲都会永久削弱此构筑。",
+    unlock: "evacuate",
+  },
+];
+
+export const CORE_NPCS = [
+  {
+    id: "pei",
+    name: "裴照雪",
+    motive: "证明师门仍值得守护",
+    help: "剑术支援、内门担保、控制护山阵外环",
+    clue: "掌门议事与护山阵换位图",
+    boundary: "不接受无证据污蔑师门，也不处决已经投降的人",
+  },
+  {
+    id: "wen",
+    name: "闻青禾",
+    motive: "找到失踪兄长并阻止弟子被炼成阵材",
+    help: "医治、毒理、尸骨辨识、组织伤员撤离",
+    clue: "丹房账册与历代弟子尸骨",
+    boundary: "不会为了追击敌人放弃仍有生机的人",
+  },
+  {
+    id: "song",
+    name: "宋无咎",
+    motive: "让宗门活下来，即使必须隐瞒真相",
+    help: "调档、审讯、调动杂役、打开建宗密库",
+    clue: "建宗旧档与长老隐情",
+    boundary: "没有可控替代方案时，会优先维持宗门稳定",
+  },
+  {
+    id: "ayen",
+    name: "阿厌",
+    motive: "重获自由并让利用她的人付出代价",
+    help: "潜行、禁术、敌方语言、山外撤离路线",
+    clue: "赤霞宗营地与日核交易暗线",
+    boundary: "不会为归尘门牺牲自由，也拒绝成为新的祭品",
+  },
+];
+
+export const BUILD_SYNERGIES = [
+  {
+    id: "ink_breaks_array",
+    name: "墨痕拆阵",
+    buildIds: ["seal_breaker"],
+    openingAny: ["perfect_memory", "keen_eye", "truth_compulsion"],
+    intelAny: ["mine_old_seal", "guardian_cadence", "founder_phrase"],
+    effect: "旧印、阵图与记忆互证，终局可直接定位祭阵主脉。",
+  },
+  {
+    id: "poison_reads_life",
+    name: "毒理观命",
+    buildIds: ["fate_breath"],
+    openingAny: ["herbal_tongue", "river_root", "yin_sense"],
+    acquiredAny: ["herb_reader", "scent_thread", "venom_delay"],
+    effect: "从尸骨残毒判断寿元流向，旧档案调查无需官方文书。",
+  },
+  {
+    id: "shadow_speaks_enemy",
+    name: "敌语无影",
+    buildIds: ["shadow_crossing"],
+    npcAny: ["ayen"],
+    intelAny: ["red_token", "handoff_time", "mine_old_seal"],
+    effect: "与阿厌沿敌宗暗线潜入，第五年可从外环反转护山阵。",
+  },
+  {
+    id: "people_form_array",
+    name: "众志成阵",
+    buildIds: ["living_ledger"],
+    minAllies: 2,
+    effect: "两名以上同伴可并行行动，终局开放全员撤离与分区破阵。",
+  },
+];
+
 export const ORIGINS = [
   {
     id: "herbalist",
@@ -423,4 +563,473 @@ export function getSettlementTrait(id) {
 
 export function uniqueTags(tags = []) {
   return [...new Set(tags)];
+}
+
+export function createIntel({
+  id,
+  title,
+  detail,
+  status = "rumor",
+  source = "未知来源",
+  gainedAtDeviation = 0,
+  expiresAtDeviation = null,
+}) {
+  if (!INTEL_LEVELS[status]) throw new Error(`Unknown intel status: ${status}`);
+  return {
+    id,
+    title,
+    detail,
+    status,
+    source,
+    gainedAtDeviation,
+    expiresAtDeviation,
+  };
+}
+
+export function upsertIntel(records = [], nextRecord) {
+  const current = records.find((record) => record.id === nextRecord.id);
+  if (!current) return [...records, { ...nextRecord }];
+  const currentRank = INTEL_LEVELS[current.status]?.rank ?? -1;
+  const nextRank = INTEL_LEVELS[nextRecord.status]?.rank ?? -1;
+  const merged = nextRank >= currentRank
+    ? { ...current, ...nextRecord }
+    : { ...nextRecord, ...current };
+  return records.map((record) => record.id === nextRecord.id ? merged : record);
+}
+
+export function ageIntel(records = [], deviation = 0) {
+  return records.map((record) => {
+    if (
+      record.status !== "confirmed"
+      || record.expiresAtDeviation === null
+      || deviation < record.expiresAtDeviation
+    ) {
+      return { ...record };
+    }
+    return {
+      ...record,
+      status: "stale",
+      staleAtDeviation: deviation,
+    };
+  });
+}
+
+export function getIntel(records = [], id) {
+  return records.find((record) => record.id === id);
+}
+
+export function getBuildPath(id) {
+  return BUILD_PATHS.find((build) => build.id === id);
+}
+
+export function getCoreNpc(id) {
+  return CORE_NPCS.find((npc) => npc.id === id);
+}
+
+export function evaluateNpcAlliance({
+  npcId,
+  confirmedIntelIds = [],
+  buildId = null,
+  p1Companion = null,
+  p1Choice = null,
+  archiveChoice = null,
+  year5Choice = null,
+}) {
+  const intel = new Set(confirmedIntelIds);
+  let allied = false;
+  let state = "cautious";
+  let reason = "尚未获得足以跨越底线的证据。";
+
+  if (npcId === "wen") {
+    allied = p1Companion === "wen"
+      || p1Choice === "rescue"
+      || archiveChoice === "bones"
+      || intel.has("sacrifice_ledger");
+    reason = allied ? "尸骨、失踪名册或共同救援证明了献祭链。" : "她仍在寻找兄长，不会离开伤者。";
+  } else if (npcId === "pei") {
+    allied = p1Companion === "pei"
+      || year5Choice === "pei"
+      || (intel.has("founding_deed") && intel.has("array_heart"));
+    reason = allied ? "建宗旧档与护山阵证据迫使她承认师门制度有罪。" : "她只接受可核验的师门罪证。";
+  } else if (npcId === "song") {
+    allied = archiveChoice === "audit"
+      || year5Choice === "song"
+      || (intel.has("founding_deed") && buildId === "living_ledger");
+    state = allied ? "allied" : archiveChoice === "accuse" ? "hostile" : "cautious";
+    reason = allied ? "你给出了既能止祭又能维持撤离秩序的方案。" : "没有可控替代方案，他会继续封锁旧档。";
+  } else if (npcId === "ayen") {
+    allied = archiveChoice === "free_ayen"
+      || year5Choice === "ayen"
+      || (buildId === "shadow_crossing" && intel.has("red_token"));
+    reason = allied ? "你承诺自由而非新的归属，她愿意交换敌宗暗线。" : "她拒绝替归尘门承担任何牺牲。";
+  }
+
+  return {
+    npcId,
+    allied,
+    state: allied ? "allied" : state,
+    reason,
+  };
+}
+
+export function deriveBuildSynergies({
+  buildId,
+  openingTraitIds = [],
+  acquiredTraitIds = [],
+  confirmedIntelIds = [],
+  alliedNpcIds = [],
+}) {
+  const opening = new Set(openingTraitIds);
+  const acquired = new Set(acquiredTraitIds);
+  const intel = new Set(confirmedIntelIds);
+  const allies = new Set(alliedNpcIds);
+  return BUILD_SYNERGIES.filter((synergy) => {
+    if (!synergy.buildIds.includes(buildId)) return false;
+    if (synergy.openingAny && !synergy.openingAny.some((id) => opening.has(id))) return false;
+    if (synergy.acquiredAny && !synergy.acquiredAny.some((id) => acquired.has(id))) return false;
+    if (synergy.intelAny && !synergy.intelAny.some((id) => intel.has(id))) return false;
+    if (synergy.npcAny && !synergy.npcAny.some((id) => allies.has(id))) return false;
+    if (synergy.minAllies && allies.size < synergy.minAllies) return false;
+    return true;
+  });
+}
+
+export function evaluateFinaleOptions({
+  confirmedIntelIds = [],
+  alliedNpcIds = [],
+  buildId = null,
+  envy = 0,
+  deviation = 0,
+  archiveChoice = null,
+  year5Choice = null,
+}) {
+  const intel = new Set(confirmedIntelIds);
+  const allies = new Set(alliedNpcIds);
+  const hasSacrificeTruth = intel.has("sacrifice_ledger") || intel.has("founding_deed");
+  const hasArrayTruth = intel.has("array_heart");
+  const exileEnabled = allies.size >= 2 || buildId === "living_ledger" || year5Choice === "ayen";
+  const severEnabled = hasSacrificeTruth
+    && hasArrayTruth
+    && allies.size >= 2
+    && ["seal_breaker", "fate_breath"].includes(buildId)
+    && deviation <= 5;
+  const seizeEnabled = (buildId === "seal_breaker" || intel.has("founder_phrase"))
+    && (allies.has("ayen") || envy >= 1)
+    && year5Choice !== "pei";
+
+  return [
+    {
+      id: "exile",
+      name: "携火离山",
+      enabled: exileEnabled,
+      reason: exileEnabled ? "至少两名同伴或撤离构筑可并行带走人和典籍。" : "需要两名同伴、众生谱或阿厌的山外路线。",
+      cost: "放弃归尘门；祭阵秘密可能在别处继续害人。",
+    },
+    {
+      id: "sever",
+      name: "斩祖散门",
+      enabled: severEnabled,
+      reason: severEnabled ? "献祭真相、阵心位置、同伴与拆阵方法已经齐备。" : "需要献祭确证、阵心确证、两名同伴、适配构筑且偏差不超过 5。",
+      cost: "宗门名誉、护山阵与制度一并终结。",
+    },
+    {
+      id: "seize",
+      name: "夺盘续世",
+      enabled: seizeEnabled,
+      reason: seizeEnabled ? "你能接管祭盘，并有力量或阿厌的禁术承受反噬。" : "需要拆阵/祖师口令，以及阿厌或至少 1 点天妒；裴照雪控阵路线会阻止此举。",
+      cost: "把收割转嫁给他者，成为下一轮劫难的制造者。",
+    },
+  ];
+}
+
+export function resolveFinalEnding(optionId, context) {
+  const option = evaluateFinaleOptions(context).find((item) => item.id === optionId);
+  if (!option?.enabled) return null;
+  const endings = {
+    exile: {
+      id: "exile",
+      name: "携火离山",
+      epitaph: "山门在身后熄灭，人还活着，火种也还活着。",
+      consequence: "你带走核心人物与典籍，放弃归尘门。祖师失去这一季祭品，却仍可能在别处寻找下一座山门。",
+      legacyId: "embers_map",
+    },
+    sever: {
+      id: "sever",
+      name: "斩祖散门",
+      epitaph: "不是守住归尘门，而是让它再也不能吃人。",
+      consequence: "祭阵被瓦解，祖师被封回无名石中。宗门声名与制度一并终结，幸存者各自开始新的生活。",
+      legacyId: "broken_seal",
+    },
+    seize: {
+      id: "seize",
+      name: "夺盘续世",
+      epitaph: "黑日仍然升起，只是这一次由你决定照向谁。",
+      consequence: "你控制命盘，把寿元收割转向敌宗与战俘。归尘门得以延续，而你成为下一轮劫难的主人。",
+      legacyId: "black_sun_mark",
+    },
+  };
+  return { ...endings[optionId], cost: option.cost };
+}
+
+export function createCycleLegacy(endingId) {
+  const map = {
+    exile: {
+      id: "embers_map",
+      name: "余烬山图",
+      effect: "新周目开局即知道一条安全撤离路；闻青禾会对你产生似曾相识的信任。",
+      openingIntel: "safe_route",
+      npcReaction: "wen",
+    },
+    sever: {
+      id: "broken_seal",
+      name: "断阵残印",
+      effect: "新周目可从晚宴异象直接追查旧印；裴照雪会认出你携带的破阵痕迹。",
+      openingIntel: "old_seal_memory",
+      npcReaction: "pei",
+    },
+    seize: {
+      id: "black_sun_mark",
+      name: "黑日命痕",
+      effect: "新周目开局即听见祖师口令，但天妒 +1；阿厌会本能地警惕你。",
+      openingIntel: "founder_echo",
+      npcReaction: "ayen",
+      envy: 1,
+    },
+  };
+  return map[endingId] ? { ...map[endingId] } : null;
+}
+
+export function createRealityAnchor(state, screen) {
+  const snapshot = structuredClone({ ...state, realityAnchor: null });
+  snapshot.screen = screen;
+  return {
+    screen,
+    snapshot,
+  };
+}
+
+export function restoreRealityAnchor(anchor) {
+  if (!anchor?.snapshot || !anchor?.screen) return null;
+  const restored = structuredClone(anchor.snapshot);
+  restored.screen = anchor.screen;
+  restored.realityAnchor = structuredClone(anchor);
+  return restored;
+}
+
+export function migrateSaveData(saved, defaults) {
+  if (!saved || ![1, 2, 3].includes(saved.version) || !saved.screen || !saved.seed) return null;
+  const migrated = {
+    ...structuredClone(defaults),
+    ...saved,
+    character: { ...defaults.character, ...saved.character },
+    timeline: { ...defaults.timeline, ...saved.timeline },
+    version: 3,
+  };
+  migrated.intel ??= [];
+  migrated.activeSynergies ??= [];
+  migrated.p1Path ??= [];
+  migrated.p2Path ??= [];
+  migrated.npcStates ??= structuredClone(defaults.npcStates || {});
+  migrated.completedEndings ??= [];
+  if (saved.version === 1 && ["mine", "ending"].includes(saved.screen)) {
+    migrated.screen = "mineApproach";
+    migrated.mineChoice = null;
+    migrated.mineOutcome = null;
+    migrated.battle = null;
+    migrated.p1Path = ["从 P0 存档续接乌铜矿完整事件"];
+  }
+  if (saved.version === 2 && saved.screen === "ending") {
+    migrated.screen = "p2Interlude";
+    migrated.p2Path = ["从 P1 完成存档继续七年终局"];
+  }
+  return migrated;
+}
+
+export function deriveTraitSynergies(openingIds = [], acquiredIds = []) {
+  const opening = new Set(openingIds);
+  const acquired = new Set(acquiredIds);
+  return TRAIT_SYNERGIES.filter((synergy) =>
+    synergy.openingAny.some((id) => opening.has(id))
+    && synergy.acquiredAny.some((id) => acquired.has(id)),
+  );
+}
+
+export function resolveCompanionOffer({
+  companion,
+  intel = [],
+  clues = [],
+  rewardType = null,
+  acquiredTraitIds = [],
+}) {
+  const confirmedIds = new Set(
+    intel.filter((record) => record.status === "confirmed").map((record) => record.id),
+  );
+  const clueText = clues.join(" ");
+
+  if (companion === "wen") {
+    const evidence = confirmedIds.has("poisoner_family")
+      || /家人被囚|闻青禾兄长|乌舌草/.test(clueText)
+      || acquiredTraitIds.includes("guarding_vow");
+    return evidence
+      ? {
+          accepted: true,
+          companion,
+          reason: "你拿出了与失踪者、毒物或囚徒有关的证据。闻青禾决定同行，但会优先救人。",
+          boundary: "发现仍活着的受困者时，她会中止追击、优先救人。",
+        }
+      : {
+          accepted: false,
+          companion,
+          reason: "你只有矿难传闻，没有能指向失踪兄长或药毒的证据。闻青禾拒绝拿病人赌一次预感。",
+          boundary: "需要毒理、囚徒或失踪者相关确证。",
+        };
+  }
+
+  if (companion === "pei") {
+    const evidence = confirmedIds.has("red_token")
+      || /赤纹腰牌|青檀纸|内门专用/.test(clueText)
+      || rewardType === "dao";
+    return evidence
+      ? {
+          accepted: true,
+          companion,
+          reason: "证据足以证明矿难背后有人布置。裴照雪答应护送，但不会执行无证据的处决。",
+          boundary: "敌人投降或证据冲突时，她会先控制局面。",
+        }
+      : {
+          accepted: false,
+          companion,
+          reason: "你无法证明矿难与宗门内应有关。裴照雪拒绝擅离内门值守。",
+          boundary: "需要势力凭证、内门文书或足以自保的道行。",
+        };
+  }
+
+  return {
+    accepted: true,
+    companion: "alone",
+    reason: "你决定独自下矿，不必说服任何人，也无人替你承担失误。",
+    boundary: "没有同伴援护。",
+  };
+}
+
+const MINE_INTENTS = ["seal", "burst", "drag"];
+
+export function createMineBattle({
+  seed,
+  entry = "main",
+  envy = 0,
+  intelStatus = "rumor",
+}) {
+  const rng = createRng(`${seed}:mine-battle:${entry}`);
+  const offset = Math.floor(rng() * MINE_INTENTS.length);
+  const intents = MINE_INTENTS.map((_, index) => MINE_INTENTS[(index + offset) % MINE_INTENTS.length]);
+  return {
+    turn: 1,
+    maxTurns: 6,
+    resolve: envy >= 3 ? 3 : 4,
+    enemyHealth: 2,
+    enemyWard: ["vent", "drain"].includes(entry) ? 1 : 2,
+    intents,
+    intentIndex: 0,
+    intelStatus,
+    insight: intelStatus === "confirmed" ? 1 : 0,
+    counterUsed: false,
+    synergyUsed: false,
+    companionUsed: false,
+    enemyPrepared: envy >= 2,
+    outcome: "active",
+    intelFailed: false,
+    log: [entry === "vent" ? "你从旧风井切入，傀儡少了一层外侧护印。" : "守核傀儡踏住正井，双重护印同时亮起。"],
+  };
+}
+
+function damageEnemy(next, amount = 1) {
+  let remaining = amount;
+  while (remaining > 0 && next.enemyWard > 0) {
+    next.enemyWard -= 1;
+    remaining -= 1;
+  }
+  if (remaining > 0) next.enemyHealth = Math.max(0, next.enemyHealth - remaining);
+}
+
+export function resolveMineBattleTurn(
+  battle,
+  action,
+  { synergyIds = [], companion = "alone" } = {},
+) {
+  if (battle.outcome !== "active") return structuredClone(battle);
+  const next = structuredClone(battle);
+  const intent = next.intents[next.intentIndex];
+  let avoidRetaliation = false;
+
+  if (action === "observe") {
+    next.insight = 1;
+    avoidRetaliation = true;
+    next.log.push(`你没有抢攻，确认傀儡下一式是“${intent}”。`);
+  } else if (action === "counter") {
+    if (next.counterUsed) return next;
+    next.counterUsed = true;
+    if (next.intelStatus === "confirmed" || next.insight > 0) {
+      damageEnemy(next, 2);
+      next.insight = 0;
+      avoidRetaliation = true;
+      next.log.push("口令与膝印变化吻合，你抢在杀招前拆掉两层防护。 ");
+    } else {
+      next.resolve -= 1;
+      next.intelFailed = next.intelStatus === "stale";
+      next.log.push(next.intelFailed
+        ? "你照搬过期口令，傀儡却已换式；错误情报让你先受一击。"
+        : "传闻缺少准确时机，你的反制落空。 ");
+    }
+  } else if (action === "synergy") {
+    if (next.synergyUsed || synergyIds.length === 0) return next;
+    next.synergyUsed = true;
+    damageEnemy(next, 2);
+    avoidRetaliation = true;
+    next.log.push("两枚词条形成规则联动：你绕开正面强弱，直接破坏护印成立的条件。 ");
+  } else if (action === "companion") {
+    if (next.companionUsed || companion === "alone") return next;
+    next.companionUsed = true;
+    if (companion === "wen") {
+      next.resolve = Math.min(4, next.resolve + 1);
+      next.insight = 1;
+      next.log.push("闻青禾以银针截断封脉余波，并指出傀儡灵流的断点。 ");
+    } else {
+      damageEnemy(next, 1);
+      next.log.push("裴照雪只斩护印不斩人，为你劈开一个安全行动窗口。 ");
+    }
+    avoidRetaliation = true;
+  } else if (action === "brace") {
+    next.insight = 1;
+    avoidRetaliation = true;
+    next.log.push("你守住心脉，逼傀儡完整暴露这一式的征兆。 ");
+  } else if (action === "strike") {
+    damageEnemy(next, 1);
+    next.log.push(next.enemyWard > 0 ? "你的攻击削去一层护印。" : "攻击穿过破损护印，击中傀儡核心。 ");
+  } else {
+    return next;
+  }
+
+  if (next.enemyHealth <= 0) {
+    next.outcome = "won";
+    next.log.push("守核傀儡停在杀招前，通往日核的路已经打开。 ");
+    return next;
+  }
+
+  if (!avoidRetaliation) {
+    const damage = intent === "burst" && next.enemyPrepared ? 2 : 1;
+    next.resolve -= damage;
+    next.log.push(`傀儡执行“${intent}”，你失去 ${damage} 点心志。`);
+  }
+
+  if (next.resolve <= 0 || next.turn >= next.maxTurns) {
+    next.resolve = Math.max(0, next.resolve);
+    next.outcome = "lost";
+    next.log.push("护印锁死经脉；这条命结束前，你看清傀儡膝印会先于杀招亮起。 ");
+    return next;
+  }
+
+  next.turn += 1;
+  next.intentIndex = (next.intentIndex + 1) % next.intents.length;
+  return next;
 }

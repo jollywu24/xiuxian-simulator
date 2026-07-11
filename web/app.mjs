@@ -1,15 +1,36 @@
 import {
   APPEARANCES,
+  BUILD_PATHS,
+  CORE_NPCS,
+  INTEL_LEVELS,
   ORIGINS,
   RARITY,
+  ageIntel,
+  createCycleLegacy,
+  createIntel,
+  createMineBattle,
+  createRealityAnchor,
+  deriveBuildSynergies,
   deriveSettlementTraits,
+  deriveTraitSynergies,
+  evaluateFinaleOptions,
+  evaluateNpcAlliance,
   generateOpeningSets,
   getAppearance,
+  getBuildPath,
+  getCoreNpc,
+  getIntel,
   getOpeningTrait,
   getOrigin,
   getSettlementTrait,
+  migrateSaveData,
+  resolveCompanionOffer,
+  resolveFinalEnding,
+  resolveMineBattleTurn,
+  restoreRealityAnchor,
   scoreSettlement,
   uniqueTags,
+  upsertIntel,
 } from "./game-core.mjs";
 
 const STORAGE_KEY = "taixu-fateplate-demo-v1";
@@ -34,8 +55,11 @@ function freshSeed() {
 
 function createInitialState(seed = freshSeed()) {
   return {
-    version: 1,
+    version: 3,
     seed,
+    cycle: 1,
+    inheritedLegacy: null,
+    completedEndings: [],
     screen: "landing",
     character: {
       name: "",
@@ -69,15 +93,56 @@ function createInitialState(seed = freshSeed()) {
     realRoute: null,
     realOutcome: null,
     companion: null,
+    companionOffer: null,
+    activeSynergies: [],
+    intel: [],
+    mineEntry: null,
+    mineInvestigation: null,
+    battle: null,
     mineChoice: null,
+    mineOutcome: null,
+    companionAct: null,
+    p1Carry: null,
+    p1RealityChoice: null,
+    p1Payoff: null,
+    p1Path: [],
+    buildId: null,
+    buildSynergies: [],
+    npcStates: {
+      pei: { state: "cautious", allied: false, fate: "仍在内门值守" },
+      wen: { state: "cautious", allied: false, fate: "仍在追查兄长" },
+      song: { state: "cautious", allied: false, fate: "封存建宗旧档" },
+      ayen: { state: "captive", allied: false, fate: "被关在外门地牢" },
+    },
+    archiveChoice: null,
+    year5Choice: null,
+    realityAnchor: null,
+    realityDeaths: 0,
+    p2Path: [],
+    finaleOptions: [],
+    endingId: null,
+    endingResult: null,
+    legacyCandidate: null,
     timeline: {
       omen: "known",
       feast: "unknown",
       mine: "hidden",
+      archive: "hidden",
+      siege: "hidden",
       blackSun: "future",
     },
     events: [],
   };
+}
+
+function migrateSavedState(saved) {
+  if (!saved?.seed) return null;
+  const migrated = migrateSaveData(saved, createInitialState(saved.seed));
+  if (!migrated) return null;
+  migrated.activeSynergies = migrated.activeSynergies?.length
+    ? migrated.activeSynergies
+    : deriveTraitSynergies(Object.values(migrated.openingSelected || {}), migrated.acquiredTraits || []);
+  return migrated;
 }
 
 function loadSavedState() {
@@ -85,8 +150,7 @@ function loadSavedState() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const saved = JSON.parse(raw);
-    if (saved?.version !== 1 || !saved?.screen) return null;
-    return saved;
+    return migrateSavedState(saved);
   } catch {
     return null;
   }
@@ -139,6 +203,75 @@ function addClue(clue) {
   if (!state.clues.includes(clue)) state.clues.push(clue);
 }
 
+function addIntel(record) {
+  state.intel = upsertIntel(state.intel || [], record);
+}
+
+function refreshIntel() {
+  state.intel = ageIntel(state.intel || [], state.deviation);
+}
+
+function refreshSynergies() {
+  state.activeSynergies = deriveTraitSynergies(
+    Object.values(state.openingSelected || {}),
+    state.acquiredTraits || [],
+  );
+}
+
+function confirmedIntelIds() {
+  return (state.intel || [])
+    .filter((record) => record.status === "confirmed")
+    .map((record) => record.id);
+}
+
+function alliedNpcIds() {
+  return Object.entries(state.npcStates || {})
+    .filter(([, npcState]) => npcState.allied)
+    .map(([id]) => id);
+}
+
+function updateNpcState(id, updates) {
+  state.npcStates[id] = {
+    ...(state.npcStates[id] || { state: "cautious", allied: false, fate: "命途未定" }),
+    ...updates,
+  };
+}
+
+function initializeP2NpcStates() {
+  for (const npc of CORE_NPCS) {
+    const result = evaluateNpcAlliance({
+      npcId: npc.id,
+      confirmedIntelIds: confirmedIntelIds(),
+      buildId: state.buildId,
+      p1Companion: state.companionOffer?.accepted ? state.companion : null,
+      p1Choice: state.mineChoice,
+      archiveChoice: state.archiveChoice,
+      year5Choice: state.year5Choice,
+    });
+    if (result.allied || !state.npcStates[npc.id]?.allied) {
+      updateNpcState(npc.id, {
+        allied: result.allied,
+        state: result.state,
+        reason: result.reason,
+      });
+    }
+  }
+}
+
+function refreshBuildSynergies() {
+  state.buildSynergies = deriveBuildSynergies({
+    buildId: state.buildId,
+    openingTraitIds: Object.values(state.openingSelected || {}),
+    acquiredTraitIds: state.acquiredTraits || [],
+    confirmedIntelIds: confirmedIntelIds(),
+    alliedNpcIds: alliedNpcIds(),
+  });
+}
+
+function establishRealityAnchor(screen) {
+  state.realityAnchor = createRealityAnchor(state, screen);
+}
+
 function triggerOpening(group) {
   const trait = openingTraitForGroup(group);
   if (!trait || state.triggeredOpeningTraits.includes(trait.id)) return null;
@@ -148,12 +281,40 @@ function triggerOpening(group) {
 }
 
 function modeForScreen(screen) {
-  if (["sim1Morning", "sim1Eve", "sim1Feast", "sim2Feast", "sim2Road", "mine"].includes(screen)) {
+  if ([
+    "sim1Morning",
+    "sim1Eve",
+    "sim1Feast",
+    "sim2Feast",
+    "sim2Road",
+    "companionResult",
+    "mineApproach",
+    "mineInvestigation",
+    "mineBattle",
+    "mineAftermath",
+  ].includes(screen)) {
     return "simulation";
   }
-  if (["deathRecap", "realityDeath", "omen"].includes(screen)) return "death";
-  if (["settlement", "traitDraw"].includes(screen)) return "settlement";
-  if (["realityHub", "realityReturn", "realityPlan", "realityResolution"].includes(screen)) {
+  if (["deathRecap", "realityDeath", "omen", "mineDefeat", "p2RealityDeath", "finale"].includes(screen)) return "death";
+  if (["settlement", "traitDraw", "mineReturn"].includes(screen)) return "settlement";
+  if ([
+    "realityHub",
+    "realityReturn",
+    "realityPlan",
+    "realityResolution",
+    "p1RealityPlan",
+    "ending",
+    "p2Interlude",
+    "buildChoice",
+    "year1Approach",
+    "year1Archive",
+    "year1Resolution",
+    "year5Hub",
+    "year5Crisis",
+    "blackSunPrep",
+    "finalSummary",
+    "cycleOpening",
+  ].includes(screen)) {
     return "reality";
   }
   return "neutral";
@@ -173,9 +334,28 @@ function modeLabel() {
     traitDraw: "命痕显化 · 第 1 世",
     sim2Feast: "第 2 次模拟 · 第七日",
     sim2Road: "第 2 次模拟 · 第三月",
-    mine: "第 2 次模拟 · 乌铜矿底",
+    companionResult: "第 2 次模拟 · 同伴回应",
+    mineApproach: "第 2 次模拟 · 乌铜矿入口",
+    mineInvestigation: "第 2 次模拟 · 矿底封井层",
+    mineBattle: "第 2 次模拟 · 守核傀儡",
+    mineDefeat: "第 2 次模拟 · 矿底死亡",
+    mineAftermath: "第 2 次模拟 · 日核近前",
+    mineReturn: "命盘结算 · 第 2 世",
+    p1RealityPlan: "现实 · 第三月矿难前",
     realityDeath: "现实 · 命途断绝",
-    ending: "纵向切片 · 命途暂止",
+    ending: "P1 原型 · 因果已偏转",
+    p2Interlude: "完整 Demo · 七年因果链",
+    buildChoice: "现实 · 第一年前",
+    year1Approach: "现实 · 第一年冬",
+    year1Archive: "现实 · 建宗密库",
+    p2RealityDeath: "现实 · 命途断绝",
+    year1Resolution: "现实 · 第一锚点已改写",
+    year5Hub: "现实 · 第五年秋",
+    year5Crisis: "现实 · 护山阵争夺",
+    blackSunPrep: "现实 · 第七年蚀日前",
+    finale: "现实 · 黑日终局",
+    finalSummary: "完整 Demo · 正式结局",
+    cycleOpening: `第 ${state.cycle || 2} 周目 · 命痕继承`,
   };
   return map[state.screen] || "太虚命盘";
 }
@@ -258,6 +438,8 @@ function actionCard({ action, value = "", title, description, source = "", meta 
 function timelineHtml() {
   const feastStatus = state.timeline.feast;
   const mineStatus = state.timeline.mine;
+  const archiveStatus = state.timeline.archive;
+  const siegeStatus = state.timeline.siege;
   const feast = feastStatus === "shifted"
     ? ["第七日 · 晚宴", "已偏转：原定死因被越过", "shifted"]
     : feastStatus === "death"
@@ -265,18 +447,37 @@ function timelineHtml() {
       : feastStatus === "known"
         ? ["第七日 · 晚宴", "已知危机：井水投毒", "current"]
         : ["第七日 · 晚宴", "酉时后将发生什么？", ""];
-  const mine = mineStatus === "revealed"
+  const mine = mineStatus === "shifted"
+    ? ["第三月 · 乌铜矿", "已偏转：旧确证开始过期", "shifted"]
+    : mineStatus === "revealed"
     ? ["第三月 · 乌铜矿", "日核异象：新因果显露", "current"]
     : mineStatus === "approaching"
       ? ["第三月 · 乌铜矿", "新的未来正在逼近", "current"]
       : ["第三月 · 乌铜矿", "一场尚未发生的矿难", ""];
+  const archive = archiveStatus === "shifted"
+    ? ["第一年冬 · 旧档案", "已确认：宗门以弟子寿元续阵", "shifted"]
+    : archiveStatus === "approaching"
+      ? ["第一年冬 · 旧档案", "建宗密库即将封死", "current"]
+      : ["第一年冬 · 旧档案", "闻青禾原定在此后失踪", ""];
+  const siege = siegeStatus === "shifted"
+    ? ["第五年秋 · 祭阵准备", "已偏转：护山阵外环被改写", "shifted"]
+    : siegeStatus === "approaching"
+      ? ["第五年秋 · 祭阵准备", "赤霞宗攻山，祭阵开始蓄力", "current"]
+      : ["第五年秋 · 祭阵准备", "敌宗与内应都在等待日核", ""];
+  const blackSun = state.timeline.blackSun === "resolved"
+    ? ["第七年 · 黑日", "终局已定", "shifted"]
+    : state.timeline.blackSun === "current"
+      ? ["第七年 · 黑日", "护山阵正在反转", "death"]
+      : ["第七年 · 黑日", "归尘门上下无一生还", ""];
   return `
     <div class="panel-title">命途时间线</div>
     <div class="timeline-list">
       ${timelineItem("现实锚点", state.timeline.feast === "shifted" ? "晚宴后的新现实" : "太虚元年三月初三", "current")}
       ${timelineItem(...feast)}
       ${timelineItem(...mine)}
-      ${timelineItem("第七年 · 黑日", "归尘门上下无一生还", "")}
+      ${timelineItem(...archive)}
+      ${timelineItem(...siege)}
+      ${timelineItem(...blackSun)}
     </div>
   `;
 }
@@ -322,7 +523,51 @@ function characterPanelHtml() {
             ? state.clues.slice(-4).map((clue) => `<div class="clue-item"><strong>命盘记录</strong><span>${escapeHtml(clue)}</span></div>`).join("")
             : `<p class="empty-state">未知仍多于已知。</p>`}
         </div>
+        ${state.intel?.length ? `
+          <div class="panel-title" style="margin-top:18px">因果情报</div>
+          <div class="intel-list">${state.intel.slice(-4).map(intelCardHtml).join("")}</div>
+        ` : ""}
+        ${state.buildId ? `
+          <div class="panel-title" style="margin-top:18px">当前构筑</div>
+          <div class="reward-item"><strong>${escapeHtml(getBuildPath(state.buildId)?.name)}</strong><span>${escapeHtml(getBuildPath(state.buildId)?.effect)}</span></div>
+        ` : ""}
+        ${state.p2Path?.length ? `
+          <div class="panel-title" style="margin-top:18px">核心人物</div>
+          <div class="npc-mini-list">${CORE_NPCS.map(npcMiniHtml).join("")}</div>
+        ` : ""}
       </div>
+    </div>
+  `;
+}
+
+function npcMiniHtml(npc) {
+  const npcState = state.npcStates?.[npc.id] || {};
+  const label = npcState.allied ? "同行" : npcState.state === "hostile" ? "对立" : npcState.state === "captive" ? "受困" : "观望";
+  return `<div class="npc-mini ${npcState.allied ? "allied" : ""}"><strong>${escapeHtml(npc.name)}</strong><span>${escapeHtml(label)} · ${escapeHtml(npcState.fate || npc.motive)}</span></div>`;
+}
+
+function intelCardHtml(record) {
+  const level = INTEL_LEVELS[record.status] || INTEL_LEVELS.rumor;
+  return `
+    <div class="intel-card intel-${record.status}">
+      <span class="intel-level">${escapeHtml(level.label)}</span>
+      <strong>${escapeHtml(record.title)}</strong>
+      <span>${escapeHtml(record.detail)}</span>
+    </div>
+  `;
+}
+
+function intelBoardHtml() {
+  if (!state.intel?.length) return `<p class="empty-state">命盘尚未记录可分级的因果情报。</p>`;
+  return `
+    <div class="intel-board">
+      ${state.intel.map((record) => `
+        <article class="intel-row intel-${record.status}">
+          <div><span class="intel-level">${escapeHtml(INTEL_LEVELS[record.status]?.label || record.status)}</span><strong>${escapeHtml(record.title)}</strong></div>
+          <p>${escapeHtml(record.detail)}</p>
+          <small>来源：${escapeHtml(record.source)}</small>
+        </article>
+      `).join("")}
     </div>
   `;
 }
@@ -389,7 +634,7 @@ function renderLanding() {
         <button class="primary-button" data-action="new-game">新建命途</button>
         ${hasSave ? `<button class="secondary-button" data-action="continue-game">继续 · ${escapeHtml(savedState.character?.name || "未完命途")}</button>` : ""}
       </div>
-      <p class="screen-note">一段约 10～15 分钟的浏览器纵向切片 · 进度自动保存在本机</p>
+      <p class="screen-note">一段约 35～50 分钟、可抵达黑日终局的完整 Demo · 进度自动保存在本机</p>
     </div>
   `, { narrow: true });
 }
@@ -526,14 +771,17 @@ function renderOmen() {
 }
 
 function renderRealityHub() {
+  const inherited = state.cycle > 1 && state.inheritedLegacy;
   return gameShell(`
     ${sceneHeader("现实 · 祖师洞外", "只有你记得七年后的尸山", "现实只过去一息。残破命盘嵌入识海，三点命火在盘面缓慢燃烧。")}
     <div class="story-copy">
       <p>你仍是刚入门三日的外门弟子。若现在冲进议事堂高喊灭门，没有人会相信一个新人的噩梦。</p>
       <div class="quote-block">命盘只给出一句说明：<strong>“试一条命，留一件真。”</strong></div>
       <p>第一次模拟只能推到第七日。那之前，宗门会举行接风晚宴。</p>
+      ${inherited ? `<div class="notice-block"><strong>二周目记忆 · ${escapeHtml(state.inheritedLegacy.name)}</strong><br>你不必再从“晚宴是否危险”开始猜；可以直接验证换水时序与旧印。</div>` : ""}
     </div>
     <div class="action-list">
+      ${inherited ? actionCard({ action: "start-sim1-informed", title: "沿继承命痕直达晚宴前夜", description: "跳过已知的晨间盲查，直接从酉时换水与名册旧印切入。", source: "二周目入口", meta: "命火 3 → 2 · 跳过一次行动", kind: "special" }) : ""}
       ${actionCard({ action: "start-sim1", title: "消耗 1 命火，试命至第七日", description: "模拟死亡不会结束周目；你可以带回一项结算成果。", source: "太虚命盘", meta: "命火 3 → 2", kind: "special" })}
     </div>
   `);
@@ -843,7 +1091,8 @@ function renderSim2Road() {
     ${sceneHeader("第 2 次模拟 · 第三月", "旧死因已越过，未来第一次向后展开", "晚宴之后，宗门派人前往乌铜矿处理一次小规模塌方。上一世的你没活到今天。")}
     <div class="fate-stamp">旧死因已越过</div>
     <div class="story-copy">
-      <p>矿井任务需要一名同伴。你仍只控制自己；同行者会按性格行动，也可能拒绝你的命令。</p>
+      <p>矿井任务需要一名同伴。你仍只控制自己；同行者会根据证据、动机和底线决定是否加入，也可能拒绝你的要求。</p>
+      <div class="notice-block"><strong>情报不是通行证</strong><br>闻青禾关心失踪者与药毒，裴照雪只接受能证明有人布置矿难的证据。</div>
     </div>
     <div class="action-list">
       ${actionCard({ action: "choose-companion", value: "wen", title: "邀请闻青禾同行", description: "她能辨毒、救人，也会优先寻找失踪兄长的线索。", source: "同伴", meta: "医术 · 关系" })}
@@ -853,50 +1102,404 @@ function renderSim2Road() {
   `);
 }
 
-function renderMine() {
-  const companionNames = { wen: "闻青禾", pei: "裴照雪", alone: "无人" };
+function renderCompanionResult() {
+  const offer = state.companionOffer;
+  const companionNames = { wen: "闻青禾", pei: "裴照雪", alone: "独自行动" };
   return gameShell(`
-    ${sceneHeader("第 2 次模拟 · 乌铜矿底", "矿难不是意外", `同行：${companionNames[state.companion]}。塌方深处没有矿石，只有一座被凿开的古阵。`)}
+    ${sceneHeader("第 2 次模拟 · 山门石阶", offer?.accepted ? `${companionNames[offer.companion]}答应同行` : `${companionNames[offer?.companion]}拒绝同行`, offer?.accepted ? "你说服了一个有自己判断的人，不是获得了一件装备。" : "拒绝本身也是情报：你缺少能让对方承担风险的证据。")}
     <div class="story-copy">
-      <p>黑色圆核悬在阵心，没有温度，却让所有影子朝它倾斜。它与七年后悬在归尘门上空的黑日一模一样。</p>
-      <div class="omen-block">日核每跳动一次，祖师洞方向便传来一次回声。</div>
-      <p>井外响起脚步。有人一直在等归尘门亲手挖出它。</p>
+      <p>${escapeHtml(offer?.reason || "你决定独自行动。")}</p>
+      <div class="notice-block"><strong>同伴底线</strong><br>${escapeHtml(offer?.boundary || "没有同伴援护。")}</div>
+      ${!offer?.accepted ? `<p>你把这次拒绝记进命盘，改为独自下矿。日后若带回对应确证，可以重新审视这段关系。</p>` : ""}
     </div>
     <div class="action-list">
-      ${actionCard({ action: "resolve-mine", value: "rescue", title: "先救被压住的矿工", description: "保住证人，放弃第一时间追查日核。", source: "守护", meta: "关系线索" })}
-      ${actionCard({ action: "resolve-mine", value: "follow", title: "熄灯，跟上井外接头人", description: "让日核暂时留在原地，追查谁在等待矿难。", source: "调查", meta: "势力线索" })}
-      ${actionCard({ action: "resolve-mine", value: "touch", title: "以神识触碰日核", description: "直接确认它与黑日的关系，也可能立刻惊醒某种存在。", source: "高风险试探", meta: "必死风险 · 核心真相", kind: "danger" })}
+      ${actionCard({ action: "to-mine-approach", title: "前往乌铜矿", description: offer?.accepted ? "同行者会在自己的底线内提供一次援护。" : "无人同行，仍可依靠调查与已知情报。", source: "第三月", meta: offer?.accepted ? "同伴加入" : "独行" , kind: "special" })}
     </div>
   `);
 }
 
-function endingClue() {
-  const map = {
-    rescue: "获救矿工说，塌方前有人从井底念出了开山祖师的名讳。",
-    follow: "接头人的袖口同样缝着赤线，但他交出的不是敌宗令牌，而是一枚归尘门旧印。",
-    touch: "日核中传来一句话：‘六十年已满，把我的弟子带回来。’",
-  };
-  return map[state.mineChoice] || "晚宴灭口与矿难都指向祖师洞。";
+function synergySummaryHtml() {
+  if (!state.activeSynergies?.length) {
+    return `<p class="empty-state">当前先天词条与后天命痕尚未形成矿井联动；你仍可依靠现场情报破局。</p>`;
+  }
+  return `<div class="synergy-list">${state.activeSynergies.map((synergy) => `
+    <div class="synergy-card">
+      <span>词条联动 · ${escapeHtml(synergySourceText(synergy))}</span><strong>${escapeHtml(synergy.name)}</strong>
+      <p>${escapeHtml(synergy.effect)}</p><small>代价：${escapeHtml(synergy.cost)}</small>
+    </div>
+  `).join("")}</div>`;
+}
+
+function synergySourceText(synergy) {
+  const opening = selectedOpeningTraits().find((trait) => synergy.openingAny.includes(trait.id));
+  const acquired = (state.acquiredTraits || [])
+    .map(getSettlementTrait)
+    .find((trait) => trait && synergy.acquiredAny.includes(trait.id));
+  return [opening?.name, acquired?.name].filter(Boolean).join(" × ") || "命盘构筑";
+}
+
+function renderMineApproach() {
+  const ventSynergy = state.activeSynergies?.find((synergy) => synergy.unlock === "vent");
+  return gameShell(`
+    ${sceneHeader("第 2 次模拟 · 乌铜矿入口", "矿难之前，入口已经在说谎", "矿册写着小规模塌方，井口却站着不属于矿场的守卫；旧风井还有新鲜药味。")}
+    <div class="story-copy">
+      ${intelBoardHtml()}
+      <h2 class="section-title">当前词条联动</h2>
+      ${synergySummaryHtml()}
+    </div>
+    <div class="action-list">
+      ${actionCard({ action: "choose-mine-entry", value: "main", title: "持宗门任务牌走正井", description: "身份最稳妥，但守核傀儡拥有完整双重护印；天妒越高，对方准备越充分。", source: "正面入口", meta: "护印 2 · 可带同伴" })}
+      ${actionCard({ action: "choose-mine-entry", value: "drain", title: "沿废弃排水道切入封井层", description: "根据旧矿图绕开守卫，先调查再接敌；地图可能已受偏差影响。", source: "情报入口", meta: "护印 1 · 情报风险" })}
+      ${ventSynergy ? actionCard({ action: "choose-mine-entry", value: "vent", title: "循药性进入旧风井", description: ventSynergy.effect, source: `联动·${ventSynergy.name}`, meta: "护印 1 · 心蚀代价", kind: "special" }) : ""}
+    </div>
+  `);
+}
+
+function renderMineInvestigation() {
+  const routeCopy = {
+    main: "你以任务牌进入正井，守卫放行得太快，像是刻意等归尘门弟子下去。",
+    drain: "排水道旧图少了一段岔路。偏差已经改动未来，但岩壁上的封井钟索仍在。",
+    vent: "药性联动指出一条未记入矿册的风脉。你贴着毒尘爬行，也避开了第一层护印。",
+  }[state.mineEntry];
+  return gameShell(`
+    ${sceneHeader("第 2 次模拟 · 封井层", "先看懂规则，再决定是否出手", routeCopy)}
+    <div class="story-copy">
+      <p>塌方后方传来规律的三声钟响。石门内，一具守核傀儡每次抬膝，关节暗印都会先于灵力亮起。</p>
+      <div class="notice-block"><strong>可验证的传闻</strong><br>矿工说“三响封井”；但只有亲自核对钟索、名册或傀儡膝印，才能把它升级为确证。</div>
+    </div>
+    <div class="action-list">
+      ${actionCard({ action: "investigate-mine", value: "bell", title: "伏在钟索旁记录膝印与三次钟响", description: "确认守核傀儡发动封脉前的征兆与反制时机。", source: "现场调查", meta: "获得确证 · 战斗反制" })}
+      ${actionCard({ action: "investigate-mine", value: "ledger", title: "比对封井名册与旧矿图", description: "确认每次矿难都由归尘门旧印签发，并找出护印供能位置。", source: "文书调查", meta: "获得确证 · 削弱护印" })}
+      ${actionCard({ action: "investigate-mine", value: "rush", title: "趁守卫换班直接闯入", description: "不花时间验证传闻，以现有判断进入战斗。", source: "抢先行动", meta: "仅有传闻 · 保留先手", kind: "danger" })}
+    </div>
+  `);
+}
+
+function mineIntentLabel(intent) {
+  return {
+    seal: "封脉 · 锁死下一次行动",
+    burst: "日核震击 · 天妒越高伤害越强",
+    drag: "牵引 · 把人拖向阵眼",
+  }[intent] || "未知杀招";
+}
+
+function renderMineBattle() {
+  const battle = state.battle;
+  const intent = battle.intents[battle.intentIndex];
+  const canRead = battle.insight > 0 || battle.intelStatus === "confirmed";
+  const intentCopy = canRead
+    ? mineIntentLabel(intent)
+    : battle.intelStatus === "stale"
+      ? `旧确证推测：${mineIntentLabel(intent)}（未来已偏移）`
+      : "征兆未明；先观察可确认下一式";
+  const availableSynergy = state.activeSynergies?.find((synergy) => ["feign", "intent", "vent"].includes(synergy.unlock));
+  const companionAvailable = state.companionOffer?.accepted && state.companion !== "alone";
+  return gameShell(`
+    ${sceneHeader("第 2 次模拟 · 守核傀儡", "它没有等级，只有可以理解的规则", "护印保护核心；每回合先读杀招，再决定观察、反制、借力或强攻。")}
+    <div class="battle-layout">
+      <section class="battle-status">
+        <div><span>你的心志</span><strong>${battle.resolve}</strong></div>
+        <div><span>傀儡护印</span><strong>${battle.enemyWard}</strong></div>
+        <div><span>核心完整</span><strong>${battle.enemyHealth}</strong></div>
+        <div><span>回合</span><strong>${battle.turn}/${battle.maxTurns}</strong></div>
+      </section>
+      <div class="intent-panel ${canRead ? "known" : "uncertain"}"><span>敌方意图</span><strong>${escapeHtml(intentCopy)}</strong></div>
+      ${battle.enemyPrepared ? `<div class="notice-block"><strong>天妒反噬</strong><br>你多次带回强力成果，幕后者更早感知命盘；“日核震击”会造成额外伤害。</div>` : ""}
+      <div class="battle-log">${battle.log.slice(-4).map((line) => `<p>${escapeHtml(line)}</p>`).join("")}</div>
+    </div>
+    <div class="action-list">
+      ${actionCard({ action: "battle-action", value: "observe", title: "守势观察征兆", description: "本回合不受反击，并确认可用于下一回合反制的意图。", source: "观察", meta: "获得洞察" })}
+      ${actionCard({ action: "battle-action", value: "counter", title: "按确证抢断口令与膝印", description: battle.intelStatus === "stale" ? "过期确证可能已经失真；未先观察时反制会落空。" : "一次性拆除两层护印；需要确证或本轮洞察。", source: battle.intelStatus === "stale" ? "过期确证" : "情报反制", meta: battle.counterUsed ? "已使用" : "限 1 次", disabled: battle.counterUsed })}
+      ${availableSynergy ? actionCard({ action: "battle-action", value: "synergy", title: `发动联动·${availableSynergy.name}`, description: availableSynergy.effect, source: "词条构筑", meta: battle.synergyUsed ? "已使用" : availableSynergy.cost, disabled: battle.synergyUsed, kind: "special" }) : ""}
+      ${companionAvailable ? actionCard({ action: "battle-action", value: "companion", title: `请求${state.companion === "wen" ? "闻青禾" : "裴照雪"}制造窗口`, description: "同伴按自己的专长提供一次援护，不接受直接控制。", source: "同伴", meta: battle.companionUsed ? "已行动" : "限 1 次", disabled: battle.companionUsed }) : ""}
+      ${actionCard({ action: "battle-action", value: "strike", title: "强攻护印或核心", description: "推进最快，但若未在本回合击破核心，将承受当前杀招。", source: "战斗", meta: "造成 1 点破坏", kind: "danger" })}
+    </div>
+  `);
+}
+
+function renderMineDefeat() {
+  return gameShell(`
+    ${sceneHeader("第 2 次模拟 · 矿底死亡", "你不是输给修为，而是晚看懂了一步", "封脉暗印锁住经络，日核把你的影子拖进阵眼。命盘保留了死亡前最后一个动作。")}
+    <div class="death-cause"><span>直接死因</span><strong>守核傀儡膝印亮起后，下一式必然封脉</strong></div>
+    <div class="cause-chain">
+      <div class="cause-node"><span class="cause-status">已确认</span><span>膝印先亮，杀招后发；观察一回合即可安全反制</span></div>
+      <div class="cause-node"><span class="cause-status">可行动</span><span>把这条确证带回现实，可提前拆除傀儡护印</span></div>
+      <div class="cause-node unknown"><span class="cause-status">仍未知</span><span>日核为何只回应归尘门旧印与祖师名讳？</span></div>
+    </div>
+    <div class="action-list">
+      ${actionCard({ action: "carry-mine-defeat", title: "带回确证·膝印先于封脉", description: "这条命没有白死。现实中可在傀儡苏醒前破坏膝印。", source: "第 2 世结算", meta: "只留一件真", kind: "special" })}
+    </div>
+  `);
+}
+
+function renderMineAftermath() {
+  return gameShell(`
+    ${sceneHeader("第 2 次模拟 · 日核近前", "矿难不是意外，是一次交接", "傀儡停转。日核每跳动一次，祖师洞方向便传来一次回声；矿工、接头人和核心只能先追一处。")}
+    <div class="story-copy">
+      <div class="omen-block">“六十年已满，把我的弟子带回来。”</div>
+      <p>闻青禾听见塌方后有人求救；裴照雪看见接头人袖口赤线；日核则正在记住你的气息。</p>
+    </div>
+    <div class="action-list">
+      ${actionCard({ action: "resolve-mine", value: "rescue", title: "先救矿工并查失踪名册", description: "保住证人，确认被困者中有闻青禾失踪的兄长。", source: "守护", meta: "同伴线 · 现实救援" })}
+      ${actionCard({ action: "resolve-mine", value: "follow", title: "让日核留在原地，追上赤线接头人", description: "取得归尘门旧印与下一次交接时辰；若闻青禾同行，她会自行留下救人。", source: "调查", meta: "势力线 · 同伴自主" })}
+      ${actionCard({ action: "resolve-mine", value: "touch", title: "以神识触碰日核", description: "直接确认祖师口令，代价是天妒上升且日核提前记住你。", source: "高风险试探", meta: "核心真相 · 天妒 +1", kind: "danger" })}
+    </div>
+  `);
+}
+
+function renderMineReturn() {
+  return gameShell(`
+    ${sceneHeader("命盘结算 · 第 2 世", "矿底只允许你带回一件真", "守核傀儡、塌方与接头人都随模拟消散；亲自确认的行动窗口留在命盘上。")}
+    <div class="story-copy">
+      <div class="fate-stamp">确证带回</div>
+      <div class="notice-block"><strong>${escapeHtml(state.p1Carry?.name)}</strong><br>${escapeHtml(state.p1Carry?.description)}</div>
+      <p>${escapeHtml(state.companionAct || "你独自完成了这次选择。")}</p>
+      <p>现实仍在第三月矿难之前。这项成果会立刻改变入井安排，但一旦现实偏转，模拟中的精确时序也可能过期。</p>
+    </div>
+    <div class="action-list">
+      ${actionCard({ action: "to-p1-reality", title: "回到现实，兑现矿底确证", description: "不等待新的菜单或养成；马上用上一条命改变矿难。", source: "太虚命盘", meta: "现实锚点 · 矿难前", kind: "special" })}
+    </div>
+  `);
+}
+
+function renderP1RealityPlan() {
+  return gameShell(`
+    ${sceneHeader("现实 · 乌铜矿任务下发前", "答案有用，但照抄答案会让未来失真", "你知道一个精确窗口，也知道第一次改命已经让部分旧确证过期。")}
+    <div class="story-copy">
+      ${intelBoardHtml()}
+      <div class="notice-block"><strong>本世带回 · ${escapeHtml(state.p1Carry?.name)}</strong><br>${escapeHtml(state.p1Carry?.description)}</div>
+    </div>
+    <div class="action-list">
+      ${actionCard({ action: "p1-reality-action", value: "precision", title: "只改动确证指向的一个关键动作", description: "提前换班、拆膝印或调走受困者，让矿难照常暴露但不再按原方式伤人。", source: "情报破局", meta: "偏差 +1 · 保留证据", kind: "special" })}
+      ${actionCard({ action: "p1-reality-action", value: "force", title: "以命盘力量强行封闭整座矿井", description: "最直接地避免伤亡，却惊动幕后者、失去现场证据，并让天妒继续上升。", source: "力量破局", meta: "天妒 +1 · 证据流失", kind: "danger" })}
+    </div>
+  `);
 }
 
 function renderEnding() {
-  const rewardType = { dao: "道行", certainty: "确证", trait: "后天词条" }[state.reward?.type] || "未知";
+  const precise = state.p1RealityChoice === "precision";
   return gameShell(`
-    ${sceneHeader("Demo 完成 · 新因果显露", "你越过了第一种死法", "但晚宴灭口、乌铜矿与七年后的黑日，正在同一条因果链上收紧。")}
+    ${sceneHeader("P1 原型完成 · 现实已偏转", precise ? "你没有比对手更强，只是比他早知道一步" : "矿难被压住，幕后者也提前看见了你", precise ? "确证改变了行动规则；新的偏差又让这条确证不再是永真攻略。" : "力量救下了眼前的人，却烧掉了追查因果的现场。")}
     <div class="story-copy">
-      <div class="notice-block"><strong>矿底新发现</strong><br>${escapeHtml(endingClue())}</div>
-      <p>命盘把第三月钉进时间线。下一次模拟，你可以为了日核而来；也可以回到更早处，换一种结算看看现实会如何偏转。</p>
+      <div class="fate-stamp">预知兑现</div>
+      <p>${escapeHtml(state.p1Payoff)}</p>
+      <div class="notice-block"><strong>为什么确证会过期</strong><br>你已经改变换班、封井或傀儡苏醒条件。模拟中“第三响”的精确顺序不再可靠，但膝印、旧印与祖师口令之间的因果仍可继续追查。</div>
+      ${intelBoardHtml()}
     </div>
     <div class="end-summary">
-      <div class="summary-block"><span>唯一主角</span><strong>${escapeHtml(state.character.name)} · ${escapeHtml(getOrigin(state.character.origin)?.name)}</strong></div>
-      <div class="summary-block"><span>第一世带回</span><strong>${rewardType} · ${escapeHtml(state.reward?.name)}</strong></div>
-      <div class="summary-block"><span>已改写</span><strong>第七日晚宴 · 原定死亡已偏转</strong></div>
+      <div class="summary-block"><span>旧情报如何改变行动</span><strong>${escapeHtml(state.p1Carry?.name)}让你在杀招成立前动手</strong></div>
+      <div class="summary-block"><span>同伴不是工具</span><strong>${escapeHtml(state.companionAct || state.companionOffer?.boundary || "本轮独行")}</strong></div>
+      <div class="summary-block"><span>下一阶段目标</span><strong>追查归尘门旧印、开山祖师与六十年献祭周期</strong></div>
     </div>
+    <div class="path-recap"><h2>本轮路径复盘</h2>${state.p1Path.map((item, index) => `<p><span>${index + 1}</span>${escapeHtml(item)}</p>`).join("")}</div>
     <div class="button-row">
       <button class="secondary-button" data-action="retry-settlement">保留角色，改选第一次结算</button>
-      <button class="primary-button" data-action="new-game">重新建立角色</button>
+      <button class="primary-button" data-action="continue-p2">继续七年因果链</button>
     </div>
-    <p class="screen-note">纵向切片到此结束 · 当前命途仍保存在浏览器</p>
+    <p class="screen-note">P0/P1 纵向切片完成 · 完整 Demo 将继续推进至第七年黑日</p>
+  `);
+}
+
+function npcDossierGridHtml() {
+  return `<div class="npc-dossier-grid">${CORE_NPCS.map((npc) => {
+    const npcState = state.npcStates?.[npc.id] || {};
+    return `
+      <article class="npc-dossier ${npcState.allied ? "allied" : ""}">
+        <div><span>${npcState.allied ? "已结盟" : npcState.state === "hostile" ? "对立" : npcState.state === "captive" ? "受困" : "观望"}</span><strong>${escapeHtml(npc.name)}</strong></div>
+        <p><b>动机</b>${escapeHtml(npc.motive)}</p>
+        <p><b>独占线索</b>${escapeHtml(npc.clue)}</p>
+        <p><b>底线</b>${escapeHtml(npc.boundary)}</p>
+        <small>${escapeHtml(npcState.reason || npcState.fate || "尚未建立足够信任")}</small>
+      </article>
+    `;
+  }).join("")}</div>`;
+}
+
+function buildSynergyGridHtml() {
+  if (!state.buildSynergies?.length) {
+    return `<p class="empty-state">当前构筑尚未与词条、确证或同伴形成联动；仍可用基础能力推进。</p>`;
+  }
+  return `<div class="synergy-list">${state.buildSynergies.map((synergy) => `
+    <div class="synergy-card"><span>构筑联动</span><strong>${escapeHtml(synergy.name)}</strong><p>${escapeHtml(synergy.effect)}</p></div>
+  `).join("")}</div>`;
+}
+
+function renderP2Interlude() {
+  return gameShell(`
+    ${sceneHeader("完整 Demo · 第三月之后", "改掉一场矿难，还没有改掉制造矿难的宗门", "命盘把时间线拉到七年。四个人分别握着阵图、尸骨、旧档和山外暗线；没有任何人会无条件听命于你。")}
+    <div class="story-copy">
+      <div class="notice-block"><strong>压缩终局</strong><br>已掌握的晚宴与矿难将快速结算；第一年旧档案、第五年祭阵准备和第七年黑日仍由你亲自行动。</div>
+      ${npcDossierGridHtml()}
+    </div>
+    <div class="action-list">
+      ${actionCard({ action: "to-build-choice", title: "用两次改命所得，确定七年构筑方向", description: "构筑改变规则入口，不是单纯提高伤害。选定后不可在本周目更换。", source: "长期准备", meta: "推进至第一年", kind: "special" })}
+    </div>
+  `);
+}
+
+function renderBuildChoice() {
+  return gameShell(`
+    ${sceneHeader("现实 · 第一年前", "七年只够把一种方法练到能改变规则", "功法不是等级树。你选择自己将如何理解、拆解或带人离开这场劫难。")}
+    <div class="build-grid">
+      ${BUILD_PATHS.map((build) => `
+        <button class="build-card" data-action="choose-build" data-value="${build.id}">
+          <span>${escapeHtml(build.discipline)}</span><h2>${escapeHtml(build.name)}</h2>
+          <p>${escapeHtml(build.effect)}</p><small>代价：${escapeHtml(build.cost)}</small>
+        </button>
+      `).join("")}
+    </div>
+  `);
+}
+
+function renderYear1Approach() {
+  const build = getBuildPath(state.buildId);
+  return gameShell(`
+    ${sceneHeader("现实 · 第一年冬", "闻青禾失踪的那一夜，建宗密库提前封门", `构筑：${build?.name}。上一条未来里，闻青禾在调查历代尸骨后消失。`)}
+    <div class="story-copy">
+      <p>你已把现实锚点钉在密库封门前。宋无咎带着钥匙，闻青禾带着尸骨药性记录，地牢里的阿厌则知道敌宗如何称呼这座祭阵。</p>
+      <div class="notice-block"><strong>现实风险</strong><br>这不是模拟。若无证据公开指控长老，你会在当夜被命盘封口；死亡后只能读取此现实锚点。</div>
+      ${buildSynergyGridHtml()}
+    </div>
+    <div class="action-list">
+      ${actionCard({ action: "enter-year1-archive", title: "在密库封门前亲自介入", description: "选择从尸骨、旧档或阿厌的敌语切入。", source: "现实锚点", meta: "第一年冬", kind: "special" })}
+    </div>
+  `);
+}
+
+function renderYear1Archive() {
+  const shadow = state.buildId === "shadow_crossing";
+  const poisonSynergy = state.buildSynergies.some((synergy) => synergy.id === "poison_reads_life");
+  return gameShell(`
+    ${sceneHeader("现实 · 建宗密库", "同一批弟子的名字，同时出现在入门册与阵材账上", "门外巡夜长老正在靠近。你只能先把一条证据链做实。")}
+    <div class="action-list">
+      ${actionCard({ action: "archive-action", value: "bones", title: "与闻青禾检验历代无名尸骨", description: "从残毒与骨龄证明失踪弟子被炼成阵材。", source: poisonSynergy ? "联动·毒理观命" : "闻青禾", meta: poisonSynergy ? "无需官方文书" : "获得尸骨确证" })}
+      ${actionCard({ action: "archive-action", value: "audit", title: "让宋无咎打开建宗原始账册", description: "给他一个可控的止祭方案，换取建宗契约与长老签印。", source: "宋无咎", meta: "稳定优先 · 获得旧档" })}
+      ${actionCard({ action: "archive-action", value: "free_ayen", title: "释放阿厌，让她翻译祭阵敌语", description: "她会交出山外暗线，但从此不接受归尘门拘束。", source: shadow ? "联动·无影渡" : "交易", meta: "阿厌自由 · 潜行路线" })}
+      ${actionCard({ action: "archive-action", value: "accuse", title: "直接召集弟子公开指控长老", description: "现有证据尚未形成公开证词链；幕后者会在当夜夺回命盘。", source: "现实冒险", meta: "现实死亡风险", kind: "danger" })}
+    </div>
+  `);
+}
+
+function renderP2RealityDeath() {
+  return gameShell(`
+    ${sceneHeader("现实 · 命途断绝", "现实死亡不会给你结算", "你把尚未成链的证据公开。宋无咎被调离，长老当夜以封盘术切断你的心脉。")}
+    <div class="death-cause"><span>现实死因</span><strong>无替代方案地惊动祭阵维护者，命盘被定位并反噬</strong></div>
+    <div class="notice-block"><strong>最近现实锚点</strong><br>第一年冬 · 建宗密库封门前。读取后，现实死亡之后的变化不会保留。</div>
+    <div class="button-row">
+      <button class="primary-button" data-action="retry-p2-anchor">读取现实锚点</button>
+      <button class="ghost-button" data-action="new-game">放弃本周目</button>
+    </div>
+  `);
+}
+
+function renderYear1Resolution() {
+  const copy = {
+    bones: "闻青禾从尸骨残毒中辨出同一种延寿丹渣。她没有失踪，而是把历代死者姓名逐一抄在丹房门上。",
+    audit: "宋无咎交出建宗契约：归尘门每六十年献祭一代弟子，为开山祖师续命。他要求你先证明宗门解散后众人仍能活。",
+    free_ayen: "阿厌念出阵图上的敌语：那不是赤霞宗法门，而是归尘门故意泄出的假藏宝图。她带走牢门钥匙，只承诺在终局前再帮一次。",
+  }[state.archiveChoice];
+  return gameShell(`
+    ${sceneHeader("现实 · 第一年冬", "宗门不是被敌人毁掉，而是按时收割自己", "第一次，黑日灭门从预言变成了有签名、有材料、有周期的制度。")}
+    <div class="story-copy">
+      <p>${escapeHtml(copy)}</p>
+      <div class="notice-block"><strong>新确证 · 六十年延寿祭阵</strong><br>晚宴灭口、乌铜矿日核、历代尸骨与护山阵反转属于同一条献祭链。</div>
+      ${npcDossierGridHtml()}
+    </div>
+    <div class="action-list">
+      ${actionCard({ action: "advance-year5", title: "快速结算四年准备，推进至赤霞宗攻山", description: "已知日常压缩跳过；构筑、同伴和确证决定第五年的可选方案。", source: "时间跳转", meta: "第一年 → 第五年", kind: "special" })}
+    </div>
+  `);
+}
+
+function renderYear5Hub() {
+  return gameShell(`
+    ${sceneHeader("现实 · 第五年秋", "敌宗攻山只是祭阵需要的一场烟幕", "赤霞宗以为山下封着飞升遗宝；长老则准备借死伤提前给日核蓄力。")}
+    <div class="story-copy">
+      <p>裴照雪控制护山阵外环，宋无咎掌握换防名册，阿厌知道敌宗口令，闻青禾已经在组织伤员撤离。你只能把一条方案设为主轴。</p>
+      <h2 class="section-title">已形成的构筑联动</h2>${buildSynergyGridHtml()}
+    </div>
+    <div class="action-list">
+      ${actionCard({ action: "to-year5-crisis", title: "进入祭阵准备争夺", description: "决定谁控制外环、谁保存证据、谁获得自由。", source: "第五年锚点", meta: "关键现实行动", kind: "special" })}
+    </div>
+  `);
+}
+
+function renderYear5Crisis() {
+  return gameShell(`
+    ${sceneHeader("现实 · 护山阵外环", "四个人都愿意行动，但不会选择同一种未来", "外环只够执行一条主方案；其余人会按照自己的底线处理伤员、证据与退路。")}
+    <div class="action-list">
+      ${actionCard({ action: "year5-action", value: "pei", title: "把阵图确证交给裴照雪，由她控制外环", description: "最稳地保护门人并取得阵心位置；她也会封死夺盘续世的邪路。", source: "裴照雪", meta: "秩序 · 阵心确证" })}
+      ${actionCard({ action: "year5-action", value: "song", title: "与宋无咎伪造换防，暗中抽空祭阵", description: "保留撤离秩序和建宗证词，但让一部分长老逃离。", source: "宋无咎", meta: "调度 · 证据链" })}
+      ${actionCard({ action: "year5-action", value: "ayen", title: "兑现自由承诺，让阿厌从敌宗侧反转外环", description: "开放山外撤离与夺盘路线；偏差提高，未来时序更不可靠。", source: "阿厌", meta: "自由 · 偏差 +1" })}
+      ${actionCard({ action: "year5-action", value: "force", title: "以命盘力量正面压住护山阵", description: "无需任何人同意，但天妒提高，终局黑日会更早锁定你。", source: "强行改命", meta: "天妒 +1", kind: "danger" })}
+    </div>
+  `);
+}
+
+function renderBlackSunPrep() {
+  return gameShell(`
+    ${sceneHeader("现实 · 第七年蚀日前", "你终于拥有的不是答案，而是一套可以同时行动的人与证据", "黑日仍会按时升起；区别在于祭品、阵眼、退路和见证者都已被你改写。")}
+    <div class="story-copy">
+      ${npcDossierGridHtml()}
+      <div class="finale-preview">${state.finaleOptions.map((option) => `
+        <div class="finale-preview-item ${option.enabled ? "enabled" : "locked"}"><span>${option.enabled ? "可执行" : "未满足"}</span><strong>${escapeHtml(option.name)}</strong><p>${escapeHtml(option.reason)}</p></div>
+      `).join("")}</div>
+    </div>
+    <div class="action-list">
+      ${actionCard({ action: "face-black-sun", title: "让第七年如约到来", description: "进入现实终局；只有已满足条件的方案可以执行。", source: "最终现实锚点", meta: "第七年蚀日", kind: "danger" })}
+    </div>
+  `);
+}
+
+function renderFinale() {
+  return gameShell(`
+    ${sceneHeader("现实 · 第七年黑日", "护山阵反转，整座山开始向祖师洞输送寿元", "这一次你不是来阻止事件发生，而是决定它最终成为哪一种历史。")}
+    <div class="omen-block">黑日悬山 · 祭阵收割开始</div>
+    <div class="finale-grid">
+      ${state.finaleOptions.map((option) => `
+        <button class="finale-card ${option.enabled ? "" : "locked"}" data-action="choose-ending" data-value="${option.id}" ${option.enabled ? "" : "disabled"}>
+          <span>${option.enabled ? "方案成立" : "条件不足"}</span><h2>${escapeHtml(option.name)}</h2>
+          <p>${escapeHtml(option.reason)}</p><small>代价：${escapeHtml(option.cost)}</small>
+        </button>
+      `).join("")}
+    </div>
+  `);
+}
+
+function renderFinalSummary() {
+  const ending = state.endingResult;
+  const confirmed = state.intel.filter((record) => record.status === "confirmed").length;
+  const stale = state.intel.filter((record) => record.status === "stale").length;
+  const build = getBuildPath(state.buildId);
+  return gameShell(`
+    ${sceneHeader("完整 Demo · 正式结局", ending.name, ending.epitaph)}
+    <div class="story-copy"><div class="fate-stamp">${escapeHtml(ending.name)}</div><p>${escapeHtml(ending.consequence)}</p><div class="notice-block"><strong>结局代价</strong><br>${escapeHtml(ending.cost)}</div></div>
+    <div class="final-summary-grid">
+      <div><span>唯一主角</span><strong>${escapeHtml(state.character.name)}</strong><p>现实死亡 ${state.realityDeaths} 次 · 最终仍由同一主角完成命途</p></div>
+      <div><span>两世带回</span><strong>${escapeHtml(state.reward?.name)} / ${escapeHtml(state.p1Carry?.name)}</strong><p>模拟死亡留下成果，现实死亡只读取锚点</p></div>
+      <div><span>情报账</span><strong>${confirmed} 条确证 / ${stale} 条过期</strong><p>传闻与过期确证仍留作因果线索</p></div>
+      <div><span>七年构筑</span><strong>${escapeHtml(build?.name)}</strong><p>${escapeHtml(build?.cost)}</p></div>
+      <div><span>命盘代价</span><strong>天妒 ${state.envy} · 偏差 ${state.deviation}</strong><p>强力与改写都真实改变终局</p></div>
+      <div><span>现实锚点</span><strong>第三月 / 第一年 / 第五年 / 第七年</strong><p>关键节点均由玩家亲自行动</p></div>
+    </div>
+    ${npcDossierGridHtml()}
+    <div class="path-recap"><h2>完整命途复盘</h2>${[...state.p1Path, ...state.p2Path].map((item, index) => `<p><span>${index + 1}</span>${escapeHtml(item)}</p>`).join("")}</div>
+    <div class="legacy-card"><span>下一周目可继承</span><strong>${escapeHtml(state.legacyCandidate?.name)}</strong><p>${escapeHtml(state.legacyCandidate?.effect)}</p></div>
+    <div class="button-row"><button class="primary-button" data-action="start-new-cycle">携带命痕，进入第 ${state.cycle + 1} 周目</button><button class="ghost-button" data-action="new-game">从零开始</button></div>
+  `);
+}
+
+function renderCycleOpening() {
+  const legacy = state.inheritedLegacy;
+  const reaction = {
+    wen: "闻青禾第一次见你，却下意识把药箱往你这边推了一寸。",
+    pei: "裴照雪看见断阵残印后按住剑柄：‘这道伤……像是我亲手留下的。’",
+    ayen: "地牢深处的阿厌抬头望向你：‘你身上有祭盘主人的味道。离我远点。’",
+  }[legacy?.npcReaction];
+  return gameShell(`
+    ${sceneHeader(`第 ${state.cycle} 周目 · 命痕继承`, "世界重新落墨，但有一处没有擦干净", "你仍是唯一主角；上一结局只留下一个能够改变早期入口的命痕。")}
+    <div class="story-copy"><div class="legacy-card"><span>继承命痕</span><strong>${escapeHtml(legacy?.name)}</strong><p>${escapeHtml(legacy?.effect)}</p></div><p>${escapeHtml(reaction)}</p></div>
+    <div class="action-list">${actionCard({ action: "begin-cycle-two", title: "带着前世记忆进入祖师洞后的现实", description: "新周目可跳过盲目调查，直接从晚宴时序或旧印入口开始试命。", source: "二周目变化", meta: "新早期行动", kind: "special" })}</div>
   `);
 }
 
@@ -933,8 +1536,27 @@ function render() {
     realityDeath: renderRealityDeath,
     sim2Feast: renderSim2Feast,
     sim2Road: renderSim2Road,
-    mine: renderMine,
+    companionResult: renderCompanionResult,
+    mineApproach: renderMineApproach,
+    mineInvestigation: renderMineInvestigation,
+    mineBattle: renderMineBattle,
+    mineDefeat: renderMineDefeat,
+    mineAftermath: renderMineAftermath,
+    mineReturn: renderMineReturn,
+    p1RealityPlan: renderP1RealityPlan,
     ending: renderEnding,
+    p2Interlude: renderP2Interlude,
+    buildChoice: renderBuildChoice,
+    year1Approach: renderYear1Approach,
+    year1Archive: renderYear1Archive,
+    p2RealityDeath: renderP2RealityDeath,
+    year1Resolution: renderYear1Resolution,
+    year5Hub: renderYear5Hub,
+    year5Crisis: renderYear5Crisis,
+    blackSunPrep: renderBlackSunPrep,
+    finale: renderFinale,
+    finalSummary: renderFinalSummary,
+    cycleOpening: renderCycleOpening,
   };
   app.innerHTML = (renderers[state.screen] || renderLanding)();
   const pageLabel = modeLabel();
@@ -968,6 +1590,7 @@ function setReward(type) {
   }
   state.timeline.feast = "known";
   state.pendingSettlement = null;
+  refreshSynergies();
   track("settlement_selected", { type });
   moveTo("realityReturn");
 }
@@ -1050,6 +1673,19 @@ const handlers = {
     state.timeline.feast = "unknown";
     track("simulation_started", { index: 1 });
     moveTo("sim1Morning");
+  },
+  "start-sim1-informed": () => {
+    if (state.screen !== "realityHub" || state.cycle < 2 || !state.inheritedLegacy || state.flames < 1) return;
+    state.flames -= 1;
+    state.simulationCount = 1;
+    state.timeline.feast = "known";
+    state.morningChoice = "cycle-memory";
+    addTags("observe", "deceive");
+    addClue("继承命痕让你直接记起：酉时换水，补刀者按名册行动。 ");
+    addIntel(createIntel({ id: "feast_timing", title: "晚宴投毒时序", detail: "酉时换水后，蒙面人按名册补刀。", status: "confirmed", source: `第 ${state.cycle} 周目继承命痕`, gainedAtDeviation: 0, expiresAtDeviation: 1 }));
+    state.latestTriggers = [triggerOpening("root")].filter(Boolean);
+    track("cycle_memory_early_route_used", { legacy: state.inheritedLegacy.id });
+    moveTo("sim1Eve");
   },
   "sim-morning": ({ value }) => {
     if (state.screen !== "sim1Morning") return;
@@ -1136,6 +1772,7 @@ const handlers = {
       description: trait.effect,
     };
     state.envy += RARITY[trait.rarity].rank >= 3 ? 2 : 1;
+    refreshSynergies();
     state.timeline.feast = "known";
     track("trait_extracted", { id });
     moveTo("realityReturn");
@@ -1155,6 +1792,30 @@ const handlers = {
     state.deviation += 1;
     state.flames += 1;
     addClue(state.realOutcome.clue);
+    addIntel(createIntel({
+      id: "feast_timing",
+      title: "晚宴投毒时序",
+      detail: "酉时换水后，蒙面人按名册补刀。",
+      status: "confirmed",
+      source: "第 1 次模拟亲历",
+      gainedAtDeviation: 0,
+      expiresAtDeviation: 1,
+    }));
+    const payoffIntel = state.reward.type === "certainty"
+      ? createIntel({ id: "poisoner_family", title: "废染坊囚徒", detail: "下毒杂役的家人被囚，闻青禾认为这与失踪者有关。", status: "confirmed", source: "现实蹲守", gainedAtDeviation: state.deviation, expiresAtDeviation: 3 })
+      : state.reward.type === "dao"
+        ? createIntel({ id: "red_token", title: "赤纹腰牌", detail: "补刀者携带赤霞宗外堂凭证，但腰牌来源仍可能被伪造。", status: "confirmed", source: "现实反杀", gainedAtDeviation: state.deviation, expiresAtDeviation: 3 })
+        : createIntel({ id: "trait_trace", title: "命痕追迹", detail: state.realOutcome.clue, status: "confirmed", source: "命痕兑现", gainedAtDeviation: state.deviation, expiresAtDeviation: 2 });
+    addIntel(payoffIntel);
+    addIntel(createIntel({
+      id: "mine_collapse",
+      title: "第三月乌铜矿塌方",
+      detail: "宗门记录称其为小事故，但有人提前收走了封井名册。",
+      status: "rumor",
+      source: "偏转后的任务简报",
+      gainedAtDeviation: state.deviation,
+    }));
+    refreshIntel();
     track("payoff_first_used", { reward: state.reward.type, route: value });
     track("fixed_death_changed");
     moveTo("realityResolution");
@@ -1164,6 +1825,10 @@ const handlers = {
     if (state.flames < 1) return;
     state.flames -= 1;
     state.simulationCount = 2;
+    refreshSynergies();
+    if (!getIntel(state.intel, "mine_collapse")) {
+      addIntel(createIntel({ id: "mine_collapse", title: "第三月乌铜矿塌方", detail: "矿难报告与现场准备不符。", status: "rumor", source: "宗门任务简报", gainedAtDeviation: state.deviation }));
+    }
     track("second_simulation_started");
     moveTo("sim2Feast");
   },
@@ -1172,15 +1837,331 @@ const handlers = {
     moveTo("sim2Road");
   },
   "choose-companion": ({ value }) => {
-    state.companion = value;
-    moveTo("mine");
+    if (state.screen !== "sim2Road" || !["wen", "pei", "alone"].includes(value)) return;
+    const offer = resolveCompanionOffer({
+      companion: value,
+      intel: state.intel,
+      clues: state.clues,
+      rewardType: state.reward?.type,
+      acquiredTraitIds: state.acquiredTraits,
+    });
+    state.companionOffer = offer;
+    state.companion = offer.accepted ? offer.companion : "alone";
+    state.p1Path.push(offer.accepted ? `${value === "wen" ? "闻青禾" : value === "pei" ? "裴照雪" : "无人"}同行` : `${value === "wen" ? "闻青禾" : "裴照雪"}因证据不足拒绝，改为独行`);
+    track("companion_offer_resolved", { requested: value, accepted: offer.accepted });
+    moveTo("companionResult");
+  },
+  "to-mine-approach": () => {
+    if (state.screen !== "companionResult") return;
+    moveTo("mineApproach");
+  },
+  "choose-mine-entry": ({ value }) => {
+    if (state.screen !== "mineApproach" || !["main", "drain", "vent"].includes(value)) return;
+    if (value === "vent" && !state.activeSynergies.some((synergy) => synergy.unlock === "vent")) return;
+    state.mineEntry = value;
+    const labels = { main: "持任务牌走正井", drain: "沿废弃排水道切入", vent: "以药性联动进入旧风井" };
+    state.p1Path.push(labels[value]);
+    track("mine_entry_selected", { entry: value, deviation: state.deviation });
+    moveTo("mineInvestigation");
+  },
+  "investigate-mine": ({ value }) => {
+    if (state.screen !== "mineInvestigation" || !["bell", "ledger", "rush"].includes(value)) return;
+    state.mineInvestigation = value;
+    if (value !== "rush") {
+      addIntel(createIntel({
+        id: "guardian_cadence",
+        title: value === "bell" ? "傀儡封脉征兆" : "封井护印供能位",
+        detail: value === "bell" ? "三响之后，傀儡膝印会先亮；此时口令反制必定生效。" : "名册旧印向膝部护印供能，截断一次即可拆除双层防护。",
+        status: "confirmed",
+        source: value === "bell" ? "封井层现场观察" : "封井名册与旧矿图互证",
+        gainedAtDeviation: state.deviation,
+        expiresAtDeviation: state.deviation + 1,
+      }));
+    } else {
+      addIntel(createIntel({ id: "guardian_cadence", title: "傀儡封脉征兆", detail: "矿工传闻第三响后会封井，准确时机未知。", status: "rumor", source: "矿工传闻", gainedAtDeviation: state.deviation }));
+    }
+    state.battle = createMineBattle({
+      seed: state.seed,
+      entry: state.mineEntry,
+      envy: state.envy,
+      intelStatus: getIntel(state.intel, "guardian_cadence")?.status || "rumor",
+    });
+    state.p1Path.push(value === "rush" ? "未验证传闻便闯入" : value === "bell" ? "亲历确认傀儡杀招征兆" : "用文书确认护印规则");
+    track("mine_intel_checked", { method: value, status: state.battle.intelStatus });
+    moveTo("mineBattle");
+  },
+  "battle-action": ({ value }) => {
+    if (state.screen !== "mineBattle" || !state.battle) return;
+    const synergyIds = state.activeSynergies.map((synergy) => synergy.id);
+    const wasSynergyUsed = state.battle.synergyUsed;
+    state.battle = resolveMineBattleTurn(state.battle, value, {
+      synergyIds,
+      companion: state.companion,
+    });
+    if (value === "synergy" && !wasSynergyUsed && state.activeSynergies.some((synergy) => synergy.id === "borrowed_stillness")) {
+      state.envy += 1;
+    }
+    track("mine_battle_action", { action: value, outcome: state.battle.outcome });
+    if (state.battle.outcome === "won") {
+      state.p1Path.push("用情报、联动或同伴窗口击破守核傀儡");
+      moveTo("mineAftermath");
+    } else if (state.battle.outcome === "lost") {
+      addIntel(createIntel({
+        id: "guardian_knee",
+        title: "膝印先于封脉",
+        detail: "守核傀儡膝印会先亮，现实中可在杀招成立前拆除。",
+        status: "confirmed",
+        source: "第 2 次模拟死亡回溯",
+        gainedAtDeviation: state.deviation,
+        expiresAtDeviation: state.deviation + 1,
+      }));
+      moveTo("mineDefeat");
+    } else {
+      render();
+    }
+  },
+  "carry-mine-defeat": () => {
+    if (state.screen !== "mineDefeat") return;
+    state.p1Carry = { id: "guardian_knee", name: "确证·膝印先于封脉", description: "守核傀儡在封脉前必先点亮膝印，可提前拆除。" };
+    state.mineOutcome = "defeat";
+    state.p1Path.push("矿底死亡，但带回可执行的膝印确证");
+    track("mine_death_intel_carried");
+    moveTo("mineReturn");
   },
   "resolve-mine": ({ value }) => {
+    if (state.screen !== "mineAftermath" || !["rescue", "follow", "touch"].includes(value)) return;
     state.mineChoice = value;
+    state.mineOutcome = value;
     state.timeline.mine = "revealed";
-    addClue(endingClue());
+    const carry = {
+      rescue: { id: "shift_roster", name: "确证·受困者换班名册", description: "矿难前一刻调走第三班，可救出闻青禾兄长并保留活证人。", detail: "第三班并非临时入井，而是被旧印点名送入封井层。" },
+      follow: { id: "handoff_time", name: "确证·赤线交接时辰", description: "接头人会在封井钟第二响交出归尘门旧印，可提前布控。", detail: "赤线接头人使用归尘门旧印签发矿难名册。" },
+      touch: { id: "founder_phrase", name: "确证·祖师唤核口令", description: "念出“六十年已满”会令日核停跳一息，也会让它记住施术者。", detail: "日核回应开山祖师名讳与六十年周期。" },
+    }[value];
+    state.p1Carry = { id: carry.id, name: carry.name, description: carry.description };
+    addIntel(createIntel({ id: carry.id, title: carry.name.replace("确证·", ""), detail: carry.detail, status: "confirmed", source: "第 2 次模拟矿底亲历", gainedAtDeviation: state.deviation, expiresAtDeviation: state.deviation + 1 }));
+    if (value === "touch") state.envy += 1;
+    if (state.companion === "wen" && state.companionOffer?.accepted) {
+      state.companionAct = value === "follow"
+        ? "闻青禾拒绝放弃仍活着的矿工，与你分头行动并救出了兄长。"
+        : "闻青禾按自己的判断先稳住伤者，再把证词交给你。";
+    } else if (state.companion === "pei" && state.companionOffer?.accepted) {
+      state.companionAct = value === "touch"
+        ? "裴照雪拒绝让你独自承受日核回望，以剑意替你截断一半反噬。"
+        : "裴照雪控制住投降者，坚持先留活口再追查旧印。";
+    } else {
+      state.companionAct = "你独自完成选择，没有人替你收束另一条线索。";
+    }
+    state.p1Path.push(value === "rescue" ? "保住受困者与换班名册" : value === "follow" ? "追踪赤线接头人并取得交接时辰" : "触碰日核并确认祖师口令");
     track("mine_hook_reached", { choice: value });
+    moveTo("mineReturn");
+  },
+  "to-p1-reality": () => {
+    if (state.screen !== "mineReturn" || !state.p1Carry) return;
+    moveTo("p1RealityPlan");
+  },
+  "p1-reality-action": ({ value }) => {
+    if (state.screen !== "p1RealityPlan" || !["precision", "force"].includes(value)) return;
+    state.p1RealityChoice = value;
+    state.deviation += 1;
+    if (value === "precision") {
+      const payoff = {
+        guardian_knee: "你在傀儡苏醒前凿断膝印。它仍按旧口令抬腿，却再也无法完成封脉；矿工亲眼看见旧印如何驱动傀儡。",
+        shift_roster: "你只调换第三班，让矿难照常暴露。闻青禾在塌方前带兄长离井，宋无咎则当场扣下伪造换班名册的人。",
+        handoff_time: state.companion === "wen"
+          ? "第二声封井钟响时，你按住接头人的手；闻青禾没有服从追击要求，而是按自己的判断救出矿工。旧印、赤线与活证人都留了下来。"
+          : state.companion === "pei"
+            ? "第二声封井钟响时，裴照雪从暗处按住接头人的手。旧印与赤线同时成为活证，对方准备好的傀儡还未启动。"
+            : "第二声封井钟响时，你独自截住接头人并夺下旧印。无人替你守住另一侧，仍有一名同谋逃离。",
+        founder_phrase: "日核第一次跳动前，你念出祖师口令令它停滞一息。众人撤出封井层，也都听见祖师洞传来的回应。",
+      };
+      state.p1Payoff = payoff[state.p1Carry.id] || "你在确证指向的时机动手，矿难仍然发生，却失去了原本的杀人规则。";
+      addIntel(createIntel({ id: "mine_old_seal", title: "归尘门旧印参与封井", detail: "矿难名册、守核傀儡与祖师洞使用同源旧印。", status: "confirmed", source: "现实精准布控", gainedAtDeviation: state.deviation, expiresAtDeviation: null }));
+      state.p1Path.push("用带回确证精准改动一个关键动作，保留现场证据");
+    } else {
+      state.envy += 1;
+      state.p1Payoff = "你以命盘力量压住整座矿井，所有矿工活着离开；日核与伪造名册却被幕后者提前转移。你赢了结果，失去了能继续追查的现场。";
+      addIntel(createIntel({ id: "mine_evacuated", title: "矿难已被强行中止", detail: "人员获救，但日核去向与交接时序只能重新调查。", status: "rumor", source: "现实封矿结果", gainedAtDeviation: state.deviation }));
+      state.p1Path.push("用力量强行封矿，救人但失去现场证据");
+    }
+    refreshIntel();
+    state.timeline.mine = "shifted";
+    track("p1_payoff_used", { route: value, carry: state.p1Carry.id, deviation: state.deviation, envy: state.envy });
     moveTo("ending");
+  },
+  "continue-p2": () => {
+    if (state.screen !== "ending") return;
+    initializeP2NpcStates();
+    state.timeline.archive = "approaching";
+    state.p2Path.push("矿难之后，决定继续追查七年献祭链");
+    track("complete_demo_continued");
+    moveTo("p2Interlude");
+  },
+  "to-build-choice": () => {
+    if (state.screen !== "p2Interlude") return;
+    moveTo("buildChoice");
+  },
+  "choose-build": ({ value }) => {
+    if (state.screen !== "buildChoice" || state.buildId || !getBuildPath(value)) return;
+    state.buildId = value;
+    refreshBuildSynergies();
+    state.p2Path.push(`七年构筑选择：${getBuildPath(value).name}`);
+    state.timeline.archive = "approaching";
+    establishRealityAnchor("year1Approach");
+    track("build_selected", { build: value });
+    moveTo("year1Approach");
+  },
+  "enter-year1-archive": () => {
+    if (state.screen !== "year1Approach") return;
+    moveTo("year1Archive");
+  },
+  "archive-action": ({ value }) => {
+    if (state.screen !== "year1Archive" || !["bones", "audit", "free_ayen", "accuse"].includes(value)) return;
+    if (value === "accuse") {
+      state.realityDeaths += 1;
+      state.p2Path.push("第一年无证据公开指控，现实死亡");
+      track("p2_reality_death", { anchor: "year1Approach" });
+      moveTo("p2RealityDeath");
+      return;
+    }
+    state.archiveChoice = value;
+    addIntel(createIntel({
+      id: "sacrifice_ledger",
+      title: "六十年延寿祭阵",
+      detail: "历代弟子尸骨、日核与护山阵共同为开山祖师续命。",
+      status: "confirmed",
+      source: value === "bones" ? "尸骨残毒与丹房账册" : value === "audit" ? "建宗原始账册" : "阿厌翻译的祭阵敌语",
+      gainedAtDeviation: state.deviation,
+      expiresAtDeviation: null,
+    }));
+    if (value === "audit") {
+      addIntel(createIntel({ id: "founding_deed", title: "建宗献祭契约", detail: "掌门与长老代代签印，知晓第七年收割。", status: "confirmed", source: "宋无咎开启的建宗密档", gainedAtDeviation: state.deviation, expiresAtDeviation: null }));
+      updateNpcState("song", { allied: true, state: "allied", fate: "交出旧档并准备秘密撤离", reason: "你给出了止祭后的秩序方案。" });
+    } else if (value === "bones") {
+      updateNpcState("wen", { allied: true, state: "allied", fate: "公开历代死者姓名并组织救治", reason: "尸骨确证与兄长命运形成完整证据链。" });
+    } else {
+      updateNpcState("ayen", { allied: true, state: "allied", fate: "重获自由并提供山外暗线", reason: "你兑现自由承诺，没有要求她加入归尘门。" });
+    }
+    state.timeline.archive = "shifted";
+    state.p2Path.push(value === "bones" ? "与闻青禾确认历代弟子被炼成阵材" : value === "audit" ? "与宋无咎取得建宗献祭契约" : "释放阿厌并翻译祭阵敌语");
+    initializeP2NpcStates();
+    refreshBuildSynergies();
+    track("archive_truth_confirmed", { route: value });
+    moveTo("year1Resolution");
+  },
+  "retry-p2-anchor": () => {
+    if (state.screen !== "p2RealityDeath") return;
+    const deaths = state.realityDeaths;
+    const restored = restoreRealityAnchor(state.realityAnchor);
+    if (!restored) return;
+    state = restored;
+    state.realityDeaths = deaths;
+    state.p2Path.push("读取第一年现实锚点，保留死亡教训但撤销现实后果");
+    track("reality_anchor_restored", { deaths });
+    render();
+  },
+  "advance-year5": () => {
+    if (state.screen !== "year1Resolution") return;
+    state.timeline.siege = "approaching";
+    refreshBuildSynergies();
+    establishRealityAnchor("year5Hub");
+    state.p2Path.push("快速结算四年准备，抵达第五年祭阵争夺");
+    moveTo("year5Hub");
+  },
+  "to-year5-crisis": () => {
+    if (state.screen !== "year5Hub") return;
+    moveTo("year5Crisis");
+  },
+  "year5-action": ({ value }) => {
+    if (state.screen !== "year5Crisis" || !["pei", "song", "ayen", "force"].includes(value)) return;
+    state.year5Choice = value;
+    addIntel(createIntel({ id: "array_heart", title: "护山阵阵心位置", detail: "日核只是钥匙；真正的收割主脉位于祖师洞与议事堂之间。", status: "confirmed", source: value === "pei" ? "裴照雪控制外环后实测" : value === "song" ? "换防名册与阵图互证" : value === "ayen" ? "敌宗侧反向口令" : "命盘正面压阵后的灵流回响", gainedAtDeviation: state.deviation, expiresAtDeviation: null }));
+    if (value === "pei") {
+      updateNpcState("pei", { allied: true, state: "allied", fate: "控制护山阵外环并保住投降者", reason: "阵图与献祭契约证明了师门制度有罪。" });
+    } else if (value === "song") {
+      updateNpcState("song", { allied: true, state: "allied", fate: "伪造换防并保存建宗证词", reason: "秘密撤离方案满足了他的稳定底线。" });
+    } else if (value === "ayen") {
+      updateNpcState("ayen", { allied: true, state: "allied", fate: "从敌宗侧反转外环后离开山门", reason: "自由承诺被兑现，她完成最后一次交易。" });
+      state.deviation += 1;
+      refreshIntel();
+    } else {
+      state.envy += 1;
+    }
+    if (state.npcStates.wen.allied) updateNpcState("wen", { fate: "按自己的判断组织伤员与尸骨证人撤离" });
+    initializeP2NpcStates();
+    refreshBuildSynergies();
+    state.timeline.siege = "shifted";
+    state.finaleOptions = evaluateFinaleOptions({
+      confirmedIntelIds: confirmedIntelIds(),
+      alliedNpcIds: alliedNpcIds(),
+      buildId: state.buildId,
+      envy: state.envy,
+      deviation: state.deviation,
+      archiveChoice: state.archiveChoice,
+      year5Choice: state.year5Choice,
+    });
+    state.p2Path.push(value === "pei" ? "让裴照雪控制护山阵外环" : value === "song" ? "与宋无咎伪造换防抽空祭阵" : value === "ayen" ? "让阿厌从敌宗侧反转外环" : "以命盘力量正面压阵");
+    track("year5_array_shifted", { route: value, options: state.finaleOptions.filter((option) => option.enabled).map((option) => option.id) });
+    moveTo("blackSunPrep");
+  },
+  "face-black-sun": () => {
+    if (state.screen !== "blackSunPrep" || !state.finaleOptions.some((option) => option.enabled)) return;
+    state.timeline.blackSun = "current";
+    establishRealityAnchor("finale");
+    moveTo("finale");
+  },
+  "choose-ending": ({ value }) => {
+    if (state.screen !== "finale" || state.endingResult) return;
+    const context = {
+      confirmedIntelIds: confirmedIntelIds(),
+      alliedNpcIds: alliedNpcIds(),
+      buildId: state.buildId,
+      envy: state.envy,
+      deviation: state.deviation,
+      archiveChoice: state.archiveChoice,
+      year5Choice: state.year5Choice,
+    };
+    const ending = resolveFinalEnding(value, context);
+    if (!ending) return;
+    state.endingId = value;
+    state.endingResult = ending;
+    state.legacyCandidate = createCycleLegacy(value);
+    state.completedEndings = uniqueTags([...(state.completedEndings || []), value]);
+    state.timeline.blackSun = "resolved";
+    state.p2Path.push(`第七年终局：${ending.name}`);
+    track("formal_ending_reached", { ending: value });
+    moveTo("finalSummary");
+  },
+  "start-new-cycle": () => {
+    if (state.screen !== "finalSummary" || !state.legacyCandidate) return;
+    const nextCycle = state.cycle + 1;
+    const legacy = structuredClone(state.legacyCandidate);
+    const character = structuredClone(state.character);
+    const openingSelected = structuredClone(state.openingSelected);
+    const completedEndings = [...state.completedEndings];
+    const next = createInitialState(`${state.seed}:cycle:${nextCycle}`);
+    next.cycle = nextCycle;
+    next.inheritedLegacy = legacy;
+    next.completedEndings = completedEndings;
+    next.character = character;
+    next.openingSelected = openingSelected;
+    next.envy = legacy.envy || 0;
+    next.initialEnvy = next.envy;
+    next.screen = "cycleOpening";
+    const legacyIntel = {
+      safe_route: createIntel({ id: "safe_route", title: "山外安全撤离图", detail: "黑日升起前可从废弃驿道撤出伤员与典籍。", status: "confirmed", source: "余烬山图", gainedAtDeviation: 0, expiresAtDeviation: null }),
+      old_seal_memory: createIntel({ id: "old_seal_memory", title: "归尘门旧印记忆", detail: "晚宴名册、矿难与祭阵使用同源旧印。", status: "confirmed", source: "断阵残印", gainedAtDeviation: 0, expiresAtDeviation: 1 }),
+      founder_echo: createIntel({ id: "founder_echo", title: "祖师口令回声", detail: "你记得“六十年已满”，但不确定新周目时序。", status: "rumor", source: "黑日命痕", gainedAtDeviation: 0 }),
+    }[legacy.openingIntel];
+    if (legacyIntel) next.intel = [legacyIntel];
+    state = next;
+    track("new_cycle_started", { cycle: nextCycle, legacy: legacy.id });
+    render();
+  },
+  "begin-cycle-two": () => {
+    if (state.screen !== "cycleOpening" || !state.inheritedLegacy) return;
+    state.p2Path = [`第 ${state.cycle} 周目继承：${state.inheritedLegacy.name}`];
+    moveTo("realityHub");
   },
   "retry-settlement": () => {
     state.screen = "settlement";
@@ -1195,9 +2176,36 @@ const handlers = {
     state.realRoute = null;
     state.realOutcome = null;
     state.companion = null;
+    state.companionOffer = null;
+    state.activeSynergies = [];
+    state.intel = [];
+    state.mineEntry = null;
+    state.mineInvestigation = null;
+    state.battle = null;
     state.mineChoice = null;
+    state.mineOutcome = null;
+    state.companionAct = null;
+    state.p1Carry = null;
+    state.p1RealityChoice = null;
+    state.p1Payoff = null;
+    state.p1Path = [];
+    state.buildId = null;
+    state.buildSynergies = [];
+    state.npcStates = createInitialState(state.seed).npcStates;
+    state.archiveChoice = null;
+    state.year5Choice = null;
+    state.realityAnchor = null;
+    state.realityDeaths = 0;
+    state.p2Path = [];
+    state.finaleOptions = [];
+    state.endingId = null;
+    state.endingResult = null;
+    state.legacyCandidate = null;
     state.timeline.feast = "death";
     state.timeline.mine = "hidden";
+    state.timeline.archive = "hidden";
+    state.timeline.siege = "hidden";
+    state.timeline.blackSun = "future";
     state.clues = [...state.firstSimulationClues];
     track("settlement_retry_started");
     render();

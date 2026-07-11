@@ -2,10 +2,27 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  BUILD_PATHS,
+  CORE_NPCS,
   RARITY,
+  ageIntel,
+  createIntel,
+  createMineBattle,
+  createCycleLegacy,
+  createRealityAnchor,
+  deriveBuildSynergies,
   deriveSettlementTraits,
+  deriveTraitSynergies,
   generateOpeningSets,
+  migrateSaveData,
+  evaluateFinaleOptions,
+  evaluateNpcAlliance,
+  resolveFinalEnding,
+  restoreRealityAnchor,
+  resolveCompanionOffer,
+  resolveMineBattleTurn,
   scoreSettlement,
+  upsertIntel,
 } from "../web/game-core.mjs";
 
 test("opening draw is deterministic and provides three stable/risky pairs", () => {
@@ -55,4 +72,245 @@ test("settlement rating rewards varied meaningful behavior", () => {
     scoreSettlement(["poison", "observe", "survival", "protect", "deceive"], 2),
     "乙",
   );
+});
+
+test("intel moves from rumor to confirmation and becomes stale after deviation", () => {
+  let intel = [createIntel({
+    id: "mine_bell",
+    title: "封井钟",
+    detail: "三响后封井",
+    status: "rumor",
+  })];
+  intel = upsertIntel(intel, createIntel({
+    id: "mine_bell",
+    title: "封井钟",
+    detail: "第三响前傀儡会先亮膝印",
+    status: "confirmed",
+    source: "矿底亲历",
+    gainedAtDeviation: 1,
+    expiresAtDeviation: 2,
+  }));
+  assert.equal(intel.length, 1);
+  assert.equal(intel[0].status, "confirmed");
+  assert.equal(ageIntel(intel, 1)[0].status, "confirmed");
+  assert.equal(ageIntel(intel, 2)[0].status, "stale");
+});
+
+test("two independent trait combinations unlock rule-level mine actions", () => {
+  const herbal = deriveTraitSynergies(["herbal_tongue"], ["scent_thread"]);
+  const feign = deriveTraitSynergies(["borrowed_life"], ["breath_hider"]);
+  assert.ok(herbal.some((item) => item.id === "herbal_trail" && item.unlock === "vent"));
+  assert.ok(feign.some((item) => item.id === "borrowed_stillness" && item.unlock === "feign"));
+  assert.deepEqual(deriveTraitSynergies(["herbal_tongue"], ["breath_hider"]), []);
+});
+
+test("companions accept evidence and retain explicit refusal conditions", () => {
+  const accepted = resolveCompanionOffer({
+    companion: "wen",
+    clues: ["下毒杂役的家人被囚于白石镇废染坊。"],
+  });
+  const refused = resolveCompanionOffer({ companion: "wen", clues: [] });
+  const pei = resolveCompanionOffer({ companion: "pei", rewardType: "dao" });
+  assert.equal(accepted.accepted, true);
+  assert.match(accepted.boundary, /救人/);
+  assert.equal(refused.accepted, false);
+  assert.match(refused.boundary, /确证/);
+  assert.equal(pei.accepted, true);
+});
+
+test("mine battle is deterministic and confirmed intel changes its rules", () => {
+  const first = createMineBattle({
+    seed: "balance-42",
+    entry: "main",
+    envy: 2,
+    intelStatus: "confirmed",
+  });
+  assert.deepEqual(first, createMineBattle({
+    seed: "balance-42",
+    entry: "main",
+    envy: 2,
+    intelStatus: "confirmed",
+  }));
+  const countered = resolveMineBattleTurn(first, "counter");
+  assert.equal(countered.enemyWard, 0);
+  assert.equal(countered.resolve, first.resolve);
+
+  const stale = createMineBattle({
+    seed: "balance-42",
+    entry: "main",
+    intelStatus: "stale",
+  });
+  const failed = resolveMineBattleTurn(stale, "counter");
+  assert.equal(failed.intelFailed, true);
+  assert.ok(failed.resolve < stale.resolve);
+});
+
+test("short battle supports companion and synergy routes without stat grinding", () => {
+  let battle = createMineBattle({
+    seed: "battle-route",
+    entry: "vent",
+    intelStatus: "rumor",
+  });
+  battle = resolveMineBattleTurn(battle, "synergy", {
+    synergyIds: ["herbal_trail"],
+    companion: "wen",
+  });
+  assert.equal(battle.enemyWard, 0);
+  battle = resolveMineBattleTurn(battle, "companion", {
+    synergyIds: ["herbal_trail"],
+    companion: "wen",
+  });
+  assert.equal(battle.companionUsed, true);
+  battle = resolveMineBattleTurn(battle, "strike");
+  battle = resolveMineBattleTurn(battle, "strike");
+  assert.equal(battle.outcome, "won");
+});
+
+test("observation persists into the next turn and counters unverified intel", () => {
+  let battle = createMineBattle({ seed: "observe-route", intelStatus: "rumor" });
+  battle = resolveMineBattleTurn(battle, "observe");
+  assert.equal(battle.insight, 1);
+  const countered = resolveMineBattleTurn(battle, "counter");
+  assert.equal(countered.enemyWard, 0);
+  assert.equal(countered.insight, 0);
+});
+
+test("envy prepares the enemy and materially increases burst damage", () => {
+  const base = createMineBattle({ seed: "envy-route", envy: 0 });
+  const prepared = createMineBattle({ seed: "envy-route", envy: 2 });
+  base.intents = ["burst"];
+  prepared.intents = ["burst"];
+  const baseHit = resolveMineBattleTurn(base, "strike");
+  const preparedHit = resolveMineBattleTurn(prepared, "strike");
+  assert.equal(baseHit.resolve - preparedHit.resolve, 1);
+  assert.equal(prepared.enemyPrepared, true);
+});
+
+test("v1 P0 ending save migrates to the complete P1 mine approach", () => {
+  const defaults = {
+    version: 2,
+    seed: "legacy",
+    screen: "landing",
+    character: { name: "", origin: null },
+    timeline: { feast: "unknown", mine: "hidden" },
+    intel: [],
+    activeSynergies: [],
+    p1Path: [],
+  };
+  const migrated = migrateSaveData({
+    version: 1,
+    seed: "legacy",
+    screen: "ending",
+    character: { name: "沈砚", origin: "herbalist" },
+    timeline: { feast: "shifted", mine: "revealed" },
+    mineChoice: "touch",
+  }, defaults);
+  assert.equal(migrated.version, 3);
+  assert.equal(migrated.screen, "mineApproach");
+  assert.equal(migrated.character.name, "沈砚");
+  assert.equal(migrated.timeline.feast, "shifted");
+  assert.equal(migrated.mineChoice, null);
+  assert.match(migrated.p1Path[0], /P0 存档/);
+  assert.equal(migrateSaveData({ version: 99, seed: "bad", screen: "ending" }, defaults), null);
+});
+
+test("complete demo exposes four rule-changing build paths", () => {
+  assert.equal(BUILD_PATHS.length, 4);
+  assert.equal(new Set(BUILD_PATHS.map((build) => build.id)).size, 4);
+  assert.ok(BUILD_PATHS.every((build) => build.effect && build.cost && build.unlock));
+});
+
+test("all four core NPCs cross their boundaries only with relevant evidence or choices", () => {
+  assert.equal(CORE_NPCS.length, 4);
+  const wen = evaluateNpcAlliance({ npcId: "wen", p1Choice: "rescue" });
+  const pei = evaluateNpcAlliance({ npcId: "pei", confirmedIntelIds: ["founding_deed", "array_heart"] });
+  const song = evaluateNpcAlliance({ npcId: "song", archiveChoice: "audit" });
+  const ayen = evaluateNpcAlliance({ npcId: "ayen", archiveChoice: "free_ayen" });
+  assert.ok([wen, pei, song, ayen].every((result) => result.allied));
+  assert.equal(evaluateNpcAlliance({ npcId: "song", archiveChoice: "accuse" }).state, "hostile");
+  assert.equal(evaluateNpcAlliance({ npcId: "ayen" }).allied, false);
+});
+
+test("builds form at least three distinct rule-level synergies", () => {
+  const ink = deriveBuildSynergies({
+    buildId: "seal_breaker",
+    openingTraitIds: ["perfect_memory"],
+    confirmedIntelIds: ["mine_old_seal"],
+  });
+  const poison = deriveBuildSynergies({
+    buildId: "fate_breath",
+    openingTraitIds: ["herbal_tongue"],
+    acquiredTraitIds: ["scent_thread"],
+  });
+  const people = deriveBuildSynergies({
+    buildId: "living_ledger",
+    alliedNpcIds: ["wen", "song"],
+  });
+  assert.equal(ink[0].id, "ink_breaks_array");
+  assert.equal(poison[0].id, "poison_reads_life");
+  assert.equal(people[0].id, "people_form_array");
+});
+
+test("finale options open from evidence, allies, build, envy and prior choices", () => {
+  const context = {
+    confirmedIntelIds: ["sacrifice_ledger", "array_heart", "founder_phrase"],
+    alliedNpcIds: ["wen", "song", "ayen"],
+    buildId: "seal_breaker",
+    envy: 2,
+    deviation: 3,
+    archiveChoice: "free_ayen",
+    year5Choice: "ayen",
+  };
+  const options = evaluateFinaleOptions(context);
+  assert.deepEqual(options.map((option) => option.enabled), [true, true, true]);
+  assert.equal(resolveFinalEnding("exile", context).name, "携火离山");
+  assert.equal(resolveFinalEnding("sever", context).name, "斩祖散门");
+  assert.equal(resolveFinalEnding("seize", context).name, "夺盘续世");
+  assert.equal(resolveFinalEnding("sever", { ...context, alliedNpcIds: ["wen"] }), null);
+  assert.equal(evaluateFinaleOptions({ ...context, year5Choice: "pei" }).find((option) => option.id === "seize").enabled, false);
+});
+
+test("reality anchor restores the last safe state after a real death", () => {
+  const state = { version: 3, screen: "year1Archive", envy: 2, clues: ["旧印"], realityAnchor: null };
+  const anchor = createRealityAnchor(state, "year1Approach");
+  state.envy = 9;
+  state.clues.push("不应保留");
+  const restored = restoreRealityAnchor(anchor);
+  assert.equal(restored.screen, "year1Approach");
+  assert.equal(restored.envy, 2);
+  assert.deepEqual(restored.clues, ["旧印"]);
+  assert.equal(restoreRealityAnchor(null), null);
+});
+
+test("v2 P1 ending migrates into the compressed seven-year finale", () => {
+  const defaults = {
+    version: 3,
+    seed: "p1-save",
+    screen: "landing",
+    character: { name: "", origin: null },
+    timeline: { feast: "unknown", mine: "hidden" },
+    npcStates: {},
+    p2Path: [],
+  };
+  const migrated = migrateSaveData({
+    version: 2,
+    seed: "p1-save",
+    screen: "ending",
+    character: { name: "沈砚", origin: "herbalist" },
+    timeline: { feast: "shifted", mine: "shifted" },
+    p1Payoff: "矿难已偏转",
+  }, defaults);
+  assert.equal(migrated.version, 3);
+  assert.equal(migrated.screen, "p2Interlude");
+  assert.match(migrated.p2Path[0], /P1 完成存档/);
+});
+
+test("each ending creates a distinct playable second-cycle legacy", () => {
+  const exile = createCycleLegacy("exile");
+  const sever = createCycleLegacy("sever");
+  const seize = createCycleLegacy("seize");
+  assert.equal(new Set([exile.id, sever.id, seize.id]).size, 3);
+  assert.equal(exile.npcReaction, "wen");
+  assert.equal(sever.openingIntel, "old_seal_memory");
+  assert.equal(seize.envy, 1);
 });
