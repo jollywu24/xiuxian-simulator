@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import {
   BUILD_PATHS,
   CORE_NPCS,
+  ENCOUNTERS,
   RARITY,
   ageIntel,
   createIntel,
@@ -14,16 +15,56 @@ import {
   deriveSettlementTraits,
   deriveTraitSynergies,
   generateOpeningSets,
+  listAvailableEncounters,
   migrateSaveData,
   evaluateFinaleOptions,
   evaluateNpcAlliance,
   resolveFinalEnding,
   restoreRealityAnchor,
   resolveCompanionOffer,
+  resolveEncounterChoice,
   resolveMineBattleTurn,
   scoreSettlement,
   upsertIntel,
 } from "../web/game-core.mjs";
+
+test("ruined-temple encounter offers three distinct long-term boons", () => {
+  assert.equal(ENCOUNTERS.length >= 1, true);
+  const encounter = listAvailableEncounters({ phase: "before_sect" })[0];
+  assert.equal(encounter.id, "ruined_temple_rain");
+  assert.equal(encounter.choices.length, 3);
+
+  const outcomes = encounter.choices.map((choice) => resolveEncounterChoice({
+    encounterId: encounter.id,
+    choiceId: choice.id,
+  }));
+  assert.equal(new Set(outcomes.map((outcome) => outcome.boon.id)).size, 3);
+  assert.equal(new Set(outcomes.map((outcome) => outcome.morningAction.value)).size, 3);
+  assert.ok(outcomes.every((outcome) => outcome.longTerm && outcome.morningAction.clue && outcome.morningAction.spentLabel));
+});
+
+test("encounter depth reacts to character background and remains once-only", () => {
+  const herbalist = resolveEncounterChoice({
+    encounterId: "ruined_temple_rain",
+    choiceId: "heal",
+    originId: "herbalist",
+  });
+  const traitReader = resolveEncounterChoice({
+    encounterId: "ruined_temple_rain",
+    choiceId: "bargain",
+    openingTraitIds: ["truth_compulsion"],
+  });
+  assert.equal(herbalist.synergy, "辨出箭毒");
+  assert.equal(traitReader.synergy, "听出半句真话");
+  assert.deepEqual(listAvailableEncounters({
+    phase: "before_sect",
+    completedIds: ["ruined_temple_rain"],
+  }), []);
+  assert.equal(resolveEncounterChoice({
+    encounterId: "ruined_temple_rain",
+    choiceId: "missing",
+  }), null);
+});
 
 test("opening draw is deterministic and provides three stable/risky pairs", () => {
   const first = generateOpeningSets("balance-42", 0);

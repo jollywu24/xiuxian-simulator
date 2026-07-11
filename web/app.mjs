@@ -2,6 +2,7 @@ import {
   APPEARANCES,
   BUILD_PATHS,
   CORE_NPCS,
+  ENCOUNTERS,
   INTEL_LEVELS,
   ORIGINS,
   RARITY,
@@ -19,12 +20,15 @@ import {
   getAppearance,
   getBuildPath,
   getCoreNpc,
+  getEncounter,
   getIntel,
   getOpeningTrait,
   getOrigin,
   getSettlementTrait,
   migrateSaveData,
+  listAvailableEncounters,
   resolveCompanionOffer,
+  resolveEncounterChoice,
   resolveFinalEnding,
   resolveMineBattleTurn,
   restoreRealityAnchor,
@@ -82,6 +86,11 @@ function createInitialState(seed = freshSeed()) {
     firstSimulationClues: [],
     triggeredOpeningTraits: [],
     latestTriggers: [],
+    encounterId: null,
+    encounterChoiceId: null,
+    encounterOutcome: null,
+    encounterBoonSpent: false,
+    completedEncounterIds: [],
     morningChoice: null,
     eveChoice: null,
     feastChoice: null,
@@ -512,6 +521,13 @@ function characterPanelHtml() {
         <div class="compact-traits">
           ${opening.map(compactTraitHtml).join("")}
         </div>
+        ${state.encounterOutcome ? `
+          <div class="panel-title" style="margin-top:18px">奇缘簿</div>
+          <div class="reward-item encounter-keepsake">
+            <strong>${escapeHtml(state.encounterOutcome.boon.name)}${state.encounterBoonSpent ? ` · ${escapeHtml(state.encounterOutcome.morningAction.spentLabel)}` : ""}</strong>
+            <span>${escapeHtml(state.encounterOutcome.boon.description)}</span>
+          </div>
+        ` : ""}
       </div>
       <div>
         <div class="panel-title">本世带回</div>
@@ -777,8 +793,65 @@ function renderBirthSheet() {
     </div>
     <div class="button-row">
       <button class="ghost-button" data-action="back-traits">重新选择</button>
-      <button class="primary-button" data-action="confirm-character">确认名牒，入外院</button>
+      <button class="primary-button" data-action="confirm-character">收好名牒，启程入山</button>
     </div>
+  `);
+}
+
+function renderEncounter() {
+  const encounter = getEncounter(state.encounterId) || ENCOUNTERS[0];
+  return setupShell(`
+    <p class="eyebrow">${escapeHtml(encounter.date)} · 奇缘未定</p>
+    <h1 class="setup-title">${escapeHtml(encounter.title)}</h1>
+    <div class="encounter-stage">
+      <div class="encounter-weather" aria-hidden="true"><span>雨</span><span>庙</span><span>夜</span></div>
+      <div class="encounter-scene-copy">
+        <div class="event-docket"><span>地点</span><strong>${escapeHtml(encounter.location)}</strong><p>${escapeHtml(encounter.lead)}</p></div>
+        <p>${escapeHtml(encounter.scene)}</p>
+        <div class="encounter-stranger"><span>庙中人</span><strong>${escapeHtml(encounter.stranger)}</strong></div>
+        <p class="encounter-pressure">${escapeHtml(encounter.pressure)}</p>
+      </div>
+    </div>
+    <p class="choice-prompt">马蹄停在庙外。你只有片刻决定，如何处置这个素未谋面的伤者。</p>
+    <div class="action-list">
+      ${encounter.choices.map((choice) => actionCard({
+        action: "encounter-choice",
+        value: choice.id,
+        title: choice.title,
+        description: choice.description,
+        source: choice.source,
+        meta: choice.meta,
+        kind: choice.id === "heal" ? "special" : "",
+      })).join("")}
+    </div>
+  `);
+}
+
+function renderEncounterOutcome() {
+  const encounter = getEncounter(state.encounterId);
+  const outcome = state.encounterOutcome;
+  if (!encounter || !outcome) return renderEncounter();
+  return setupShell(`
+    <p class="eyebrow">天将破晓 · 身份揭明</p>
+    <h1 class="setup-title">她不是逃犯，是从自己帮中逃出来的人</h1>
+    <div class="encounter-reveal">
+      <div class="reveal-seal" aria-hidden="true">霜河</div>
+      <div>
+        <p class="reveal-kicker">${escapeHtml(outcome.reveal.identity)}</p>
+        <h2>${escapeHtml(outcome.reveal.name)}</h2>
+        <p>${escapeHtml(outcome.reveal.context)}</p>
+      </div>
+    </div>
+    <div class="story-copy encounter-consequence">
+      <p>${escapeHtml(outcome.immediate)}</p>
+      <p>${escapeHtml(outcome.depth)}</p>
+      ${outcome.synergy ? `<div class="trigger-block"><span class="trigger-label">身世相合 · ${escapeHtml(outcome.synergy)}</span>你从这场相逢里看见了旁人难以察觉的第二层。</div>` : ""}
+    </div>
+    <div class="encounter-ledger">
+      <div><span>所得信物</span><strong>${escapeHtml(outcome.boon.name)}</strong><p>${escapeHtml(outcome.boon.description)}</p></div>
+      <div><span>留下因果</span><strong>柳照影记住了你</strong><p>${escapeHtml(outcome.longTerm)}</p></div>
+    </div>
+    <div class="button-row"><button class="primary-button" data-action="continue-after-encounter">收下信物，天明入山</button></div>
   `);
 }
 
@@ -842,6 +915,7 @@ function renderTriggerBlocks() {
 
 function renderSim1Morning() {
   const originAction = originMorningAction();
+  const encounterAction = state.encounterOutcome?.morningAction;
   return gameShell(`
     ${sceneHeader("第 1 次模拟 · 第三日", "你决定先把这条命用在哪里", "第七日晚宴之前，你只有两次完整行动机会。")}
     <div class="story-copy">
@@ -853,6 +927,7 @@ function renderSim1Morning() {
       ${actionCard({ action: "sim-morning", value: "dan", title: "去丹房帮闻青禾清点药材", description: "接近毒理线索，并建立一段早期关系。", source: "关系", meta: "半日 · 风险低" })}
       ${actionCard({ action: "sim-morning", value: "train", title: "在演武坪打磨引气诀", description: "为未知危险准备最直接的自保手段。", source: "修炼", meta: "一日 · 错过井边动静" })}
       ${actionCard({ action: "sim-morning", value: `origin-${state.character.origin}`, title: originAction.title, description: originAction.description, source: `出身·${getOrigin(state.character.origin)?.name}`, meta: originAction.meta, kind: "special" })}
+      ${encounterAction ? actionCard({ action: "sim-morning", value: encounterAction.value, title: encounterAction.title, description: encounterAction.description, source: encounterAction.source, meta: encounterAction.meta, kind: "special" }) : ""}
     </div>
   `);
 }
@@ -867,6 +942,9 @@ function originMorningAction() {
 }
 
 function morningResultCopy() {
+  if (state.morningChoice === state.encounterOutcome?.morningAction?.value) {
+    return state.encounterOutcome.morningAction.result;
+  }
   const map = {
     well: "你在井栏上发现了新磨损，却还无法判断它来自哪一天。水面映着自己，平静得令人不安。",
     dan: "闻青禾让你把乌舌草单独入柜。她说这药不致死，只会让人四肢失力。",
@@ -1569,6 +1647,8 @@ function render() {
     creator: renderCreator,
     openingTraits: renderOpeningTraits,
     birthSheet: renderBirthSheet,
+    encounter: renderEncounter,
+    encounterOutcome: renderEncounterOutcome,
     arrival: renderArrival,
     omen: renderOmen,
     realityHub: renderRealityHub,
@@ -1704,12 +1784,46 @@ const handlers = {
   },
   "back-traits": () => moveTo("openingTraits"),
   "confirm-character": () => {
+    if (state.screen !== "birthSheet") return;
     state.initialEnvy = selectedOpeningTraits().some((trait) => ["heaven_hates_genius", "reckless_insight"].includes(trait.id)) ? 1 : 0;
     state.envy = state.initialEnvy;
     track("character_confirmed", {
       origin: state.character.origin,
       traits: selectedOpeningTraits().map((trait) => trait.id),
     });
+    const encounter = listAvailableEncounters({
+      phase: "before_sect",
+      completedIds: state.completedEncounterIds,
+    })[0];
+    if (encounter) {
+      state.encounterId = encounter.id;
+      moveTo("encounter");
+    } else {
+      moveTo("arrival");
+    }
+  },
+  "encounter-choice": ({ value }) => {
+    if (state.screen !== "encounter" || state.encounterOutcome) return;
+    const outcome = resolveEncounterChoice({
+      encounterId: state.encounterId,
+      choiceId: value,
+      originId: state.character.origin,
+      openingTraitIds: Object.values(state.openingSelected),
+    });
+    if (!outcome) return;
+    state.encounterChoiceId = value;
+    state.encounterOutcome = outcome;
+    state.completedEncounterIds = uniqueTags([...state.completedEncounterIds, state.encounterId]);
+    track("encounter_resolved", {
+      encounter: state.encounterId,
+      choice: value,
+      boon: outcome.boon.id,
+      synergy: outcome.synergy,
+    });
+    moveTo("encounterOutcome");
+  },
+  "continue-after-encounter": () => {
+    if (state.screen !== "encounterOutcome" || !state.encounterOutcome) return;
     moveTo("arrival");
   },
   "enter-ancestral-cave": ({ value }) => {
@@ -1754,6 +1868,10 @@ const handlers = {
       addClue("乌舌草只会使人失去行动，不会直接致死。 ");
     } else if (value === "train") {
       addTags("survival", "combat");
+    } else if (value === state.encounterOutcome?.morningAction?.value) {
+      addTags(...state.encounterOutcome.morningAction.tags);
+      addClue(state.encounterOutcome.morningAction.clue);
+      state.encounterBoonSpent = true;
     } else {
       addTags("observe", "poison");
       addClue(morningResultCopy());

@@ -184,6 +184,164 @@ export const APPEARANCES = [
   { id: "amber", name: "琥珀", accent: "#9a7442", mark: "石" },
 ];
 
+export const ENCOUNTERS = [
+  {
+    id: "ruined_temple_rain",
+    phase: "before_sect",
+    once: true,
+    name: "雨夜破庙",
+    date: "太虚元年三月初三 · 子夜",
+    location: "照夜山脚 · 无名山神庙",
+    title: "破庙里，有人先你一步点了灯",
+    lead: "封山雨来得太急。你抱着新领的身份玉牌躲进破庙，门后却先传来一声压得极低的喘息。",
+    scene: "倒塌的神像旁倚着一名陌生妇人。锦衣被血浸透，手边横着一柄未出鞘的短刀。她没有求救，只看了一眼你腰间的归尘门玉牌。",
+    pressure: "庙外很快响起马蹄。有人沿路搜查，问的是：『可曾见过一个受伤的逃犯？』",
+    stranger: "身份不明 · 伤势很重 · 仍有反击之力",
+    reveal: {
+      name: "柳照影",
+      identity: "霜河帮主母",
+      context: "霜河帮掌着白石镇到照夜山的三条水路。今夜帮中有人夺权，她带着半本暗账逃出了追杀。",
+    },
+    choices: [
+      {
+        id: "shelter",
+        title: "掩去血迹，把追兵引向北坡",
+        description: "先救人，再问她究竟是谁。你要在雨停前伪造一条离庙的足迹。",
+        source: "藏人",
+        meta: "追兵远去 · 留下人情",
+        boon: {
+          id: "river_shadow_token",
+          name: "霜河暗纹",
+          description: "柳照影许你一次不问缘由的人情；水路上的脚夫会认这道暗纹。",
+        },
+        immediate: "你用香灰压住血腥气，又把沾血的草鞋印一路引向北坡。追兵踹门时，只看见一个抱着名牒瑟瑟发抖的新弟子。",
+        longTerm: "你替柳照影藏过一次命。她不会忘，但夺权者也可能从那串假脚印中查到你。",
+        baseDepth: "天亮前，陌生妇人从神像背后走出，将一枚只有水路中人才懂的暗纹按在你的玉牌背面。",
+        synergy: {
+          originIds: ["hunter"],
+          traitIds: ["keen_eye", "lone_star"],
+          name: "雨痕无迹",
+          text: "你顺着檐水改掉脚印深浅，连搜山老手也没看出折返痕迹。柳照影因此多告诉你一句：归尘门的旧印，近来在黑市出现过。",
+        },
+        morningAction: {
+          value: "encounter-shelter",
+          spentLabel: "人情已用",
+          title: "亮出霜河暗纹，拦下井边脚夫",
+          description: "借柳照影留下的人情，盘问那桶没有山门印记的外来水。",
+          source: "奇缘 · 霜河暗纹",
+          meta: "一次 · 水路线索",
+          result: "井边脚夫认出玉牌背后的暗纹，悄声告诉你：那只水桶昨夜从白石镇逆水送来，封泥上压的是归尘门旧印。",
+          clue: "外来水桶经霜河帮水路送上山，封泥使用归尘门旧印。",
+          tags: ["observe", "deceive"],
+        },
+      },
+      {
+        id: "heal",
+        title: "替她止血，再取灯下的箭毒",
+        description: "先处理伤势，从伤口和气味判断追兵用了什么手段。",
+        source: "救治",
+        meta: "耗去药囊 · 得一枚丹药",
+        boon: {
+          id: "breath_lock_pill",
+          name: "锁息丹",
+          description: "服下后可将毒发压迟一刻；药力用尽前，痛觉不会消失。",
+        },
+        immediate: "你割开箭伤周围的衣料，以烈酒洗创，再用随身草药把毒血逼到一处。她全程没有喊过一声。",
+        longTerm: "柳照影记住了你的救命手法。若以后以医者身份见她，她会比面对归尘门弟子时更愿意说真话。",
+        baseDepth: "陌生妇人醒来后，将一枚蜡封丹丸放进你的药囊：『只能替你多争一刻，别拿它当第二条命。』",
+        synergy: {
+          originIds: ["herbalist"],
+          traitIds: ["herbal_tongue"],
+          name: "辨出箭毒",
+          text: "你尝出箭头上的麻味来自乌舌草。柳照影告诉你，近三日有人用归尘门旧印在白石镇扫空了同一种药。",
+        },
+        morningAction: {
+          value: "encounter-heal",
+          spentLabel: "丹药已服",
+          title: "含住锁息丹，亲自尝一口井水",
+          description: "用破庙所得的丹药拖慢毒发，完整辨认麻痹出现的次序。",
+          source: "奇缘 · 锁息丹",
+          meta: "消耗信物 · 毒理线索",
+          result: "锁息丹把麻意压在舌根。你尝出井水里的乌舌草还没有到致死剂量——这毒只负责让人倒下，真正的杀招一定在后面。",
+          clue: "井水中的乌舌草只负责麻痹，幕后者另有补杀安排。",
+          tags: ["poison", "observe", "survival"],
+        },
+      },
+      {
+        id: "bargain",
+        title: "挡在门前，先问这条命值什么",
+        description: "她若想借你的身份躲过追兵，就必须先给出足以交换的筹码。",
+        source: "问价",
+        meta: "关系疏冷 · 得一条暗路",
+        boon: {
+          id: "night_ferry_note",
+          name: "夜渡名帖",
+          description: "凭帖可在白石镇找到不记姓名的船、货与消息，但每次开口都要另付代价。",
+        },
+        immediate: "你没有拔刀，也没有让路。她沉默片刻，报出一个白石镇渡口和一句接头暗语，这才允许你替她回答庙外的人。",
+        longTerm: "你与柳照影之间没有恩情，只有一笔尚未结清的买卖。她欣赏守价的人，也会毫不犹豫地追讨欠账。",
+        baseDepth: "追兵离开后，陌生妇人撕下暗账的一角交给你。纸上只有渡口、时辰，以及一枚被划掉的归尘门旧印。",
+        synergy: {
+          originIds: ["caravan"],
+          traitIds: ["truth_compulsion"],
+          name: "听出半句真话",
+          text: "你听出她所说的『逃犯』并非假话，却故意省略了谁先背叛谁。你因此把价码加到两条消息：旧印的来处，以及下一批货上山的时辰。",
+        },
+        morningAction: {
+          value: "encounter-bargain",
+          spentLabel: "名帖已呈",
+          title: "循夜渡名帖，查晚宴前的暗货",
+          description: "让白石镇渡口翻出三日内送往归尘门、却不登记姓名的货。",
+          source: "奇缘 · 夜渡名帖",
+          meta: "欠下一价 · 货路线索",
+          result: "渡口回话：三日前，有人以归尘门旧印买下乌舌草，又让同一条夜船送来一只未刻山门印记的水桶。",
+          clue: "乌舌草与无印水桶来自同一条白石镇夜船，买主使用归尘门旧印。",
+          tags: ["poison", "observe", "deceive"],
+        },
+      },
+    ],
+  },
+];
+
+export function getEncounter(id) {
+  return ENCOUNTERS.find((encounter) => encounter.id === id) || null;
+}
+
+export function listAvailableEncounters({ phase, completedIds = [] } = {}) {
+  const completed = new Set(completedIds);
+  return ENCOUNTERS.filter((encounter) =>
+    (!phase || encounter.phase === phase)
+    && (!encounter.once || !completed.has(encounter.id)),
+  );
+}
+
+export function resolveEncounterChoice({
+  encounterId,
+  choiceId,
+  originId = null,
+  openingTraitIds = [],
+} = {}) {
+  const encounter = getEncounter(encounterId);
+  const choice = encounter?.choices.find((item) => item.id === choiceId);
+  if (!encounter || !choice) return null;
+  const hasSynergy = choice.synergy.originIds.includes(originId)
+    || choice.synergy.traitIds.some((id) => openingTraitIds.includes(id));
+  return {
+    encounterId: encounter.id,
+    choiceId: choice.id,
+    reveal: { ...encounter.reveal },
+    boon: { ...choice.boon },
+    immediate: choice.immediate,
+    longTerm: choice.longTerm,
+    depth: hasSynergy ? choice.synergy.text : choice.baseDepth,
+    synergy: hasSynergy ? choice.synergy.name : null,
+    morningAction: {
+      ...choice.morningAction,
+      tags: [...choice.morningAction.tags],
+    },
+  };
+}
+
 export const OPENING_TRAITS = [
   {
     id: "ember_root",
