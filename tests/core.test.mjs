@@ -210,7 +210,7 @@ test("v1 P0 ending save migrates to the complete P1 mine approach", () => {
   assert.equal(migrated.character.name, "沈砚");
   assert.equal(migrated.timeline.feast, "shifted");
   assert.equal(migrated.mineChoice, null);
-  assert.match(migrated.p1Path[0], /P0 存档/);
+  assert.match(migrated.p1Path[0], /乌铜矿前重新续上因果/);
   assert.equal(migrateSaveData({ version: 99, seed: "bad", screen: "ending" }, defaults), null);
 });
 
@@ -302,7 +302,7 @@ test("v2 P1 ending migrates into the compressed seven-year finale", () => {
   }, defaults);
   assert.equal(migrated.version, 3);
   assert.equal(migrated.screen, "p2Interlude");
-  assert.match(migrated.p2Path[0], /P1 完成存档/);
+  assert.match(migrated.p2Path[0], /重新展开七年因果/);
 });
 
 test("each ending creates a distinct playable second-cycle legacy", () => {

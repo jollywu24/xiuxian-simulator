@@ -117,7 +117,7 @@
 
 现有主流程屏幕顺序为：
 
-`landing → creator → openingTraits → birthSheet → omen → realityHub → sim1Morning → sim1Eve → sim1Feast → deathRecap → settlement → [traitDraw] → realityReturn → realityPlan → realityResolution/realityDeath → sim2Feast → sim2Road → companionResult → mineApproach → mineInvestigation → mineBattle → mineAftermath/mineDefeat → mineReturn → p1RealityPlan → ending → p2Interlude → buildChoice → year1Approach/year1Archive → year1Resolution → year5Hub/year5Crisis → blackSunPrep → finale → finalSummary → [cycleOpening]`
+`landing → worldIntro → creator → openingTraits → birthSheet → arrival → omen → realityHub → sim1Morning → sim1Eve → sim1Feast → deathRecap → settlement → [traitDraw] → realityReturn → realityPlan → realityResolution/realityDeath → sim2Feast → sim2Road → companionResult → mineApproach → mineInvestigation → mineBattle → mineAftermath/mineDefeat → mineReturn → p1RealityPlan → ending → p2Interlude → buildChoice → year1Approach/year1Archive → year1Resolution → year5Hub/year5Crisis → blackSunPrep → finale → finalSummary → [cycleOpening]`
 
 新增或修改流程时：
 
@@ -165,6 +165,11 @@
 - 稀有度表示规则影响范围，不等于无条件更强；强力能力应有可感知代价；
 - 自动文本只用于压缩无决策时段，关键发现必须来自可操作场景；
 - 同一问题应尽量支持代价不同的多个解法，避免唯一标准答案。
+- 新玩家进入游戏时按“世界与处境 → 宗门名牒 → 照骨验身 → 人物卡 → 首个事件 → 命盘异象”逐层揭示信息；不要在首页同时抛出未来事件、NPC 名单和系统术语；
+- 面向玩家的界面必须保持世界内表达。禁止出现 `Demo`、`P0/P1/P2`、原型、测试、构筑、二周目、自动存档、菜单、养成等开发或产品描述；对应概念改写为法门、前世、命盘记录、现实锚点等叙事内语言；
+- 新名词首次出现时必须由场景、人物或物件自然解释。尚未被玩家亲历或得知的时间线节点不得提前展示；
+- 人物出场前先交代其身份与当前事件关系，避免连续抛出无上下文姓名；
+- 人物创建应以宗门名牒和照骨镜呈现；人物卡至少显示身份、境界、持有物、凡俗牵挂与先天命签。
 
 修改剧情文案时，同时检查：死亡回溯是否说清直接死因、已知前因、新问题和下次可改变之处；现实兑现是否能让玩家明确感到“因为我提前知道，所以这次不同”。
 

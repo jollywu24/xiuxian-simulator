@@ -72,7 +72,7 @@ export const BUILD_PATHS = [
     name: "众生谱",
     discipline: "关系",
     effect: "把同伴的自主行动编入同一方案，开放多人撤离与并行破阵。",
-    cost: "任何同伴被牺牲都会永久削弱此构筑。",
+    cost: "任何同伴被牺牲，众生谱都会永远缺去一页。",
     unlock: "evacuate",
   },
 ];
@@ -722,14 +722,14 @@ export function evaluateFinaleOptions({
       id: "exile",
       name: "携火离山",
       enabled: exileEnabled,
-      reason: exileEnabled ? "至少两名同伴或撤离构筑可并行带走人和典籍。" : "需要两名同伴、众生谱或阿厌的山外路线。",
+      reason: exileEnabled ? "至少两名同伴或众生谱可并行带走人和典籍。" : "需要两名同伴、众生谱或阿厌的山外路线。",
       cost: "放弃归尘门；祭阵秘密可能在别处继续害人。",
     },
     {
       id: "sever",
       name: "斩祖散门",
       enabled: severEnabled,
-      reason: severEnabled ? "献祭真相、阵心位置、同伴与拆阵方法已经齐备。" : "需要献祭确证、阵心确证、两名同伴、适配构筑且偏差不超过 5。",
+      reason: severEnabled ? "献祭真相、阵心位置、同伴与拆阵方法已经齐备。" : "需要献祭确证、阵心确证、两名同伴、合适法门且偏差不超过 5。",
       cost: "宗门名誉、护山阵与制度一并终结。",
     },
     {
@@ -776,21 +776,21 @@ export function createCycleLegacy(endingId) {
     exile: {
       id: "embers_map",
       name: "余烬山图",
-      effect: "新周目开局即知道一条安全撤离路；闻青禾会对你产生似曾相识的信任。",
+      effect: "下一世开局即知道一条安全撤离路；闻青禾会对你产生似曾相识的信任。",
       openingIntel: "safe_route",
       npcReaction: "wen",
     },
     sever: {
       id: "broken_seal",
       name: "断阵残印",
-      effect: "新周目可从晚宴异象直接追查旧印；裴照雪会认出你携带的破阵痕迹。",
+      effect: "下一世可从晚宴异象直接追查旧印；裴照雪会认出你携带的破阵痕迹。",
       openingIntel: "old_seal_memory",
       npcReaction: "pei",
     },
     seize: {
       id: "black_sun_mark",
       name: "黑日命痕",
-      effect: "新周目开局即听见祖师口令，但天妒 +1；阿厌会本能地警惕你。",
+      effect: "下一世开局即听见祖师口令，但天妒 +1；阿厌会本能地警惕你。",
       openingIntel: "founder_echo",
       npcReaction: "ayen",
       envy: 1,
@@ -836,11 +836,11 @@ export function migrateSaveData(saved, defaults) {
     migrated.mineChoice = null;
     migrated.mineOutcome = null;
     migrated.battle = null;
-    migrated.p1Path = ["从 P0 存档续接乌铜矿完整事件"];
+    migrated.p1Path = ["旧命盘在乌铜矿前重新续上因果"];
   }
   if (saved.version === 2 && saved.screen === "ending") {
     migrated.screen = "p2Interlude";
-    migrated.p2Path = ["从 P1 完成存档继续七年终局"];
+    migrated.p2Path = ["旧命盘越过矿难，重新展开七年因果"];
   }
   return migrated;
 }

@@ -123,6 +123,7 @@ function createInitialState(seed = freshSeed()) {
     endingId: null,
     endingResult: null,
     legacyCandidate: null,
+    prologueChoice: null,
     timeline: {
       omen: "known",
       feast: "unknown",
@@ -343,8 +344,8 @@ function modeLabel() {
     mineReturn: "命盘结算 · 第 2 世",
     p1RealityPlan: "现实 · 第三月矿难前",
     realityDeath: "现实 · 命途断绝",
-    ending: "P1 原型 · 因果已偏转",
-    p2Interlude: "完整 Demo · 七年因果链",
+    ending: "现实 · 乌铜矿余波",
+    p2Interlude: "命盘深处 · 七年因果",
     buildChoice: "现实 · 第一年前",
     year1Approach: "现实 · 第一年冬",
     year1Archive: "现实 · 建宗密库",
@@ -354,8 +355,8 @@ function modeLabel() {
     year5Crisis: "现实 · 护山阵争夺",
     blackSunPrep: "现实 · 第七年蚀日前",
     finale: "现实 · 黑日终局",
-    finalSummary: "完整 Demo · 正式结局",
-    cycleOpening: `第 ${state.cycle || 2} 周目 · 命痕继承`,
+    finalSummary: "太虚七年 · 尘埃落定",
+    cycleOpening: `第 ${state.cycle || 2} 世 · 命痕继承`,
   };
   return map[state.screen] || "太虚命盘";
 }
@@ -469,15 +470,16 @@ function timelineHtml() {
     : state.timeline.blackSun === "current"
       ? ["第七年 · 黑日", "护山阵正在反转", "death"]
       : ["第七年 · 黑日", "归尘门上下无一生还", ""];
+  const revealedItems = [feast];
+  if (mineStatus !== "hidden") revealedItems.push(mine);
+  if (archiveStatus !== "hidden") revealedItems.push(archive);
+  if (siegeStatus !== "hidden") revealedItems.push(siege);
+  revealedItems.push(blackSun);
   return `
     <div class="panel-title">命途时间线</div>
     <div class="timeline-list">
       ${timelineItem("现实锚点", state.timeline.feast === "shifted" ? "晚宴后的新现实" : "太虚元年三月初三", "current")}
-      ${timelineItem(...feast)}
-      ${timelineItem(...mine)}
-      ${timelineItem(...archive)}
-      ${timelineItem(...siege)}
-      ${timelineItem(...blackSun)}
+      ${revealedItems.map((item) => timelineItem(...item)).join("")}
     </div>
   `;
 }
@@ -506,7 +508,7 @@ function characterPanelHtml() {
             <p>${escapeHtml(origin?.name || "尚未定出身")} · 外门抄经弟子</p>
           </div>
         </div>
-        <div class="panel-title">先天词条</div>
+        <div class="panel-title">先天命签</div>
         <div class="compact-traits">
           ${opening.map(compactTraitHtml).join("")}
         </div>
@@ -528,7 +530,7 @@ function characterPanelHtml() {
           <div class="intel-list">${state.intel.slice(-4).map(intelCardHtml).join("")}</div>
         ` : ""}
         ${state.buildId ? `
-          <div class="panel-title" style="margin-top:18px">当前构筑</div>
+          <div class="panel-title" style="margin-top:18px">修行路数</div>
           <div class="reward-item"><strong>${escapeHtml(getBuildPath(state.buildId)?.name)}</strong><span>${escapeHtml(getBuildPath(state.buildId)?.effect)}</span></div>
         ` : ""}
         ${state.p2Path?.length ? `
@@ -598,8 +600,8 @@ function gameShell(sceneHtml) {
         <div class="mode-badge">${modeLabel()}</div>
         <div class="resource-row">
           <div class="resource"><span>命火</span><strong>${state.flames}</strong></div>
-          <div class="resource"><span>天妒</span><strong>${state.envy}</strong></div>
-          <div class="resource"><span>偏差</span><strong>${state.deviation}</strong></div>
+          ${state.envy > 0 ? `<div class="resource"><span>天妒</span><strong>${state.envy}</strong></div>` : ""}
+          ${state.deviation > 0 ? `<div class="resource"><span>偏差</span><strong>${state.deviation}</strong></div>` : ""}
         </div>
       </header>
       <div class="game-grid">
@@ -626,17 +628,29 @@ function renderLanding() {
   return setupShell(`
     <div class="title-lockup">
       <div class="fate-ring"><span class="fate-glyph">命</span></div>
-      <p class="eyebrow">Playable concept demo</p>
+      <p class="eyebrow">大虞北境 · 照夜山</p>
       <h1>太虚命盘</h1>
-      <p class="subtitle">七年后，归尘门上下无一生还。<br />你能带回的，只有上一条命留下的一件东西。</p>
-      <div class="rule-line"><span>试命</span><span>带回</span><span>改命</span></div>
+      <p class="subtitle">春雨封山，归尘门再开山门。<br />你是今日入籍的外门弟子之一。</p>
       <div class="button-row">
-        <button class="primary-button" data-action="new-game">新建命途</button>
-        ${hasSave ? `<button class="secondary-button" data-action="continue-game">继续 · ${escapeHtml(savedState.character?.name || "未完命途")}</button>` : ""}
+        <button class="primary-button" data-action="new-game">翻开山门旧事</button>
+        ${hasSave ? `<button class="secondary-button" data-action="continue-game">续读 · ${escapeHtml(savedState.character?.name || "无名弟子")}</button>` : ""}
       </div>
-      <p class="screen-note">一段约 35～50 分钟、可抵达黑日终局的完整 Demo · 进度自动保存在本机</p>
     </div>
   `, { narrow: true });
+}
+
+function renderWorldIntro() {
+  return setupShell(`
+    <p class="eyebrow">入山之前 · 你所知道的世道</p>
+    <h1 class="setup-title">凡人仰望仙山，仙门俯看人间</h1>
+    <div class="world-ledger">
+      <article class="world-fact"><span>大虞</span><h2>山河由朝廷与仙门共治</h2><p>凡人缴纳田税，仙门镇守妖祟。若测出灵根，便有机会用一生换一条长生路。</p></article>
+      <article class="world-fact"><span>归尘门</span><h2>照夜山上的小宗门</h2><p>门中不过数百人，护着山下三镇。它不以剑法闻名，却从未让山外邪祟越过山门。</p></article>
+      <article class="world-fact"><span>外门弟子</span><h2>最靠近仙途，也最无足轻重</h2><p>新弟子先抄经、挑水、服矿役，百日后才授引气诀。能留下姓名，才算真正入门。</p></article>
+    </div>
+    <div class="event-docket"><span>今日</span><strong>太虚元年 · 三月初三</strong><p>春试最后一日。掌簿执事摊开入籍簿，等你写下自己的名字。</p></div>
+    <div class="button-row"><button class="ghost-button" data-action="back-landing">合上旧事</button><button class="primary-button" data-action="to-creator">填写外门名牒</button></div>
+  `);
 }
 
 function renderCreator() {
@@ -649,19 +663,19 @@ function renderCreator() {
   const appearanceCards = APPEARANCES.map((appearance) => `
     <button class="appearance-card ${state.character.appearance === appearance.id ? "selected" : ""}" data-action="select-appearance" data-value="${appearance.id}">
       <span class="appearance-head"><span class="appearance-swatch" style="color:${appearance.accent};border-color:${appearance.accent}">${appearance.mark}</span><strong>${appearance.name}</strong></span>
-      <p>命笺印色与人物剪影</p>
+      <p>身份玉牌落印时映出的灵光</p>
     </button>
   `).join("");
   const pronouns = PRONOUNS.map((item) => `
     <button class="select-tile ${state.character.pronoun === item.id ? "selected" : ""}" data-action="select-pronoun" data-value="${item.id}">
-      <strong>${item.name}</strong><p>剧情称谓</p>
+      <strong>${item.name}</strong><p>同门如何称呼你</p>
     </button>
   `).join("");
   const canContinue = Boolean(state.character.name.trim() && state.character.origin && state.character.appearance);
   return setupShell(`
-    <p class="eyebrow">Step 01 · 自建主角</p>
-    <h1 class="setup-title">这一世，你是谁？</h1>
-    <p class="subtitle" style="margin:0;text-align:left">现实与模拟始终只由这名自建角色经历。其他人会同行、拒绝、隐瞒，但不会成为替代主角。</p>
+    <p class="eyebrow">归尘门 · 外门入籍簿</p>
+    <h1 class="setup-title">请留下你的名牒</h1>
+    <p class="subtitle" style="margin:0;text-align:left">这张薄纸将决定同门怎样称呼你、你从何处来，以及身份玉牌上会留下什么印色。</p>
 
     <div class="form-section">
       <div class="section-label"><strong>姓名</strong><span>1～8 个汉字或字符</span></div>
@@ -672,23 +686,23 @@ function renderCreator() {
     </div>
 
     <div class="form-section">
-      <div class="section-label"><strong>称谓</strong><span>不影响能力</span></div>
+      <div class="section-label"><strong>称谓</strong><span>写入同门名册</span></div>
       <div class="option-grid">${pronouns}</div>
     </div>
 
     <div class="form-section">
-      <div class="section-label"><strong>凡俗出身</strong><span>提供一项早期调查入口</span></div>
+      <div class="section-label"><strong>凡俗出身</strong><span>入山前赖以谋生的本事</span></div>
       <div class="option-grid">${originCards}</div>
     </div>
 
     <div class="form-section">
-      <div class="section-label"><strong>命笺印色</strong><span>Demo 外观预设</span></div>
+      <div class="section-label"><strong>玉牌印色</strong><span>灵光会随你一同入门</span></div>
       <div class="option-grid">${appearanceCards}</div>
     </div>
 
     <div class="button-row">
-      <button class="ghost-button" data-action="back-landing">返回</button>
-      <button class="primary-button" data-action="to-traits" data-role="creator-continue" ${canContinue ? "" : "disabled"}>让命盘观我先天</button>
+      <button class="ghost-button" data-action="back-world">返回山门简牍</button>
+      <button class="primary-button" data-action="to-traits" data-role="creator-continue" ${canContinue ? "" : "disabled"}>到照骨镜前验身</button>
     </div>
   `);
 }
@@ -709,9 +723,9 @@ function renderOpeningTraits() {
   }).join("");
   const complete = Object.keys(state.openingSelected).length === 3;
   return setupShell(`
-    <p class="eyebrow">Step 02 · 先天六签</p>
-    <h1 class="setup-title">命盘不许人尽得其愿</h1>
-    <p class="subtitle" style="margin:0;text-align:left">根骨、才性、因果各取一枚。左侧稳定，右侧高波动；稀有不等于没有代价。</p>
+    <p class="eyebrow">山门春试 · 照骨镜</p>
+    <h1 class="setup-title">镜中六签，只许各取其一</h1>
+    <p class="subtitle" style="margin:0;text-align:left">镜光依次照见你的根骨、才性与因果。每一份天赋都带着自己的代价。</p>
     <div class="trait-groups">${groups}</div>
 
     ${state.rerollConfirm ? `
@@ -723,7 +737,7 @@ function renderOpeningTraits() {
 
     <div class="button-row">
       <button class="ghost-button" data-action="request-reroll" ${state.rerollUsed ? "disabled" : ""}>重掷六签 · ${state.rerollUsed ? "已用尽" : "1/1"}</button>
-      <button class="primary-button" data-action="to-birth-sheet" ${complete ? "" : "disabled"}>收下三枚先天词条</button>
+      <button class="primary-button" data-action="to-birth-sheet" ${complete ? "" : "disabled"}>收下三签，封入玉牌</button>
     </div>
   `);
 }
@@ -731,14 +745,26 @@ function renderOpeningTraits() {
 function renderBirthSheet() {
   const origin = getOrigin(state.character.origin);
   const appearance = getAppearance(state.character.appearance);
+  const mortalTie = {
+    herbalist: "山下药田仍欠着一季春税",
+    hunter: "旧猎弓留在山门外的松树下",
+    scholar: "落第文章还压在行囊最底层",
+    caravan: "失散商队的下落至今不明",
+  }[state.character.origin];
   return setupShell(`
-    <p class="eyebrow">Step 03 · 初命笺</p>
-    <h1 class="setup-title">此身落印，世界方生</h1>
+    <p class="eyebrow">归尘门 · 外门名牒</p>
+    <h1 class="setup-title">从今日起，山门记得你的名字</h1>
     <div class="birth-sheet">
       <div>${avatarHtml("large")}</div>
       <div class="birth-details">
         <h2>${escapeHtml(state.character.name)}</h2>
-        <p class="birth-meta">${escapeHtml(origin.name)} · ${escapeHtml(appearance.name)}印 · 归尘门外门新弟子</p>
+        <p class="birth-meta">${escapeHtml(origin.name)} · ${escapeHtml(appearance.name)}印</p>
+        <div class="birth-facts">
+          <div><span>身份</span><strong>归尘门外门新弟子</strong></div>
+          <div><span>境界</span><strong>凡身 · 尚未引气</strong></div>
+          <div><span>持有</span><strong>身份玉牌、粗布道袍、抄经一卷</strong></div>
+          <div><span>凡俗牵挂</span><strong>${escapeHtml(mortalTie)}</strong></div>
+        </div>
         <div class="chosen-traits">
           ${selectedOpeningTraits().map((trait) => `
             <div class="chosen-trait-line ${rarityClass(trait.rarity)}">
@@ -751,16 +777,37 @@ function renderBirthSheet() {
     </div>
     <div class="button-row">
       <button class="ghost-button" data-action="back-traits">重新选择</button>
-      <button class="primary-button" data-action="confirm-character">落印，入世</button>
+      <button class="primary-button" data-action="confirm-character">确认名牒，入外院</button>
     </div>
-    <p class="screen-note">确认后将固定本局世界种子：${escapeHtml(state.seed)}</p>
+  `);
+}
+
+function renderArrival() {
+  const origin = getOrigin(state.character.origin);
+  return setupShell(`
+    <p class="eyebrow">太虚元年三月初六 · 黄昏</p>
+    <h1 class="setup-title">藏经阁西墙传来一声闷响</h1>
+    <div class="event-docket"><span>地点</span><strong>归尘门 · 外院藏经阁</strong><p>入门第三日，你被派来归还虫蛀经卷。春雨打湿窗纸，一页残经忽然被风卷进西墙后的窄缝。</p></div>
+    <div class="story-copy"><p>墙后本该是封死的祖师洞。石门却开了一线，冷风里带着陈年香灰味。你的${escapeHtml(origin?.name)}经历告诉你：这阵风不是从山腹里吹出来的。</p></div>
+    <div class="action-list">
+      ${actionCard({ action: "enter-ancestral-cave", value: "follow", title: "提灯追进石门", description: "那页残经上有你的名字。你想在别人发现前把它取回来。", source: "循迹", meta: "独自入洞", kind: "special" })}
+      ${actionCard({ action: "enter-ancestral-cave", value: "inspect", title: "先检查门缝与香灰", description: "不贸然跨过石门，先判断最近是否有人来过。", source: `出身·${escapeHtml(origin?.name)}`, meta: "谨慎查验" })}
+      ${actionCard({ action: "enter-ancestral-cave", value: "report", title: "去值房禀报石门异动", description: "按门规行事，却可能让掌簿执事先一步封住现场。", source: "门规", meta: "寻求见证" })}
+    </div>
   `);
 }
 
 function renderOmen() {
+  const entryCopy = {
+    follow: "你追着残经跨过石门。纸页落在一面裂开的青铜圆盘上，你的名字正从盘心慢慢渗出。",
+    inspect: "香灰只有一层脚印：进洞的人赤足，却没有留下离开的痕迹。你沿脚印找到一面裂开的青铜圆盘。",
+    report: "值房无人应门。等你带着巡夜木牌回来，石门已经大开，残经贴在一面裂开的青铜圆盘上。",
+  }[state.prologueChoice] || "石门后没有祖师像，只有一面裂开的青铜圆盘。";
   return setupShell(`
     <div class="title-lockup">
-      <p class="eyebrow">祖师洞 · 一息之后</p>
+      <p class="eyebrow">祖师洞 · 封门已久</p>
+      <p class="subtitle">${escapeHtml(entryCopy)}</p>
+      <p class="subtitle">指尖碰到盘沿的刹那，春雨声消失了。你从自己的身体里坠下去，一口气越过七年。</p>
       <h1 class="setup-title">黑日悬山</h1>
       <div class="omen-block">太虚七年，护山阵反转。<br />归尘门上下，无一生还。</div>
       <p class="subtitle">你看见裴照雪折剑，闻青禾倒在丹房门前。最后一刻，一轮没有温度的黑日从祖师洞中升起。</p>
@@ -778,18 +825,18 @@ function renderRealityHub() {
       <p>你仍是刚入门三日的外门弟子。若现在冲进议事堂高喊灭门，没有人会相信一个新人的噩梦。</p>
       <div class="quote-block">命盘只给出一句说明：<strong>“试一条命，留一件真。”</strong></div>
       <p>第一次模拟只能推到第七日。那之前，宗门会举行接风晚宴。</p>
-      ${inherited ? `<div class="notice-block"><strong>二周目记忆 · ${escapeHtml(state.inheritedLegacy.name)}</strong><br>你不必再从“晚宴是否危险”开始猜；可以直接验证换水时序与旧印。</div>` : ""}
+      ${inherited ? `<div class="notice-block"><strong>前世遗痕 · ${escapeHtml(state.inheritedLegacy.name)}</strong><br>你不必再从“晚宴是否危险”开始猜；可以直接验证换水时序与旧印。</div>` : ""}
     </div>
     <div class="action-list">
-      ${inherited ? actionCard({ action: "start-sim1-informed", title: "沿继承命痕直达晚宴前夜", description: "跳过已知的晨间盲查，直接从酉时换水与名册旧印切入。", source: "二周目入口", meta: "命火 3 → 2 · 跳过一次行动", kind: "special" }) : ""}
-      ${actionCard({ action: "start-sim1", title: "消耗 1 命火，试命至第七日", description: "模拟死亡不会结束周目；你可以带回一项结算成果。", source: "太虚命盘", meta: "命火 3 → 2", kind: "special" })}
+      ${inherited ? actionCard({ action: "start-sim1-informed", title: "沿前世遗痕直达晚宴前夜", description: "越过已经看清的晨间琐事，直接从酉时换水与名册旧印切入。", source: "前世遗痕", meta: "命火 3 → 2", kind: "special" }) : ""}
+      ${actionCard({ action: "start-sim1", title: "燃起 1 点命火，试命至第七日", description: "即使死在推演之中，你仍会带着一项所得醒来。", source: "太虚命盘", meta: "命火 3 → 2", kind: "special" })}
     </div>
   `);
 }
 
 function renderTriggerBlocks() {
   return state.latestTriggers.map((trigger) => `
-    <div class="trigger-block"><span class="trigger-label">先天词条触发 · ${escapeHtml(trigger.name)}</span>${escapeHtml(trigger.text)}</div>
+    <div class="trigger-block"><span class="trigger-label">先天命签 · ${escapeHtml(trigger.name)}</span>${escapeHtml(trigger.text)}</div>
   `).join("");
 }
 
@@ -898,7 +945,7 @@ function renderSettlement() {
   const pending = state.pendingSettlement;
   const poolTags = state.actionTags.filter((tag) => ["poison", "observe", "survival", "protect", "deceive"].includes(tag));
   return gameShell(`
-    ${sceneHeader(`第 1 世结算 · ${state.rating}等`, "这一生，只能带回一件东西", "确定答案解决眼前，未知词条塑造以后。三者互斥。")}
+    ${sceneHeader(`第 1 世结算 · ${state.rating}等`, "这一生，只能带回一件东西", "确定所得能解眼前之急，未知命痕会改变往后的路。三者只能取一。")}
     <div class="settlement-grid">
       <button class="settlement-card" data-action="choose-settlement" data-value="dao">
         <span class="settlement-type">道行 · 完全可见</span>
@@ -915,7 +962,7 @@ function renderSettlement() {
       <button class="settlement-card" data-action="choose-settlement" data-value="trait">
         <span class="settlement-type">命痕 · 候选未知</span>
         <h3>${state.rating}等抽取</h3>
-        <p>放弃道行与确证，从“${poolTags.map(tagName).join("、")}”词池中抽取三枚，再带回一枚后天词条。</p>
+        <p>放弃道行与确证，让此世的“${poolTags.map(tagName).join("、")}”经历凝成三枚命痕，再择一枚带回。</p>
         <div class="settlement-facts"><span>规格：3 抽 1 · 至少一枚蓝色</span><span>代价：结果未知</span></div>
       </button>
     </div>
@@ -929,8 +976,8 @@ function renderSettlement() {
 }
 
 function settlementConfirmText(type) {
-  if (type === "dao") return "你将失去「酉时换水」与本次词条抽取。";
-  if (type === "certainty") return "你将失去「灵息逆转」与本次词条抽取。";
+  if (type === "dao") return "你将失去「酉时换水」与本次命痕显化。";
+  if (type === "certainty") return "你将失去「灵息逆转」与本次命痕显化。";
   return "你将放弃「灵息逆转」与「酉时换水」，候选显化后不可改回。";
 }
 
@@ -942,7 +989,7 @@ function renderTraitDraw() {
       <div class="draw-grid">
         ${state.settlementCandidates.map((trait, index) => traitCardHtml(trait, { action: "take-trait", revealed: true, index })).join("")}
       </div>
-      <p class="screen-note">点击一枚命痕带回现实 · 稀有度表示规则影响，不等于无条件更强</p>
+      <p class="screen-note">三枚命痕只能留下一枚；其余将随这段未来一同散去。</p>
     </div>
   `);
 }
@@ -1065,7 +1112,7 @@ function renderRealityDeath() {
   return gameShell(`
     ${sceneHeader("现实 · 命途断绝", "现实没有结算", "宋无咎要求你拿出证据。消息泄露后，晚宴取消，杀手却在当夜找上了你。")}
     <div class="death-cause"><span>现实死因</span><strong>无证据示警打草惊蛇，当夜遭未知术法灭口</strong></div>
-    <div class="notice-block">模拟死亡会留下成果；现实死亡只会结束当前命途。Demo 已在危险行动前保存现实锚点。</div>
+    <div class="notice-block">模拟中的死亡会留下所得；现实中的死亡只会截断命途。幸而命盘在你冒险前钉下了一道回命锚。</div>
     <div class="button-row">
       <button class="primary-button" data-action="retry-reality">读取现实锚点</button>
       <button class="ghost-button" data-action="new-game">重新建立角色</button>
@@ -1081,7 +1128,7 @@ function renderSim2Feast() {
       <p>这一世，你已经带着现实里的新安排进入模拟。酉时将至，所有人和物都来到熟悉位置。</p>
     </div>
     <div class="action-list">
-      ${actionCard({ action: "fast-forward-feast", title: "按已验证方案快速处理晚宴", description: "仍由你执行关键动作，其余已知过程压缩结算。", source: state.reward ? state.reward.name : "已知命途", meta: "数日 → 一刻", kind: "special" })}
+      ${actionCard({ action: "fast-forward-feast", title: "按已验证方案处理晚宴", description: "你亲手落下关键一子，其余已经看清的过程由盘面一笔带过。", source: state.reward ? state.reward.name : "已知命途", meta: "数日 → 一刻", kind: "special" })}
     </div>
   `);
 }
@@ -1106,7 +1153,7 @@ function renderCompanionResult() {
   const offer = state.companionOffer;
   const companionNames = { wen: "闻青禾", pei: "裴照雪", alone: "独自行动" };
   return gameShell(`
-    ${sceneHeader("第 2 次模拟 · 山门石阶", offer?.accepted ? `${companionNames[offer.companion]}答应同行` : `${companionNames[offer?.companion]}拒绝同行`, offer?.accepted ? "你说服了一个有自己判断的人，不是获得了一件装备。" : "拒绝本身也是情报：你缺少能让对方承担风险的证据。")}
+    ${sceneHeader("第 2 次模拟 · 山门石阶", offer?.accepted ? `${companionNames[offer.companion]}答应同行` : `${companionNames[offer?.companion]}拒绝同行`, offer?.accepted ? "对方愿意与你并肩下山，也把自己的底线说在了前面。" : "这份拒绝说明：你还没有拿出足以让对方承担风险的证据。")}
     <div class="story-copy">
       <p>${escapeHtml(offer?.reason || "你决定独自行动。")}</p>
       <div class="notice-block"><strong>同伴底线</strong><br>${escapeHtml(offer?.boundary || "没有同伴援护。")}</div>
@@ -1120,11 +1167,11 @@ function renderCompanionResult() {
 
 function synergySummaryHtml() {
   if (!state.activeSynergies?.length) {
-    return `<p class="empty-state">当前先天词条与后天命痕尚未形成矿井联动；你仍可依靠现场情报破局。</p>`;
+    return `<p class="empty-state">当前先天命签与后天命痕尚未彼此呼应；你仍可依靠现场情报破局。</p>`;
   }
   return `<div class="synergy-list">${state.activeSynergies.map((synergy) => `
     <div class="synergy-card">
-      <span>词条联动 · ${escapeHtml(synergySourceText(synergy))}</span><strong>${escapeHtml(synergy.name)}</strong>
+      <span>命签相应 · ${escapeHtml(synergySourceText(synergy))}</span><strong>${escapeHtml(synergy.name)}</strong>
       <p>${escapeHtml(synergy.effect)}</p><small>代价：${escapeHtml(synergy.cost)}</small>
     </div>
   `).join("")}</div>`;
@@ -1135,7 +1182,7 @@ function synergySourceText(synergy) {
   const acquired = (state.acquiredTraits || [])
     .map(getSettlementTrait)
     .find((trait) => trait && synergy.acquiredAny.includes(trait.id));
-  return [opening?.name, acquired?.name].filter(Boolean).join(" × ") || "命盘构筑";
+  return [opening?.name, acquired?.name].filter(Boolean).join(" × ") || "未成章法";
 }
 
 function renderMineApproach() {
@@ -1144,7 +1191,7 @@ function renderMineApproach() {
     ${sceneHeader("第 2 次模拟 · 乌铜矿入口", "矿难之前，入口已经在说谎", "矿册写着小规模塌方，井口却站着不属于矿场的守卫；旧风井还有新鲜药味。")}
     <div class="story-copy">
       ${intelBoardHtml()}
-      <h2 class="section-title">当前词条联动</h2>
+      <h2 class="section-title">当前命签相应</h2>
       ${synergySummaryHtml()}
     </div>
     <div class="action-list">
@@ -1195,7 +1242,7 @@ function renderMineBattle() {
   const availableSynergy = state.activeSynergies?.find((synergy) => ["feign", "intent", "vent"].includes(synergy.unlock));
   const companionAvailable = state.companionOffer?.accepted && state.companion !== "alone";
   return gameShell(`
-    ${sceneHeader("第 2 次模拟 · 守核傀儡", "它没有等级，只有可以理解的规则", "护印保护核心；每回合先读杀招，再决定观察、反制、借力或强攻。")}
+    ${sceneHeader("第 2 次模拟 · 守核傀儡", "它不知疲倦，每一道杀招却都循着固定印诀", "护印保护核心；你必须先读懂杀招，再决定观察、反制、借力或强攻。")}
     <div class="battle-layout">
       <section class="battle-status">
         <div><span>你的心志</span><strong>${battle.resolve}</strong></div>
@@ -1210,7 +1257,7 @@ function renderMineBattle() {
     <div class="action-list">
       ${actionCard({ action: "battle-action", value: "observe", title: "守势观察征兆", description: "本回合不受反击，并确认可用于下一回合反制的意图。", source: "观察", meta: "获得洞察" })}
       ${actionCard({ action: "battle-action", value: "counter", title: "按确证抢断口令与膝印", description: battle.intelStatus === "stale" ? "过期确证可能已经失真；未先观察时反制会落空。" : "一次性拆除两层护印；需要确证或本轮洞察。", source: battle.intelStatus === "stale" ? "过期确证" : "情报反制", meta: battle.counterUsed ? "已使用" : "限 1 次", disabled: battle.counterUsed })}
-      ${availableSynergy ? actionCard({ action: "battle-action", value: "synergy", title: `发动联动·${availableSynergy.name}`, description: availableSynergy.effect, source: "词条构筑", meta: battle.synergyUsed ? "已使用" : availableSynergy.cost, disabled: battle.synergyUsed, kind: "special" }) : ""}
+      ${availableSynergy ? actionCard({ action: "battle-action", value: "synergy", title: `发动联动·${availableSynergy.name}`, description: availableSynergy.effect, source: "命痕相应", meta: battle.synergyUsed ? "已使用" : availableSynergy.cost, disabled: battle.synergyUsed, kind: "special" }) : ""}
       ${companionAvailable ? actionCard({ action: "battle-action", value: "companion", title: `请求${state.companion === "wen" ? "闻青禾" : "裴照雪"}制造窗口`, description: "同伴按自己的专长提供一次援护，不接受直接控制。", source: "同伴", meta: battle.companionUsed ? "已行动" : "限 1 次", disabled: battle.companionUsed }) : ""}
       ${actionCard({ action: "battle-action", value: "strike", title: "强攻护印或核心", description: "推进最快，但若未在本回合击破核心，将承受当前杀招。", source: "战斗", meta: "造成 1 点破坏", kind: "danger" })}
     </div>
@@ -1257,7 +1304,7 @@ function renderMineReturn() {
       <p>现实仍在第三月矿难之前。这项成果会立刻改变入井安排，但一旦现实偏转，模拟中的精确时序也可能过期。</p>
     </div>
     <div class="action-list">
-      ${actionCard({ action: "to-p1-reality", title: "回到现实，兑现矿底确证", description: "不等待新的菜单或养成；马上用上一条命改变矿难。", source: "太虚命盘", meta: "现实锚点 · 矿难前", kind: "special" })}
+      ${actionCard({ action: "to-p1-reality", title: "回到现实，兑现矿底确证", description: "趁矿难尚未发生，立刻把上一条命换来的时机写进现实。", source: "太虚命盘", meta: "现实锚点 · 矿难前", kind: "special" })}
     </div>
   `);
 }
@@ -1279,7 +1326,7 @@ function renderP1RealityPlan() {
 function renderEnding() {
   const precise = state.p1RealityChoice === "precision";
   return gameShell(`
-    ${sceneHeader("P1 原型完成 · 现实已偏转", precise ? "你没有比对手更强，只是比他早知道一步" : "矿难被压住，幕后者也提前看见了你", precise ? "确证改变了行动规则；新的偏差又让这条确证不再是永真攻略。" : "力量救下了眼前的人，却烧掉了追查因果的现场。")}
+    ${sceneHeader("现实 · 乌铜矿余波", precise ? "你没有比对手更强，只是比他早知道一步" : "矿难被压住，幕后者也提前看见了你", precise ? "确证改变了行动规则；新的偏差又让这条确证不再是永真答案。" : "力量救下了眼前的人，却烧掉了追查因果的现场。")}
     <div class="story-copy">
       <div class="fate-stamp">预知兑现</div>
       <p>${escapeHtml(state.p1Payoff)}</p>
@@ -1294,9 +1341,8 @@ function renderEnding() {
     <div class="path-recap"><h2>本轮路径复盘</h2>${state.p1Path.map((item, index) => `<p><span>${index + 1}</span>${escapeHtml(item)}</p>`).join("")}</div>
     <div class="button-row">
       <button class="secondary-button" data-action="retry-settlement">保留角色，改选第一次结算</button>
-      <button class="primary-button" data-action="continue-p2">继续七年因果链</button>
+      <button class="primary-button" data-action="continue-p2">追查旧印背后的七年因果</button>
     </div>
-    <p class="screen-note">P0/P1 纵向切片完成 · 完整 Demo 将继续推进至第七年黑日</p>
   `);
 }
 
@@ -1317,29 +1363,29 @@ function npcDossierGridHtml() {
 
 function buildSynergyGridHtml() {
   if (!state.buildSynergies?.length) {
-    return `<p class="empty-state">当前构筑尚未与词条、确证或同伴形成联动；仍可用基础能力推进。</p>`;
+    return `<p class="empty-state">当前法门尚未与命痕、确证或同伴彼此呼应；你仍可凭基础本领推进。</p>`;
   }
   return `<div class="synergy-list">${state.buildSynergies.map((synergy) => `
-    <div class="synergy-card"><span>构筑联动</span><strong>${escapeHtml(synergy.name)}</strong><p>${escapeHtml(synergy.effect)}</p></div>
+    <div class="synergy-card"><span>法门相应</span><strong>${escapeHtml(synergy.name)}</strong><p>${escapeHtml(synergy.effect)}</p></div>
   `).join("")}</div>`;
 }
 
 function renderP2Interlude() {
   return gameShell(`
-    ${sceneHeader("完整 Demo · 第三月之后", "改掉一场矿难，还没有改掉制造矿难的宗门", "命盘把时间线拉到七年。四个人分别握着阵图、尸骨、旧档和山外暗线；没有任何人会无条件听命于你。")}
+    ${sceneHeader("命盘深处 · 第三月之后", "改掉一场矿难，还没有改掉制造矿难的宗门", "命盘上的墨线延伸到七年之后。四个人分别握着阵图、尸骨、旧档和山外暗线；没有任何人会无条件听命于你。")}
     <div class="story-copy">
-      <div class="notice-block"><strong>压缩终局</strong><br>已掌握的晚宴与矿难将快速结算；第一年旧档案、第五年祭阵准备和第七年黑日仍由你亲自行动。</div>
+      <div class="notice-block"><strong>命盘翻过已知岁月</strong><br>晚宴与矿难已经看清，盘面不再重复旧事。新的墨迹停在第一年冬、第五年秋与第七年黑日。</div>
       ${npcDossierGridHtml()}
     </div>
     <div class="action-list">
-      ${actionCard({ action: "to-build-choice", title: "用两次改命所得，确定七年构筑方向", description: "构筑改变规则入口，不是单纯提高伤害。选定后不可在本周目更换。", source: "长期准备", meta: "推进至第一年", kind: "special" })}
+      ${actionCard({ action: "to-build-choice", title: "用两世所得，择定一门七年法门", description: "观命、拆阵、潜行或聚众，只能择一门修到足以撬动宗门。", source: "长期准备", meta: "推进至第一年", kind: "special" })}
     </div>
   `);
 }
 
 function renderBuildChoice() {
   return gameShell(`
-    ${sceneHeader("现实 · 第一年前", "七年只够把一种方法练到能改变规则", "功法不是等级树。你选择自己将如何理解、拆解或带人离开这场劫难。")}
+    ${sceneHeader("现实 · 第一年前", "七年只够把一种方法练到足以撼动宗门", "你必须择一门法：看清因果、拆毁祭阵、潜入暗处，或把众人连成一条退路。")}
     <div class="build-grid">
       ${BUILD_PATHS.map((build) => `
         <button class="build-card" data-action="choose-build" data-value="${build.id}">
@@ -1354,7 +1400,7 @@ function renderBuildChoice() {
 function renderYear1Approach() {
   const build = getBuildPath(state.buildId);
   return gameShell(`
-    ${sceneHeader("现实 · 第一年冬", "闻青禾失踪的那一夜，建宗密库提前封门", `构筑：${build?.name}。上一条未来里，闻青禾在调查历代尸骨后消失。`)}
+    ${sceneHeader("现实 · 第一年冬", "闻青禾失踪的那一夜，建宗密库提前封门", `你已修成${build?.name}。上一条未来里，闻青禾在调查历代尸骨后消失。`)}
     <div class="story-copy">
       <p>你已把现实锚点钉在密库封门前。宋无咎带着钥匙，闻青禾带着尸骨药性记录，地牢里的阿厌则知道敌宗如何称呼这座祭阵。</p>
       <div class="notice-block"><strong>现实风险</strong><br>这不是模拟。若无证据公开指控长老，你会在当夜被命盘封口；死亡后只能读取此现实锚点。</div>
@@ -1387,7 +1433,7 @@ function renderP2RealityDeath() {
     <div class="notice-block"><strong>最近现实锚点</strong><br>第一年冬 · 建宗密库封门前。读取后，现实死亡之后的变化不会保留。</div>
     <div class="button-row">
       <button class="primary-button" data-action="retry-p2-anchor">读取现实锚点</button>
-      <button class="ghost-button" data-action="new-game">放弃本周目</button>
+      <button class="ghost-button" data-action="new-game">散去此世，另起一命</button>
     </div>
   `);
 }
@@ -1406,7 +1452,7 @@ function renderYear1Resolution() {
       ${npcDossierGridHtml()}
     </div>
     <div class="action-list">
-      ${actionCard({ action: "advance-year5", title: "快速结算四年准备，推进至赤霞宗攻山", description: "已知日常压缩跳过；构筑、同伴和确证决定第五年的可选方案。", source: "时间跳转", meta: "第一年 → 第五年", kind: "special" })}
+      ${actionCard({ action: "advance-year5", title: "让命盘推演四年，直至赤霞宗攻山", description: "此后四年的修行与结盟化作盘上墨痕；法门、同伴和确证共同决定第五年的局面。", source: "命盘推演", meta: "第一年 → 第五年", kind: "special" })}
     </div>
   `);
 }
@@ -1416,7 +1462,7 @@ function renderYear5Hub() {
     ${sceneHeader("现实 · 第五年秋", "敌宗攻山只是祭阵需要的一场烟幕", "赤霞宗以为山下封着飞升遗宝；长老则准备借死伤提前给日核蓄力。")}
     <div class="story-copy">
       <p>裴照雪控制护山阵外环，宋无咎掌握换防名册，阿厌知道敌宗口令，闻青禾已经在组织伤员撤离。你只能把一条方案设为主轴。</p>
-      <h2 class="section-title">已形成的构筑联动</h2>${buildSynergyGridHtml()}
+      <h2 class="section-title">已相互呼应的法门与命痕</h2>${buildSynergyGridHtml()}
     </div>
     <div class="action-list">
       ${actionCard({ action: "to-year5-crisis", title: "进入祭阵准备争夺", description: "决定谁控制外环、谁保存证据、谁获得自由。", source: "第五年锚点", meta: "关键现实行动", kind: "special" })}
@@ -1472,20 +1518,20 @@ function renderFinalSummary() {
   const stale = state.intel.filter((record) => record.status === "stale").length;
   const build = getBuildPath(state.buildId);
   return gameShell(`
-    ${sceneHeader("完整 Demo · 正式结局", ending.name, ending.epitaph)}
+    ${sceneHeader("太虚七年 · 尘埃落定", ending.name, ending.epitaph)}
     <div class="story-copy"><div class="fate-stamp">${escapeHtml(ending.name)}</div><p>${escapeHtml(ending.consequence)}</p><div class="notice-block"><strong>结局代价</strong><br>${escapeHtml(ending.cost)}</div></div>
     <div class="final-summary-grid">
-      <div><span>唯一主角</span><strong>${escapeHtml(state.character.name)}</strong><p>现实死亡 ${state.realityDeaths} 次 · 最终仍由同一主角完成命途</p></div>
+      <div><span>命主</span><strong>${escapeHtml(state.character.name)}</strong><p>命途曾在现实断裂 ${state.realityDeaths} 次，皆从锚点续回</p></div>
       <div><span>两世带回</span><strong>${escapeHtml(state.reward?.name)} / ${escapeHtml(state.p1Carry?.name)}</strong><p>模拟死亡留下成果，现实死亡只读取锚点</p></div>
       <div><span>情报账</span><strong>${confirmed} 条确证 / ${stale} 条过期</strong><p>传闻与过期确证仍留作因果线索</p></div>
-      <div><span>七年构筑</span><strong>${escapeHtml(build?.name)}</strong><p>${escapeHtml(build?.cost)}</p></div>
+      <div><span>七年法门</span><strong>${escapeHtml(build?.name)}</strong><p>${escapeHtml(build?.cost)}</p></div>
       <div><span>命盘代价</span><strong>天妒 ${state.envy} · 偏差 ${state.deviation}</strong><p>强力与改写都真实改变终局</p></div>
-      <div><span>现实锚点</span><strong>第三月 / 第一年 / 第五年 / 第七年</strong><p>关键节点均由玩家亲自行动</p></div>
+      <div><span>现实锚点</span><strong>第三月 / 第一年 / 第五年 / 第七年</strong><p>每一道锚点都留着你的选择</p></div>
     </div>
     ${npcDossierGridHtml()}
-    <div class="path-recap"><h2>完整命途复盘</h2>${[...state.p1Path, ...state.p2Path].map((item, index) => `<p><span>${index + 1}</span>${escapeHtml(item)}</p>`).join("")}</div>
-    <div class="legacy-card"><span>下一周目可继承</span><strong>${escapeHtml(state.legacyCandidate?.name)}</strong><p>${escapeHtml(state.legacyCandidate?.effect)}</p></div>
-    <div class="button-row"><button class="primary-button" data-action="start-new-cycle">携带命痕，进入第 ${state.cycle + 1} 周目</button><button class="ghost-button" data-action="new-game">从零开始</button></div>
+    <div class="path-recap"><h2>命途复盘</h2>${[...state.p1Path, ...state.p2Path].map((item, index) => `<p><span>${index + 1}</span>${escapeHtml(item)}</p>`).join("")}</div>
+    <div class="legacy-card"><span>下一世可继承</span><strong>${escapeHtml(state.legacyCandidate?.name)}</strong><p>${escapeHtml(state.legacyCandidate?.effect)}</p></div>
+    <div class="button-row"><button class="primary-button" data-action="start-new-cycle">携带命痕，再开第 ${state.cycle + 1} 世</button><button class="ghost-button" data-action="new-game">散去旧痕，另起一命</button></div>
   `);
 }
 
@@ -1497,9 +1543,9 @@ function renderCycleOpening() {
     ayen: "地牢深处的阿厌抬头望向你：‘你身上有祭盘主人的味道。离我远点。’",
   }[legacy?.npcReaction];
   return gameShell(`
-    ${sceneHeader(`第 ${state.cycle} 周目 · 命痕继承`, "世界重新落墨，但有一处没有擦干净", "你仍是唯一主角；上一结局只留下一个能够改变早期入口的命痕。")}
+    ${sceneHeader(`第 ${state.cycle} 世 · 命痕继承`, "世界重新落墨，但有一处没有擦干净", "你仍是此命之主；上一世终局只留下一枚能够改变早期因果的命痕。")}
     <div class="story-copy"><div class="legacy-card"><span>继承命痕</span><strong>${escapeHtml(legacy?.name)}</strong><p>${escapeHtml(legacy?.effect)}</p></div><p>${escapeHtml(reaction)}</p></div>
-    <div class="action-list">${actionCard({ action: "begin-cycle-two", title: "带着前世记忆进入祖师洞后的现实", description: "新周目可跳过盲目调查，直接从晚宴时序或旧印入口开始试命。", source: "二周目变化", meta: "新早期行动", kind: "special" })}</div>
+    <div class="action-list">${actionCard({ action: "begin-cycle-two", title: "带着前世记忆回到祖师洞外", description: "你可以越过已经看清的盲查，直接从晚宴时序或旧印入口开始试命。", source: "前世遗痕", meta: "早期因果已改变", kind: "special" })}</div>
   `);
 }
 
@@ -1519,9 +1565,11 @@ function render() {
   document.body.dataset.mode = mode;
   const renderers = {
     landing: renderLanding,
+    worldIntro: renderWorldIntro,
     creator: renderCreator,
     openingTraits: renderOpeningTraits,
     birthSheet: renderBirthSheet,
+    arrival: renderArrival,
     omen: renderOmen,
     realityHub: renderRealityHub,
     sim1Morning: renderSim1Morning,
@@ -1560,7 +1608,7 @@ function render() {
   };
   app.innerHTML = (renderers[state.screen] || renderLanding)();
   const pageLabel = modeLabel();
-  document.title = pageLabel === "太虚命盘" ? "太虚命盘 · 可玩 Demo" : `${pageLabel} · 太虚命盘`;
+  document.title = pageLabel === "太虚命盘" ? "太虚命盘" : `${pageLabel} · 太虚命盘`;
   if (state.screen !== "landing") saveState();
   window.scrollTo({ top: 0, behavior: "instant" });
 }
@@ -1599,7 +1647,7 @@ const handlers = {
   "new-game": () => {
     clearSave();
     state = createInitialState(freshSeed());
-    state.screen = "creator";
+    state.screen = "worldIntro";
     render();
   },
   "continue-game": () => {
@@ -1608,6 +1656,8 @@ const handlers = {
     render();
   },
   "back-landing": () => moveTo("landing"),
+  "to-creator": () => moveTo("creator"),
+  "back-world": () => moveTo("worldIntro"),
   "select-pronoun": ({ value }) => {
     state.character.pronoun = value;
     render();
@@ -1660,6 +1710,12 @@ const handlers = {
       origin: state.character.origin,
       traits: selectedOpeningTraits().map((trait) => trait.id),
     });
+    moveTo("arrival");
+  },
+  "enter-ancestral-cave": ({ value }) => {
+    if (state.screen !== "arrival" || !["follow", "inspect", "report"].includes(value)) return;
+    state.prologueChoice = value;
+    track("ancestral_cave_entered", { approach: value });
     moveTo("omen");
   },
   "wake-reality": () => {
@@ -1682,7 +1738,7 @@ const handlers = {
     state.morningChoice = "cycle-memory";
     addTags("observe", "deceive");
     addClue("继承命痕让你直接记起：酉时换水，补刀者按名册行动。 ");
-    addIntel(createIntel({ id: "feast_timing", title: "晚宴投毒时序", detail: "酉时换水后，蒙面人按名册补刀。", status: "confirmed", source: `第 ${state.cycle} 周目继承命痕`, gainedAtDeviation: 0, expiresAtDeviation: 1 }));
+    addIntel(createIntel({ id: "feast_timing", title: "晚宴投毒时序", detail: "酉时换水后，蒙面人按名册补刀。", status: "confirmed", source: `第 ${state.cycle} 世前世遗痕`, gainedAtDeviation: 0, expiresAtDeviation: 1 }));
     state.latestTriggers = [triggerOpening("root")].filter(Boolean);
     track("cycle_memory_early_route_used", { legacy: state.inheritedLegacy.id });
     moveTo("sim1Eve");
@@ -2005,7 +2061,7 @@ const handlers = {
     if (state.screen !== "buildChoice" || state.buildId || !getBuildPath(value)) return;
     state.buildId = value;
     refreshBuildSynergies();
-    state.p2Path.push(`七年构筑选择：${getBuildPath(value).name}`);
+    state.p2Path.push(`择定七年法门：${getBuildPath(value).name}`);
     state.timeline.archive = "approaching";
     establishRealityAnchor("year1Approach");
     track("build_selected", { build: value });
@@ -2065,7 +2121,7 @@ const handlers = {
     state.timeline.siege = "approaching";
     refreshBuildSynergies();
     establishRealityAnchor("year5Hub");
-    state.p2Path.push("快速结算四年准备，抵达第五年祭阵争夺");
+    state.p2Path.push("命盘推演四年修行，抵达第五年祭阵争夺");
     moveTo("year5Hub");
   },
   "to-year5-crisis": () => {
@@ -2151,7 +2207,7 @@ const handlers = {
     const legacyIntel = {
       safe_route: createIntel({ id: "safe_route", title: "山外安全撤离图", detail: "黑日升起前可从废弃驿道撤出伤员与典籍。", status: "confirmed", source: "余烬山图", gainedAtDeviation: 0, expiresAtDeviation: null }),
       old_seal_memory: createIntel({ id: "old_seal_memory", title: "归尘门旧印记忆", detail: "晚宴名册、矿难与祭阵使用同源旧印。", status: "confirmed", source: "断阵残印", gainedAtDeviation: 0, expiresAtDeviation: 1 }),
-      founder_echo: createIntel({ id: "founder_echo", title: "祖师口令回声", detail: "你记得“六十年已满”，但不确定新周目时序。", status: "rumor", source: "黑日命痕", gainedAtDeviation: 0 }),
+      founder_echo: createIntel({ id: "founder_echo", title: "祖师口令回声", detail: "你记得“六十年已满”，但不确定下一世的时序。", status: "rumor", source: "黑日命痕", gainedAtDeviation: 0 }),
     }[legacy.openingIntel];
     if (legacyIntel) next.intel = [legacyIntel];
     state = next;
@@ -2160,7 +2216,7 @@ const handlers = {
   },
   "begin-cycle-two": () => {
     if (state.screen !== "cycleOpening" || !state.inheritedLegacy) return;
-    state.p2Path = [`第 ${state.cycle} 周目继承：${state.inheritedLegacy.name}`];
+    state.p2Path = [`第 ${state.cycle} 世继承：${state.inheritedLegacy.name}`];
     moveTo("realityHub");
   },
   "retry-settlement": () => {

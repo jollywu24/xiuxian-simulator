@@ -374,6 +374,61 @@ h1 {
   margin-top: 32px;
 }
 
+.world-ledger {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.world-fact {
+  padding: 20px;
+  border: 1px solid var(--line);
+  background: var(--panel-soft);
+}
+
+.world-fact > span,
+.event-docket > span {
+  display: block;
+  margin-bottom: 9px;
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+}
+
+.world-fact h2 {
+  margin-bottom: 10px;
+  font-size: 20px;
+  line-height: 1.5;
+}
+
+.world-fact p,
+.event-docket p {
+  margin: 0;
+  color: var(--muted);
+  font-family: var(--font-story);
+  font-size: 14px;
+  line-height: 1.85;
+}
+
+.event-docket {
+  max-width: 760px;
+  margin: 28px auto 0;
+  padding: 20px 22px;
+  border: 1px solid var(--line-strong);
+  border-left: 4px solid var(--accent);
+  background: var(--accent-soft);
+}
+
+.event-docket strong {
+  display: block;
+  margin-bottom: 8px;
+  font-family: var(--font-story);
+  font-size: 22px;
+  font-weight: 600;
+}
+
 .section-label {
   display: flex;
   align-items: baseline;
@@ -711,6 +766,34 @@ h1 {
 .birth-meta {
   color: var(--muted);
   font-size: 13px;
+}
+
+.birth-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.birth-facts > div {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.birth-facts span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+}
+
+.birth-facts strong {
+  font-family: var(--font-story);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.55;
 }
 
 .chosen-traits {
@@ -1907,6 +1990,11 @@ h1 {
   .build-grid,
   .finale-grid,
   .final-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .world-ledger,
+  .birth-facts {
     grid-template-columns: 1fr;
   }
 

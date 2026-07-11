@@ -104,8 +104,19 @@ const checkpoints = [];
 checkpoints.push(await snapshot("landing"));
 assert.equal(checkpoints.at(-1).title, "太虚命盘");
 assert.ok(checkpoints.at(-1).scrollWidth <= checkpoints.at(-1).viewport[0]);
+assert.doesNotMatch(checkpoints.at(-1).text, /Demo|P0|P1|P2|Playable|自动保存|测试/);
 
 await click("new-game");
+assert.match(await evaluate(`document.querySelector("#app")?.innerText || ""`), /凡人仰望仙山/);
+assert.match(await evaluate(`document.querySelector("#app")?.innerText || ""`), /归尘门/);
+assert.match(await evaluate(`document.querySelector("#app")?.innerText || ""`), /外门弟子/);
+await screenshot("/tmp/taixu-world-intro.png");
+await send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
+const mobileWorldIntro = await snapshot("world-intro-mobile");
+assert.ok(mobileWorldIntro.scrollWidth <= mobileWorldIntro.viewport[0]);
+await screenshot("/tmp/taixu-world-intro-mobile.png");
+await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
+await click("to-creator");
 await evaluate(`(() => {
   const field = document.querySelector('[data-field="name"]');
   field.value = "沈砚";
@@ -128,7 +139,17 @@ for (const [group, traitId] of Object.entries(openingChoices)) {
 }
 await click("to-birth-sheet");
 assert.match(await evaluate(`document.querySelector(".birth-details")?.innerText || ""`), /沈砚/);
+assert.match(await evaluate(`document.querySelector(".birth-facts")?.innerText || ""`), /凡身 · 尚未引气/);
+await screenshot("/tmp/taixu-character-sheet.png");
+await send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
+const mobileCharacterSheet = await snapshot("character-sheet-mobile");
+assert.ok(mobileCharacterSheet.scrollWidth <= mobileCharacterSheet.viewport[0]);
+await screenshot("/tmp/taixu-character-sheet-mobile.png");
+await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
 await click("confirm-character");
+assert.match(await evaluate(`document.querySelector("#app")?.innerText || ""`), /藏经阁西墙传来一声闷响/);
+await screenshot("/tmp/taixu-first-event.png");
+await click("enter-ancestral-cave", "follow");
 await click("wake-reality");
 await click("start-sim1");
 await click("sim-morning", "well");
@@ -138,7 +159,7 @@ await click("sim-feast", "feign");
 checkpoints.push(await snapshot("death"));
 assert.equal(checkpoints.at(-1).mode, "death");
 assert.match(checkpoints.at(-1).text, /你不是被毒死的/);
-assert.match(checkpoints.at(-1).text, /先天词条触发/);
+assert.match(checkpoints.at(-1).text, /先天命签/);
 await screenshot("/tmp/taixu-death.png");
 
 await click("to-settlement");
@@ -328,7 +349,7 @@ const finaleBaseSave = await evaluate(`localStorage.getItem("taixu-fateplate-dem
 
 await click("choose-ending", "sever");
 assert.match(await evaluate(`document.querySelector("#app")?.innerText || ""`), /斩祖散门/);
-assert.match(await evaluate(`document.querySelector(".final-summary-grid")?.innerText || ""`), /现实死亡 1 次/);
+assert.match(await evaluate(`document.querySelector(".final-summary-grid")?.innerText || ""`), /现实断裂 1 次/);
 await screenshot("/tmp/taixu-p2-sever-ending.png");
 await send("Emulation.setDeviceMetricsOverride", {
   width: 390,
@@ -338,7 +359,8 @@ await send("Emulation.setDeviceMetricsOverride", {
 });
 const mobileFinal = await snapshot("final-mobile");
 assert.ok(mobileFinal.scrollWidth <= mobileFinal.viewport[0]);
-assert.match(mobileFinal.text, /正式结局/);
+assert.match(mobileFinal.text, /太虚七年/);
+assert.doesNotMatch(await evaluate(`document.querySelector("#app")?.innerText || ""`), /Demo|P0|P1|P2|Playable|自动保存|测试|构筑|二周目/);
 await screenshot("/tmp/taixu-p2-final-mobile.png");
 await send("Emulation.setDeviceMetricsOverride", {
   width: 1280,
