@@ -1536,6 +1536,51 @@ h1 {
   font-family: var(--font-story);
 }
 
+.shen-trust-strip,
+.shen-investigation-meter {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  background: var(--panel-soft);
+}
+
+.shen-trust-strip span,
+.shen-investigation-meter span {
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+
+.shen-trust-strip strong,
+.shen-investigation-meter strong {
+  color: var(--accent);
+  font-family: var(--font-story);
+  font-size: 28px;
+}
+
+.shen-trust-strip p,
+.shen-investigation-meter p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.reward-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.reward-choice-grid .action-card {
+  height: 100%;
+}
+
 .game-shell {
   width: min(1500px, 100%);
   min-height: 100vh;
@@ -2706,6 +2751,7 @@ h1 {
   .npc-duo,
   .wudao-ending-grid,
   .next-hooks,
+  .reward-choice-grid,
   .settlement-grid,
   .draw-grid,
   .end-summary,
@@ -2720,6 +2766,16 @@ h1 {
   .world-ledger,
   .birth-facts {
     grid-template-columns: 1fr;
+  }
+
+  .shen-trust-strip,
+  .shen-investigation-meter {
+    grid-template-columns: auto 1fr;
+  }
+
+  .shen-trust-strip p,
+  .shen-investigation-meter p {
+    grid-column: 1 / -1;
   }
 
   .attribute-sheet {

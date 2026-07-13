@@ -11,13 +11,19 @@ import {
   MIND_ART,
   NIGHT_TALK,
   ROAD_TRIALS,
+  SHEN_CLUES,
+  SHEN_REWARDS,
+  SHEN_SOLUTIONS,
   TEMPLE_ENCOUNTERS,
   VOWS,
   WORLD_FACTS,
   allocateJadeBonus,
+  getShenClue,
+  getShenReward,
   resolveLadyChoice,
   resolveNightTalk,
   resolveRoadTrial,
+  resolveShenSolution,
   templeTaskCost,
 } from "../web/wudao-core.mjs";
 
@@ -90,4 +96,46 @@ test("the newly learned mind art immediately changes the road through the same w
   assert.equal(resolveRoadTrial("detour", false).potential, 0);
   assert.match(ROAD_TRIALS.dive.result, /沈氏丹纹/);
   assert.equal(resolveRoadTrial("missing", true), null);
+});
+
+test("the Shen danroom offers limited investigation and distinct ways through the same crisis", () => {
+  assert.deepEqual(SHEN_CLUES.map((item) => item.id), ["ledger", "waterway", "door_lock"]);
+  assert.deepEqual(Object.keys(SHEN_SOLUTIONS), ["ignite", "procedure", "waterway", "bait"]);
+  assert.match(getShenClue("door_lock").description, /外面落下|重复/);
+  assert.equal(getShenClue("missing"), null);
+
+  const procedureLocked = resolveShenSolution("procedure", { clues: [] });
+  assert.equal(procedureLocked.available, false);
+  assert.deepEqual(procedureLocked.missing, ["ledger"]);
+  assert.equal(resolveShenSolution("procedure", { clues: ["ledger"] }).available, true);
+
+  assert.equal(resolveShenSolution("waterway", { clues: ["waterway"], hasMindArt: false }).available, false);
+  const waterwayOpen = resolveShenSolution("waterway", { clues: ["waterway"], hasMindArt: true });
+  assert.equal(waterwayOpen.available, true);
+  assert.equal(waterwayOpen.relation, "丹房救火人");
+});
+
+test("a fate lamp reveals the deepest Shen counterplay but can never spend the last lamp", () => {
+  assert.equal(resolveShenSolution("ignite", { lives: 2 }).available, true);
+  const lastLamp = resolveShenSolution("ignite", { lives: 1 });
+  assert.equal(lastLamp.available, false);
+  assert.ok(lastLamp.missing.includes("last_lamp"));
+
+  const baitLocked = resolveShenSolution("bait", { hasMindArt: true, deathMemory: false });
+  assert.equal(baitLocked.available, false);
+  assert.ok(baitLocked.missing.includes("death_memory"));
+  const baitOpen = resolveShenSolution("bait", { hasMindArt: true, deathMemory: true });
+  assert.equal(baitOpen.available, true);
+  assert.equal(baitOpen.outcome, "takeover");
+  assert.equal(baitOpen.potential, 450);
+});
+
+test("Shen rewards create three exclusive growth directions", () => {
+  assert.deepEqual(Object.keys(SHEN_REWARDS), ["five_animals", "marrow_powder", "herb_token"]);
+  assert.equal(getShenReward("five_animals", 299).available, false);
+  assert.equal(getShenReward("five_animals", 299).missingPotential, 1);
+  assert.equal(getShenReward("five_animals", 300).available, true);
+  assert.equal(getShenReward("marrow_powder", 0).attribute, "constitution");
+  assert.equal(getShenReward("herb_token", 0).potential, 100);
+  assert.equal(getShenReward("missing", 999), null);
 });

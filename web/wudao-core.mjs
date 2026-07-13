@@ -225,6 +225,107 @@ export const ROAD_TRIALS = {
   },
 };
 
+export const SHEN_CLUES = [
+  {
+    id: "ledger",
+    name: "药材簿上的新墨",
+    location: "东墙账台",
+    description: "今日入炉的宁神草被人改成了同色同形的伏脉藤，改字处没有丹师押印。",
+    unlock: "可援引沈家双押规矩，要求封炉复验",
+  },
+  {
+    id: "waterway",
+    name: "冷水槽里的逆流",
+    location: "丹炉背面",
+    description: "冷却水没有流向院外，而是被新铜管引入回风槽；药烟会先灌满值守小室。",
+    unlock: "鱼跃龙门诀可从水道潜入，改回风向",
+  },
+  {
+    id: "door_lock",
+    name: "门闩上的旧灰",
+    location: "西侧小门",
+    description: "门闩只能从外面落下，旧灰里有三道相同擦痕；这不是一次意外，而是重复过的手法。",
+    unlock: "确认死局需要有人在开炉后从外面封门",
+  },
+];
+
+export const SHEN_SOLUTIONS = {
+  ignite: {
+    id: "ignite",
+    title: "照令点燃青炉",
+    description: "不改变任何安排，亲自确认命格没有显示出来的最后一环。",
+    outcome: "death",
+    potential: 0,
+    relation: null,
+    forecast: "伏脉烟封住经脉，门闩从外落下，丹火随后吞没小室。",
+  },
+  procedure: {
+    id: "procedure",
+    title: "按沈家规矩封炉复验",
+    description: "拿药材簿缺失的押印作证，要求两名丹师共同验药。",
+    outcome: "safe",
+    requirements: ["ledger"],
+    potential: 200,
+    relation: "可信差事人",
+    result: "沈砚秋依家规封炉。伏脉藤被当众验出，外门执役带走了换药的药童，但幕后递药之人抢先断了线。",
+    reward: "潜能二百 · 沈家信任 · 伏脉藤样本",
+  },
+  waterway: {
+    id: "waterway",
+    title: "潜入冷水暗渠改风",
+    description: "借鱼跃龙门诀潜过狭窄水道，把毒烟导向无人灰池，再守住出口。",
+    outcome: "counter",
+    requirements: ["waterway"],
+    requiresMindArt: true,
+    potential: 300,
+    relation: "丹房救火人",
+    result: "午时毒烟尽数涌进灰池。前来堵死水口的换药人被你从水下拖住，丹房和两名药徒都保了下来。",
+    reward: "潜能三百 · 丹房水道图 · 换药人口供",
+  },
+  bait: {
+    id: "bait",
+    title: "假装中毒，引换药人补刀",
+    description: "按死前记忆伪造毒发，藏住呼吸，等对方进门回收毒证。",
+    outcome: "takeover",
+    requiresDeathMemory: true,
+    requiresMindArt: true,
+    potential: 450,
+    relation: "沈家救命恩人",
+    result: "你让青炉照常冒烟，倒在门后。换药人木七果然折返搜走药包，被你借水息从死角制住；他供出丹房内还有一名接应者。",
+    reward: "潜能四百五十 · 木七口供 · 内应名单残角",
+  },
+};
+
+export const SHEN_REWARDS = {
+  five_animals: {
+    id: "five_animals",
+    name: "《五禽桩》",
+    type: "基础锻体法",
+    description: "以虎、鹿、熊、猿、鸟五势熬炼筋骨，立刻踏入锻体第一重。",
+    cost: 300,
+    stage: "body",
+    effect: "潜能 -300 · 境界提升至锻体一重",
+  },
+  marrow_powder: {
+    id: "marrow_powder",
+    name: "洗髓散",
+    type: "沈家秘药",
+    description: "不急于突破，以药力补足逆天改命留下的先天亏空。",
+    cost: 0,
+    attribute: "constitution",
+    effect: "根骨永久 +1",
+  },
+  herb_token: {
+    id: "herb_token",
+    name: "青木药牌",
+    type: "沈家门路",
+    description: "保留自由身，却能查阅外院药簿并接取沈家药材差事。",
+    cost: 0,
+    potential: 100,
+    effect: "潜能 +100 · 沈家药库入口",
+  },
+};
+
 export function getBackground(id) {
   return BACKGROUNDS.find((item) => item.id === id) || null;
 }
@@ -285,4 +386,26 @@ export function resolveRoadTrial(choiceId, hasMindArt = false) {
   const choice = ROAD_TRIALS[choiceId];
   if (!choice || (choiceId === "dive" && !hasMindArt)) return null;
   return { ...choice };
+}
+
+export function getShenClue(id) {
+  const clue = SHEN_CLUES.find((item) => item.id === id);
+  return clue ? { ...clue } : null;
+}
+
+export function resolveShenSolution(choiceId, context = {}) {
+  const solution = SHEN_SOLUTIONS[choiceId];
+  if (!solution) return null;
+  const clues = new Set(context.clues || []);
+  const missing = (solution.requirements || []).filter((requirement) => !clues.has(requirement));
+  if (solution.requiresMindArt && !context.hasMindArt) missing.push("mind_art");
+  if (solution.requiresDeathMemory && !context.deathMemory) missing.push("death_memory");
+  if (choiceId === "ignite" && Number(context.lives || 0) <= 1) missing.push("last_lamp");
+  return { ...solution, missing, available: missing.length === 0 };
+}
+
+export function getShenReward(id, potential = 0) {
+  const reward = SHEN_REWARDS[id];
+  if (!reward) return null;
+  return { ...reward, available: potential >= reward.cost, missingPotential: Math.max(0, reward.cost - potential) };
 }

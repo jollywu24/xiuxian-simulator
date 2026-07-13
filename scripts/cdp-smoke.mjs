@@ -182,24 +182,63 @@ assert.doesNotMatch(await text(), /现实|论坛|武道局|其他玩家|其它�
 await click("choose-route", "shen");
 assert.match(await text(), /下一程已定/);
 await screenshot("wudao-ending-desktop.png");
+
+await click("start-shen-chapter");
+assert.match(await text(), /沈家药铺/);
+assert.match(await text(), /以药立足的金陵世家/);
+await click("enter-shen-gate");
+assert.match(await text(), /沈砚秋/);
+await click("shen-gate-choice", "truth");
+assert.match(await text(), /信任/);
+assert.match(await text(), /一枚旧诺，只能换一件事/);
+await click("accept-shen-errand");
+assert.match(await text(), /乙字号丹房/);
+assert.equal(await evaluate(`document.querySelectorAll('[data-action="investigate-shen-clue"]:not(:disabled)').length`), 3);
+assert.equal(await evaluate(`document.querySelectorAll('[data-action="shen-solution"][data-value="ignite"]').length`), 0);
+await click("investigate-shen-clue", "waterway");
+await click("investigate-shen-clue", "ledger");
+assert.match(await text(), /冷却水没有流向院外/);
+assert.match(await text(), /今日入炉的宁神草/);
+await click("shen-solution", "waterway");
+assert.match(await text(), /丹房水道图/);
+assert.match(await text(), /丹房救火人/);
+await screenshot("wudao-shen-resolution-desktop.png");
+await click("continue-shen-reward");
+assert.match(await text(), /五禽桩/);
+assert.match(await text(), /洗髓散/);
+assert.match(await text(), /青木药牌/);
+await click("choose-shen-reward", "five_animals");
+assert.match(await text(), /锻体一重/);
+assert.match(await text(), /以熊桩托住药架/);
+await click("use-shen-reward");
+assert.match(await text(), /丹房内应/);
+assert.doesNotMatch(await text(), /现实|论坛|武道局|其他玩家|其它玩家|太虚命盘|归尘门|黑日|Demo|P0|P1|P2|测试|原型/);
+await screenshot("wudao-shen-ending-desktop.png");
 await send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
-const mobileEnding = await snapshot("ending-mobile");
+const mobileEnding = await snapshot("shen-ending-mobile");
 assert.ok(mobileEnding.scrollWidth <= 390);
-await screenshot("wudao-ending-mobile.png");
+await screenshot("wudao-shen-ending-mobile.png");
 
 const saved = JSON.parse(await evaluate(`localStorage.getItem("wudao-high-martial-v1")`));
 assert.equal(saved.backgroundId, "mystery");
 assert.equal(saved.vowId, "path");
 assert.equal(saved.lives, 1);
-assert.equal(saved.potential, 1700);
+assert.equal(saved.potential, 1750);
 assert.equal(saved.relationship, "莫逆之交");
 assert.equal(saved.mindArt, "carp_dragon_gate");
 assert.equal(saved.roadTrial, "dive");
 assert.equal(saved.nextRoute, "shen");
+assert.equal(saved.shenChapterComplete, true);
+assert.equal(saved.shenOutcome, "waterway");
+assert.equal(saved.shenReward, "five_animals");
+assert.equal(saved.shenRewardUsed, "five_animals");
+assert.equal(saved.martialStage, "body");
+assert.deepEqual(saved.skills, ["five_animals"]);
 
 await evaluate(`location.reload(); true`);
 await new Promise((resolve) => setTimeout(resolve, 250));
-assert.match(await text(), /下一程已定/);
+assert.match(await text(), /锻体一重/);
+assert.match(await text(), /金陵篇继续/);
 assert.deepEqual(pageErrors, []);
 
 process.stdout.write(`${JSON.stringify({ ok: true, checkpoints, saved: {
@@ -211,6 +250,9 @@ process.stdout.write(`${JSON.stringify({ ok: true, checkpoints, saved: {
   mindArt: saved.mindArt,
   roadTrial: saved.roadTrial,
   nextRoute: saved.nextRoute,
+  shenOutcome: saved.shenOutcome,
+  shenReward: saved.shenReward,
+  martialStage: saved.martialStage,
 } }, null, 2)}\n`);
 
 socket.close();
