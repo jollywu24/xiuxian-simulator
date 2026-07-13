@@ -6,24 +6,43 @@ import {
   BACKGROUNDS,
   DESTINY,
   LADY_STAGES,
+  LIFE_RULE,
+  MARTIAL_STAGES,
   MIND_ART,
   NIGHT_TALK,
+  ROAD_TRIALS,
   TEMPLE_ENCOUNTERS,
   VOWS,
+  WORLD_FACTS,
   allocateJadeBonus,
-  bureauConsequence,
   resolveLadyChoice,
   resolveNightTalk,
+  resolveRoadTrial,
   templeTaskCost,
 } from "../web/wudao-core.mjs";
 
-test("character creation preserves the novel route ingredients", () => {
+test("the first release establishes one self-contained high-martial world", () => {
+  assert.equal(WORLD_FACTS.length, 3);
+  assert.deepEqual(WORLD_FACTS.map((item) => item.id), ["dynasty", "jianghu", "martial"]);
+  assert.match(WORLD_FACTS[1].summary, /山门|世家|帮会/);
+  assert.match(WORLD_FACTS[2].summary, /宗师/);
+  assert.deepEqual(MARTIAL_STAGES.map((item) => item.id), ["mortal", "body", "breath", "meridian", "master"]);
+});
+
+test("character creation ties possessions and debts to the martial world", () => {
   assert.equal(ATTRIBUTES.length, 5);
   assert.equal(BACKGROUNDS.length, 4);
   assert.equal(VOWS.length, 5);
   assert.ok(BACKGROUNDS.some((item) => item.id === "mystery" && /玉佩/.test(item.gain)));
+  assert.ok(BACKGROUNDS.every((item) => item.gain && item.cost));
   assert.equal(DESTINY.name, "逆天改命");
   assert.match(DESTINY.cost, /五维基础属性全部归零/);
+});
+
+test("two in-world fate lamps explain death and return without another world", () => {
+  assert.equal(LIFE_RULE.lives, 2);
+  assert.match(LIFE_RULE.effect, /因果节点/);
+  assert.match(LIFE_RULE.effect, /此生终结/);
 });
 
 test("jade bonuses can be reallocated to solve the wall encounter faster", () => {
@@ -65,10 +84,10 @@ test("night talk choices change favor while the faithful route grants the mind a
   assert.equal(results[2].reward.id, MIND_ART.id);
 });
 
-test("bureau registration keeps protection and freedom in tension", () => {
-  const conceal = bureauConsequence("conceal");
-  const reveal = bureauConsequence("reveal");
-  assert.match(conceal.effect, /不知道你能看见全部奇遇条件/);
-  assert.match(reveal.risk, /优先为他人寻找奇遇/);
-  assert.equal(bureauConsequence("missing"), null);
+test("the newly learned mind art immediately changes the road through the same world", () => {
+  assert.equal(resolveRoadTrial("dive", false), null);
+  assert.equal(resolveRoadTrial("dive", true).potential, 100);
+  assert.equal(resolveRoadTrial("detour", false).potential, 0);
+  assert.match(ROAD_TRIALS.dive.result, /沈氏丹纹/);
+  assert.equal(resolveRoadTrial("missing", true), null);
 });

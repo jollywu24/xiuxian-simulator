@@ -1,3 +1,29 @@
+export const WORLD_FACTS = [
+  {
+    id: "dynasty",
+    name: "大曜天下",
+    summary: "朝廷守城池、驿路与律法，州府之外的山川水泽，却未必由官印说了算。",
+  },
+  {
+    id: "jianghu",
+    name: "江湖秩序",
+    summary: "山门传武，世家守土，帮会控制水陆生计。普通人依附其中，武者也要为一碗饭和一本秘籍低头。",
+  },
+  {
+    id: "martial",
+    name: "高武之世",
+    summary: "武者从锻体起步；强者可踏水越城，宗师足以改变一州格局。可你此刻连第一道门槛都没迈过。",
+  },
+];
+
+export const MARTIAL_STAGES = [
+  { id: "mortal", name: "未入门", description: "尚未完成锻体，气血与寻常少年无异。" },
+  { id: "body", name: "锻体", description: "熬炼筋骨气血，能够正式修习招式。" },
+  { id: "breath", name: "聚气", description: "内息成流，武学开始超出凡俗技艺。" },
+  { id: "meridian", name: "通脉", description: "气走周天，可隔空发劲、踏水疾行。" },
+  { id: "master", name: "宗师", description: "精神与天地相合，一人足以镇住一方势力。" },
+];
+
 export const ATTRIBUTES = [
   { id: "constitution", name: "根骨", description: "气血与武学承载之基。" },
   { id: "insight", name: "悟性", description: "参悟武学、突破瓶颈的灵慧。" },
@@ -9,48 +35,54 @@ export const ATTRIBUTES = [
 export const BACKGROUNDS = [
   {
     id: "clan",
-    name: "世家少年",
-    summary: "有武学、有银钱，也要不断完成家族交付的差事。",
-    gain: "随机黄级武学 · 二十两银",
-    cost: "羁绊：家族期望",
+    name: "世家旁支",
+    summary: "读过拳谱，也认得城中规矩；家族给你的每一分照拂，日后都要偿还。",
+    gain: "一册家传拳谱 · 二十两银",
+    cost: "旧债：宗族差事",
   },
   {
     id: "common",
     name: "寒门子弟",
-    summary: "没有显赫来处，靠买卖、交涉或偷窃在市井立足。",
-    gain: "一项市井能力 · 一两银",
+    summary: "没有显赫来处，靠眼力、口才和一双脚在市井中寻找机会。",
+    gain: "市井见闻 · 一两银",
     cost: "没有庇护，也没有旧债",
   },
   {
     id: "mystery",
     name: "身世成谜",
-    summary: "记忆残缺，怀里只有半块玉佩与一封难辨的血书。",
-    gain: "家传玉佩 · 金龙会邀请线索",
-    cost: "黑衣人会循线追杀",
+    summary: "十六岁前的记忆支离破碎，怀里只有半块玉佩与一封难辨真假的血书。",
+    gain: "家传玉佩 · 金龙会线索",
+    cost: "暗债：有人在追查血书",
   },
   {
     id: "street",
-    name: "流落街头",
-    summary: "幼时家破人亡，熟悉饥饿、恶犬和三教九流。",
-    gain: "命格：生存之道",
-    cost: "部分名门初始关系降低",
+    name: "江湖遗孤",
+    summary: "幼时家破人亡，熟悉饥饿、恶犬和三教九流，却不知仇家姓名。",
+    gain: "生存之道 · 三份干粮",
+    cost: "部分名门初见时心存戒备",
   },
 ];
 
 export const VOWS = [
-  { id: "answer", name: "寻一个答案", title: "执念者", effect: "追查亲故与身世时更容易锁定关键线索。" },
-  { id: "path", name: "证一条大道", title: "求道者", effect: "修行效率提高，更容易获得隐世高手青睐。" },
-  { id: "guard", name: "守一方安宁", title: "守护者", effect: "保护他人时更容易获得信任与临时援助。" },
-  { id: "free", name: "求一世逍遥", title: "逍遥者", effect: "脱离势力羁绊时，承受的声望损失降低。" },
-  { id: "rule", name: "掌一朝天下", title: "野心者", effect: "经营势力与调动他人时，更快看见利益节点。" },
+  { id: "answer", name: "寻一个答案", title: "执念者", effect: "追查亲故与身世时，更容易锁定关键线索。" },
+  { id: "path", name: "证一条武道", title: "求道者", effect: "参悟武学时更专注，也更容易获得前辈指点。" },
+  { id: "guard", name: "守一方安宁", title: "守护者", effect: "保护他人时，更容易获得信任与临时援助。" },
+  { id: "free", name: "求一世逍遥", title: "逍遥者", effect: "脱离势力羁绊时，承受的关系损失降低。" },
+  { id: "rule", name: "掌一方权柄", title: "野心者", effect: "经营势力时，更容易看见利益与人心的节点。" },
 ];
 
 export const DESTINY = {
   id: "defy_fate",
   name: "逆天改命",
-  rank: "专属",
-  effect: "可随时重新分配自身五维，并看见场景、人物身上的全部奇遇及触发条件。",
-  cost: "五维基础属性全部归零；一旦暴露，任何势力都会把你当作寻找奇遇的工具。",
+  rank: "唯一命格",
+  effect: "可随时重新分配自身五维，并看见场景、人物身上的奇遇及触发条件。",
+  cost: "五维基础属性全部归零；你只能重新调配装备与武学已经赋予的力量。",
+};
+
+export const LIFE_RULE = {
+  name: "双灯照命",
+  lives: 2,
+  effect: "命灯熄灭一盏，可带着死前记忆回到最近的因果节点；两灯皆灭，此生终结。",
 };
 
 export const TEMPLE_ENCOUNTERS = [
@@ -67,7 +99,7 @@ export const TEMPLE_ENCOUNTERS = [
     name: "沈氏承诺",
     rank: "凡",
     condition: "连续敲击东北角墙体一千次",
-    reward: "沈字铜钱、沈家好感、潜能五十",
+    reward: "沈字铜钱、沈家门路、潜能五十",
     result: "墙灰剥落后，一枚刻着‘沈’字的旧铜钱从砖缝里滚出。它足以让金陵沈家给一个陌生人开门。",
   },
   {
@@ -86,7 +118,7 @@ export const LADY_STAGES = {
       id: "retort",
       title: "反唇相讥",
       description: "指出她把旁人的过错迁怒于你。",
-      forecast: "人蠢话多 · 先天以下会被一掌打死",
+      forecast: "人蠢话多 · 聚气境以下会被一掌打死",
       outcome: "death",
     },
     {
@@ -109,7 +141,7 @@ export const LADY_STAGES = {
       id: "defy",
       title: "宁死不屈",
       description: "再次否认她对你的贬斥。",
-      forecast: "勇气可嘉 · 先天以下死亡",
+      forecast: "勇气可嘉 · 聚气境以下死亡",
       outcome: "death",
     },
     {
@@ -174,6 +206,25 @@ export const MIND_ART = {
   ],
 };
 
+export const ROAD_TRIALS = {
+  dive: {
+    id: "dive",
+    title: "潜入黑水涧底",
+    condition: "已习得鱼跃龙门诀",
+    result: "内息沿着江鲤行波图自行流转。你在冰冷涧水下找到一段沉没石阶，捞起刻有沈氏丹纹的铜匣残片。",
+    reward: "潜能一百 · 沈家丹房线索",
+    potential: 100,
+  },
+  detour: {
+    id: "detour",
+    title: "沿山道绕行",
+    condition: "无",
+    result: "你避开深水，花了半日翻过山脊。路更安全，却错过了涧底沉没多年的东西。",
+    reward: "平安抵达金陵外道",
+    potential: 0,
+  },
+};
+
 export function getBackground(id) {
   return BACKGROUNDS.find((item) => item.id === id) || null;
 }
@@ -230,26 +281,8 @@ export function resolveNightTalk(choiceId, priorFavor = 20) {
   };
 }
 
-export function bureauConsequence(choiceId) {
-  const outcomes = {
-    conceal: {
-      id: "conceal",
-      title: "只登记鱼跃龙门诀",
-      effect: "武道局确认你已经获得现实同步能力，却不知道你能看见全部奇遇条件。",
-      risk: "林毅会继续调查你为何在第一夜便获得心法。",
-    },
-    partial: {
-      id: "partial",
-      title: "承认能看见部分奇遇征兆",
-      effect: "于可心提供一次官方保护与基础情报交换资格。",
-      risk: "你被列入需要持续接触的高潜力新人名单。",
-    },
-    reveal: {
-      id: "reveal",
-      title: "公开逆天改命",
-      effect: "武道局愿意立刻调集资深玩家保护你的第二条命。",
-      risk: "从此每次行动都可能被要求优先为他人寻找奇遇。",
-    },
-  };
-  return outcomes[choiceId] ? { ...outcomes[choiceId] } : null;
+export function resolveRoadTrial(choiceId, hasMindArt = false) {
+  const choice = ROAD_TRIALS[choiceId];
+  if (!choice || (choiceId === "dive" && !hasMindArt)) return null;
+  return { ...choice };
 }

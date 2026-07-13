@@ -86,16 +86,19 @@ const checkpoints = [];
 checkpoints.push(await snapshot("landing"));
 assert.equal(checkpoints.at(-1).title, "武道");
 assert.ok(checkpoints.at(-1).scrollWidth <= 1280);
-assert.doesNotMatch(checkpoints.at(-1).text, /太虚命盘|归尘门|黑日|Demo|P0|P1|P2|测试|原型/);
+assert.match(checkpoints.at(-1).text, /大曜四百二十七年/);
+assert.doesNotMatch(checkpoints.at(-1).text, /现实|论坛|武道局|其他玩家|其它玩家|太虚命盘|归尘门|黑日|Demo|P0|P1|P2|测试|原型/);
 
-await click("new-game");
-assert.match(await text(), /江海大学男生宿舍/);
-assert.match(await text(), /陈玄/);
-await screenshot("wudao-reality-intro-desktop.png");
+await click("new-journey");
+assert.match(await text(), /大曜天下/);
+assert.match(await text(), /山门、世家与帮会/);
+assert.match(await text(), /宗师/);
+assert.doesNotMatch(await text(), /现实|论坛|武道局|其他玩家|其它玩家/);
+await screenshot("wudao-world-intro-desktop.png");
 await send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
 const mobileIntro = await snapshot("intro-mobile");
 assert.ok(mobileIntro.scrollWidth <= 390);
-await screenshot("wudao-reality-intro-mobile.png");
+await screenshot("wudao-world-intro-mobile.png");
 await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
 
 await click("enter-creation");
@@ -108,10 +111,11 @@ assert.match(await text(), /逆天改命/);
 assert.match(await text(), /五维基础属性全部归零/);
 await click("confirm-destiny");
 assert.match(await text(), /陈司命/);
-assert.match(await text(), /可用命数/);
+assert.match(await text(), /两灯皆灭，此生终结/);
+assert.match(await text(), /未入门/);
 await screenshot("wudao-character-sheet.png");
 
-await click("start-wudao");
+await click("start-journey");
 assert.match(await text(), /你是被冷醒的/);
 await click("search-fire");
 await click("use-destiny");
@@ -131,14 +135,12 @@ await click("temple-task", "traveler_relic");
 await click("temple-task", "shen_promise");
 assert.match(await text(), /金陵东郊残图/);
 assert.match(await text(), /沈字铜钱/);
-await click("leave-temple");
+await click("meet-lady");
 
-assert.match(await text(), /初始只有两条命/);
-assert.match(await text(), /武道局/);
-await click("forum-plan", "hide");
 const ladyBeforeReveal = await text();
 assert.match(ladyBeforeReveal, /青衣妇人/);
 assert.doesNotMatch(ladyBeforeReveal, /龙青鱼|漕帮帮主夫人/);
+assert.doesNotMatch(ladyBeforeReveal, /现实|论坛|武道局|其他玩家|其它玩家/);
 await screenshot("wudao-lady-arrival-desktop.png");
 await send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
 const mobileLady = await snapshot("lady-mobile");
@@ -148,7 +150,7 @@ await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, dev
 
 await click("lady-choice", "retort");
 assert.equal((await snapshot("death")).mode, "death");
-assert.match(await text(), /剩余命数/);
+assert.match(await text(), /剩余命灯/);
 assert.match(await text(), /1/);
 await click("return-after-death");
 await click("lady-choice", "deny_beggar");
@@ -164,38 +166,40 @@ await screenshot("wudao-encounter-reward.png");
 
 await click("receive-mind-art");
 assert.equal(await evaluate(`document.querySelectorAll(".mind-art-card li").length`), 3);
-await click("close-wudao");
-assert.match(await text(), /现实同步成立/);
-await click("confirm-sync");
-assert.match(await text(), /于可心/);
-assert.match(await text(), /林毅/);
-await click("bureau-choice", "conceal");
+await click("to-road-trial");
+assert.match(await text(), /黑水涧/);
+await click("road-trial", "dive");
+assert.match(await text(), /沈氏丹纹/);
+assert.match(await text(), /潜能一百/);
+await click("continue-road");
 
 checkpoints.push(await snapshot("ending"));
-assert.match(checkpoints.at(-1).text, /只登记鱼跃龙门诀/);
-assert.match(await text(), /丹房差事/);
+assert.match(checkpoints.at(-1).text, /第一夜之后/);
+assert.match(await text(), /沈字铜钱/);
 assert.match(await text(), /神秘贡品/);
-assert.match(await text(), /与龙青鱼重逢/);
-assert.doesNotMatch(await text(), /太虚命盘|归尘门|黑日|Demo|P0|P1|P2|测试|原型/);
+assert.match(await text(), /临安/);
+assert.doesNotMatch(await text(), /现实|论坛|武道局|其他玩家|其它玩家|太虚命盘|归尘门|黑日|Demo|P0|P1|P2|测试|原型/);
+await click("choose-route", "shen");
+assert.match(await text(), /下一程已定/);
 await screenshot("wudao-ending-desktop.png");
 await send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
 const mobileEnding = await snapshot("ending-mobile");
 assert.ok(mobileEnding.scrollWidth <= 390);
 await screenshot("wudao-ending-mobile.png");
 
-const saved = JSON.parse(await evaluate(`localStorage.getItem("wudao-novel-route-v1")`));
+const saved = JSON.parse(await evaluate(`localStorage.getItem("wudao-high-martial-v1")`));
 assert.equal(saved.backgroundId, "mystery");
 assert.equal(saved.vowId, "path");
 assert.equal(saved.lives, 1);
-assert.equal(saved.potential, 1600);
+assert.equal(saved.potential, 1700);
 assert.equal(saved.relationship, "莫逆之交");
 assert.equal(saved.mindArt, "carp_dragon_gate");
-assert.equal(saved.realitySynced, true);
-assert.equal(saved.bureauChoice, "conceal");
+assert.equal(saved.roadTrial, "dive");
+assert.equal(saved.nextRoute, "shen");
 
 await evaluate(`location.reload(); true`);
 await new Promise((resolve) => setTimeout(resolve, 250));
-assert.match(await text(), /只登记鱼跃龙门诀/);
+assert.match(await text(), /下一程已定/);
 assert.deepEqual(pageErrors, []);
 
 process.stdout.write(`${JSON.stringify({ ok: true, checkpoints, saved: {
@@ -205,7 +209,8 @@ process.stdout.write(`${JSON.stringify({ ok: true, checkpoints, saved: {
   potential: saved.potential,
   relationship: saved.relationship,
   mindArt: saved.mindArt,
-  bureau: saved.bureauChoice,
+  roadTrial: saved.roadTrial,
+  nextRoute: saved.nextRoute,
 } }, null, 2)}\n`);
 
 socket.close();

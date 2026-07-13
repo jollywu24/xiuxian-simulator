@@ -403,6 +403,14 @@ h1 {
   line-height: 1.5;
 }
 
+.world-fact > strong {
+  display: block;
+  margin-bottom: 10px;
+  font-family: var(--font-story);
+  font-size: 20px;
+  line-height: 1.5;
+}
+
 .world-fact p,
 .event-docket p {
   margin: 0;
@@ -1513,18 +1521,18 @@ h1 {
   background: var(--panel-soft);
 }
 
-.next-hooks span,
-.next-hooks strong {
+.next-hooks > div span,
+.next-hooks > div strong {
   display: block;
 }
 
-.next-hooks span {
+.next-hooks > div span {
   margin-bottom: 6px;
   color: var(--muted);
   font-size: 10px;
 }
 
-.next-hooks strong {
+.next-hooks > div strong {
   font-family: var(--font-story);
 }
 

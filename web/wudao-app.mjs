@@ -2,49 +2,52 @@ import {
   ATTRIBUTES,
   BACKGROUNDS,
   DESTINY,
+  LIFE_RULE,
+  MARTIAL_STAGES,
   MIND_ART,
   NIGHT_TALK,
+  ROAD_TRIALS,
   TEMPLE_ENCOUNTERS,
   VOWS,
+  WORLD_FACTS,
   allocateJadeBonus,
-  bureauConsequence,
   getBackground,
   getTempleEncounter,
   getVow,
   resolveLadyChoice,
   resolveNightTalk,
+  resolveRoadTrial,
   templeTaskCost,
 } from "./wudao-core.mjs";
 
-const STORAGE_KEY = "wudao-novel-route-v1";
+const STORAGE_KEY = "wudao-high-martial-v1";
 const app = document.querySelector("#app");
 
 function createInitialState() {
   return {
-    version: 1,
+    version: 2,
     screen: "landing",
-    realName: "陈玄",
-    gameName: "陈司命",
+    name: "陈司命",
     backgroundId: "mystery",
     vowId: "path",
     destinyRevealed: false,
     allocationId: "balanced",
     attributes: allocateJadeBonus("balanced"),
-    lives: 2,
+    lives: LIFE_RULE.lives,
     potential: 0,
     peaches: 3,
     fireMinutes: 120,
     completedTempleTasks: [],
     templeLog: [],
-    forumChoice: null,
-    ladyStage: "first",
     ladyChoiceLog: [],
     ladyFavor: 0,
     relationship: null,
     mindArt: null,
-    realitySynced: false,
-    bureauChoice: null,
-    bureauResult: null,
+    roadTrial: null,
+    roadTrialResult: null,
+    nextRoute: null,
+    lastDeathChoice: null,
+    departed: false,
     events: [],
   };
 }
@@ -52,7 +55,7 @@ function createInitialState() {
 function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (!saved || saved.version !== 1 || !saved.screen) return null;
+    if (!saved || saved.version !== 2 || !saved.screen) return null;
     return { ...createInitialState(), ...saved };
   } catch {
     return null;
@@ -88,8 +91,14 @@ function track(name, data = {}) {
 
 function moveTo(screen) {
   state.screen = screen;
+  saveState();
   render();
   window.scrollTo({ top: 0, behavior: "instant" });
+}
+
+function refresh() {
+  saveState();
+  render();
 }
 
 function setupShell(content, narrow = false) {
@@ -108,15 +117,23 @@ function actionCard({ action, value = "", title, description, source = "", meta 
   `;
 }
 
+function sceneHeader(eyebrow, title, subtitle = "") {
+  return `<header class="scene-head"><p class="eyebrow">${escapeHtml(eyebrow)}</p><h1 class="scene-title">${escapeHtml(title)}</h1>${subtitle ? `<p class="scene-subtitle">${escapeHtml(subtitle)}</p>` : ""}</header>`;
+}
+
 function journalHtml() {
   const items = [
-    ["现实 · 江海大学", state.destinyRevealed ? "《武道》已无法卸载" : "暑假宿舍，只剩陈玄一人", "current"],
-    ["天武四年 · 金陵东郊", state.completedTempleTasks.length ? `破庙奇遇 ${state.completedTempleTasks.length}/3` : "初入江湖", state.completedTempleTasks.length ? "shifted" : ""],
+    ["大曜 · 金陵道", state.destinyRevealed ? "命格已醒" : "无名少年初入江湖", "current"],
+    ["东郊 · 无名破庙", state.completedTempleTasks.length ? `已取奇遇 ${state.completedTempleTasks.length}/3` : "寒夜求生", state.completedTempleTasks.length ? "shifted" : ""],
   ];
-  if (state.ladyChoiceLog.length) items.push(["寅时 · 青衣来客", state.relationship ? `龙青鱼 · ${state.relationship}` : "奇遇仍在变化", state.relationship ? "shifted" : "current"]);
-  if (state.mindArt) items.push(["现实同步", state.realitySynced ? "鱼跃龙门诀已经生效" : "尚未亲自验证", state.realitySynced ? "shifted" : "current"]);
+  if (state.ladyChoiceLog.length) {
+    items.push(["寅时 · 青衣来客", state.relationship ? `龙青鱼 · ${state.relationship}` : state.departed ? "擦肩而过" : "杀机未定", state.relationship ? "shifted" : "current"]);
+  }
+  if (state.roadTrial) {
+    items.push(["天明 · 黑水涧", state.roadTrial === "dive" ? "涧底丹纹" : "绕山而行", "shifted"]);
+  }
   return `
-    <div class="panel-title">两界纪事</div>
+    <div class="panel-title">江湖行录</div>
     <div class="timeline-list">
       ${items.map(([title, detail, status]) => `
         <div class="timeline-item ${status}"><span class="timeline-dot" aria-hidden="true"></span><span><h4>${escapeHtml(title)}</h4><p>${escapeHtml(detail)}</p></span></div>
@@ -132,14 +149,14 @@ function characterPanelHtml() {
     <div class="panel-body">
       <div>
         <div class="character-head">
-          <div class="wudao-avatar">司命</div>
-          <div><h3>${escapeHtml(state.gameName)}</h3><p>${escapeHtml(background?.name)} · 十六岁</p></div>
+          <div class="wudao-avatar">命</div>
+          <div><h3>${escapeHtml(state.name)}</h3><p>${escapeHtml(background?.name)} · 十六岁</p></div>
         </div>
         <div class="panel-title">人物状态</div>
         <div class="status-grid compact-status">
-          <div><span>称号</span><strong>${escapeHtml(vow?.title)}</strong></div>
-          <div><span>境界</span><strong>无</strong></div>
-          <div><span>命数</span><strong>${state.lives}</strong></div>
+          <div><span>初心</span><strong>${escapeHtml(vow?.title)}</strong></div>
+          <div><span>境界</span><strong>${MARTIAL_STAGES[0].name}</strong></div>
+          <div><span>命灯</span><strong>${state.lives}</strong></div>
           <div><span>潜能</span><strong>${state.potential}</strong></div>
         </div>
       </div>
@@ -148,15 +165,16 @@ function characterPanelHtml() {
         <div class="attribute-mini-list">
           ${ATTRIBUTES.map((attribute) => `<div><span>${escapeHtml(attribute.name)}</span><strong>${state.attributes[attribute.id] || 0}</strong></div>`).join("")}
         </div>
-        ${state.destinyRevealed ? `<div class="destiny-mini"><span>专属命格</span><strong>${DESTINY.name}</strong><p>${DESTINY.effect}</p></div>` : ""}
+        ${state.destinyRevealed ? `<div class="destiny-mini"><span>唯一命格</span><strong>${DESTINY.name}</strong><p>${DESTINY.effect}</p></div>` : ""}
       </div>
       <div>
         <div class="panel-title">随身所得</div>
         <div class="inventory-list">
-          ${state.backgroundId === "mystery" ? `<div><strong>半块家传玉佩</strong><span>可重分配三点五维加成</span></div><div><strong>一封血书</strong><span>指向金龙会万鲤堂孙不离</span></div>` : ""}
-          ${state.completedTempleTasks.includes("traveler_relic") ? `<div><strong>金陵东郊残图</strong><span>已经解锁破庙外道路</span></div>` : ""}
+          ${state.backgroundId === "mystery" ? `<div><strong>半块家传玉佩</strong><span>可重分三点五维加成</span></div><div><strong>一封血书</strong><span>指向金龙会万鲤堂孙不离</span></div>` : ""}
+          ${state.completedTempleTasks.includes("traveler_relic") ? `<div><strong>金陵东郊残图</strong><span>标出破庙外的旧路</span></div>` : ""}
           ${state.completedTempleTasks.includes("shen_promise") ? `<div><strong>沈字铜钱</strong><span>可作为金陵沈家信物</span></div>` : ""}
           ${state.mindArt ? `<div><strong>${MIND_ART.name}</strong><span>${MIND_ART.rank} · 龙青鱼所授</span></div>` : ""}
+          ${state.roadTrial === "dive" ? `<div><strong>铜匣残片</strong><span>刻有沈氏丹房纹记</span></div>` : ""}
         </div>
       </div>
     </div>
@@ -167,9 +185,9 @@ function gameShell(content) {
   return `
     <main class="game-shell">
       <header class="topbar">
-        <div class="brand-mini"><span class="brand-seal">武</span><span>武道</span></div>
-        <div class="mode-badge">${modeLabel()}</div>
-        <div class="resource-row"><div class="resource"><span>命数</span><strong>${state.lives}</strong></div><div class="resource"><span>潜能</span><strong>${state.potential}</strong></div></div>
+        <div class="brand-mini"><span class="brand-seal">武</span><span>大曜江湖</span></div>
+        <div class="mode-badge">${escapeHtml(modeLabel())}</div>
+        <div class="resource-row"><div class="resource"><span>命灯</span><strong>${state.lives}</strong></div><div class="resource"><span>潜能</span><strong>${state.potential}</strong></div></div>
       </header>
       <div class="game-grid">
         <aside class="panel timeline-panel">${journalHtml()}</aside>
@@ -180,102 +198,100 @@ function gameShell(content) {
   `;
 }
 
-function sceneHeader(eyebrow, title, subtitle = "") {
-  return `<header class="scene-head"><p class="eyebrow">${escapeHtml(eyebrow)}</p><h1 class="scene-title">${escapeHtml(title)}</h1>${subtitle ? `<p class="scene-subtitle">${escapeHtml(subtitle)}</p>` : ""}</header>`;
-}
-
 function modeLabel() {
-  const map = {
-    templeWake: "天武四年 · 子时三刻",
+  const labels = {
+    templeWake: "大曜四百二十七年 · 子时三刻",
     fateSight: "金陵东郊 · 无名破庙",
     allocation: "命格运转 · 五维重分",
     templeTasks: "固定奇遇 · 破庙",
-    forum: "现实 · 江海大学宿舍",
-    ladyArrival: "天武四年 · 寅时二刻",
-    ladyPressure: "偶发奇遇 · 因爱成恨",
-    ladyTest: "偶发奇遇 · 危局未解",
-    nightTalk: "偶发奇遇 · 破庙夜话",
+    ladyArrival: "寅时二刻 · 夜雨将至",
+    ladyPressure: "人物奇遇 · 因爱成恨",
+    ladyTest: "人物奇遇 · 杀机未解",
+    nightTalk: "人物奇遇 · 破庙夜话",
     encounterReward: "奇遇结局 · 鱼跃龙门",
     mindArt: "心法灌顶 · 江鲤行波",
-    realitySync: "现实 · 超凡初证",
-    bureauDoor: "现实 · 武道局登门",
-    ending: "现实与武道 · 双线初启",
-    gameDeath: "武道人物 · 此命已尽",
-    quietDeparture: "偶发奇遇 · 擦肩而过",
+    roadTrial: "天明 · 黑水涧",
+    roadResult: "武学初试 · 去路已开",
+    ending: "金陵道 · 第一夜终",
+    gameDeath: "命灯熄灭 · 残灯回照",
+    quietDeparture: "天明 · 擦肩而过",
   };
-  return map[state.screen] || "武道";
+  return labels[state.screen] || "大曜江湖";
 }
 
 function renderLanding() {
   return setupShell(`
     <div class="title-lockup wudao-title">
       <div class="fate-ring"><span class="fate-glyph">武</span></div>
-      <p class="eyebrow">现实 · 江海大学 · 盛夏</p>
+      <p class="eyebrow">大曜四百二十七年 · 江湖将雨</p>
       <h1>武道</h1>
-      <p class="subtitle">一款无法卸载的文字游戏。<br />一个只有两条命的真实江湖。</p>
+      <p class="subtitle">山门守一峰，世家镇一城，帮会争一江。<br />你只有两盏命灯，要从金陵城外的破庙活到天明。</p>
       <div class="button-row">
-        <button class="primary-button" data-action="new-game">点开陌生图标</button>
-        ${savedState && savedState.screen !== "landing" ? `<button class="secondary-button" data-action="continue-game">继续 · ${escapeHtml(savedState.gameName)}</button>` : ""}
+        <button class="primary-button" data-action="new-journey">入此江湖</button>
+        ${savedState && savedState.screen !== "landing" ? `<button class="secondary-button" data-action="continue-journey">继续 · ${escapeHtml(savedState.name)}</button>` : ""}
       </div>
     </div>
   `, true);
 }
 
-function renderRealityIntro() {
+function renderWorldIntro() {
   return setupShell(`
-    <p class="eyebrow">暑假第一日 · 江海大学男生宿舍</p>
-    <h1 class="setup-title">退掉一局游戏后，平板自己黑了</h1>
+    <p class="eyebrow">大曜天下 · 金陵道</p>
+    <h1 class="setup-title">这里的刀剑，不只决定胜负</h1>
+    <p class="subtitle">谁守道路、谁传武功、谁控制盐粮，谁就能决定一方人的活法。</p>
     <div class="world-ledger">
-      <article class="world-fact"><span>现实身份</span><strong>陈玄 · 江海大学学生</strong><p>本地长大，父母早逝，靠房租和游戏代练生活。这个暑假，他独自留在空宿舍。</p></article>
-      <article class="world-fact"><span>屏幕异象</span><strong>刀剑相击的血红图标</strong><p>没有安装记录，没有厂商署名。图标下面只有两个字：武道。</p></article>
-      <article class="world-fact"><span>唯一说明</span><strong>你的选择将成为真实人生</strong><p>它不索要银钱，只询问智慧、勇气，以及是否愿意踏进一个陌生江湖。</p></article>
+      ${WORLD_FACTS.map((fact) => `<article class="world-fact"><span>${escapeHtml(fact.name)}</span><strong>${escapeHtml(fact.id === "dynasty" ? "城内有法，城外看刀" : fact.id === "jianghu" ? "门派、世家与帮会" : "一人之力，可镇一方")}</strong><p>${escapeHtml(fact.summary)}</p></article>`).join("")}
     </div>
-    <div class="button-row"><button class="primary-button" data-action="enter-creation">进入武道</button></div>
+    <div class="notice-block"><strong>你所在之地</strong><br />金陵是东南水陆汇聚的大城。城外三十里，一座废弃山神庙正漏着雨；你的故事从那里开始。</div>
+    <div class="button-row"><button class="primary-button" data-action="enter-creation">选择此生来处</button></div>
   `);
 }
 
 function renderCharacterDraft() {
   return setupShell(`
-    <p class="eyebrow">武道人物 · 第一步</p>
-    <h1 class="setup-title">先莫问去路，且忆来处</h1>
-    <p class="subtitle">身世决定你在江湖里最先拥有的东西，也决定什么会追在你身后。</p>
+    <p class="eyebrow">人物车卡 · 来处</p>
+    <h1 class="setup-title">你是谁，又欠江湖什么？</h1>
+    <p class="subtitle">出身既是第一份家底，也是最早追上你的债。</p>
     <div class="origin-grid wudao-origin-grid">
       ${BACKGROUNDS.map((item) => `
         <button class="origin-card ${state.backgroundId === item.id ? "selected" : ""}" data-action="select-background" data-value="${item.id}">
-          <span class="origin-icon">${item.id === "mystery" ? "谜" : item.id === "clan" ? "门" : item.id === "common" ? "市" : "生"}</span>
+          <span class="origin-icon">${item.id === "mystery" ? "谜" : item.id === "clan" ? "门" : item.id === "common" ? "市" : "孤"}</span>
           <strong>${escapeHtml(item.name)}</strong><p>${escapeHtml(item.summary)}</p>
           <span class="origin-tag">所得：${escapeHtml(item.gain)}</span><span class="origin-cost">代价：${escapeHtml(item.cost)}</span>
         </button>
       `).join("")}
     </div>
-    <div class="field-row wudao-name-field"><label for="game-name">江湖姓名</label><input id="game-name" data-field="game-name" maxlength="8" value="${escapeHtml(state.gameName)}" /></div>
-    <div class="button-row"><button class="primary-button" data-action="to-vow" ${state.backgroundId && state.gameName.trim() ? "" : "disabled"}>写下初心</button></div>
+    <div class="field-row wudao-name-field"><label for="hero-name">姓名</label><input id="hero-name" data-field="hero-name" maxlength="8" value="${escapeHtml(state.name)}" /></div>
+    <div class="button-row"><button class="primary-button" data-action="to-vow" ${state.backgroundId && state.name.trim() ? "" : "disabled"}>写下初心</button></div>
   `);
 }
 
 function renderVow() {
   return setupShell(`
-    <p class="eyebrow">武道人物 · 第二步</p>
+    <p class="eyebrow">人物车卡 · 初心</p>
     <h1 class="setup-title">江湖路远，你为何执剑？</h1>
+    <p class="subtitle">初心不会替你赢，却会在某些人面前改变你能说的话。</p>
     <div class="action-list vow-list">
-      ${VOWS.map((item) => actionCard({ action: "select-vow", value: item.id, title: item.name, description: item.effect, source: item.title, meta: state.vowId === item.id ? "已选" : "选择" , kind: state.vowId === item.id ? "special" : "" })).join("")}
+      ${VOWS.map((item) => actionCard({ action: "select-vow", value: item.id, title: item.name, description: item.effect, source: item.title, meta: state.vowId === item.id ? "当前" : "选择" })).join("")}
     </div>
-    <div class="button-row"><button class="ghost-button" data-action="back-creation">返回身世</button><button class="primary-button" data-action="reveal-destiny">抽取命格</button></div>
   `);
 }
 
 function renderDestiny() {
   return setupShell(`
-    <p class="eyebrow">专属命格 · 代价已经标明</p>
-    <h1 class="setup-title">逆天改命</h1>
-    <div class="destiny-reveal-card">
-      <span class="destiny-rank">${DESTINY.rank}</span>
-      <strong>${DESTINY.name}</strong>
-      <p>${DESTINY.effect}</p>
-      <div class="danger-note"><span>代价</span>${DESTINY.cost}</div>
+    <p class="eyebrow">人物车卡 · 命格</p>
+    <h1 class="setup-title">两盏命灯旁，浮出四个血字</h1>
+    <div class="encounter-reveal">
+      <div class="reveal-seal">逆<br />天<br />改<br />命</div>
+      <div>
+        <h2>${DESTINY.name}</h2>
+        <p>${DESTINY.effect}</p>
+        ${state.destinyRevealed ? `<div class="notice-block"><strong>代价</strong><br />${escapeHtml(DESTINY.cost)}</div><div class="notice-block"><strong>${LIFE_RULE.name}</strong><br />${escapeHtml(LIFE_RULE.effect)}</div>` : `<p class="empty-state">命格仍被一层血色薄雾遮住。</p>`}
+      </div>
     </div>
-    <div class="quote-block">你原本分配的二十点五维被全部抹去。屏幕上只剩五个零，以及一句话：<strong>“看见命运，不等于有力气抓住它。”</strong></div>
-    <div class="button-row"><button class="primary-button" data-action="confirm-destiny">接受代价，查看人物卡</button></div>
+    <div class="button-row">
+      ${state.destinyRevealed ? `<button class="primary-button" data-action="confirm-destiny">接受此命</button>` : `<button class="primary-button" data-action="reveal-destiny">触碰命灯</button>`}
+    </div>
   `);
 }
 
@@ -283,237 +299,208 @@ function renderCharacterSheet() {
   const background = getBackground(state.backgroundId);
   const vow = getVow(state.vowId);
   return setupShell(`
-    <p class="eyebrow">武道人物 · 生死名册</p>
-    <h1 class="setup-title">${escapeHtml(state.gameName)}，十六岁，尚未习武</h1>
-    <div class="birth-sheet wudao-sheet">
-      <div class="wudao-sheet-seal">司<br />命</div>
-      <div class="birth-details">
-        <h2>${escapeHtml(state.gameName)}</h2><p class="birth-meta">${escapeHtml(background.name)} · ${escapeHtml(vow.title)}</p>
-        <div class="birth-facts">
-          <div><span>境界</span><strong>无</strong></div><div><span>实战经验</span><strong>零</strong></div>
-          <div><span>命格</span><strong>${DESTINY.name}</strong></div><div><span>可用命数</span><strong>二</strong></div>
-          <div><span>随身物</span><strong>${state.backgroundId === "mystery" ? "半块玉佩、一封血书" : background.gain}</strong></div><div><span>初心</span><strong>${vow.name}</strong></div>
-        </div>
-        <div class="attribute-sheet">${ATTRIBUTES.map((item) => `<div><span>${item.name}</span><strong>0</strong></div>`).join("")}</div>
+    <p class="eyebrow">人物车卡 · 已定</p>
+    <h1 class="setup-title">${escapeHtml(state.name)}</h1>
+    <div class="birth-sheet">
+      <div class="wudao-sheet-seal">${escapeHtml(state.name.slice(-2))}</div>
+      <div class="birth-facts">
+        <div><span>年龄</span><strong>十六</strong><p>初入金陵道</p></div>
+        <div><span>出身</span><strong>${escapeHtml(background?.name)}</strong><p>${escapeHtml(background?.cost)}</p></div>
+        <div><span>初心</span><strong>${escapeHtml(vow?.title)}</strong><p>${escapeHtml(vow?.name)}</p></div>
+        <div><span>武境</span><strong>未入门</strong><p>先从锻体开始</p></div>
+        <div><span>命格</span><strong>${DESTINY.name}</strong><p>见奇遇 · 改五维</p></div>
+        <div><span>命灯</span><strong>二</strong><p>两灯皆灭，此生终结</p></div>
       </div>
     </div>
-    <div class="button-row"><button class="ghost-button" data-action="back-vow">改写初心</button><button class="primary-button" data-action="start-wudao">选择金陵城外 · 破庙夜雨</button></div>
+    <div class="notice-block"><strong>眼下处境</strong><br />你在金陵城外的破庙醒来。没有境界，没有师门，腹中空空；怀里的玉佩正散出最后一点暖意。</div>
+    <div class="button-row"><button class="primary-button" data-action="start-journey">睁开眼睛</button></div>
   `);
 }
 
 function renderTempleWake() {
   return gameShell(`
-    ${sceneHeader("天武四年八月初二 · 子时三刻", "你是被冷醒的", "金陵城东郊，无名破庙。屋外大雨，火光只够再撑一个时辰。")}
+    ${sceneHeader("金陵东郊 · 无名破庙", "你是被冷醒的", "破瓦漏下月光，篝火将熄。庙外有狼嚎，腹中像压着一块烧红的铁。")}
     <div class="temple-scene">
-      <div class="temple-glyphs" aria-hidden="true"><span>雨</span><span>火</span><span>庙</span></div>
-      <div class="story-copy">
-        <p>湿透的旧青衫贴在身上。你背靠长满青苔的砖墙，气血尚存，体力却几乎见底。</p>
-        <p>供桌、蒲团和漏雨的瓦檐都没有异样。唯一能交互的东西，是将熄的篝火。</p>
-        <div class="danger-note"><span>当前状态</span>饥饿：无法靠休息恢复体力。体力耗尽后，气血会开始下降。</div>
-      </div>
+      <div class="temple-glyphs"><span>火</span><span>雨</span><span>山</span></div>
+      <div class="story-copy"><p>供桌上没有神像，只摆着几枚新鲜山桃。东北角墙体颜色略深，像被人重新砌过。</p><p>这不是传说中的高手开局。今夜最先要赢的，是寒冷和饥饿。</p></div>
     </div>
-    <div class="action-list">${actionCard({ action: "search-fire", title: "拨亮篝火，检查供桌", description: "先解决饥饿，再判断这座破庙有没有别的出路。", source: "生存", meta: "发现山桃", kind: "special" })}</div>
+    <div class="action-list">${actionCard({ action: "search-fire", title: "拨亮余火，吃下一枚山桃", description: "先稳住体温和饥饿，再检查破庙里不合常理的地方。", source: "生存", meta: "山桃 -1 · 篝火两刻" })}</div>
   `);
 }
 
 function renderFateSight() {
   return gameShell(`
-    ${sceneHeader("无名破庙 · 火光渐稳", "吃下山桃后，你终于看清整座庙", "破庙仍然破败，但命格眼中的因果开始发亮。")}
-    <div class="story-copy"><p>你从供桌后找出四枚山桃，吃下一枚，体力终于不再流失。破庙的小地图随之展开。</p><p>当你凝神注视供桌、东北角墙体和那几枚来历不明的贡品时，金色因果线从眼前浮起。</p></div>
-    <div class="fate-forecast"><span>是否发动专属命格</span><strong>查看当前场景全部固定奇遇及触发条件</strong></div>
-    <div class="action-list">${actionCard({ action: "use-destiny", title: "发动逆天改命", description: "提前知道奖励与条件，但没有任何条件会因此自动完成。", source: "专属命格", meta: "显露因果", kind: "special" })}</div>
+    ${sceneHeader("命格初醒", "视野里浮出三道淡金因果", "一项属于火，一项藏在墙后，还有一项要等到并不存在的时辰。")}
+    <div class="quest-grid">
+      ${TEMPLE_ENCOUNTERS.map((item) => `<article class="quest-card ${item.id === "mysterious_offering" ? "locked" : ""}"><span>${escapeHtml(item.rank)}级奇遇</span><h2>${escapeHtml(item.name)}</h2><p>${escapeHtml(item.condition)}</p><small>${escapeHtml(item.id === "mysterious_offering" ? "时日未到，只能记住条件" : item.reward)}</small></article>`).join("")}
+    </div>
+    <div class="notice-block"><strong>玉佩余力：三点</strong><br />根骨、身法、力道各一点。逆天改命可以重新分配它们，但不能凭空增加力量。</div>
+    <div class="action-list">${actionCard({ action: "use-destiny", title: "重分玉佩余力", description: "决定用更少时间砸开墙，保持均衡，或把三点都押给福缘。", source: DESTINY.name, meta: "三点五维" })}</div>
   `);
 }
 
 function renderAllocation() {
-  if (state.backgroundId !== "mystery") {
-    return gameShell(`
-      ${sceneHeader("命格运转 · 五维归零", "你没有可以重新分配的装备加成", "逆天改命能挪动已有属性，却不能凭空创造属性。破庙里的条件仍要以凡人之身完成。")}
-      <div class="danger-note"><span>当前五维</span>根骨、悟性、身法、力道、福缘全部为零。沈氏承诺会消耗更多时间与山桃。</div>
-      <div class="button-row"><button class="primary-button" data-action="confirm-allocation">以凡人之身追逐奇遇</button></div>
-    `);
-  }
   const choices = [
-    ["strength", "尽数转为力道", "力道三。敲墙最快，也最适合当前破庙。"],
-    ["balanced", "保留均衡加成", "根骨、身法、力道各一。稳妥，但耗时更久。"],
-    ["fortune", "尽数转为福缘", "福缘三。可能影响未来奇遇，却无法缓解眼前体力。"],
+    ["strength", "三点尽归力道", "更快敲开墙体，不消耗山桃。"],
+    ["balanced", "根骨、身法、力道各一", "保留均衡，但敲墙更慢并消耗一枚山桃。"],
+    ["fortune", "三点尽归福缘", "为后续偶发奇遇下注，眼下敲墙代价最高。"],
   ];
   return gameShell(`
-    ${sceneHeader("命格运转 · 家传玉佩", "三个装备加成，可以被重新分配", "基础五维仍是零；你只能挪动玉佩暂时提供的三点。")}
+    ${sceneHeader("逆天改命 · 五维重分", "把三点玉佩余力押在今夜", "命格允许你改变已有力量的去处，却不会替你支付代价。")}
+    <div class="attribute-sheet">${ATTRIBUTES.map((attribute) => `<div><span>${escapeHtml(attribute.name)}</span><strong>${state.attributes[attribute.id] || 0}</strong><small>${escapeHtml(attribute.description)}</small></div>`).join("")}</div>
     <div class="action-list">
-      ${choices.map(([id, title, description]) => actionCard({ action: "allocate-jade", value: id, title, description, source: "五维重分", meta: state.allocationId === id ? "当前" : "选择", kind: state.allocationId === id ? "special" : "" })).join("")}
+      ${choices.map(([id, title, description]) => actionCard({ action: "allocate-jade", value: id, title, description, source: state.allocationId === id ? "已选" : "分配", meta: id === "strength" ? "破墙最优" : id === "balanced" ? "稳妥" : "赌奇遇", kind: state.allocationId === id ? "special" : "" })).join("")}
     </div>
-    <div class="button-row"><button class="primary-button" data-action="confirm-allocation">以此分配追逐奇遇</button></div>
+    <div class="button-row"><button class="primary-button" data-action="confirm-allocation">看清全部条件</button></div>
   `);
-}
-
-function templeEncounterCard(item) {
-  const completed = state.completedTempleTasks.includes(item.id);
-  const locked = item.id === "mysterious_offering";
-  const cost = templeTaskCost(item.id, state.attributes);
-  const status = completed ? "已得" : locked ? "时机未到" : cost ? `${cost.minutes} 分钟${cost.peaches ? ` · 山桃 ${cost.peaches}` : ""}` : "";
-  return `
-    <article class="quest-card ${completed ? "completed" : ""} ${locked ? "locked" : ""}">
-      <div class="quest-top"><span>${escapeHtml(item.rank)}级奇遇</span><strong>${escapeHtml(item.name)}</strong></div>
-      <p><b>条件：</b>${escapeHtml(item.condition)}</p><p><b>可见所得：</b>${escapeHtml(item.reward)}</p>
-      <button data-action="temple-task" data-value="${item.id}" ${completed || locked ? "disabled" : ""}>${completed ? "已经取得" : locked ? "记下条件" : `执行 · ${escapeHtml(status)}`}</button>
-    </article>
-  `;
 }
 
 function renderTempleTasks() {
-  const canLeave = state.completedTempleTasks.includes("traveler_relic") && state.completedTempleTasks.includes("shen_promise");
   return gameShell(`
-    ${sceneHeader("逆天改命 · 固定奇遇", "命运把答案写出来，代价仍要你亲手支付", "这些奇遇只会被一人取走。现在离开，它们也可能永远消失。")}
-    <div class="quest-grid">${TEMPLE_ENCOUNTERS.map(templeEncounterCard).join("")}</div>
-    ${state.templeLog.length ? `<div class="result-log">${state.templeLog.map((entry) => `<p>${escapeHtml(entry)}</p>`).join("")}</div>` : ""}
-    <div class="button-row"><button class="primary-button" data-action="leave-temple" ${canLeave ? "" : "disabled"}>带着残图与铜钱，暂离武道</button></div>
+    ${sceneHeader("固定奇遇 · 无名破庙", "条件已经看见，代价仍要亲手支付", "先后顺序会消耗篝火、山桃与体力。今夜只有两项能立刻完成。")}
+    <div class="quest-grid">
+      ${TEMPLE_ENCOUNTERS.map((item) => {
+        const done = state.completedTempleTasks.includes(item.id);
+        const locked = item.id === "mysterious_offering";
+        const cost = templeTaskCost(item.id, state.attributes);
+        const meta = locked ? "时日未到" : done ? "已完成" : `${cost.minutes}分钟${cost.peaches ? ` · 山桃 ${cost.peaches}` : ""}`;
+        return `<article class="quest-card ${locked ? "locked" : ""} ${done ? "completed" : ""}"><span>${escapeHtml(item.rank)}级奇遇</span><h2>${escapeHtml(item.name)}</h2><p>${escapeHtml(item.condition)}</p><small>${escapeHtml(done ? item.result : item.reward)}</small>${locked || done ? `<div class="quest-state">${escapeHtml(meta)}</div>` : `<button class="inline-button" data-action="temple-task" data-value="${item.id}">${escapeHtml(meta)} · 立即行动</button>`}</article>`;
+      }).join("")}
+    </div>
+    ${state.templeLog.length ? `<div class="notice-block"><strong>今夜所得</strong><br />${state.templeLog.map(escapeHtml).join("；")}</div>` : ""}
+    <div class="action-list">${actionCard({ action: "meet-lady", title: "守着余火等到寅时", description: "庙外雨声渐密。有人踩着泥水，停在了门外。", source: "继续", meta: "人物奇遇将至", kind: state.completedTempleTasks.length ? "special" : "" })}</div>
   `);
 }
 
-function renderForum() {
-  return gameShell(`
-    ${sceneHeader("现实 · 江海大学宿舍", "梦里的疲惫与饥饿，一起回到了身体里", "《武道》已经从平板转移到你正在注视的设备；它没有卸载按钮。")}
-    <div class="story-copy"><p>睡醒后，你的手臂像真的敲过一千次墙，胃里也残留着破庙中的饥火。搜索引擎最前端，多出一个此前绝不存在的“武”字论坛。</p></div>
-    <div class="forum-board">
-      <div class="forum-alert"><strong>置顶 · 新人必读</strong><p>人物在武道中的武功、属性和境界会同步现实。初始只有两条命：第一次死亡，重建人物时属性减半；第二次死亡，现实也会死亡。</p></div>
-      <div><strong>第三批资格已经发放</strong><p>龙国武道局招募新人；民间势力也在高价收购银两、命格与奇遇消息。</p></div>
-      <div><strong>奇遇为何最珍贵</strong><p>多数奇遇只能被触发一次，没人知道条件与奖励。你恰好拥有唯一例外。</p></div>
-    </div>
-    <p class="choice-prompt">专属命格一旦暴露，你会得到保护，也可能失去选择奇遇归属的自由。</p>
-    <div class="action-list">
-      ${actionCard({ action: "forum-plan", value: "hide", title: "隐藏逆天改命", description: "不在论坛发言，不加入任何组织，先独自验证这份能力。", source: "谨慎", meta: "小说主线", kind: "special" })}
-      ${actionCard({ action: "forum-plan", value: "official", title: "准备向武道局部分登记", description: "只承认自己看见过异常征兆，不公开全部触发条件。", source: "交换", meta: "获得保护" })}
-      ${actionCard({ action: "forum-plan", value: "guild", title: "联系民间天下会", description: "用奇遇情报换资源，但把命格交给逐利者估价。", source: "冒险", meta: "高风险" })}
-    </div>
-  `);
-}
-
-function forecastBlock() {
-  return `<div class="fate-forecast"><span>逆天改命</span><strong>人物偶发奇遇：根据选择显示后续结局与生死条件</strong></div>`;
+function ladyChoices(stage, action) {
+  const options = stage === "first" ? [
+    ["retort", "反唇相讥", "指出她把旁人的过错迁怒于你。", "聚气境以下死亡", "danger"],
+    ["silent", "沉默避让", "让出篝火另一侧，天亮后各走各路。", "安全 · 永失后续", ""],
+    ["deny_beggar", "只说：我不是乞丐", "不讨好，也不因她的威势否认自己。", "进入后续", "special"],
+  ] : stage === "pressure" ? [
+    ["defy", "宁死不屈", "再次顶撞，不肯退让半步。", "聚气境以下死亡", "danger"],
+    ["yield", "顺着她的话活下来", "暂认乞丐，听清她真正恨的是谁。", "她会说出更多", "special"],
+  ] : [
+    ["exploit", "利用她的失意攀附", "把她这一夜的脆弱当作飞黄腾达的捷径。", "条件不足 · 死亡", "danger"],
+    ["refuse", "拒绝成为报复工具", "告诉她：不该用另一个人的背叛决定今晚。", "破庙夜话", "special"],
+  ];
+  return options.filter(([, , , , kind]) => !(kind === "danger" && state.lives <= 1)).map(([id, title, description, meta, kind]) => actionCard({ action, value: id, title, description, source: "逆天改命", meta, kind })).join("");
 }
 
 function renderLadyArrival() {
   return gameShell(`
-    ${sceneHeader("天武四年八月初二 · 寅时二刻", "再回破庙，篝火旁多了一名青衣妇人", "她没有受伤，也没有求救。她只是心情极坏，而且武功高得足以随手杀你。")}
-    <div class="story-copy"><p>你醒来时，她已经坐在火光另一侧。绝艳面容覆着寒霜，见你多看一眼，便讥讽天下男子都一样贪色。</p><p>你不知道她是谁，只知道她提到“要饭的”和一个令她失望的人时，杀意会突然变重。</p></div>
-    ${forecastBlock()}
-    <div class="action-list">
-      ${state.lives > 1 ? actionCard({ action: "lady-choice", value: "retort", title: "反唇相讥", description: "指出她不该把旁人的过错迁怒于陌生人。", source: "预测：死亡", meta: "先天以下挡不住一掌", kind: "danger" }) : ""}
-      ${actionCard({ action: "lady-choice", value: "silent", title: "沉默避让", description: "等到天亮，各走各路，不再与她产生交集。", source: "预测：安全", meta: "失去全部后续" })}
-      ${actionCard({ action: "lady-choice", value: "deny_beggar", title: "只说：我不是乞丐", description: "不讨好，也不反击，看看这句话为什么会令她失控。", source: "预测：因爱成恨", meta: "进入后续奇遇", kind: "special" })}
+    ${sceneHeader("寅时二刻 · 破庙门开", "一个青衣妇人走进雨里仅剩的火光", "她没有受伤，身后也没有追兵。湿透的斗篷下，气息却压得你几乎不敢呼吸。")}
+    <div class="encounter-stage">
+      <div class="encounter-weather"><span>雨</span><span>火</span><span>杀</span></div>
+      <div class="story-copy"><p>她扫过你的破衣、山桃核和墙边碎砖，冷笑一声：“年纪轻轻，便活成了个乞丐。”</p><p>命格在每一句回答旁，写出了你可能迎来的结局。</p></div>
     </div>
+    <div class="action-list">${ladyChoices("first", "lady-choice")}</div>
   `);
 }
 
 function renderLadyPressure() {
   return gameShell(`
-    ${sceneHeader("偶发奇遇 · 危机", "她掐住你的脖颈，逼你承认自己卑贱", "你终于明白：她真正痛恨的不是乞丐，而是某个出身帮会、如今贪权变心的人。")}
-    <div class="story-copy"><p>在你即将窒息时，她松开手，却没有放你离开。她又问了一遍：你是不是乞丐，是不是天下最卑贱的人？</p></div>
-    ${forecastBlock()}
-    <div class="action-list">
-      ${state.lives > 1 ? actionCard({ action: "lady-pressure", value: "defy", title: "宁死不屈", description: "再次否认，让她把这一掌落下来。", source: "预测：死亡", meta: "失去一条命", kind: "danger" }) : ""}
-      ${actionCard({ action: "lady-pressure", value: "yield", title: "先顺着她的话活下来", description: "承认身份，观察她为什么会因此又哭又笑。", source: "预测：继续", meta: "看见真正伤口", kind: "special" })}
-    </div>
+    ${sceneHeader("因爱成恨", "她的掌风压灭了半边火苗", "你只否认了乞丐二字，她却像从这句话里听见了另一个人的声音。")}
+    <div class="story-copy"><p>“不是乞丐？”她盯着你，怒意后面藏着被人抛下的狼狈，“这世上身份、誓言、夫妻情分，又有几样是真的？”</p></div>
+    <div class="action-list">${ladyChoices("pressure", "lady-pressure")}</div>
   `);
 }
 
 function renderLadyTest() {
   return gameShell(`
-    ${sceneHeader("偶发奇遇 · 因爱成恨", "她想用你证明：陆连山能做的，她也能做", "这不是温柔邀约，而是一场由背叛、愤怒和报复驱动的试探。")}
-    <div class="story-copy"><p>她突然换了神色，向你许诺庇护与亲近，仿佛只要你点头，便能立刻摆脱无名小卒的处境。</p><p>逆天改命却给出冰冷结论：你当前根骨远远不够，顺势攀附只会让她在清醒后杀你灭口。</p></div>
-    ${forecastBlock()}
-    <div class="action-list">
-      ${state.lives > 1 ? actionCard({ action: "lady-test", value: "exploit", title: "接受这条捷径", description: "利用她的失意换取庇护，不问清醒后的代价。", source: "预测：死亡", meta: "条件不满足", kind: "danger" }) : ""}
-      ${actionCard({ action: "lady-test", value: "refuse", title: "拒绝成为报复别人的工具", description: "劝她不要让今夜的决定，永远受那个负心人支配。", source: "预测：破庙夜话", meta: "关系转机", kind: "special" })}
-    </div>
+    ${sceneHeader("杀机未解", "陆连山三个字，终于从她口中落下", "漕帮水路上的权势、夫妻间的旧誓，以及一场背叛，在雨夜里拧成了同一个结。")}
+    <div class="story-copy"><p>她并非需要救命。她想证明自己仍能让人趋之若鹜，也想用一个陌生人的选择报复那个变心的人。</p></div>
+    <div class="action-list">${ladyChoices("test", "lady-test")}</div>
   `);
 }
 
 function renderNightTalk() {
   return gameShell(`
-    ${sceneHeader("破庙夜话 · 火将熄", "卸下身份后，她只是一个无人倾诉的失意人", "她坐回篝火边，第一次提到陆连山：少时相识，门当户对，成婚之后却故人心变。")}
-    <div class="story-copy"><p>你没有追问她的地位，也没有打断她。临近天亮，她忽然问：为这样一个人伤心，自己是不是很愚蠢？</p></div>
-    <div class="action-list">
-      ${NIGHT_TALK.map((choice) => actionCard({ action: "night-talk", value: choice.id, title: choice.title, description: choice.description, source: choice.insight, meta: `可能好感 +${choice.favor}`, kind: choice.id === "sincere" ? "special" : "" })).join("")}
-    </div>
+    ${sceneHeader("破庙夜话", "你推回她递来的酒，只替篝火添了块木头", "杀机第一次退去。现在决定结果的不是境界，而是你是否真的听懂了她。")}
+    <div class="story-copy"><p>她说起漕帮，说起与陆连山一同从小船打到千帆听令，也说起权势如何一点点换掉了旧日之人。</p></div>
+    <div class="action-list">${NIGHT_TALK.map((item) => actionCard({ action: "night-talk", value: item.id, title: item.title, description: item.description, source: item.insight, meta: `好感 +${item.favor}`, kind: item.id === "sincere" ? "special" : "" })).join("")}</div>
   `);
 }
 
 function renderGameDeath() {
   return gameShell(`
-    ${sceneHeader("武道人物 · 死亡", "你甚至没看清她如何出掌", "人物气血归零。现实中的心跳仍在，但第二次死亡将没有这种幸运。")}
-    <div class="death-verdict"><span>剩余命数</span><strong>${state.lives}</strong><p>${state.lives > 0 ? "重返武道后，开局属性将承受死亡惩罚。你仍记得逆天改命显示过的结局。" : "人物与现实同时终止。"}</p></div>
-    <div class="button-row"><button class="primary-button" data-action="return-after-death" ${state.lives > 0 ? "" : "disabled"}>记住死因，再回寅时破庙</button></div>
+    ${sceneHeader("命灯熄灭", "你甚至没看清她如何出掌", "气血断绝的一刻，胸前一盏无形命灯替你碎了。死前的恐惧与判断，全都留在记忆里。")}
+    <div class="death-verdict"><span>剩余命灯</span><strong>${state.lives}</strong><p>${state.lives > 0 ? "残灯回照，可返回青衣妇人进门之前。" : "两灯皆灭，此生终结。"}</p></div>
+    <div class="notice-block"><strong>已知死因</strong><br />${escapeHtml(state.lastDeathChoice || "实力差距过大，正面激怒聚气境武者。")}</div>
+    <div class="button-row">${state.lives > 0 ? `<button class="primary-button" data-action="return-after-death">借残灯回照</button>` : `<button class="primary-button" data-action="restart">另起一世</button>`}</div>
   `);
 }
 
 function renderQuietDeparture() {
   return gameShell(`
-    ${sceneHeader("破庙 · 天将明", "你们没有再说一句话", "她在雨停后离开。没有姓名、没有心法，也没有第二次相见的约定。")}
-    <div class="story-copy"><p>这是一条安全命途。逆天改命让你提前知道它不会带来灾祸，也不会带来任何关系。</p></div>
-    <div class="button-row"><button class="primary-button" data-action="return-to-lady">回看另一条因果</button></div>
+    ${sceneHeader("天明 · 雨停", "你活了下来，也永远错过了这一场人物奇遇", "青衣妇人没有再看你。天色发白时，她踏雨向西，身影很快消失。")}
+    <div class="encounter-ledger"><div><span>所得</span><strong>平安</strong><p>命灯未损，关系未立。</p></div><div><span>错过</span><strong>身份未知</strong><p>命格确认：此后再无相遇条件。</p></div></div>
+    <div class="action-list">${actionCard({ action: "accept-departure", title: "带着破庙所得前往金陵", description: "有些奇遇允许拒绝；活下来，本身也是一个结果。", source: "去路", meta: "结束今夜", kind: "special" })}</div>
   `);
 }
 
 function renderEncounterReward() {
   return gameShell(`
-    ${sceneHeader("偶发奇遇完成 · 地级", "龙青鱼记住了她的‘野鬼少侠’", "天亮前，她终于说出姓名，也留下了日后在临安重逢的约定。")}
-    <div class="npc-reveal-card"><div class="reveal-seal">青鱼</div><div><span>漕帮帮主夫人</span><h2>龙青鱼</h2><p>丈夫陆连山由丐帮起势，却在权位与感情之间背弃旧诺。她今夜离开漕帮，并非遭人追杀，而是不愿在帮中显露软弱。</p></div></div>
-    <div class="encounter-ledger"><div><span>关系</span><strong>${escapeHtml(state.relationship)}</strong><p>龙青鱼好感 ${state.ladyFavor}。临安城开放“重逢”奇遇。</p></div><div><span>所得</span><strong>鱼跃龙门诀</strong><p>潜能一千五百，并获得可在现实生效的特殊心法。</p></div></div>
+    ${sceneHeader("天色将明", "青衣妇人终于说出自己的名字", "她叫龙青鱼，漕帮帮主夫人。昨夜坐在你对面的，是足以调动半条大江船队的人。")}
+    <div class="npc-reveal-card"><div class="reveal-seal">龙<br />青<br />鱼</div><div><span>漕帮 · 帮主夫人</span><h2>${escapeHtml(state.relationship)}</h2><p>她记住了你没有趁虚而入，也记住了你如何说出她不愿承认的真相。</p></div></div>
+    <div class="encounter-ledger"><div><span>关系</span><strong>${escapeHtml(state.relationship)}</strong><p>龙青鱼好感 ${state.ladyFavor}，临安重逢条件已经出现。</p></div><div><span>所得</span><strong>${MIND_ART.name}</strong><p>潜能一千五百，并获得一门水行心法。</p></div></div>
     <div class="button-row"><button class="primary-button" data-action="receive-mind-art">接受灌顶</button></div>
   `);
 }
 
 function renderMindArt() {
   return gameShell(`
-    ${sceneHeader("江鲤行波图 · 识海", "一条青鲤逆流而上，第一次看见龙门", "龙青鱼的指尖点在眉心。她的武功你学不了，但这门由她独创的心法恰好不受门派限制。")}
-    <article class="mind-art-card"><span>${MIND_ART.rank}</span><h2>${MIND_ART.name}</h2><p>${MIND_ART.source}</p><ul>${MIND_ART.traits.map((trait) => `<li>${escapeHtml(trait)}</li>`).join("")}</ul></article>
-    <div class="button-row"><button class="primary-button" data-action="close-wudao">离开武道，验证心法</button></div>
+    ${sceneHeader("心法灌顶", "鱼跃龙门诀", "龙青鱼并指点在你眉心。江鲤行波图化作一段陌生而完整的行气记忆。")}
+    <article class="mind-art-card"><span>${escapeHtml(MIND_ART.rank)}</span><h2>${escapeHtml(MIND_ART.name)}</h2><p>${escapeHtml(MIND_ART.source)}</p><ul>${MIND_ART.traits.map((trait) => `<li>${escapeHtml(trait)}</li>`).join("")}</ul></article>
+    <div class="notice-block"><strong>武道并非只写在人物卡上</strong><br />庙后黑水涧挡着去往金陵的近路。刚得到的心法，立刻就有一次亲手验证的机会。</div>
+    <div class="action-list">${actionCard({ action: "to-road-trial", title: "前往庙后黑水涧", description: "选择潜入涧底，或沿更远的山道绕行。", source: "天明", meta: "武学初试", kind: "special" })}</div>
   `);
 }
 
-function renderRealitySync() {
+function renderRoadTrial() {
   return gameShell(`
-    ${sceneHeader("现实 · 宿舍盥洗间", "文字里的心法，真的刻进了你的记忆", "你放满洗手池，将脸埋进水里，默念江鲤行波图。")}
-    <div class="sync-trial"><span>00:00</span><strong>窒息感正在消失</strong><p>一分钟、三分钟、五分钟。水不再像阻断呼吸的墙，更像一股可以借力的缓流。</p></div>
-    <div class="quote-block"><strong>现实同步成立。</strong>《武道》中的武功、属性与境界，都能成为现实中的超凡力量。</div>
-    <div class="action-list">${actionCard({ action: "confirm-sync", title: "从水中抬头", description: "接受这不是梦，也接受人物死亡可能波及现实。", source: "超凡初证", meta: "鱼跃龙门诀生效", kind: "special" })}</div>
-  `);
-}
-
-function renderBureauDoor() {
-  return gameShell(`
-    ${sceneHeader("现实 · 深夜敲门", "门外两人出示了龙国武道局证件", "于可心负责新人接洽，林毅是她的队长。他们知道陈玄刚获得第三批《武道》资格。")}
-    <div class="npc-duo"><div><strong>于可心</strong><span>态度温和 · 主动说明登记规则</span></div><div><strong>林毅</strong><span>观察敏锐 · 已注意到你的异常疲惫</span></div></div>
-    <p class="choice-prompt">他们暂时不知道“逆天改命”。你必须决定，登记到什么程度。</p>
+    ${sceneHeader("天明 · 黑水涧", "近路沉在三丈深的寒水下面", "石阶在对岸继续，水面看不见桥。新得的心法能让你下潜，但涧底有什么仍是未知。")}
     <div class="action-list">
-      ${actionCard({ action: "bureau-choice", value: "conceal", title: "只登记鱼跃龙门诀", description: "承认获得心法和现实同步，不解释如何在第一夜找到地级奇遇。", source: "保密", meta: "保留主动权", kind: "special" })}
-      ${actionCard({ action: "bureau-choice", value: "partial", title: "承认能看见部分奇遇征兆", description: "换取官方保护，但把能力描述成不稳定的直觉。", source: "交换", meta: "进入关注名单" })}
-      ${actionCard({ action: "bureau-choice", value: "reveal", title: "公开逆天改命", description: "让武道局调集资深玩家保护你，也接受能力被征用的可能。", source: "公开", meta: "保护最高 · 自由最低", kind: "danger" })}
+      ${actionCard({ action: "road-trial", value: "dive", title: ROAD_TRIALS.dive.title, description: "运转江鲤行波图，从水下寻找旧路，也承担未知风险。", source: "鱼跃龙门诀", meta: ROAD_TRIALS.dive.reward, kind: "special" })}
+      ${actionCard({ action: "road-trial", value: "detour", title: ROAD_TRIALS.detour.title, description: "不试新功，沿山脊多走半日。", source: "稳妥", meta: ROAD_TRIALS.detour.reward })}
     </div>
+  `);
+}
+
+function renderRoadResult() {
+  const result = state.roadTrialResult;
+  return gameShell(`
+    ${sceneHeader("黑水涧 · 去路已开", result?.title || "沿路而行", result?.result || "你平安离开破庙。")}
+    <div class="encounter-ledger"><div><span>选择</span><strong>${escapeHtml(result?.title || "未知")}</strong><p>${escapeHtml(result?.condition || "")}</p></div><div><span>结果</span><strong>${escapeHtml(result?.reward || "平安")}</strong><p>${state.roadTrial === "dive" ? "新心法已经真正改变了可走的道路。" : "安全与错过同时成立。"}</p></div></div>
+    <div class="action-list">${actionCard({ action: "continue-road", title: "沿官道望向金陵城", description: "城门、沈家、漕帮与追查血书的人，都在前方。", source: "第一夜", meta: "告一段落", kind: "special" })}</div>
   `);
 }
 
 function renderEnding() {
-  const result = state.bureauResult;
+  const routes = [
+    ["shen", "持沈字铜钱进城", "前往金陵沈家，追查丹房差事与铜匣残片。", "沈家 · 丹房"],
+    ["offering", "等到初一再回破庙", "按晴日、辰时与根骨条件，追索神秘贡品。", "破庙 · 地级奇遇"],
+    ["linan", "沿漕帮水路去临安", "寻找龙青鱼留下的重逢条件，也踏入漕帮权争。", "漕帮 · 人物线"],
+  ];
   return gameShell(`
-    ${sceneHeader("第一夜结束 · 两界同时天亮", result.title, result.effect)}
-    <div class="end-summary wudao-ending-grid">
-      <div><span>武道身份</span><strong>${escapeHtml(state.gameName)}</strong><p>${escapeHtml(getBackground(state.backgroundId).name)} · ${escapeHtml(getVow(state.vowId).title)}</p></div>
-      <div><span>破庙所得</span><strong>残图与沈字铜钱</strong><p>金陵沈家与东郊地图已经成为下一步去处。</p></div>
-      <div><span>人物因果</span><strong>龙青鱼 · ${escapeHtml(state.relationship)}</strong><p>临安“重逢”奇遇已经留下入口。</p></div>
-      <div><span>现实所得</span><strong>${MIND_ART.name}</strong><p>水下闭气已亲手验证，超凡不再只是文字。</p></div>
+    ${sceneHeader("金陵道 · 晨雾", state.departed ? "你独自走向金陵" : "第一夜之后，江湖终于向你张开", state.departed ? "你保住两盏命灯，也失去了一个永不再来的名字。" : "你仍是未入门的少年，却已经有了一门心法、一段关系和几条会彼此牵动的去路。")}
+    <div class="wudao-ending-grid">
+      <div><span>人物</span><strong>${escapeHtml(state.name)}</strong><p>${escapeHtml(getBackground(state.backgroundId)?.name)} · ${escapeHtml(getVow(state.vowId)?.title)}</p></div>
+      <div><span>命灯</span><strong>${state.lives} / ${LIFE_RULE.lives}</strong><p>${state.lastDeathChoice ? "已经用死亡确认过一次实力差距" : "尚未熄灭"}</p></div>
+      <div><span>武学</span><strong>${state.mindArt ? MIND_ART.name : "无"}</strong><p>${state.roadTrial === "dive" ? "已在黑水涧亲手运用" : state.mindArt ? "尚未冒险下水" : "青衣来客已成过路人"}</p></div>
+      <div><span>关系</span><strong>${escapeHtml(state.relationship || "无")}</strong><p>${state.relationship ? "临安重逢条件已出现" : "今夜未与任何势力结缘"}</p></div>
     </div>
-    <div class="notice-block"><strong>仍在逼近的风险</strong><br />${escapeHtml(result.risk)}</div>
-    <div class="next-hooks"><div><span>金陵沈家</span><strong>丹房差事</strong></div><div><span>初一或十五</span><strong>神秘贡品</strong></div><div><span>临安城</span><strong>与龙青鱼重逢</strong></div></div>
-    <div class="button-row"><button class="ghost-button" data-action="restart-story">重走第一夜</button></div>
+    <div class="next-hooks">
+      ${routes.map(([id, title, description, meta]) => actionCard({ action: "choose-route", value: id, title, description, source: state.nextRoute === id ? "已定" : "去路", meta, kind: state.nextRoute === id ? "special" : "" })).join("")}
+    </div>
+    ${state.nextRoute ? `<div class="notice-block"><strong>下一程已定</strong><br />晨雾散去后，你将沿这条路继续。</div>` : ""}
+    <div class="button-row"><button class="secondary-button" data-action="restart">另起一世</button></div>
   `);
 }
 
 const renderers = {
   landing: renderLanding,
-  realityIntro: renderRealityIntro,
+  worldIntro: renderWorldIntro,
   characterDraft: renderCharacterDraft,
   vow: renderVow,
   destiny: renderDestiny,
@@ -522,7 +509,6 @@ const renderers = {
   fateSight: renderFateSight,
   allocation: renderAllocation,
   templeTasks: renderTempleTasks,
-  forum: renderForum,
   ladyArrival: renderLadyArrival,
   ladyPressure: renderLadyPressure,
   ladyTest: renderLadyTest,
@@ -531,182 +517,171 @@ const renderers = {
   quietDeparture: renderQuietDeparture,
   encounterReward: renderEncounterReward,
   mindArt: renderMindArt,
-  realitySync: renderRealitySync,
-  bureauDoor: renderBureauDoor,
+  roadTrial: renderRoadTrial,
+  roadResult: renderRoadResult,
   ending: renderEnding,
 };
 
-function screenMode(screen) {
-  if (["realityIntro", "characterDraft", "vow", "destiny", "characterSheet"].includes(screen)) return "neutral";
-  if (["forum", "realitySync", "bureauDoor", "ending"].includes(screen)) return "reality";
-  if (screen === "gameDeath") return "death";
-  if (["encounterReward", "mindArt"].includes(screen)) return "settlement";
-  return screen === "landing" ? "neutral" : "simulation";
+function screenMode() {
+  if (state.screen === "gameDeath") return "death";
+  if (["encounterReward", "mindArt", "roadResult", "ending", "quietDeparture"].includes(state.screen)) return "settlement";
+  if (["landing", "worldIntro", "characterDraft", "vow", "destiny", "characterSheet"].includes(state.screen)) return "neutral";
+  return "simulation";
 }
 
 function render() {
-  document.body.dataset.mode = screenMode(state.screen);
-  app.innerHTML = (renderers[state.screen] || renderLanding)();
-  saveState();
+  document.body.dataset.mode = screenMode();
+  const renderer = renderers[state.screen] || renderLanding;
+  app.innerHTML = renderer();
+}
+
+function handleDeath(choice) {
+  if (state.lives <= 1) return;
+  state.lives -= 1;
+  state.lastDeathChoice = choice?.forecast || "正面激怒远强于自己的武者";
+  track("death", { choice: choice?.id, lives: state.lives });
+  moveTo("gameDeath");
 }
 
 const handlers = {
-  "new-game": () => {
+  "new-journey": () => {
     clearState();
     state = createInitialState();
-    moveTo("realityIntro");
+    moveTo("worldIntro");
   },
-  "continue-game": () => {
-    if (!savedState) return;
-    state = structuredClone(savedState);
+  "continue-journey": () => {
+    state = savedState ? structuredClone(savedState) : createInitialState();
     render();
   },
   "enter-creation": () => moveTo("characterDraft"),
-  "select-background": ({ value }) => {
-    if (!getBackground(value)) return;
+  "select-background": (value) => {
+    if (!BACKGROUNDS.some((item) => item.id === value)) return;
     state.backgroundId = value;
-    render();
+    refresh();
   },
   "to-vow": () => {
-    if (!state.backgroundId || !state.gameName.trim()) return;
-    state.gameName = state.gameName.trim();
+    if (!state.name.trim() || !getBackground(state.backgroundId)) return;
     moveTo("vow");
   },
-  "back-creation": () => moveTo("characterDraft"),
-  "select-vow": ({ value }) => {
-    if (!getVow(value)) return;
+  "select-vow": (value) => {
+    if (!VOWS.some((item) => item.id === value)) return;
     state.vowId = value;
-    render();
+    moveTo("destiny");
   },
   "reveal-destiny": () => {
     state.destinyRevealed = true;
-    track("destiny_revealed");
-    moveTo("destiny");
+    refresh();
   },
   "confirm-destiny": () => moveTo("characterSheet"),
-  "back-vow": () => moveTo("vow"),
-  "start-wudao": () => {
-    track("wudao_entered", { background: state.backgroundId, vow: state.vowId });
-    moveTo("templeWake");
+  "start-journey": () => moveTo("templeWake"),
+  "search-fire": () => {
+    if (state.peaches > 0) state.peaches -= 1;
+    moveTo("fateSight");
   },
-  "search-fire": () => moveTo("fateSight"),
   "use-destiny": () => moveTo("allocation"),
-  "allocate-jade": ({ value }) => {
+  "allocate-jade": (value) => {
     if (!["strength", "balanced", "fortune"].includes(value)) return;
     state.allocationId = value;
     state.attributes = allocateJadeBonus(value);
-    render();
+    refresh();
   },
-  "confirm-allocation": () => {
-    if (state.backgroundId !== "mystery") {
-      state.attributes = Object.fromEntries(ATTRIBUTES.map((attribute) => [attribute.id, 0]));
-      state.allocationId = "none";
-    }
-    moveTo("templeTasks");
-  },
-  "temple-task": ({ value }) => {
-    if (state.screen !== "templeTasks" || state.completedTempleTasks.includes(value)) return;
+  "confirm-allocation": () => moveTo("templeTasks"),
+  "temple-task": (value) => {
+    if (state.completedTempleTasks.includes(value) || value === "mysterious_offering") return;
     const encounter = getTempleEncounter(value);
     const cost = templeTaskCost(value, state.attributes);
-    if (!encounter || !cost) return;
-    if (state.peaches < cost.peaches) return;
+    if (!encounter || !cost || state.peaches < cost.peaches) return;
+    state.fireMinutes = Math.max(0, state.fireMinutes - cost.minutes);
     state.peaches -= cost.peaches;
-    state.fireMinutes = Math.max(15, state.fireMinutes - cost.minutes);
     state.potential += 50;
     state.completedTempleTasks.push(value);
-    state.templeLog.push(encounter.result);
-    track("temple_encounter_completed", { encounter: value, cost });
-    render();
+    state.templeLog.push(`${encounter.name}：${encounter.reward}`);
+    track("temple_encounter", { id: value, cost });
+    refresh();
   },
-  "leave-temple": () => {
-    if (!["traveler_relic", "shen_promise"].every((id) => state.completedTempleTasks.includes(id))) return;
-    moveTo("forum");
+  "meet-lady": () => moveTo("ladyArrival"),
+  "lady-choice": (value) => {
+    const choice = resolveLadyChoice("first", value);
+    if (!choice) return;
+    state.ladyChoiceLog.push(value);
+    if (choice.outcome === "death") return handleDeath(choice);
+    if (choice.outcome === "depart") {
+      state.departed = true;
+      return moveTo("quietDeparture");
+    }
+    moveTo("ladyPressure");
   },
-  "forum-plan": ({ value }) => {
-    if (!["hide", "official", "guild"].includes(value)) return;
-    state.forumChoice = value;
-    track("forum_plan_chosen", { choice: value });
-    moveTo("ladyArrival");
+  "lady-pressure": (value) => {
+    const choice = resolveLadyChoice("pressure", value);
+    if (!choice) return;
+    state.ladyChoiceLog.push(value);
+    if (choice.outcome === "death") return handleDeath(choice);
+    state.ladyFavor = 20;
+    moveTo("ladyTest");
   },
-  "lady-choice": ({ value }) => handleLadyChoice("first", value),
-  "lady-pressure": ({ value }) => handleLadyChoice("pressure", value),
-  "lady-test": ({ value }) => handleLadyChoice("test", value),
-  "return-after-death": () => {
-    if (state.lives <= 0) return;
-    state.ladyStage = "first";
-    moveTo("ladyArrival");
+  "lady-test": (value) => {
+    const choice = resolveLadyChoice("test", value);
+    if (!choice) return;
+    state.ladyChoiceLog.push(value);
+    if (choice.outcome === "death") return handleDeath(choice);
+    moveTo("nightTalk");
   },
-  "return-to-lady": () => moveTo("ladyArrival"),
-  "night-talk": ({ value }) => {
-    const result = resolveNightTalk(value, 20);
+  "night-talk": (value) => {
+    const result = resolveNightTalk(value, state.ladyFavor);
     if (!result) return;
+    state.ladyChoiceLog.push(value);
     state.ladyFavor = result.totalFavor;
     state.relationship = result.relation;
-    state.mindArt = result.reward?.id || null;
     state.potential += 1500;
-    track("lady_encounter_completed", { choice: value, favor: result.totalFavor });
+    state.mindArt = result.reward?.id || null;
+    track("lady_encounter", { choice: value, relation: result.relation });
     moveTo("encounterReward");
   },
+  "return-after-death": () => moveTo("ladyArrival"),
+  "accept-departure": () => moveTo("ending"),
   "receive-mind-art": () => moveTo("mindArt"),
-  "close-wudao": () => moveTo("realitySync"),
-  "confirm-sync": () => {
-    state.realitySynced = true;
-    track("reality_sync_confirmed", { mindArt: state.mindArt });
-    moveTo("bureauDoor");
-  },
-  "bureau-choice": ({ value }) => {
-    const result = bureauConsequence(value);
+  "to-road-trial": () => moveTo("roadTrial"),
+  "road-trial": (value) => {
+    const result = resolveRoadTrial(value, state.mindArt === MIND_ART.id);
     if (!result) return;
-    state.bureauChoice = value;
-    state.bureauResult = result;
-    track("bureau_registration_decided", { choice: value });
-    moveTo("ending");
+    state.roadTrial = value;
+    state.roadTrialResult = result;
+    state.potential += result.potential;
+    track("road_trial", { choice: value });
+    moveTo("roadResult");
   },
-  "restart-story": () => {
+  "continue-road": () => moveTo("ending"),
+  "choose-route": (value) => {
+    if (!["shen", "offering", "linan"].includes(value)) return;
+    state.nextRoute = value;
+    track("next_route", { route: value });
+    refresh();
+  },
+  restart: () => {
     clearState();
     state = createInitialState();
-    moveTo("realityIntro");
+    render();
   },
 };
-
-function handleLadyChoice(stage, value) {
-  const result = resolveLadyChoice(stage, value);
-  if (!result) return;
-  state.ladyChoiceLog.push({ stage, choice: value, outcome: result.outcome });
-  track("lady_choice", { stage, choice: value, outcome: result.outcome });
-  if (result.outcome === "death") {
-    state.lives -= 1;
-    moveTo("gameDeath");
-  } else if (result.outcome === "depart") {
-    moveTo("quietDeparture");
-  } else if (result.outcome === "pressure") {
-    state.ladyStage = "pressure";
-    moveTo("ladyPressure");
-  } else if (result.outcome === "test") {
-    state.ladyStage = "test";
-    moveTo("ladyTest");
-  } else if (result.outcome === "talk") {
-    state.ladyStage = "talk";
-    moveTo("nightTalk");
-  }
-}
 
 app.addEventListener("click", (event) => {
   const target = event.target.closest("[data-action]");
   if (!target || target.disabled) return;
-  handlers[target.dataset.action]?.({ value: target.dataset.value, target });
+  handlers[target.dataset.action]?.(target.dataset.value || "");
 });
 
 app.addEventListener("input", (event) => {
-  if (event.target.dataset.field === "game-name") state.gameName = event.target.value;
+  if (event.target.dataset.field !== "hero-name") return;
+  state.name = event.target.value.slice(0, 8);
+  saveState();
+  const button = app.querySelector('[data-action="to-vow"]');
+  if (button) button.disabled = !state.name.trim() || !state.backgroundId;
 });
 
-window.addEventListener("keydown", (event) => {
-  if (event.target.matches("input, textarea")) return;
-  const number = Number(event.key);
-  if (!Number.isInteger(number) || number < 1) return;
-  const actions = [...app.querySelectorAll(".action-card:not(:disabled)")];
-  actions[number - 1]?.click();
+document.addEventListener("keydown", (event) => {
+  if (event.target.matches("input, textarea") || !/^[1-9]$/.test(event.key)) return;
+  const actions = [...app.querySelectorAll(".action-card:not(:disabled), .inline-button:not(:disabled)")];
+  actions[Number(event.key) - 1]?.click();
 });
 
 render();
