@@ -45,9 +45,13 @@
 - 曹青本名庞不凡，是药王谷叛徒；强取一碗血后才允许主角继续留下；
 - 主角把玉佩三点改到悟性，观察水炼并通过火候、药序和动机三道盘问；
 - 固定所得为一百八十潜能、炼丹进度六成一与《青青册》；
-- 医书第一层消耗八十五潜能，次日通过考校后得到五禽戏，但不会立即突破锻体。
+- 医书第一层消耗八十五潜能，次日通过考校后得到五禽戏，但不会立即突破锻体；
+- 五禽戏需医术一、悟性三与五百潜能才可入门，第一次完成一戏增加一点可重分属性；
+- 沈家密会揭示金龙会四堂和百舸争流，沈福银子如实交代后曹青好感达到三十九；
+- 医术二级开启取药差事与紫金河钓鱼窗口，完整条件可取得黄金钱鳘与王五的打鱼杆法；
+- 曹青好感越过四十后正式传授回春丹，首次成功炼出六枚下品回春丹并得到《百丹注解》。
 
-沈家丹房段已按合法公开来源核对原作第十二至十八章的人物、事件、数值门槛和因果顺序。改编使用原创转述，不复制小说正文长段落。扩展未经核对的后续章节时，应使用用户提供文本或合法公开来源核对人物、事件和规则；无法核对时必须明确作为原创扩展。
+沈家丹房至首次炼丹段已按合法公开来源核对原作第十二至二十九章的人物、事件、数值门槛和因果顺序。改编使用原创转述，不复制小说正文长段落。扩展未经核对的后续章节时，应使用用户提供文本或合法公开来源核对人物、事件和规则；无法核对时必须明确作为原创扩展。
 
 ## 4. 玩家可见内容规则
 
@@ -62,7 +66,7 @@
 
 ## 5. 当前流程
 
-`landing → worldIntro → characterDraft → vow → destiny → characterSheet → templeWake → fateSight → allocation → templeTasks → ladyArrival → ladyPressure → ladyTest → nightTalk → encounterReward → mindArt → roadTrial → roadResult → ending → shenArrival → shenJobs → caoArrival → caoFate → bloodDemand → danObservation → caoExamFire → caoExamIngredients → caoExamMotive → qingQingReward → qingQingStudy → fiveAnimalReward → shenChapterEnding`
+`landing → worldIntro → characterDraft → vow → destiny → characterSheet → templeWake → fateSight → allocation → templeTasks → ladyArrival → ladyPressure → ladyTest → nightTalk → encounterReward → mindArt → roadTrial → roadResult → ending → shenArrival → shenJobs → caoArrival → caoFate → bloodDemand → danObservation → caoExamFire → caoExamIngredients → caoExamMotive → qingQingReward → qingQingStudy → fiveAnimalReward → shenDaily → fiveAnimalChoice → shenMeeting → shenFuChoice → shenPharmacy → shenDaily → shenErrand → fishingPrep → riverFishing → treasureFish → wangTeaching → caoReturn → caoGuidance → alchemyLesson → firstAlchemy → shenChapterEnding`
 
 支路：
 
@@ -73,7 +77,9 @@
 - 结尾可选择下一程路线并写入存档；
 - 曹青取血时反抗、拒绝或答错关键盘问会进入 `shenDeath`；
 - 仍有命灯时从 `shenDeath` 返回 `bloodDemand`，保留死亡记忆；
-- 取血后选择休息会结束沈家路线，选择观察才进入炼丹盘问。
+- 取血后选择休息会结束沈家路线，选择观察才进入炼丹盘问；
+- 沈家日常透支进入 `shenDeath`，回照时恢复到当日开始；
+- 首炉炼丹失败进入 `alchemyFailure`，不消耗命灯，次日可重试。
 
 新增场景时必须同步：
 
@@ -111,6 +117,9 @@
 - `SHEN_JOBS`、`CAO_ENCOUNTERS`：沈家差事门槛与曹青固定奇遇；
 - `BLOOD_CHOICES`、`OBSERVATION_CHOICES`、`CAO_QUESTIONS`：取血、观察与炼丹盘问；
 - `QINGQING_BOOK`、`FIVE_ANIMAL_PLAY`：固定成长奖励；
+- `SHEN_DAILY_ACTIONS`、`SHEN_DAILY_RULES`：丹房日常的时段、体力与饱腹；
+- `FIVE_ANIMAL_ASPECTS`、`FISHING_PREPARATIONS`：五禽属性选择和钓鱼条件；
+- `TREASURE_FISH_CHOICES`、`RETURN_SPRING_BREW`：宝鱼风险与首炉炼丹；
 - `allocateJadeBonus()`、`templeTaskCost()`：五维重分和环境代价；
 - `resolveLadyChoice()`、`resolveNightTalk()`、`resolveRoadTrial()`、`resolveShenJob()`、`resolveBloodChoice()`、`resolveCaoAnswer()`：选择结果。
 
@@ -118,7 +127,7 @@
 
 ## 8. 状态与存档
 
-存档键为 `wudao-high-martial-v1`，当前状态 `version` 为 `2`。
+存档键为 `wudao-high-martial-v1`，当前状态 `version` 为 `3`。旧版 `version: 2` 存档会迁移；已取得五禽秘籍的旧存档会回到秘籍结算页继续新流程。
 
 `createInitialState()` 是状态事实来源，关键字段包括：
 
@@ -128,7 +137,10 @@
 - 龙青鱼奇遇阶段、选择日志、好感和关系；
 - 心法、紫金河选择与结果；
 - 下一程路线；
-- 沈家差事、曹青身份与好感、取血损失、有效悟性、盘问答案、炼丹进度、医书层级和五禽戏。
+- 沈家差事、曹青身份与好感、取血损失、有效悟性和盘问答案；
+- 每日时段、体力、饱腹、当日快照与行动记录；
+- 医术、五禽戏、炼丹、钓鱼、《打鱼杆法》和王五好感；
+- 沈家密会、沈福门路、黄金钱鳘、首炉回春丹与通关倾向。
 
 handler 必须检查当前条件，避免重复领取潜能、物品或关系奖励。状态只能存放 JSON 可序列化值。
 
@@ -164,6 +176,10 @@ node scripts/cdp-smoke.mjs 9225
 - 紫金河即时应用和沈家当日入场；
 - 四项差事门槛、曹青身份、取血选择和一次丹房死亡；
 - 玉佩改悟性、炼丹三问、《青青册》与五禽戏；
+- 五种丹房日常行动、真实资源变化和当日回照；
+- 沈家密会、医术二级与完整钓鱼条件板；
+- 黄金钱鳘、王五六十好感和《打鱼杆法》；
+- 曹青四十好感、七点有效悟性、一次炼丹失败重试与六枚回春丹；
 - 五禽戏不会使境界直接变为锻体，以及本地存档恢复；
 - 桌面和手机无横向溢出；
 - 页面运行异常为空。

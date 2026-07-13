@@ -10,10 +10,16 @@ import {
   BLOOD_CHOICES,
   CAO_ENCOUNTERS,
   CAO_QUESTIONS,
+  FISHING_PREPARATIONS,
   FIVE_ANIMAL_PLAY,
+  FIVE_ANIMAL_ASPECTS,
   OBSERVATION_CHOICES,
   QINGQING_BOOK,
+  RETURN_SPRING_BREW,
+  SHEN_DAILY_ACTIONS,
+  SHEN_DAILY_RULES,
   SHEN_JOBS,
+  TREASURE_FISH_CHOICES,
   TEMPLE_ENCOUNTERS,
   VOWS,
   WORLD_FACTS,
@@ -21,15 +27,24 @@ import {
   canStudyQingQing,
   getBackground,
   getCaoEncounter,
+  getFiveAnimalAspect,
   getTempleEncounter,
   getVow,
   resolveLadyChoice,
   resolveNightTalk,
   resolveBloodChoice,
   resolveCaoAnswer,
+  resolveFirstAlchemy,
+  resolveFishingPreparation,
+  resolveFiveAnimalBreakthrough,
+  resolveMedicalBreakthrough,
   resolveObservationChoice,
   resolveRoadTrial,
+  resolveShenDailyAction,
   resolveShenJob,
+  resolveTreasureFishChoice,
+  canLearnFishingRod,
+  reallocateExistingAttributes,
   templeTaskCost,
 } from "./wudao-core.mjs";
 
@@ -38,7 +53,7 @@ const app = document.querySelector("#app");
 
 function createInitialState() {
   return {
-    version: 2,
+    version: 3,
     screen: "landing",
     name: "陈司命",
     backgroundId: "mystery",
@@ -65,7 +80,7 @@ function createInitialState() {
     martialStage: "mortal",
     skills: [],
     shenChapterStarted: false,
-    shenOriginalVersion: 1,
+    shenOriginalVersion: 2,
     shenJob: null,
     caoIdentitySeen: false,
     caoFavor: 0,
@@ -79,6 +94,36 @@ function createInitialState() {
     gatheringProgress: 0,
     qingQingStudied: false,
     fiveAnimalBook: false,
+    fiveAnimalLevel: 0,
+    fiveAnimalProgress: 0,
+    fiveAnimalAspect: null,
+    shenAttributeGains: 0,
+    shenDay: 1,
+    shenLocation: "danroom",
+    shenTimeLeft: SHEN_DAILY_RULES.slotsPerDay,
+    shenStamina: SHEN_DAILY_RULES.startStamina,
+    shenSatiety: SHEN_DAILY_RULES.startSatiety,
+    shenDayLog: [],
+    shenDayStart: null,
+    shenFocus: { medicine: 0, martial: 0 },
+    medicalProgress: 0,
+    shenMeetingSeen: false,
+    shenFuContact: false,
+    shenSilver: 0,
+    shenFishingPrep: [],
+    fishingLevel: 0,
+    riverFishStage: 0,
+    releasedRiverFish: false,
+    treasureFishCaught: false,
+    treasureFishShared: false,
+    wangFavor: 0,
+    fishingRodMethod: false,
+    alchemyLevel: 0,
+    alchemyPills: 0,
+    alchemyFailures: 0,
+    shenLastAlchemyChoice: null,
+    effectiveAlchemyInsight: 0,
+    shenTendency: null,
     shenDeathNode: null,
     shenDeathReason: null,
     shenOutcome: null,
@@ -90,18 +135,15 @@ function createInitialState() {
 function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (!saved || saved.version !== 2 || !saved.screen) return null;
-    if (saved.shenChapterStarted && saved.shenOriginalVersion !== 1) {
-      const reset = createInitialState();
-      return {
-        ...reset,
-        ...saved,
-        screen: "ending",
-        nextRoute: "shen",
-        ...Object.fromEntries(Object.keys(reset).filter((key) => key.startsWith("shen") || ["caoIdentitySeen", "caoFavor", "bloodChoice", "bloodLoss", "observationChoice", "effectiveInsight", "caoAnswers", "alchemyProgress", "medicalLevel", "gatheringProgress", "qingQingStudied", "fiveAnimalBook"].includes(key)).map((key) => [key, reset[key]])),
-      };
+    if (!saved || ![2, 3].includes(saved.version) || !saved.screen) return null;
+    const migrated = { ...createInitialState(), ...saved, version: 3 };
+    if (saved.version === 2 && saved.shenChapterComplete && saved.fiveAnimalBook) {
+      migrated.screen = "fiveAnimalReward";
+      migrated.shenChapterComplete = false;
+      migrated.shenOriginalVersion = 2;
+      migrated.skills = migrated.skills.filter((skill) => skill !== FIVE_ANIMAL_PLAY.id);
     }
-    return { ...createInitialState(), ...saved };
+    return migrated;
   } catch {
     return null;
   }
@@ -146,6 +188,46 @@ function refresh() {
   render();
 }
 
+function shenAttributePool() {
+  return 3 + Number(state.shenAttributeGains || 0);
+}
+
+function reallocateShenAttributes(focus) {
+  const attributes = reallocateExistingAttributes(shenAttributePool(), focus);
+  attributes.constitution -= Number(state.bloodLoss || 0);
+  return attributes;
+}
+
+function beginShenDay() {
+  state.shenTimeLeft = SHEN_DAILY_RULES.slotsPerDay;
+  state.shenStamina = SHEN_DAILY_RULES.startStamina;
+  state.shenSatiety = SHEN_DAILY_RULES.startSatiety;
+  state.shenDayLog = [];
+  state.shenDayStart = {
+    potential: state.potential,
+    attributes: structuredClone(state.attributes),
+    fiveAnimalLevel: state.fiveAnimalLevel,
+    fiveAnimalProgress: state.fiveAnimalProgress,
+    fiveAnimalAspect: state.fiveAnimalAspect,
+    shenAttributeGains: state.shenAttributeGains,
+    medicalLevel: state.medicalLevel,
+    medicalProgress: state.medicalProgress,
+    gatheringProgress: state.gatheringProgress,
+    alchemyProgress: state.alchemyProgress,
+    shenFocus: structuredClone(state.shenFocus),
+    skills: structuredClone(state.skills),
+    shenStamina: state.shenStamina,
+    shenSatiety: state.shenSatiety,
+    shenTimeLeft: state.shenTimeLeft,
+  };
+}
+
+function restoreShenDay() {
+  if (!state.shenDayStart) return;
+  Object.assign(state, structuredClone(state.shenDayStart));
+  state.shenDayLog = ["你记得透支而死的滋味，重新安排这一天。"];
+}
+
 function setupShell(content, narrow = false) {
   return `<main class="setup-shell"><section class="setup-card ${narrow ? "narrow" : ""}">${content}</section></main>`;
 }
@@ -178,7 +260,13 @@ function journalHtml() {
     items.push(["天明 · 紫金河", state.roadTrial === "dive" ? "顺流抵达东湖" : "官道受阻", "shifted"]);
   }
   if (state.shenChapterStarted) {
-    items.push(["金陵 · 沈家丹房", state.shenChapterComplete ? "虎口求生" : state.qingQingStudied ? "曹青考校" : state.bloodChoice ? "取血炼丹" : "无职可领", state.shenChapterComplete ? "shifted" : "current"]);
+    const shenDetail = state.shenChapterComplete
+      ? state.alchemyPills ? "首炉回春丹已成" : "此路暂止"
+      : state.fishingRodMethod ? "王五传下打鱼杆法"
+        : state.treasureFishCaught ? "黄金钱鳘上岸"
+          : state.shenMeetingSeen ? "曹青迁往东门药铺"
+            : state.qingQingStudied ? "丹房求生" : state.bloodChoice ? "取血炼丹" : "无职可领";
+    items.push([state.shenLocation === "pharmacy" ? "金陵 · 东门药铺" : "金陵 · 沈家丹房", shenDetail, state.shenChapterComplete ? "shifted" : "current"]);
   }
   return `
     <div class="panel-title">江湖行录</div>
@@ -219,13 +307,16 @@ function characterPanelHtml() {
       <div>
         <div class="panel-title">随身所得</div>
         <div class="inventory-list">
-          ${state.backgroundId === "mystery" ? `<div><strong>半块家传玉佩</strong><span>可重分三点五维加成</span></div><div><strong>一封血书</strong><span>指向金龙会万鲤堂孙不离</span></div>` : ""}
+          ${state.backgroundId === "mystery" ? `<div><strong>半块家传玉佩</strong><span>可把自身所得重分五维 · 当前总点 ${shenAttributePool()}</span></div><div><strong>一封血书</strong><span>指向金龙会万鲤堂孙不离</span></div>` : ""}
           ${state.completedTempleTasks.includes("traveler_relic") ? `<div><strong>金陵东郊残图</strong><span>标出破庙外的旧路</span></div>` : ""}
           ${state.completedTempleTasks.includes("shen_promise") ? `<div><strong>沈字铜钱</strong><span>可作为金陵沈家信物</span></div>` : ""}
           ${state.mindArt ? `<div><strong>${MIND_ART.name}</strong><span>${MIND_ART.rank} · 龙青鱼所授</span></div>` : ""}
           ${state.roadTrial === "dive" ? `<div><strong>紫金河水路</strong><span>鱼跃龙门诀可缩短往返沈家的路程</span></div>` : ""}
-          ${state.inventory.includes(QINGQING_BOOK.id) ? `<div><strong>${QINGQING_BOOK.name}</strong><span>${state.qingQingStudied ? "已研习 · 医术入门" : "曹青所授 · 尚未研习"}</span></div>` : ""}
-          ${state.fiveAnimalBook ? `<div><strong>${FIVE_ANIMAL_PLAY.name}</strong><span>基础健体功 · 尚未练成</span></div>` : ""}
+          ${state.inventory.includes(QINGQING_BOOK.id) ? `<div><strong>${QINGQING_BOOK.name}</strong><span>${state.qingQingStudied ? `已研习 · 医术 ${state.medicalLevel}级 ${state.medicalProgress}%` : "曹青所授 · 尚未研习"}</span></div>` : ""}
+          ${state.fiveAnimalBook ? `<div><strong>${FIVE_ANIMAL_PLAY.name}</strong><span>${state.fiveAnimalLevel ? `${state.fiveAnimalLevel}级 ${state.fiveAnimalProgress}% · ${escapeHtml(getFiveAnimalAspect(state.fiveAnimalAspect)?.name || "已入门")}` : "基础健体功 · 尚未练成"}</span></div>` : ""}
+          ${state.fishingRodMethod ? `<div><strong>《打鱼杆法》</strong><span>王五所授 · 抄水拍鱼、劈浪戳鱼</span></div>` : ""}
+          ${state.inventory.includes("return_spring_pills") ? `<div><strong>六枚下品回春丹</strong><span>亲手炼成 · 止血补气</span></div>` : ""}
+          ${state.inventory.includes("hundred_pills_notes") ? `<div><strong>《百丹注解》</strong><span>曹青所授 · 再成三丹可换武功</span></div>` : ""}
         </div>
       </div>
     </div>
@@ -278,8 +369,26 @@ function modeLabel() {
     qingQingReward: "酉时三刻 · 青青册",
     qingQingStudy: "次日寅时 · 曹青考校",
     fiveAnimalReward: "沈家后院 · 五禽戏",
+    shenDaily: "丹房起居 · 自择一日",
+    fiveAnimalChoice: "五兽灵光 · 一戏初成",
+    shenMeeting: "沈家内宅 · 密会",
+    shenFuChoice: "沈家内堂 · 十两银子",
+    shenPharmacy: "金陵东门 · 沈氏药铺",
+    shenErrand: "曹青差事 · 钓鱼时机",
+    fishingPrep: "半日奔波 · 补齐条件",
+    riverFishing: "紫金河 · 垂钓",
+    riverCatch: "紫金河 · 第一尾鱼",
+    wangEncounter: "紫金河 · 渔翁",
+    treasureFish: "珍馐宝鱼 · 黄金钱鳘",
+    treasureShare: "河岸分鱼 · 王五",
+    wangTeaching: "宝鱼气血 · 打鱼杆法",
+    caoReturn: "东门药铺 · 夜归",
+    caoGuidance: "好感四十 · 曹青指点",
+    alchemyLesson: "回春丹 · 正式传授",
+    firstAlchemy: "第一炉丹 · 亲手开炉",
+    alchemyFailure: "药材焦坏 · 次日重试",
     shenDeath: "命灯熄灭 · 曹青杀机",
-    shenChapterEnding: "沈家丹房 · 暂得立足",
+    shenChapterEnding: "东门药铺 · 首炉丹成",
   };
   return labels[state.screen] || "大曜江湖";
 }
@@ -910,24 +1019,240 @@ function renderFiveAnimalReward() {
     ${sceneHeader("沈家后院", "曹青把一册《五禽戏》丢到你手里", "他警告你身体孱弱，昨夜失血后仍不休息，再这样下去活不过一年。随后传下一门没有杀伤力的健体术。")}
     <div class="mind-art-card"><span>基础健体功</span><h2>${FIVE_ANIMAL_PLAY.name}</h2><p>${FIVE_ANIMAL_PLAY.description}</p><ul><li>虎势：练筋骨整劲</li><li>熊势：稳下盘气血</li><li>其余三势仍需继续研习</li></ul></div>
     <div class="notice-block"><strong>尚未突破</strong><br />得到功法不等于已经炼成。你仍是未入门，只是终于有了一条可以自己走的炼体之路。</div>
-    <div class="action-list">${actionCard({ action: "finish-shen-original", title: "收好两册书，留在丹房活下去", description: "下一步是把《五禽戏》练入门，并在一个月内查清血书背后的万鲤堂。", source: "沈家立足", meta: "曹青好感 30", kind: "special" })}</div>
+    <div class="action-list">${actionCard({ action: "begin-shen-cycle", title: "收好两册书，安排留在丹房的第一天", description: "读医书、练五禽或休养，都要占去一个时段；身体再次垮掉，曹青不会为你停炉。", source: "沈家立足", meta: "三段白昼 · 体力四 · 饱腹四", kind: "special" })}</div>
+  `);
+}
+
+function shenDailyStatusHtml() {
+  return `
+    <div class="shen-cycle-status">
+      <div><span>今日</span><strong>第${state.shenDay}日</strong><p>${state.shenLocation === "pharmacy" ? "东门药铺" : "沈家丹房"}</p></div>
+      <div><span>剩余时段</span><strong>${state.shenTimeLeft}</strong><p>每项事务占一段白昼</p></div>
+      <div><span>体力</span><strong>${state.shenStamina}/${SHEN_DAILY_RULES.maxStamina}</strong><p>降到零会昏厥</p></div>
+      <div><span>饱腹</span><strong>${state.shenSatiety}/${SHEN_DAILY_RULES.maxSatiety}</strong><p>降到零不能再行动</p></div>
+    </div>
+  `;
+}
+
+function renderShenDaily() {
+  const breakthrough = resolveFiveAnimalBreakthrough({ medicalLevel: state.medicalLevel, insight: state.attributes.insight, potential: state.potential });
+  const medicine = resolveMedicalBreakthrough(state.medicalProgress, state.potential);
+  const location = state.shenLocation === "pharmacy" ? "金陵东门 · 沈氏药铺后院" : "沈家后院 · 丹房偏屋";
+  const exhausted = state.shenTimeLeft <= 0;
+  return gameShell(`
+    ${sceneHeader(location, state.shenLocation === "pharmacy" ? "曹青把药铺后院交给你打理" : "曹青炼他的丹，你得先把自己练成有用的人", state.shenLocation === "pharmacy" ? "医术二级会让你看出下一次外出差事的真正价值；在那以前，每一段白昼仍要自己安排。" : "《青青册》能让你留下，《五禽戏》能让你活久一点。饥饿与失血却不会因为有了秘籍便消失。")}
+    ${shenDailyStatusHtml()}
+    <div class="skill-progress-grid">
+      <div><span>《青青册》</span><strong>${state.medicalLevel}级 ${state.medicalProgress}%</strong><div class="progress-track"><i style="width:${Math.min(100, state.medicalProgress)}%"></i></div><p>${state.medicalLevel >= 2 ? "医术二级 · 已能辨认离院时机" : "再读到十七分，可用潜能贯通二级"}</p></div>
+      <div><span>《五禽戏》</span><strong>${state.fiveAnimalLevel}级 ${state.fiveAnimalProgress}%</strong><div class="progress-track"><i style="width:${Math.min(100, state.fiveAnimalProgress)}%"></i></div><p>${state.fiveAnimalLevel ? `${getFiveAnimalAspect(state.fiveAnimalAspect)?.name || "一戏"}已成 · 属性总点 ${shenAttributePool()}` : "医术一、悟性三、潜能五百方可入门"}</p></div>
+      <div><span>丹理</span><strong>${state.alchemyProgress}%</strong><div class="progress-track"><i style="width:${Math.min(100, state.alchemyProgress)}%"></i></div><p>好感四十后，曹青才会正式传授</p></div>
+    </div>
+    ${state.shenDayLog.length ? `<div class="result-log">${state.shenDayLog.map((line) => `<p>${escapeHtml(line)}</p>`).join("")}</div>` : ""}
+    ${!state.fiveAnimalLevel ? `<div class="action-list">${actionCard({ action: "breakthrough-five-animals", title: "用五百潜能贯通《五禽戏》", description: "医术让你看懂吐纳与架势；把悟性集中到三点，才能抓住五兽灵光。", source: "奇术入门", meta: breakthrough.available ? "潜能 -500 · 选择一戏" : `尚缺：${breakthrough.missing.join("、")}`, kind: "special", disabled: !breakthrough.available })}</div>` : ""}
+    ${state.medicalLevel === 1 && state.medicalProgress >= 17 ? `<div class="action-list">${actionCard({ action: "breakthrough-medicine", title: "用一百六十六潜能贯通《青青册》二级", description: "把已经读懂的脉象、药理与采集知识连成一体。", source: "医术突破", meta: medicine.available ? "医术二级 · 采集一级" : "潜能不足", kind: "special", disabled: !medicine.available })}</div>` : ""}
+    <div class="daily-action-grid">
+      ${Object.values(SHEN_DAILY_ACTIONS).map((action) => {
+        const status = resolveShenDailyAction(action.id, { timeLeft: state.shenTimeLeft, stamina: state.shenStamina, satiety: state.shenSatiety, fiveAnimalLevel: state.fiveAnimalLevel });
+        const unsafeLastLamp = status.dangerous && state.lives <= 1;
+        const delta = [action.stamina ? `体力 ${action.stamina > 0 ? "+" : ""}${action.stamina}` : "", action.satiety ? `饱腹 ${action.satiety > 0 ? "+" : ""}${action.satiety}` : ""].filter(Boolean).join(" · ");
+        return actionCard({ action: "shen-daily-action", value: action.id, title: action.name, description: action.description, source: action.focus === "medicine" ? "医道" : action.focus === "martial" ? "练体" : "起居", meta: unsafeLastLamp ? "仅余一灯 · 不可透支" : delta, kind: action.focus ? "special" : "", disabled: !status.available || unsafeLastLamp });
+      }).join("")}
+    </div>
+    ${exhausted ? `<div class="action-list">${state.shenDay === 1 && !state.shenMeetingSeen ? actionCard({ action: "close-first-day", title: "跟曹青去沈家内宅", description: "晚饭刚端上来，曹青便说家主有事相商，要你一同前去。", source: "曹青吩咐", meta: "沈家密会", kind: "special" }) : actionCard({ action: "next-shen-day", title: "收束今日，睡到天明", description: "保住今日所得，恢复体力与时段。", source: "起居有常", meta: `第${state.shenDay + 1}日`, kind: "special" })}</div>` : ""}
+    ${state.shenLocation === "pharmacy" && state.medicalLevel >= 2 ? `<div class="action-list">${actionCard({ action: "take-herb-errand", title: "接下返回沈家取药草与杂物的差事", description: "医术二级让你看出：这是离开药铺、顺路准备紫金河奇遇的最好时机。", source: "曹青差事", meta: "钓鱼时机", kind: "special" })}</div>` : ""}
+  `);
+}
+
+function renderFiveAnimalChoice() {
+  return gameShell(`
+    ${sceneHeader("五兽灵光", "第一次完整演完五禽，你要把这一点增长落在哪一戏", "这点属性属于你自己，也会进入逆天改命此后可以重新分配的总数。原本的求道之路，最看重猿戏带来的悟性。")}
+    <div class="quest-grid five-aspect-grid">${FIVE_ANIMAL_ASPECTS.map((aspect) => `<article class="quest-card"><span>${escapeHtml(aspect.name)}</span><h2>${escapeHtml(ATTRIBUTES.find((item) => item.id === aspect.attribute)?.name || aspect.attribute)} +1</h2><p>${escapeHtml(aspect.effect)}</p><button data-action="choose-five-aspect" data-value="${escapeHtml(aspect.id)}">把灵光交给${escapeHtml(aspect.name)}</button></article>`).join("")}</div>
+  `);
+}
+
+function renderShenMeeting() {
+  return gameShell(`
+    ${sceneHeader("沈家内宅 · 夜", "曹青第一次把你带进沈家真正议事的房间", "沿路家丁都向他低头。曹青说，他第一次取血时总会给药童一次旁观机会；别人不敢争，你却只是想求一条活路。")}
+    <div class="world-ledger shen-meeting-ledger">
+      <article class="world-fact"><span>曹青的打算</span><strong>离开沈家，迁入东门药铺</strong><p>以后沈家的药材与差事，由你代为传话联络。</p></article>
+      <article class="world-fact"><span>沈家密议</span><strong>金龙会四堂回岛</strong><p>万鲤、怒蛟、巨鲸、神龟四堂齐聚，沈家认为水路将有大事。</p></article>
+      <article class="world-fact"><span>三个月后</span><strong>百舸争流大典</strong><p>漕帮让各路年轻武人同船竞渡，划船、护船与破坏对手皆在考校之内。</p></article>
+    </div>
+    <div class="notice-block"><strong>遥远门槛</strong><br />大典最普通的船夫也须炼骨。你连锻体都未踏入，但这条水路已第一次出现在眼前。</div>
+    <div class="action-list">${actionCard({ action: "leave-shen-meeting", title: "依曹青吩咐退出内堂", description: "门外，先前把你当废物的沈福已经搬来椅子，笑得比谁都恭敬。", source: "沈家总管", meta: "十两见面礼", kind: "special" })}</div>
+  `);
+}
+
+function renderShenFuChoice() {
+  return gameShell(`
+    ${sceneHeader("沈家内堂门外", "沈福把十两银子塞进你手里", "逆天改命让你看见他在秦淮河畔藏着一处宅子。曹青很快就会出来，你如何处理这包银子，会决定他是否把你当成能替自己办事的人。")}
+    <div class="action-list">
+      ${actionCard({ action: "shenfu-choice", value: "report", title: "收下银子，待曹青出来后如实交代", description: "不假清高，也不向曹青隐瞒；同时记住沈福这条能进厨房、找护院的门路。", source: "坦诚", meta: "银子十两 · 曹青好感 39", kind: "special" })}
+      ${actionCard({ action: "shenfu-choice", value: "hide", title: "收下银子，对曹青只字不提", description: "你得到钱，却让曹青确认你不能代他与沈家往来。", source: "私心", meta: "失去药铺与指点门路", kind: "danger" })}
+    </div>
+  `);
+}
+
+function renderShenPharmacy() {
+  return gameShell(`
+    ${sceneHeader("金陵东门 · 沈氏药铺", "曹青连夜搬出了沈家", "前铺卖药，后院炼丹。曹青给你一间硬板床，也把与沈家往来的杂事一并交到你手里。")}
+    <div class="encounter-ledger"><div><span>曹青好感</span><strong>${state.caoFavor}</strong><p>距离正式指点只差一点</p></div><div><span>沈福门路</span><strong>${state.shenFuContact ? "可以办事" : "已经断掉"}</strong><p>可找走船护院，也能从灶房取酒与面团</p></div></div>
+    <div class="action-list">${actionCard({ action: "enter-pharmacy-day", title: "在药铺醒来，继续安排修习", description: "先把《青青册》推到医术二级，才看得懂曹青下一道差事的价值。", source: "新居", meta: "第2日", kind: "special" })}</div>
+  `);
+}
+
+function renderShenErrand() {
+  return gameShell(`
+    ${sceneHeader("东门药铺 · 辰时", "曹青让你回沈家取走遗下的药草和杂物", "他以为这只是一次跑腿。你却知道，今天可以自由穿过沈家与紫金河之间，也是凑齐黄金钱鳘全部条件的唯一窗口。")}
+    <div class="fate-forecast"><span>医术二级 · 看见时机</span><strong>若直接搬完东西回来，安稳无事；若把半日用来准备钓鱼，可能赶在天黑前带回另一条路。</strong></div>
+    <div class="action-list">
+      ${actionCard({ action: "start-fishing-prep", title: "借差事准备紫金河一行", description: "蚯蚓、鱼竿、钓鱼手艺、酒与面团缺一不可。", source: "珍馐宝鱼", meta: "开始补齐五项条件", kind: "special" })}
+      ${actionCard({ action: "abandon-fishing", title: "只取药草，立刻返回药铺", description: "保住曹青的信任，却永久错过本周的黄金钱鳘与王五。", source: "安稳", meta: "水陆奇遇关闭" })}
+    </div>
+  `);
+}
+
+function renderFishingPrep() {
+  const ready = FISHING_PREPARATIONS.every((item) => state.shenFishingPrep.includes(item.id)) && state.mindArt === MIND_ART.id;
+  return gameShell(`
+    ${sceneHeader("沈家至紫金河 · 半日", "把黄金钱鳘从传闻变成可以触发的奇遇", "每一项准备都要亲手完成。逆天改命只能告诉你条件，不能替你挖饵、学手艺或游过急流。")}
+    <div class="quest-grid fishing-condition-grid">
+      ${FISHING_PREPARATIONS.map((item) => {
+        const status = resolveFishingPreparation(item.id, { completed: state.shenFishingPrep, hasContact: state.shenFuContact, potential: state.potential });
+        const done = state.shenFishingPrep.includes(item.id);
+        return `<article class="quest-card ${done ? "completed" : status.available ? "" : "locked"}"><span>${done ? "已满足" : "待准备"}</span><h2>${escapeHtml(item.name)}</h2><p>${escapeHtml(item.condition)}</p><small>${escapeHtml(item.result)}</small><button data-action="fishing-prep" data-value="${escapeHtml(item.id)}" ${!status.available ? "disabled" : ""}>${done ? "已经完成" : "现在去办"}</button></article>`;
+      }).join("")}
+      <article class="quest-card ${state.mindArt === MIND_ART.id ? "completed" : "locked"}"><span>${state.mindArt === MIND_ART.id ? "已满足" : "尚缺"}</span><h2>紫金河水路</h2><p>需要能逆流游到第三段河湾。</p><small>《鱼跃龙门诀》可降低体力消耗并提高水中身法。</small></article>
+    </div>
+    <div class="action-list">${actionCard({ action: "enter-purple-river", title: "抱紧包裹，顺紫金河游向钓点", description: "所有条件已齐，晌午前还能赶到芦苇荡外。", source: "鱼跃龙门诀", meta: ready ? "条件齐备" : `已满足 ${state.shenFishingPrep.length + (state.mindArt === MIND_ART.id ? 1 : 0)}/5`, kind: "special", disabled: !ready })}</div>
+  `);
+}
+
+function renderRiverFishing() {
+  const fortuneReady = state.attributes.fortune >= shenAttributePool();
+  return gameShell(`
+    ${sceneHeader("金陵东郊 · 紫金河", state.riverFishStage === 0 ? "十文铜钱沉入河底，你第一次把浮子甩进急流" : "普通鲫鱼已经离开，摆渡老翁也消失在芦苇后", state.riverFishStage === 0 ? "鱼跃龙门诀让你越过两段河湾。现在没有刀剑，只有水声、烈日和一根会不会动的浮子。" : "天色已经偏西。若宝鱼真与福缘有关，现在就是把所有可调属性压到福缘上的时候。")}
+    <div class="river-stage"><div class="river-glyph">水<br />鱼<br />竿</div><div><span>钓鱼 ${state.fishingLevel}级</span><strong>${state.riverFishStage === 0 ? "先学会等" : fortuneReady ? "福缘已尽数调动" : "宝鱼仍未出现"}</strong><p>${state.riverFishStage === 0 ? "浮子第一次轻点时不要急，等它连续摆动再起竿。" : `当前福缘 ${state.attributes.fortune}，可调属性总数 ${shenAttributePool()}。`}</p></div></div>
+    <div class="action-list">
+      ${state.riverFishStage === 0 ? actionCard({ action: "cast-first-line", title: "耐住性子，等浮子连续摆动再起竿", description: "一尾二斤多的鲫鱼终于破水而出。", source: "钓鱼判定", meta: "钓鱼经验 +1%", kind: "special" }) : ""}
+      ${state.riverFishStage === 1 && !fortuneReady ? actionCard({ action: "reallocate-fortune", title: "把全部已有属性重分到福缘", description: "暂时放下力道、悟性和身法，只为让今天剩下的运气集中到这一竿。", source: "逆天改命", meta: `福缘变为 ${shenAttributePool()}`, kind: "special" }) : ""}
+      ${state.riverFishStage === 1 ? actionCard({ action: "cast-treasure-line", title: "重新挂饵，等那一点金色咬钩", description: "浮子猛地没入水下，河中亮起铜钱般的金鳞。", source: "珍馐宝鱼", meta: fortuneReady ? "黄金钱鳘上钩" : "需要先集中福缘", kind: "special", disabled: !fortuneReady }) : ""}
+    </div>
+  `);
+}
+
+function renderRiverCatch() {
+  return gameShell(`
+    ${sceneHeader("紫金河岸", "第一尾只是普通鲫鱼", "你没有鱼篓。船桨拨水声从芦苇后传来，一个戴草笠的黝黑老翁正笑你不懂得用鲜鱼吊汤。")}
+    <div class="action-list">
+      ${actionCard({ action: "river-catch-choice", value: "release", title: "把鲫鱼放回河里", description: "承认自己要等的不是这一尾，同时告诉老翁：有人说此地有一桩机缘。", source: "放生", meta: "老翁驻足", kind: "special" })}
+      ${actionCard({ action: "river-catch-choice", value: "keep", title: "没有鱼篓也把鲫鱼留在岸边", description: "老翁摇头离去；鱼会坏掉，但宝鱼的条件仍未失效。", source: "贪一口鲜", meta: "王五好感不增" })}
+    </div>
+  `);
+}
+
+function renderWangEncounter() {
+  return gameShell(`
+    ${sceneHeader("紫金河 · 芦苇荡", "摆渡老翁说，五十里河道里哪有什么命中机缘", "他不信，却记住了你。等船影再度隐入芦苇，你终于可以不受旁人注视地改换福缘。")}
+    <div class="npc-reveal-card"><div class="reveal-seal">渔<br />翁</div><div><span>安庆镇摆渡人</span><h2>姓名尚未相告</h2><p>手里只有船桨与鱼竿，肩背却比沈家大多数家丁更稳。</p></div></div>
+    <div class="action-list">${actionCard({ action: "wait-for-treasure", title: "让老翁离开，继续守住这根浮子", description: "普通鱼已经证明钓法无误，剩下只看福缘。", source: "长线等待", meta: "可重分福缘", kind: "special" })}</div>
+  `);
+}
+
+function renderTreasureFish() {
+  return gameShell(`
+    ${sceneHeader("黄金钱鳘上钩", "不到一尺的宝鱼，爆发出不逊常人的力道", "鱼竿几乎脱手，你半个身体已经被拖进河里。老翁的船又从芦苇后出现，高声让你沿岸游走，不要与鱼拔河。")}
+    <div class="action-list">${Object.values(TREASURE_FISH_CHOICES).map((choice) => {
+      const status = resolveTreasureFishChoice(choice.id, state.lives);
+      return actionCard({ action: "treasure-fish-choice", value: choice.id, title: choice.title, description: choice.result, source: choice.outcome === "death" ? "落水" : choice.outcome === "miss" ? "保命" : "王五指点", meta: status.available ? (choice.outcome === "catch" ? "合力擒鱼" : choice.outcome === "death" ? "死亡回照" : "机缘结束") : "仅余一灯 · 不可重试", kind: choice.outcome === "death" ? "danger" : choice.outcome === "catch" ? "special" : "", disabled: !status.available });
+    }).join("")}</div>
+  `);
+}
+
+function renderTreasureShare() {
+  return gameShell(`
+    ${sceneHeader("紫金河岸 · 申时", "黄金钱鳘躺在岸上，鱼颈留着老翁那一竿的伤口", "没有他，你保不住鱼，也未必保得住命。逆天改命同时显出：眼前人名叫王五，六十好感便愿传一门自己磨了四十年的杆法。")}
+    <div class="action-list">
+      ${actionCard({ action: "share-treasure-fish", value: "share", title: "生火烤鱼，与王五一同分食", description: "承认这一尾鱼是两个人的收获。你吃下能承受的部分，把余下都留给他。", source: "互惠互利", meta: "王五好感 60 · 力道 +1 · 潜能 +500", kind: "special" })}
+      ${actionCard({ action: "share-treasure-fish", value: "gift", title: "把整尾宝鱼送给王五", description: "王五会记住这份情，也愿传杆法；你却得不到宝鱼的一点力道与五百潜能。", source: "赠鱼", meta: "王五好感 70" })}
+      ${actionCard({ action: "share-treasure-fish", value: "keep", title: "谢过援手，独自带走宝鱼", description: "你得到宝鱼，却永远失去王五的杆法与这一条水上关系。", source: "独吞", meta: "力道 +1 · 潜能 +500 · 无传功", kind: "danger" })}
+    </div>
+  `);
+}
+
+function renderWangTeaching() {
+  const status = canLearnFishingRod({ strength: state.attributes.strength, insight: state.attributes.insight, hasWaterMindArt: state.mindArt === MIND_ART.id, favor: state.wangFavor });
+  return gameShell(`
+    ${sceneHeader("紫金河岸 · 宝鱼气血", "热流在脏腑里奔涌，两个时辰不散便会变成内伤", "王五提起鱼竿：竿可作棍，也可作鞭。正好用他的《打鱼杆法》把这股气血宣泄出去。")}
+    <div class="skill-gate-board"><div><span>王五好感</span><strong>${state.wangFavor}/60</strong></div><div><span>力道</span><strong>${state.attributes.strength}/3</strong></div><div><span>水行悟性</span><strong>${status.effectiveInsight}/2</strong></div></div>
+    <div class="action-list">
+      ${state.attributes.strength < 3 ? actionCard({ action: "reallocate-strength", title: "把已有属性重分到力道", description: "宝鱼与五禽所得都已写入自身，现在可把全部点数调来稳住鱼竿。", source: "逆天改命", meta: `力道变为 ${shenAttributePool()}`, kind: "special" }) : ""}
+      ${actionCard({ action: "learn-fishing-rod", title: "跟王五学抄水拍鱼、劈浪戳鱼", description: "鱼跃龙门诀补足水行悟性，宝鱼气血则让你可以不停挥杆。", source: "基础武学", meta: status.available ? "学会《打鱼杆法》" : "条件尚未齐备", kind: "special", disabled: !status.available })}
+    </div>
+  `);
+}
+
+function renderCaoReturn() {
+  return gameShell(`
+    ${sceneHeader("沈氏药铺 · 入夜", "曹青还在灯下等你", state.fishingRodMethod ? "他看见你湿透的衣袍和银柳木鱼竿，只问了一句：这一下午，去钓鱼了？" : "你带着宝鱼的热气回来，却没有一门能解释晚归、也没有一项新本事能让他重新评价你。")}
+    <div class="action-list">
+      ${state.fishingRodMethod ? actionCard({ action: "cao-return-choice", value: "truth", title: "如实说出黄金钱鳘与王五，并演示杆法", description: "不隐瞒晚归，也不夸大这门基础功夫。曹青会亲眼判断你说的是真是假。", source: "实话", meta: "曹青好感越过四十", kind: "special" }) : ""}
+      ${actionCard({ action: "cao-return-choice", value: "hide", title: "只交回药材，不解释这一下午", description: "曹青不再追问，也不再把炼丹与武功交到你手里。", source: "止步", meta: "保住药童身份" })}
+    </div>
+  `);
+}
+
+function renderCaoGuidance() {
+  return gameShell(`
+    ${sceneHeader("药铺后院 · 灯下", "曹青看完两式杆法，反而让你把《青青册》和《五禽戏》拿来", "这门杆法只是渔人的基础功夫，却证明你渴望武道、愿意争机缘，也没有向他藏着新得的本事。")}
+    <div class="encounter-ledger"><div><span>曹青好感</span><strong>${state.caoFavor}</strong><p>四十以上 · 正式开放指点</p></div><div><span>宝鱼见闻</span><strong>水中灵兽</strong><p>武夫之外，江河山野也有宝鱼、灵兽与凶禽</p></div></div>
+    <div class="action-list">${actionCard({ action: "accept-cao-guidance", title: "先问两遍五禽戏，再请教一遍《青青册》", description: "曹青指出五禽关窍，也提醒你医术为本、体术为辅；明日正式跟他学炼回春丹。", source: "循序请教", meta: "五禽 +16% · 医书二级 15%", kind: "special" })}</div>
+  `);
+}
+
+function renderAlchemyLesson() {
+  const effective = state.attributes.insight + (state.mindArt === MIND_ART.id ? 2 : 0);
+  return gameShell(`
+    ${sceneHeader("东门药铺 · 次日丹房", "曹青点燃炉火，第一次把每一种药材和火候都讲给你听", "回春丹用三七、丹参与苎麻根等药材，是最基础的疗伤丹之一。真正的门槛不是背方子，而是把水、火、药序同时握住。")}
+    <div class="skill-gate-board"><div><span>医术</span><strong>${state.medicalLevel}/2</strong></div><div><span>曹青好感</span><strong>${state.caoFavor}/40</strong></div><div><span>当前有效悟性</span><strong>${effective}/7</strong></div></div>
+    ${effective >= 7 ? `<div class="trigger-block"><span class="trigger-label">天资聪颖</span>五点已有属性尽数化作悟性，鱼跃龙门诀再加两点。曹青只演示一遍，你也能把每个动作重新放回脑海。</div>` : ""}
+    <div class="action-list">
+      ${effective < 7 ? actionCard({ action: "reallocate-alchemy-insight", title: "把五禽与宝鱼所得一并重分到悟性", description: "已有五点属性尽数集中，鱼跃龙门诀再为水火判定补足两点。", source: "逆天改命", meta: `悟性 ${shenAttributePool()} + 心法 2`, kind: "special" }) : ""}
+      ${actionCard({ action: "learn-return-spring", title: "记下回春丹方与整炉火候", description: "在曹青半日演示中令炼丹术正式入门，然后要求亲手试一炉。", source: "正式传授", meta: effective >= 7 ? "炼丹一级 · 回春丹方" : "有效悟性需要七", kind: "special", disabled: effective < 7 })}
+    </div>
+  `);
+}
+
+function renderFirstAlchemy() {
+  return gameShell(`
+    ${sceneHeader("第一炉回春丹", "曹青已经退到一旁，现在由你亲手起火、投药、收丹", "纸上得来终觉浅。你只有一份药材，若把刚才的三次换火简化，药性就会在炉中分离。")}
+    <div class="action-list">${Object.values(RETURN_SPRING_BREW.choices).map((choice) => actionCard({ action: "first-alchemy", value: choice.id, title: choice.title, description: choice.result, source: choice.outcome === "success" ? "完整复现" : "冒险省步", meta: choice.outcome === "success" ? "六枚下品回春丹" : "烧坏本炉 · 次日重试", kind: choice.outcome === "success" ? "special" : "danger" })).join("")}</div>
+  `);
+}
+
+function renderAlchemyFailure() {
+  return gameShell(`
+    ${sceneHeader("丹炉熄火", "这一炉没有成丹", RETURN_SPRING_BREW.choices[state.shenLastAlchemyChoice]?.result || "药材已经不能再用。")}
+    <div class="death-verdict alchemy-failure-card"><span>烧坏药材</span><strong>${state.alchemyFailures}</strong><p>曹青没有杀你，只让你把错误从头说一遍。明日沈家会再送来一份药材，但今天的时辰已经过去。</p></div>
+    <div class="button-row"><button class="primary-button" data-action="retry-alchemy">记住错处，次日再开一炉</button></div>
   `);
 }
 
 function renderShenChapterEnding() {
-  const success = state.shenOutcome === "tiger_escape";
+  const success = state.alchemyPills === RETURN_SPRING_BREW.successPills;
+  const tendency = state.shenTendency === "medicine" ? "丹医立足" : "水陆求道";
   return gameShell(`
-    ${sceneHeader("沈家丹房", success ? "你没有破掉死局，只是让曹青暂时舍不得杀你" : "你活下来了，却仍只是一个取血药童", success ? "真正的原著破局，是把自己从一次性血料变成曹青眼中的可造之材。" : "回去休息保住了今天的体力，也永久错过了曹青这一次考验。")}
+    ${sceneHeader(success ? "东门药铺 · 丹香初成" : "金陵东门 · 路在眼前断开", success ? "六枚下品回春丹滚入木盘，曹青许你三丹换一门真正武功" : "你仍活着，却没有把这一次机缘走到炼丹炉前", success ? `这一程更偏向“${tendency}”。但你亲手得到的另一条路不会消失：紫金河仍认你的鱼竿，曹青也已经认你的丹。` : "安全可以保住药童身份，却换不来王五的杆法、曹青的指点或下一层武功承诺。")}
     <div class="wudao-ending-grid shen-ending-grid">
-      <div><span>沈家身份</span><strong>${success ? "丹房药童" : "取血药童"}</strong><p>${success ? "可旁观炼丹并询问医术" : "每日仍可能被取血"}</p></div>
-      <div><span>曹青好感</span><strong>${state.caoFavor}</strong><p>${success ? "下一门槛：四十" : "不堪大用"}</p></div>
-      <div><span>生活能力</span><strong>${success ? "医术一级" : "未入门"}</strong><p>炼丹进度 ${state.alchemyProgress}%</p></div>
-      <div><span>武学</span><strong>${state.fiveAnimalBook ? FIVE_ANIMAL_PLAY.name : "无"}</strong><p>${state.fiveAnimalBook ? "已得秘籍 · 尚未练成" : "没有得到传授"}</p></div>
+      <div><span>丹医所得</span><strong>${success ? "六枚下品回春丹" : `医术 ${state.medicalLevel}级`}</strong><p>${success ? `炼丹 ${state.alchemyLevel}级 ${state.alchemyProgress}% · 《百丹注解》` : "尚未完成第一炉"}</p></div>
+      <div><span>水陆所得</span><strong>${state.fishingRodMethod ? "《打鱼杆法》" : "尚无武学"}</strong><p>${state.treasureFishCaught ? `黄金钱鳘 · 王五好感 ${state.wangFavor}` : "黄金钱鳘已经错过"}</p></div>
+      <div><span>曹青好感</span><strong>${state.caoFavor}</strong><p>${success ? "江湖知音 · 可以继续请教" : "未越过传艺门槛"}</p></div>
+      <div><span>五维总点</span><strong>${shenAttributePool()}</strong><p>五禽一戏 +1 · 宝鱼力道 ${state.treasureFishShared ? "+1" : "未得"}</p></div>
     </div>
     <div class="next-hooks shen-next-hooks">
-      <div><span>毒师传承</span><strong>好感四十</strong><p>继续学医炼丹，换取曹青更多心得。</p></div>
-      <div><span>身世试炼</span><strong>一个月后</strong><p>血书所指的金龙会万鲤堂仍会找来。</p></div>
-      <div><span>炼体之路</span><strong>${FIVE_ANIMAL_PLAY.name}</strong><p>练成之后，才算真正踏入武道第一境。</p></div>
+      <div><span>曹青承诺</span><strong>再掌握三种丹药</strong><p>达到回春丹的品质，便传一招真正武功。</p></div>
+      <div><span>江湖大典</span><strong>三个月后 · 百舸争流</strong><p>炼骨才够当船夫；你已先得水路与杆法。</p></div>
+      <div><span>血书来客</span><strong>万鲤堂 · 孙不离</strong><p>沈家密会只揭开了金龙会的第一层。</p></div>
     </div>
     <div class="button-row"><button class="secondary-button" data-action="restart">另起一世</button></div>
   `);
@@ -967,13 +1292,31 @@ const renderers = {
   qingQingReward: renderQingQingReward,
   qingQingStudy: renderQingQingStudy,
   fiveAnimalReward: renderFiveAnimalReward,
+  shenDaily: renderShenDaily,
+  fiveAnimalChoice: renderFiveAnimalChoice,
+  shenMeeting: renderShenMeeting,
+  shenFuChoice: renderShenFuChoice,
+  shenPharmacy: renderShenPharmacy,
+  shenErrand: renderShenErrand,
+  fishingPrep: renderFishingPrep,
+  riverFishing: renderRiverFishing,
+  riverCatch: renderRiverCatch,
+  wangEncounter: renderWangEncounter,
+  treasureFish: renderTreasureFish,
+  treasureShare: renderTreasureShare,
+  wangTeaching: renderWangTeaching,
+  caoReturn: renderCaoReturn,
+  caoGuidance: renderCaoGuidance,
+  alchemyLesson: renderAlchemyLesson,
+  firstAlchemy: renderFirstAlchemy,
+  alchemyFailure: renderAlchemyFailure,
   shenDeath: renderShenDeath,
   shenChapterEnding: renderShenChapterEnding,
 };
 
 function screenMode() {
   if (["gameDeath", "shenDeath"].includes(state.screen)) return "death";
-  if (["encounterReward", "mindArt", "roadResult", "ending", "quietDeparture", "qingQingReward", "fiveAnimalReward", "shenChapterEnding"].includes(state.screen)) return "settlement";
+  if (["encounterReward", "mindArt", "roadResult", "ending", "quietDeparture", "qingQingReward", "fiveAnimalReward", "shenPharmacy", "alchemyFailure", "shenChapterEnding"].includes(state.screen)) return "settlement";
   if (["landing", "worldIntro", "characterDraft", "vow", "destiny", "characterSheet"].includes(state.screen)) return "neutral";
   return "simulation";
 }
@@ -1218,7 +1561,7 @@ const handlers = {
   "start-shen-chapter": () => {
     if (state.screen !== "ending" || state.nextRoute !== "shen" || !state.completedTempleTasks.includes("shen_promise") || state.roadTrial !== "dive") return;
     state.shenChapterStarted = true;
-    state.shenOriginalVersion = 1;
+    state.shenOriginalVersion = 2;
     track("shen_original_started");
     moveTo("shenArrival");
   },
@@ -1315,6 +1658,7 @@ const handlers = {
     const node = state.shenDeathNode;
     state.shenDeathNode = null;
     state.shenDeathReason = null;
+    if (node === "shenDaily") restoreShenDay();
     moveTo(node);
   },
   "study-qingqing": () => {
@@ -1332,14 +1676,280 @@ const handlers = {
     if (state.screen !== "qingQingStudy" || !state.qingQingStudied || state.fiveAnimalBook) return;
     state.caoFavor += 10;
     state.fiveAnimalBook = true;
-    if (!state.skills.includes(FIVE_ANIMAL_PLAY.id)) state.skills.push(FIVE_ANIMAL_PLAY.id);
     track("five_animal_received", { favor: state.caoFavor });
     moveTo("fiveAnimalReward");
   },
-  "finish-shen-original": () => {
+  "begin-shen-cycle": () => {
     if (state.screen !== "fiveAnimalReward" || !state.fiveAnimalBook) return;
+    state.shenDay = 1;
+    state.shenLocation = "danroom";
+    beginShenDay();
+    track("shen_cycle_started");
+    moveTo("shenDaily");
+  },
+  "breakthrough-five-animals": () => {
+    if (state.screen !== "shenDaily" || state.fiveAnimalLevel) return;
+    const status = resolveFiveAnimalBreakthrough({ medicalLevel: state.medicalLevel, insight: state.attributes.insight, potential: state.potential });
+    if (!status.available) return;
+    state.potential -= status.cost;
+    state.fiveAnimalLevel = 1;
+    state.fiveAnimalProgress = 0;
+    track("five_animal_breakthrough", { cost: status.cost });
+    moveTo("fiveAnimalChoice");
+  },
+  "choose-five-aspect": (value) => {
+    if (state.screen !== "fiveAnimalChoice" || state.fiveAnimalAspect) return;
+    const aspect = getFiveAnimalAspect(value);
+    if (!aspect) return;
+    state.fiveAnimalAspect = value;
+    state.shenAttributeGains += 1;
+    state.attributes = { ...state.attributes, [aspect.attribute]: Number(state.attributes[aspect.attribute] || 0) + 1 };
+    state.shenDayLog.push(`${aspect.name}初成：${aspect.effect}。`);
+    state.shenFocus.martial += 1;
+    if (!state.skills.includes(FIVE_ANIMAL_PLAY.id)) state.skills.push(FIVE_ANIMAL_PLAY.id);
+    track("five_animal_aspect", { aspect: value });
+    moveTo("shenDaily");
+  },
+  "shen-daily-action": (value) => {
+    if (state.screen !== "shenDaily") return;
+    const action = resolveShenDailyAction(value, { timeLeft: state.shenTimeLeft, stamina: state.shenStamina, satiety: state.shenSatiety, fiveAnimalLevel: state.fiveAnimalLevel });
+    if (!action?.available || (action.dangerous && state.lives <= 1)) return;
+    state.shenTimeLeft -= 1;
+    state.shenStamina = action.nextStamina;
+    state.shenSatiety = action.nextSatiety;
+    if (action.medicalProgress) state.medicalProgress += action.medicalProgress;
+    if (action.fiveAnimalProgress) state.fiveAnimalProgress += action.fiveAnimalProgress;
+    if (action.alchemyProgress) state.alchemyProgress = Math.min(99, state.alchemyProgress + action.alchemyProgress);
+    if (action.focus) state.shenFocus[action.focus] += 1;
+    const gains = [];
+    if (action.medicalProgress) gains.push(`《青青册》进度 +${action.medicalProgress}%`);
+    if (action.fiveAnimalProgress) gains.push(`《五禽戏》进度 +${action.fiveAnimalProgress}%`);
+    if (action.alchemyProgress) gains.push(`丹理 +${action.alchemyProgress}%`);
+    if (!gains.length) gains.push(`体力 ${state.shenStamina}，饱腹 ${state.shenSatiety}`);
+    state.shenDayLog.push(`${action.name}：${gains.join("，")}。`);
+    track("shen_daily_action", { action: value, day: state.shenDay });
+    if (action.dangerous) return handleShenDeath("失血后的身体经不起连续透支，你在丹房门外倒下，再没有醒来。", "shenDaily");
+    refresh();
+  },
+  "breakthrough-medicine": () => {
+    if (state.screen !== "shenDaily" || state.medicalLevel !== 1) return;
+    const status = resolveMedicalBreakthrough(state.medicalProgress, state.potential);
+    if (!status.available) return;
+    state.potential -= status.cost;
+    state.medicalLevel = 2;
+    state.medicalProgress = 0;
+    state.gatheringProgress = 133;
+    state.shenFocus.medicine += 1;
+    state.shenDayLog.push("《青青册》贯通二级：医术二级，采集一级三十三分。");
+    track("medicine_level_two", { cost: status.cost });
+    refresh();
+  },
+  "close-first-day": () => {
+    if (state.screen !== "shenDaily" || state.shenDay !== 1 || state.shenTimeLeft > 0 || state.shenMeetingSeen) return;
+    state.shenMeetingSeen = true;
+    moveTo("shenMeeting");
+  },
+  "leave-shen-meeting": () => {
+    if (state.screen !== "shenMeeting") return;
+    moveTo("shenFuChoice");
+  },
+  "shenfu-choice": (value) => {
+    if (state.screen !== "shenFuChoice" || !["report", "hide"].includes(value)) return;
+    state.shenSilver = 10;
+    if (value === "hide") {
+      state.shenOutcome = "silver_hidden";
+      state.shenChapterComplete = true;
+      track("shenfu_silver", { choice: value });
+      return moveTo("shenChapterEnding");
+    }
+    state.shenFuContact = true;
+    state.caoFavor += 9;
+    state.shenLocation = "pharmacy";
+    state.shenDay = 2;
+    beginShenDay();
+    track("shenfu_silver", { choice: value, favor: state.caoFavor });
+    moveTo("shenPharmacy");
+  },
+  "enter-pharmacy-day": () => {
+    if (state.screen !== "shenPharmacy") return;
+    moveTo("shenDaily");
+  },
+  "next-shen-day": () => {
+    if (state.screen !== "shenDaily" || state.shenTimeLeft > 0) return;
+    state.shenDay += 1;
+    beginShenDay();
+    moveTo("shenDaily");
+  },
+  "take-herb-errand": () => {
+    if (state.screen !== "shenDaily" || state.shenLocation !== "pharmacy" || state.medicalLevel < 2) return;
+    moveTo("shenErrand");
+  },
+  "start-fishing-prep": () => {
+    if (state.screen !== "shenErrand") return;
+    moveTo("fishingPrep");
+  },
+  "abandon-fishing": () => {
+    if (state.screen !== "shenErrand") return;
+    state.shenOutcome = "fishing_abandoned";
     state.shenChapterComplete = true;
     moveTo("shenChapterEnding");
+  },
+  "fishing-prep": (value) => {
+    if (state.screen !== "fishingPrep") return;
+    const preparation = resolveFishingPreparation(value, { completed: state.shenFishingPrep, hasContact: state.shenFuContact, potential: state.potential });
+    if (!preparation?.available) return;
+    state.shenFishingPrep.push(value);
+    state.potential += Number(preparation.potential || 0);
+    if (value === "fishing_skill") state.fishingLevel = 1;
+    track("fishing_preparation", { preparation: value, potential: preparation.potential || 0 });
+    refresh();
+  },
+  "enter-purple-river": () => {
+    if (state.screen !== "fishingPrep" || !FISHING_PREPARATIONS.every((item) => state.shenFishingPrep.includes(item.id)) || state.mindArt !== MIND_ART.id) return;
+    state.riverFishStage = 0;
+    moveTo("riverFishing");
+  },
+  "cast-first-line": () => {
+    if (state.screen !== "riverFishing" || state.riverFishStage !== 0) return;
+    moveTo("riverCatch");
+  },
+  "river-catch-choice": (value) => {
+    if (state.screen !== "riverCatch" || !["release", "keep"].includes(value)) return;
+    state.releasedRiverFish = value === "release";
+    moveTo("wangEncounter");
+  },
+  "wait-for-treasure": () => {
+    if (state.screen !== "wangEncounter") return;
+    state.riverFishStage = 1;
+    moveTo("riverFishing");
+  },
+  "reallocate-fortune": () => {
+    if (state.screen !== "riverFishing" || state.riverFishStage !== 1) return;
+    state.attributes = reallocateShenAttributes("fortune");
+    refresh();
+  },
+  "cast-treasure-line": () => {
+    if (state.screen !== "riverFishing" || state.riverFishStage !== 1 || state.attributes.fortune < shenAttributePool()) return;
+    moveTo("treasureFish");
+  },
+  "treasure-fish-choice": (value) => {
+    if (state.screen !== "treasureFish") return;
+    const choice = resolveTreasureFishChoice(value, state.lives);
+    if (!choice?.available) return;
+    if (choice.outcome === "death") return handleShenDeath(choice.result, "treasureFish");
+    if (choice.outcome === "miss") {
+      state.shenOutcome = "treasure_fish_missed";
+      state.shenChapterComplete = true;
+      return moveTo("shenChapterEnding");
+    }
+    state.treasureFishCaught = true;
+    moveTo("treasureShare");
+  },
+  "share-treasure-fish": (value) => {
+    if (state.screen !== "treasureShare" || !["share", "gift", "keep"].includes(value)) return;
+    if (value === "share" || value === "keep") {
+      state.potential += 500;
+      state.shenAttributeGains += 1;
+      state.attributes = { ...state.attributes, strength: Number(state.attributes.strength || 0) + 1 };
+    }
+    if (value === "share") {
+      state.treasureFishShared = true;
+      state.wangFavor = 60;
+      state.shenFocus.martial += 2;
+      track("treasure_fish_shared", { favor: 60 });
+      return moveTo("wangTeaching");
+    }
+    if (value === "gift") {
+      state.wangFavor = 70;
+      track("treasure_fish_gifted", { favor: 70 });
+      return moveTo("wangTeaching");
+    }
+    state.wangFavor = 0;
+    state.shenOutcome = "treasure_fish_kept";
+    track("treasure_fish_kept");
+    moveTo("caoReturn");
+  },
+  "reallocate-strength": () => {
+    if (state.screen !== "wangTeaching") return;
+    state.attributes = reallocateShenAttributes("strength");
+    refresh();
+  },
+  "learn-fishing-rod": () => {
+    if (state.screen !== "wangTeaching") return;
+    const status = canLearnFishingRod({ strength: state.attributes.strength, insight: state.attributes.insight, hasWaterMindArt: state.mindArt === MIND_ART.id, favor: state.wangFavor });
+    if (!status.available) return;
+    state.fishingRodMethod = true;
+    state.fiveAnimalProgress = Math.max(state.fiveAnimalProgress, 14);
+    state.shenFocus.martial += 1;
+    if (!state.skills.includes("fishing_rod_method")) state.skills.push("fishing_rod_method");
+    track("fishing_rod_learned");
+    moveTo("caoReturn");
+  },
+  "cao-return-choice": (value) => {
+    if (state.screen !== "caoReturn" || !["truth", "hide"].includes(value)) return;
+    if (value === "hide" || !state.fishingRodMethod) {
+      state.shenOutcome = "cao_distrust";
+      state.shenChapterComplete = true;
+      return moveTo("shenChapterEnding");
+    }
+    state.caoFavor += 2;
+    track("cao_rod_demonstration", { favor: state.caoFavor });
+    moveTo("caoGuidance");
+  },
+  "accept-cao-guidance": () => {
+    if (state.screen !== "caoGuidance" || state.caoFavor < 40) return;
+    state.fiveAnimalProgress = Math.max(30, state.fiveAnimalProgress + 16);
+    state.medicalProgress = Math.max(15, state.medicalProgress + 15);
+    state.shenFocus.medicine += 1;
+    state.shenFocus.martial += 1;
+    track("cao_guidance");
+    moveTo("alchemyLesson");
+  },
+  "reallocate-alchemy-insight": () => {
+    if (state.screen !== "alchemyLesson") return;
+    state.attributes = reallocateShenAttributes("insight");
+    state.effectiveAlchemyInsight = state.attributes.insight + (state.mindArt === MIND_ART.id ? 2 : 0);
+    refresh();
+  },
+  "learn-return-spring": () => {
+    if (state.screen !== "alchemyLesson") return;
+    const effectiveInsight = state.attributes.insight + (state.mindArt === MIND_ART.id ? 2 : 0);
+    if (state.medicalLevel < 2 || state.caoFavor < 40 || effectiveInsight < 7) return;
+    state.effectiveAlchemyInsight = effectiveInsight;
+    state.alchemyLevel = 1;
+    state.alchemyProgress = 54;
+    state.shenFocus.medicine += 2;
+    if (!state.inventory.includes("return_spring_recipe")) state.inventory.push("return_spring_recipe");
+    track("alchemy_learned", { effectiveInsight });
+    moveTo("firstAlchemy");
+  },
+  "first-alchemy": (value) => {
+    if (state.screen !== "firstAlchemy") return;
+    const result = resolveFirstAlchemy(value, { medicalLevel: state.medicalLevel, caoFavor: state.caoFavor, effectiveInsight: state.effectiveAlchemyInsight });
+    if (!result?.available) return;
+    state.shenLastAlchemyChoice = value;
+    if (result.outcome === "failure") {
+      state.alchemyFailures += 1;
+      track("alchemy_failure", { choice: value, failures: state.alchemyFailures });
+      return moveTo("alchemyFailure");
+    }
+    state.alchemyPills = result.pills;
+    state.alchemyLevel = 2;
+    state.alchemyProgress = 12;
+    state.caoFavor = 49;
+    state.shenFocus.medicine += 2;
+    state.shenTendency = state.shenFocus.medicine >= state.shenFocus.martial ? "medicine" : "martial";
+    state.shenOutcome = "first_alchemy";
+    state.shenChapterComplete = true;
+    if (!state.inventory.includes("return_spring_pills")) state.inventory.push("return_spring_pills");
+    if (!state.inventory.includes("hundred_pills_notes")) state.inventory.push("hundred_pills_notes");
+    track("first_alchemy_success", { pills: result.pills, tendency: state.shenTendency });
+    moveTo("shenChapterEnding");
+  },
+  "retry-alchemy": () => {
+    if (state.screen !== "alchemyFailure") return;
+    state.shenDay += 1;
+    moveTo("firstAlchemy");
   },
   restart: () => {
     clearState();

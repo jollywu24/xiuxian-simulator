@@ -1581,6 +1581,138 @@ h1 {
   height: 100%;
 }
 
+.shen-cycle-status,
+.skill-progress-grid,
+.skill-gate-board {
+  display: grid;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.shen-cycle-status {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.skill-progress-grid,
+.skill-gate-board {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.shen-cycle-status > div,
+.skill-progress-grid > div,
+.skill-gate-board > div {
+  min-width: 0;
+  padding: 13px 14px;
+  border: 1px solid var(--line);
+  background: var(--panel-soft);
+}
+
+.shen-cycle-status span,
+.skill-progress-grid span,
+.skill-gate-board span {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+.shen-cycle-status strong,
+.skill-progress-grid strong,
+.skill-gate-board strong {
+  display: block;
+  color: var(--accent);
+  font-family: var(--font-story);
+  font-size: 20px;
+}
+
+.shen-cycle-status p,
+.skill-progress-grid p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.progress-track {
+  height: 4px;
+  margin-top: 10px;
+  overflow: hidden;
+  background: var(--line);
+}
+
+.progress-track i {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+.daily-action-grid {
+  display: grid;
+  max-width: 820px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 24px auto 0;
+}
+
+.daily-action-grid .action-card {
+  height: 100%;
+}
+
+.five-aspect-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.five-aspect-grid .quest-card {
+  min-height: 240px;
+}
+
+.river-stage {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 22px;
+  align-items: center;
+  margin: 24px 0;
+  padding: 20px;
+  border: 1px solid var(--line-strong);
+  background: var(--panel-soft);
+}
+
+.river-glyph {
+  display: grid;
+  min-height: 180px;
+  color: var(--accent);
+  border: 1px solid var(--line);
+  background: repeating-linear-gradient(112deg, transparent 0 13px, var(--accent-soft) 14px 15px);
+  font-family: var(--font-story);
+  font-size: 24px;
+  line-height: 1.9;
+  place-items: center;
+  text-align: center;
+}
+
+.river-stage span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.river-stage strong {
+  display: block;
+  margin: 7px 0;
+  font-family: var(--font-story);
+  font-size: 27px;
+}
+
+.river-stage p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.alchemy-failure-card strong {
+  font-size: 40px;
+}
+
 .game-shell {
   width: min(1500px, 100%);
   min-height: 100vh;
@@ -2752,6 +2884,12 @@ h1 {
   .wudao-ending-grid,
   .next-hooks,
   .reward-choice-grid,
+  .shen-cycle-status,
+  .skill-progress-grid,
+  .skill-gate-board,
+  .daily-action-grid,
+  .five-aspect-grid,
+  .river-stage,
   .settlement-grid,
   .draw-grid,
   .end-summary,
@@ -2761,6 +2899,14 @@ h1 {
   .finale-grid,
   .final-summary-grid {
     grid-template-columns: 1fr;
+  }
+
+  .shen-cycle-status {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .river-glyph {
+    min-height: 68px;
   }
 
   .world-ledger,

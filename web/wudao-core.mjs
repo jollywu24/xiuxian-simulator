@@ -353,6 +353,146 @@ export const FIVE_ANIMAL_PLAY = {
   description: "曹青传下的强身之术，形似虎、鹿、熊、猿、鸟；没有杀伤力，需要继续修炼才能踏入炼体。",
 };
 
+export const SHEN_DAILY_RULES = {
+  slotsPerDay: 3,
+  maxStamina: 4,
+  maxSatiety: 4,
+  startStamina: 3,
+  startSatiety: 3,
+  fiveAnimalPotentialCost: 500,
+  medicalBreakthroughCost: 166,
+};
+
+export const SHEN_DAILY_ACTIONS = {
+  qingqing: {
+    id: "qingqing",
+    name: "研读《青青册》",
+    description: "辨认药草、脉象与舌苔，把曹青的入门医书逐页吃透。",
+    stamina: -1,
+    satiety: -1,
+    medicalProgress: 17,
+    focus: "medicine",
+  },
+  five_animals: {
+    id: "five_animals",
+    name: "练习《五禽戏》",
+    description: "照着虎、熊、鹤、猿、鹿五势活动筋骨，熟悉已经入门的架势。",
+    stamina: -1,
+    satiety: -1,
+    fiveAnimalProgress: 14,
+    focus: "martial",
+  },
+  observe: {
+    id: "observe",
+    name: "整理丹房并旁观",
+    description: "替曹青分药、添水、记火候，继续积累丹理。",
+    stamina: -1,
+    satiety: -1,
+    alchemyProgress: 5,
+    focus: "medicine",
+  },
+  meal: {
+    id: "meal",
+    name: "去灶房吃饭",
+    description: "停下手里的书和架势，吃一顿热饭再回来。",
+    stamina: 1,
+    satiety: 3,
+  },
+  rest: {
+    id: "rest",
+    name: "闭门小睡",
+    description: "用一个时段换回精神，但醒来后仍会腹中空空。",
+    stamina: 2,
+    satiety: -1,
+  },
+};
+
+export const FIVE_ANIMAL_ASPECTS = [
+  { id: "tiger", name: "虎戏", attribute: "strength", effect: "力道永久增加一点" },
+  { id: "bear", name: "熊戏", attribute: "constitution", effect: "根骨永久增加一点" },
+  { id: "crane", name: "鹤戏", attribute: "agility", effect: "身法永久增加一点" },
+  { id: "ape", name: "猿戏", attribute: "insight", effect: "悟性永久增加一点" },
+  { id: "deer", name: "鹿戏", attribute: "fortune", effect: "福缘永久增加一点" },
+];
+
+export const FISHING_PREPARATIONS = [
+  {
+    id: "worms",
+    name: "路边挖蚯蚓",
+    condition: "一炷香空闲",
+    result: "取得活饵",
+  },
+  {
+    id: "rod",
+    name: "杂货铺挑鱼竿",
+    condition: "发动逆天改命查看便宜好货",
+    result: "取得银柳木竿，潜能增加五十",
+    potential: 50,
+  },
+  {
+    id: "fishing_skill",
+    name: "向走船护院请教",
+    condition: "沈福愿意引见，潜能不少于五十",
+    result: "钓鱼一级，潜能消耗五十",
+    potential: -50,
+    requiresContact: true,
+  },
+  {
+    id: "bait",
+    name: "去沈家灶房取酒与面团",
+    condition: "沈福愿意替你开口",
+    result: "取得竹叶青与面团",
+    requiresContact: true,
+  },
+];
+
+export const TREASURE_FISH_CHOICES = {
+  pull: {
+    id: "pull",
+    title: "站定硬拽",
+    outcome: "death",
+    result: "黄金钱鳘的巨力把你拖入深水。",
+  },
+  cut: {
+    id: "cut",
+    title: "割线保命",
+    outcome: "miss",
+    result: "你保住性命，却失去了本周这一次宝鱼机缘。",
+  },
+  follow: {
+    id: "follow",
+    title: "沿岸游走，听王五指点溜鱼",
+    outcome: "catch",
+    result: "王五一竿击中鱼颈，你把黄金钱鳘拖上河岸。",
+  },
+};
+
+export const RETURN_SPRING_BREW = {
+  recipe: "回春丹",
+  successPills: 6,
+  successQuality: "下品",
+  choices: {
+    replay: {
+      id: "replay",
+      title: "照曹青方才的次序分毫不差地重做",
+      outcome: "success",
+      result: "六枚下品回春丹成形。",
+    },
+    rush: {
+      id: "rush",
+      title: "把三次换火合成一场大火",
+      outcome: "failure",
+      result: "药泥焦黑结块，这一炉药材尽数报废。",
+    },
+    cool: {
+      id: "cool",
+      title: "提前撤火，等丹丸自行凝结",
+      outcome: "failure",
+      result: "药液没有收束成丸，只剩一炉苦涩药汤。",
+    },
+  },
+};
+
 export function getBackground(id) {
   return BACKGROUNDS.find((item) => item.id === id) || null;
 }
@@ -459,4 +599,99 @@ export function canStudyQingQing(insight = 0, potential = 0) {
   const missingInsight = Math.max(0, QINGQING_BOOK.requirement - Number(insight || 0));
   const missingPotential = Math.max(0, QINGQING_BOOK.studyCost - Number(potential || 0));
   return { available: missingInsight === 0 && missingPotential === 0, missingInsight, missingPotential };
+}
+
+export function resolveShenDailyAction(id, status = {}) {
+  const action = SHEN_DAILY_ACTIONS[id];
+  if (!action) return null;
+  const timeLeft = Number(status.timeLeft || 0);
+  const stamina = Number(status.stamina || 0);
+  const satiety = Number(status.satiety || 0);
+  const fiveAnimalLevel = Number(status.fiveAnimalLevel || 0);
+  const missing = [];
+  if (timeLeft < 1) missing.push("time");
+  if (id === "five_animals" && fiveAnimalLevel < 1) missing.push("five_animal_level");
+  const nextStamina = Math.min(SHEN_DAILY_RULES.maxStamina, stamina + Number(action.stamina || 0));
+  const nextSatiety = Math.min(SHEN_DAILY_RULES.maxSatiety, satiety + Number(action.satiety || 0));
+  return {
+    ...action,
+    available: missing.length === 0,
+    missing,
+    nextStamina,
+    nextSatiety,
+    dangerous: nextStamina <= 0 || nextSatiety <= 0,
+  };
+}
+
+export function resolveFiveAnimalBreakthrough({ medicalLevel = 0, insight = 0, potential = 0 } = {}) {
+  const missing = [];
+  if (Number(medicalLevel) < 1) missing.push("medicine");
+  if (Number(insight) < 3) missing.push("insight");
+  if (Number(potential) < SHEN_DAILY_RULES.fiveAnimalPotentialCost) missing.push("potential");
+  return {
+    available: missing.length === 0,
+    missing,
+    cost: SHEN_DAILY_RULES.fiveAnimalPotentialCost,
+  };
+}
+
+export function getFiveAnimalAspect(id) {
+  const aspect = FIVE_ANIMAL_ASPECTS.find((item) => item.id === id);
+  return aspect ? { ...aspect } : null;
+}
+
+export function resolveMedicalBreakthrough(progress = 0, potential = 0) {
+  const missingProgress = Math.max(0, 17 - Number(progress || 0));
+  const missingPotential = Math.max(0, SHEN_DAILY_RULES.medicalBreakthroughCost - Number(potential || 0));
+  return {
+    available: missingProgress === 0 && missingPotential === 0,
+    missingProgress,
+    missingPotential,
+    cost: SHEN_DAILY_RULES.medicalBreakthroughCost,
+  };
+}
+
+export function resolveFishingPreparation(id, { completed = [], hasContact = false, potential = 0 } = {}) {
+  const preparation = FISHING_PREPARATIONS.find((item) => item.id === id);
+  if (!preparation) return null;
+  const missing = [];
+  if (completed.includes(id)) missing.push("completed");
+  if (preparation.requiresContact && !hasContact) missing.push("contact");
+  if (Number(preparation.potential || 0) < 0 && Number(potential) < Math.abs(preparation.potential)) missing.push("potential");
+  return { ...preparation, available: missing.length === 0, missing };
+}
+
+export function resolveTreasureFishChoice(id, lives = LIFE_RULE.lives) {
+  const choice = TREASURE_FISH_CHOICES[id];
+  if (!choice) return null;
+  const available = choice.outcome !== "death" || Number(lives) > 1;
+  return { ...choice, available };
+}
+
+export function canLearnFishingRod({ strength = 0, insight = 0, hasWaterMindArt = false, favor = 0 } = {}) {
+  const effectiveInsight = Number(insight) + (hasWaterMindArt ? 2 : 0);
+  return {
+    available: Number(strength) >= 3 && effectiveInsight >= 2 && Number(favor) >= 60,
+    effectiveInsight,
+    missingStrength: Math.max(0, 3 - Number(strength)),
+    missingInsight: Math.max(0, 2 - effectiveInsight),
+    missingFavor: Math.max(0, 60 - Number(favor)),
+  };
+}
+
+export function reallocateExistingAttributes(total = 3, focus = "insight") {
+  const values = Object.fromEntries(ATTRIBUTES.map((attribute) => [attribute.id, 0]));
+  if (Object.hasOwn(values, focus)) values[focus] = Math.max(0, Number(total || 0));
+  return values;
+}
+
+export function resolveFirstAlchemy(choiceId, { medicalLevel = 0, caoFavor = 0, effectiveInsight = 0 } = {}) {
+  const choice = RETURN_SPRING_BREW.choices[choiceId];
+  if (!choice) return null;
+  const available = Number(medicalLevel) >= 2 && Number(caoFavor) >= 40 && Number(effectiveInsight) >= 7;
+  return {
+    ...choice,
+    available,
+    pills: choice.outcome === "success" ? RETURN_SPRING_BREW.successPills : 0,
+  };
 }

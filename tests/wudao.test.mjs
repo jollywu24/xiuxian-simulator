@@ -13,22 +13,36 @@ import {
   ROAD_TRIALS,
   BLOOD_CHOICES,
   CAO_ENCOUNTERS,
+  FISHING_PREPARATIONS,
   FIVE_ANIMAL_PLAY,
+  FIVE_ANIMAL_ASPECTS,
   QINGQING_BOOK,
+  RETURN_SPRING_BREW,
+  SHEN_DAILY_ACTIONS,
+  SHEN_DAILY_RULES,
   SHEN_JOBS,
   TEMPLE_ENCOUNTERS,
   VOWS,
   WORLD_FACTS,
   allocateJadeBonus,
   canStudyQingQing,
+  canLearnFishingRod,
   getCaoEncounter,
+  getFiveAnimalAspect,
   resolveLadyChoice,
   resolveNightTalk,
   resolveBloodChoice,
   resolveCaoAnswer,
+  resolveFirstAlchemy,
+  resolveFishingPreparation,
+  resolveFiveAnimalBreakthrough,
+  resolveMedicalBreakthrough,
   resolveObservationChoice,
   resolveRoadTrial,
   resolveShenJob,
+  resolveShenDailyAction,
+  resolveTreasureFishChoice,
+  reallocateExistingAttributes,
   templeTaskCost,
 } from "../web/wudao-core.mjs";
 
@@ -143,4 +157,60 @@ test("the original reward chain is Qingqing study followed by an untrained Five 
   assert.equal(canStudyQingQing(3, 1780).available, true);
   assert.equal(FIVE_ANIMAL_PLAY.name, "《五禽戏》");
   assert.match(FIVE_ANIMAL_PLAY.description, /没有杀伤力|继续修炼/);
+});
+
+test("the Shen daily loop spends real time, stamina and satiety for five distinct actions", () => {
+  assert.deepEqual(Object.keys(SHEN_DAILY_ACTIONS), ["qingqing", "five_animals", "observe", "meal", "rest"]);
+  const study = resolveShenDailyAction("qingqing", { timeLeft: 3, stamina: 4, satiety: 4, fiveAnimalLevel: 0 });
+  assert.equal(study.available, true);
+  assert.equal(study.nextStamina, 3);
+  assert.equal(study.nextSatiety, 3);
+  assert.equal(study.medicalProgress, 17);
+  assert.equal(resolveShenDailyAction("five_animals", { timeLeft: 3, stamina: 4, satiety: 4, fiveAnimalLevel: 0 }).available, false);
+  assert.equal(resolveShenDailyAction("meal", { timeLeft: 1, stamina: 2, satiety: 1, fiveAnimalLevel: 0 }).nextSatiety, SHEN_DAILY_RULES.maxSatiety);
+  assert.equal(resolveShenDailyAction("qingqing", { timeLeft: 1, stamina: 1, satiety: 1, fiveAnimalLevel: 1 }).dangerous, true);
+  assert.equal(resolveShenDailyAction("missing", {}), null);
+});
+
+test("Five Animal Play must be unlocked before one of five attribute aspects is chosen", () => {
+  assert.equal(resolveFiveAnimalBreakthrough({ medicalLevel: 1, insight: 3, potential: 499 }).available, false);
+  assert.equal(resolveFiveAnimalBreakthrough({ medicalLevel: 1, insight: 3, potential: 500 }).available, true);
+  assert.equal(FIVE_ANIMAL_ASPECTS.length, 5);
+  assert.deepEqual(FIVE_ANIMAL_ASPECTS.map((item) => item.attribute), ["strength", "constitution", "agility", "insight", "fortune"]);
+  assert.equal(getFiveAnimalAspect("ape").attribute, "insight");
+  assert.equal(getFiveAnimalAspect("missing"), null);
+});
+
+test("Qingqing progress and potential jointly unlock medicine level two", () => {
+  assert.equal(resolveMedicalBreakthrough(16, 1000).available, false);
+  assert.equal(resolveMedicalBreakthrough(17, 165).available, false);
+  assert.equal(resolveMedicalBreakthrough(17, 166).available, true);
+});
+
+test("the fishing window exposes four preparations with real contact and potential gates", () => {
+  assert.deepEqual(FISHING_PREPARATIONS.map((item) => item.id), ["worms", "rod", "fishing_skill", "bait"]);
+  assert.equal(resolveFishingPreparation("worms", {}).available, true);
+  assert.equal(resolveFishingPreparation("fishing_skill", { hasContact: false, potential: 50 }).available, false);
+  assert.equal(resolveFishingPreparation("fishing_skill", { hasContact: true, potential: 49 }).available, false);
+  assert.equal(resolveFishingPreparation("fishing_skill", { hasContact: true, potential: 50 }).available, true);
+  assert.equal(resolveFishingPreparation("rod", { completed: ["rod"] }).available, false);
+});
+
+test("the treasure fish can kill, be abandoned or unlock Wang Wu's rod method", () => {
+  assert.equal(resolveTreasureFishChoice("pull", 2).outcome, "death");
+  assert.equal(resolveTreasureFishChoice("pull", 1).available, false);
+  assert.equal(resolveTreasureFishChoice("cut", 1).outcome, "miss");
+  assert.equal(resolveTreasureFishChoice("follow", 1).outcome, "catch");
+  assert.equal(canLearnFishingRod({ strength: 3, insight: 0, hasWaterMindArt: true, favor: 60 }).available, true);
+  assert.equal(canLearnFishingRod({ strength: 2, insight: 3, hasWaterMindArt: true, favor: 60 }).available, false);
+});
+
+test("five earned attribute points plus the water mind art meet the first alchemy gate", () => {
+  const attributes = reallocateExistingAttributes(5, "insight");
+  assert.equal(attributes.insight, 5);
+  const success = resolveFirstAlchemy("replay", { medicalLevel: 2, caoFavor: 41, effectiveInsight: 7 });
+  assert.equal(success.available, true);
+  assert.equal(success.pills, RETURN_SPRING_BREW.successPills);
+  assert.equal(resolveFirstAlchemy("rush", { medicalLevel: 2, caoFavor: 41, effectiveInsight: 7 }).outcome, "failure");
+  assert.equal(resolveFirstAlchemy("replay", { medicalLevel: 1, caoFavor: 41, effectiveInsight: 7 }).available, false);
 });

@@ -171,9 +171,53 @@ NPC、门派、世家、帮会和朝廷机构属于世界本身，不属于“�
 
 改编仅保留人物、事件、数值门槛与因果顺序，所有玩家文本使用原创转述，不复制小说正文长段落。
 
+### 6.4 丹房日常与沈家密会
+
+取得《五禽戏》后不再直接结算，而是进入每日三个时段的起居循环。
+
+| 行动 | 当日代价 | 长期结果 |
+| --- | --- | --- |
+| 研读《青青册》 | 体力一、饱腹一、时段一 | 医术进度十七 |
+| 练习《五禽戏》 | 体力一、饱腹一、时段一 | 五禽进度十四 |
+| 整理丹房并旁观 | 体力一、饱腹一、时段一 | 丹理进度五 |
+| 去灶房吃饭 | 时段一 | 体力一、饱腹三 |
+| 闭门小睡 | 饱腹一、时段一 | 体力二 |
+
+体力或饱腹降到零会死亡，并在仍有命灯时回到当日第一个时段；当只剩一盏命灯时，界面会禁用明确造成透支的行动。
+
+《五禽戏》入门要求医术一级、悟性三和五百潜能。第一次完整演练后，从虎、熊、鹤、猿、鹿五戏中选择一点永久属性；该点以及之后宝鱼所得都纳入“逆天改命”可以重分的属性总数。原作路线选择猿戏，悟性增加一点。
+
+第一日结算后，曹青带主角进入沈家密会。密会同时承担三个作用：
+
+1. 让主角从丹房后院看见沈家真正的权力结构；
+2. 揭示金龙会四堂回岛和三个月后的百舸争流；
+3. 让曹青宣布离开沈家、由主角代为传递药材与差事。
+
+沈福赠送十两银子后，原作路线为收下再向曹青如实交代。该选择把曹青好感从三十推到三十九，并建立此后找护院学钓鱼、进灶房取饵的沈福门路。
+
+### 6.5 医术二级、黄金钱鳘与首炉炼丹
+
+迁到东门药铺后，《青青册》先须通过日常研读达到十七进度，再消耗一百六十六潜能提升到二级。医术二级让主角看出：曹青要求返回沈家取药草的差事，是准备紫金河奇遇的时间窗口。
+
+钓鱼条件板包含：
+
+- 路边挖蚯蚓；
+- 以逆天改命在杂货铺挑出银柳木竿，得到五十潜能；
+- 由沈福引见走船护院，消耗五十潜能学会钓鱼一级；
+- 从沈家灶房取得竹叶青和面团；
+- 已掌握《鱼跃龙门诀》，能够游到第三段河湾。
+
+紫金河先钓到普通鲫鱼，再遇见身份尚未揭示的摆渡老翁。玩家集中福缘后才令黄金钱鳘上钩。硬拽会被拖入深水，割线会失去本周奇遇，沿岸溜鱼并接受老翁指点才会合力擒鱼。
+
+分食宝鱼使王五好感达到六十，取得五百潜能和一点力道，并开放《打鱼杆法》。杆法需要力道三、悟性二；《鱼跃龙门诀》参与水行悟性判定。玩家须再用逆天改命把已有属性集中到力道，才能把宝鱼气血转化为真正掌握的基础武学。
+
+晚归后如实向曹青说明并演示杆法，好感越过四十。曹青依原作顺序两次指点《五禽戏》、一次指点《青青册》，随后正式传授回春丹。此时五禽所得一点与宝鱼所得一点令可调属性总数达到五；全部重分到悟性，再由《鱼跃龙门诀》增加两点，形成有效悟性七。
+
+首次炼丹提供真实火候选择。错误会烧坏一炉药材并在次日重试，不消耗命灯；正确复现曹青的全部步骤，固定得到六枚下品回春丹、炼丹二级十二进度、《百丹注解》和“三种新丹换真正武功”的承诺。
+
 ## 7. 当前完整流程
 
-`landing → worldIntro → characterDraft → vow → destiny → characterSheet → templeWake → fateSight → allocation → templeTasks → ladyArrival → ladyPressure → ladyTest → nightTalk → encounterReward → mindArt → roadTrial → roadResult → ending → shenArrival → shenJobs → caoArrival → caoFate → bloodDemand → danObservation → caoExamFire → caoExamIngredients → caoExamMotive → qingQingReward → qingQingStudy → fiveAnimalReward → shenChapterEnding`
+`landing → worldIntro → characterDraft → vow → destiny → characterSheet → templeWake → fateSight → allocation → templeTasks → ladyArrival → ladyPressure → ladyTest → nightTalk → encounterReward → mindArt → roadTrial → roadResult → ending → shenArrival → shenJobs → caoArrival → caoFate → bloodDemand → danObservation → caoExamFire → caoExamIngredients → caoExamMotive → qingQingReward → qingQingStudy → fiveAnimalReward → shenDaily → fiveAnimalChoice → shenDaily → shenMeeting → shenFuChoice → shenPharmacy → shenDaily → shenErrand → fishingPrep → riverFishing → riverCatch → wangEncounter → riverFishing → treasureFish → treasureShare → wangTeaching → caoReturn → caoGuidance → alchemyLesson → firstAlchemy → shenChapterEnding`
 
 支路：
 
@@ -184,17 +228,19 @@ NPC、门派、世家、帮会和朝廷机构属于世界本身，不属于“�
 - 选择沈家且持有沈字铜钱时可继续进入丹房；
 - 取血时反抗或拒绝，以及炼丹盘问答错，都会进入 `shenDeath`；仍有命灯时回到曹青开口取血之前；
 - 选择休息会安全结束沈家差事，却永久错过曹青传承；
-- 正确完成三问后，奖励按《青青册》到五禽戏的固定次序推进。
+- 正确完成三问后，奖励按《青青册》到五禽戏的固定次序推进；
+- 丹房日常透支会进入 `shenDeath`，回照时恢复到当日开始；
+- 沈福银子隐瞒、放弃钓鱼、割断宝鱼线、独吞宝鱼或向曹青隐瞒晚归都会形成不同的提前收束；
+- 首炉炼丹选错火候进入 `alchemyFailure`，次日保留记忆和能力重新尝试，不消耗命灯。
 
-## 8. 后续内容优先级
+## 8. 首章收束与后续入口
 
-沈家丹房完成后，最适合沿三条原作因果继续：
+本段完整路线同时形成两组成果：
 
-1. 以五禽戏和《青青册》继续积累根骨与医术，而不是直接跨境；
-2. 继续提高曹青好感，逐级接近血灵丹经和毒师传承；
-3. 处理金龙会孙不离追索半块玉佩的血书旧债，或在初一晴日重返破庙。
+1. 丹医立足：医术二级、曹青好感四十九、回春丹六枚、《百丹注解》和武功承诺；
+2. 水陆求道：黄金钱鳘、王五六十好感、五百潜能、一点力道与《打鱼杆法》。
 
-后续仍需保持单一武道世界和单人叙事，并让本段取得的医术、炼丹进度、五禽戏与曹青好感在下一场景中改变行动条件。
+结算根据日常研习行动的医道、武道次数突出其中一种倾向，但已经取得的另一组能力不被抹去。下一段只能从已核对的原作因果中选择：百丹注解三丹考验、百舸争流的炼骨门槛、万鲤堂孙不离的血书旧债，或晴日初一重返破庙。未经核对的内容明确作为原创扩展，不冒充原作情节。
 
 ## 9. 界面与叙事规则
 
