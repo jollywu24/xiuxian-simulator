@@ -11,19 +11,24 @@ import {
   MIND_ART,
   NIGHT_TALK,
   ROAD_TRIALS,
-  SHEN_CLUES,
-  SHEN_REWARDS,
-  SHEN_SOLUTIONS,
+  BLOOD_CHOICES,
+  CAO_ENCOUNTERS,
+  FIVE_ANIMAL_PLAY,
+  QINGQING_BOOK,
+  SHEN_JOBS,
   TEMPLE_ENCOUNTERS,
   VOWS,
   WORLD_FACTS,
   allocateJadeBonus,
-  getShenClue,
-  getShenReward,
+  canStudyQingQing,
+  getCaoEncounter,
   resolveLadyChoice,
   resolveNightTalk,
+  resolveBloodChoice,
+  resolveCaoAnswer,
+  resolveObservationChoice,
   resolveRoadTrial,
-  resolveShenSolution,
+  resolveShenJob,
   templeTaskCost,
 } from "../web/wudao-core.mjs";
 
@@ -92,50 +97,50 @@ test("night talk choices change favor while the faithful route grants the mind a
 
 test("the newly learned mind art immediately changes the road through the same world", () => {
   assert.equal(resolveRoadTrial("dive", false), null);
-  assert.equal(resolveRoadTrial("dive", true).potential, 100);
+  assert.equal(resolveRoadTrial("dive", true).potential, 0);
   assert.equal(resolveRoadTrial("detour", false).potential, 0);
-  assert.match(ROAD_TRIALS.dive.result, /沈氏丹纹/);
+  assert.match(ROAD_TRIALS.dive.result, /紫金河|沈家/);
   assert.equal(resolveRoadTrial("missing", true), null);
 });
 
-test("the Shen danroom offers limited investigation and distinct ways through the same crisis", () => {
-  assert.deepEqual(SHEN_CLUES.map((item) => item.id), ["ledger", "waterway", "door_lock"]);
-  assert.deepEqual(Object.keys(SHEN_SOLUTIONS), ["ignite", "procedure", "waterway", "bait"]);
-  assert.match(getShenClue("door_lock").description, /外面落下|重复/);
-  assert.equal(getShenClue("missing"), null);
-
-  const procedureLocked = resolveShenSolution("procedure", { clues: [] });
-  assert.equal(procedureLocked.available, false);
-  assert.deepEqual(procedureLocked.missing, ["ledger"]);
-  assert.equal(resolveShenSolution("procedure", { clues: ["ledger"] }).available, true);
-
-  assert.equal(resolveShenSolution("waterway", { clues: ["waterway"], hasMindArt: false }).available, false);
-  const waterwayOpen = resolveShenSolution("waterway", { clues: ["waterway"], hasMindArt: true });
-  assert.equal(waterwayOpen.available, true);
-  assert.equal(waterwayOpen.relation, "丹房救火人");
+test("the original Shen route assigns the hero to the danroom because every ordinary job is out of reach", () => {
+  assert.deepEqual(SHEN_JOBS.map((item) => item.id), ["guard", "laborer", "runner", "clerk"]);
+  const strength = allocateJadeBonus("strength");
+  assert.equal(resolveShenJob("guard", strength, {}).available, false);
+  assert.ok(resolveShenJob("guard", strength, {}).missing.includes("basic_skill"));
+  assert.equal(resolveShenJob("laborer", strength, {}).available, false);
+  assert.equal(resolveShenJob("runner", strength, {}).available, false);
+  assert.equal(resolveShenJob("clerk", strength, {}).available, false);
+  assert.equal(resolveShenJob("missing", strength, {}), null);
 });
 
-test("a fate lamp reveals the deepest Shen counterplay but can never spend the last lamp", () => {
-  assert.equal(resolveShenSolution("ignite", { lives: 2 }).available, true);
-  const lastLamp = resolveShenSolution("ignite", { lives: 1 });
-  assert.equal(lastLamp.available, false);
-  assert.ok(lastLamp.missing.includes("last_lamp"));
-
-  const baitLocked = resolveShenSolution("bait", { hasMindArt: true, deathMemory: false });
-  assert.equal(baitLocked.available, false);
-  assert.ok(baitLocked.missing.includes("death_memory"));
-  const baitOpen = resolveShenSolution("bait", { hasMindArt: true, deathMemory: true });
-  assert.equal(baitOpen.available, true);
-  assert.equal(baitOpen.outcome, "takeover");
-  assert.equal(baitOpen.potential, 450);
+test("Cao Qing exposes the three original fixed encounters and forces a blood choice", () => {
+  assert.deepEqual(CAO_ENCOUNTERS.map((item) => item.id), ["traitor", "blood_scripture", "poison_legacy"]);
+  assert.match(getCaoEncounter("traitor").result, /不死不休/);
+  assert.equal(getCaoEncounter("missing"), null);
+  assert.deepEqual(Object.keys(BLOOD_CHOICES), ["fight", "comply", "refuse"]);
+  assert.equal(resolveBloodChoice("fight", 2).available, true);
+  assert.equal(resolveBloodChoice("fight", 1).available, false);
+  assert.equal(resolveBloodChoice("comply", 1).outcome, "observe");
 });
 
-test("Shen rewards create three exclusive growth directions", () => {
-  assert.deepEqual(Object.keys(SHEN_REWARDS), ["five_animals", "marrow_powder", "herb_token"]);
-  assert.equal(getShenReward("five_animals", 299).available, false);
-  assert.equal(getShenReward("five_animals", 299).missingPotential, 1);
-  assert.equal(getShenReward("five_animals", 300).available, true);
-  assert.equal(getShenReward("marrow_powder", 0).attribute, "constitution");
-  assert.equal(getShenReward("herb_token", 0).potential, 100);
-  assert.equal(getShenReward("missing", 999), null);
+test("insight, observation and honest survival reproduce Cao Qing's original examination", () => {
+  const insight = allocateJadeBonus("insight");
+  const watched = resolveObservationChoice("watch", insight, true);
+  assert.equal(watched.effectiveInsight, 5);
+  assert.equal(resolveCaoAnswer("fire", "strong_slow_strong", watched.effectiveInsight).outcome, "continue");
+  assert.equal(resolveCaoAnswer("fire", "stew", watched.effectiveInsight).outcome, "death");
+  assert.equal(resolveCaoAnswer("fire", "forget", watched.effectiveInsight).outcome, "neglected");
+  assert.equal(resolveCaoAnswer("ingredients", "recite_order", watched.effectiveInsight).outcome, "continue");
+  assert.equal(resolveCaoAnswer("motive", "learn", watched.effectiveInsight).outcome, "death");
+  assert.equal(resolveCaoAnswer("motive", "survive", watched.effectiveInsight).outcome, "continue");
+});
+
+test("the original reward chain is Qingqing study followed by an untrained Five Animal Play manual", () => {
+  assert.equal(QINGQING_BOOK.studyCost, 85);
+  assert.equal(canStudyQingQing(2, 1780).available, false);
+  assert.equal(canStudyQingQing(3, 84).available, false);
+  assert.equal(canStudyQingQing(3, 1780).available, true);
+  assert.equal(FIVE_ANIMAL_PLAY.name, "《五禽戏》");
+  assert.match(FIVE_ANIMAL_PLAY.description, /没有杀伤力|继续修炼/);
 });

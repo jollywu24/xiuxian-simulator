@@ -39,14 +39,15 @@
 - 金陵东郊破庙有旅人遗物、沈氏承诺、神秘贡品三项固定奇遇；
 - 青衣妇人是漕帮帮主夫人龙青鱼，进入破庙时没有受伤，也没有追兵；
 - 主线路线经因爱成恨、破庙夜话获得鱼跃龙门诀；
-- 心法在同一世界的黑水涧立即改变可走路线，并能发现沈氏丹房线索；
+- 心法在同一世界的紫金河立即改变可走路线，使主角及时抵达沈家；
 - 结尾记录沈家、破庙贡品或临安漕帮作为下一程；
-- 沈家路线由沈字铜钱开启，在两刻内调查丹房死局，并可用鱼跃龙门诀改风；
-- 命灯充足时可亲历丹房死亡，回照后解锁假毒反抓；
-- 破局奖励从《五禽桩》、洗髓散和青木药牌中选择一项。
-- 所选奖励在沈家外院立刻使用一次，再进入章节结尾。
+- 沈家路线由沈字铜钱开启；主角因四种普通差事皆不合门槛，被送入曹青丹房；
+- 曹青本名庞不凡，是药王谷叛徒；强取一碗血后才允许主角继续留下；
+- 主角把玉佩三点改到悟性，观察水炼并通过火候、药序和动机三道盘问；
+- 固定所得为一百八十潜能、炼丹进度六成一与《青青册》；
+- 医书第一层消耗八十五潜能，次日通过考校后得到五禽戏，但不会立即突破锻体。
 
-沈家丹房死局是依据已出现的沈字铜钱和丹房线索所作的原创扩展，不声称还原未经核对的小说后续章节。改编使用原创转述，不复制小说正文长段落。扩展未经核对的后续章节时，应使用用户提供文本或合法公开来源核对人物、事件和规则；无法核对时必须明确作为原创扩展。
+沈家丹房段已按合法公开来源核对原作第十二至十八章的人物、事件、数值门槛和因果顺序。改编使用原创转述，不复制小说正文长段落。扩展未经核对的后续章节时，应使用用户提供文本或合法公开来源核对人物、事件和规则；无法核对时必须明确作为原创扩展。
 
 ## 4. 玩家可见内容规则
 
@@ -61,17 +62,18 @@
 
 ## 5. 当前流程
 
-`landing → worldIntro → characterDraft → vow → destiny → characterSheet → templeWake → fateSight → allocation → templeTasks → ladyArrival → ladyPressure → ladyTest → nightTalk → encounterReward → mindArt → roadTrial → roadResult → ending → shenArrival → shenGate → shenBriefing → shenInvestigation → shenResolution → shenReward → shenAftermath → shenChapterEnding`
+`landing → worldIntro → characterDraft → vow → destiny → characterSheet → templeWake → fateSight → allocation → templeTasks → ladyArrival → ladyPressure → ladyTest → nightTalk → encounterReward → mindArt → roadTrial → roadResult → ending → shenArrival → shenJobs → caoArrival → caoFate → bloodDemand → danObservation → caoExamFire → caoExamIngredients → caoExamMotive → qingQingReward → qingQingStudy → fiveAnimalReward → shenChapterEnding`
 
 支路：
 
 - 明确死亡选择进入 `gameDeath`，失去一盏命灯后返回 `ladyArrival`；
 - 沉默避让进入 `quietDeparture`，安全但永久失去龙青鱼后续；
 - 剩余一盏命灯时不再显示明确会直接死亡的重复选项；
-- 黑水涧可潜水取线索或绕山保平安；
+- 紫金河水路可及时抵达沈家，官道路线会错过当日时辰；
 - 结尾可选择下一程路线并写入存档；
-- 沈家死局可经家规封炉、心法改风或赴死回照后假毒反抓；
-- 丹房死亡支路为 `shenDeath → shenReturn → shenInvestigation`。
+- 曹青取血时反抗、拒绝或答错关键盘问会进入 `shenDeath`；
+- 仍有命灯时从 `shenDeath` 返回 `bloodDemand`，保留死亡记忆；
+- 取血后选择休息会结束沈家路线，选择观察才进入炼丹盘问。
 
 新增场景时必须同步：
 
@@ -106,9 +108,11 @@
 - `TEMPLE_ENCOUNTERS`：破庙固定奇遇；
 - `LADY_STAGES`、`NIGHT_TALK`：龙青鱼人物奇遇；
 - `MIND_ART`、`ROAD_TRIALS`：鱼跃龙门诀及同世界内的即时应用；
-- `SHEN_CLUES`、`SHEN_SOLUTIONS`、`SHEN_REWARDS`：丹房查验、破局与成长方向；
+- `SHEN_JOBS`、`CAO_ENCOUNTERS`：沈家差事门槛与曹青固定奇遇；
+- `BLOOD_CHOICES`、`OBSERVATION_CHOICES`、`CAO_QUESTIONS`：取血、观察与炼丹盘问；
+- `QINGQING_BOOK`、`FIVE_ANIMAL_PLAY`：固定成长奖励；
 - `allocateJadeBonus()`、`templeTaskCost()`：五维重分和环境代价；
-- `resolveLadyChoice()`、`resolveNightTalk()`、`resolveRoadTrial()`、`resolveShenSolution()`：选择结果。
+- `resolveLadyChoice()`、`resolveNightTalk()`、`resolveRoadTrial()`、`resolveShenJob()`、`resolveBloodChoice()`、`resolveCaoAnswer()`：选择结果。
 
 核心不访问 DOM、`localStorage` 或网络。所有返回对象保持 JSON 可序列化。
 
@@ -122,9 +126,9 @@
 - 命灯、潜能、山桃、篝火时间；
 - 五维分配和已完成固定奇遇；
 - 龙青鱼奇遇阶段、选择日志、好感和关系；
-- 心法、黑水涧选择与结果；
+- 心法、紫金河选择与结果；
 - 下一程路线；
-- 沈家信任、查验点、线索、死亡记忆、破局、身份、奖励、奖励运用、境界与已习武学。
+- 沈家差事、曹青身份与好感、取血损失、有效悟性、盘问答案、炼丹进度、医书层级和五禽戏。
 
 handler 必须检查当前条件，避免重复领取潜能、物品或关系奖励。状态只能存放 JSON 可序列化值。
 
@@ -157,9 +161,10 @@ node scripts/cdp-smoke.mjs 9225
 - 青衣妇人身份延迟揭示；
 - 一次死亡和命灯减少；
 - 莫逆之交与鱼跃龙门诀；
-- 黑水涧即时应用和沈家丹纹线索；
-- 沈家侧门的信物核验、两处限时查验和至少一种破局；
-- 沈家三选一奖励、锻体境界与本地存档恢复；
+- 紫金河即时应用和沈家当日入场；
+- 四项差事门槛、曹青身份、取血选择和一次丹房死亡；
+- 玉佩改悟性、炼丹三问、《青青册》与五禽戏；
+- 五禽戏不会使境界直接变为锻体，以及本地存档恢复；
 - 桌面和手机无横向溢出；
 - 页面运行异常为空。
 

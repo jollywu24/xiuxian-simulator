@@ -7,22 +7,29 @@ import {
   MIND_ART,
   NIGHT_TALK,
   ROAD_TRIALS,
-  SHEN_CLUES,
-  SHEN_REWARDS,
-  SHEN_SOLUTIONS,
+  BLOOD_CHOICES,
+  CAO_ENCOUNTERS,
+  CAO_QUESTIONS,
+  FIVE_ANIMAL_PLAY,
+  OBSERVATION_CHOICES,
+  QINGQING_BOOK,
+  SHEN_JOBS,
   TEMPLE_ENCOUNTERS,
   VOWS,
   WORLD_FACTS,
   allocateJadeBonus,
+  canStudyQingQing,
   getBackground,
-  getShenClue,
-  getShenReward,
+  getCaoEncounter,
   getTempleEncounter,
   getVow,
   resolveLadyChoice,
   resolveNightTalk,
+  resolveBloodChoice,
+  resolveCaoAnswer,
+  resolveObservationChoice,
   resolveRoadTrial,
-  resolveShenSolution,
+  resolveShenJob,
   templeTaskCost,
 } from "./wudao-core.mjs";
 
@@ -58,15 +65,23 @@ function createInitialState() {
     martialStage: "mortal",
     skills: [],
     shenChapterStarted: false,
-    shenGateChoice: null,
-    shenTrust: 0,
-    shenInvestigationPoints: 2,
-    shenClues: [],
-    shenDeathMemory: false,
+    shenOriginalVersion: 1,
+    shenJob: null,
+    caoIdentitySeen: false,
+    caoFavor: 0,
+    bloodChoice: null,
+    bloodLoss: 0,
+    observationChoice: null,
+    effectiveInsight: 0,
+    caoAnswers: [],
+    alchemyProgress: 0,
+    medicalLevel: 0,
+    gatheringProgress: 0,
+    qingQingStudied: false,
+    fiveAnimalBook: false,
+    shenDeathNode: null,
+    shenDeathReason: null,
     shenOutcome: null,
-    shenStanding: null,
-    shenReward: null,
-    shenRewardUsed: null,
     shenChapterComplete: false,
     events: [],
   };
@@ -76,6 +91,16 @@ function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
     if (!saved || saved.version !== 2 || !saved.screen) return null;
+    if (saved.shenChapterStarted && saved.shenOriginalVersion !== 1) {
+      const reset = createInitialState();
+      return {
+        ...reset,
+        ...saved,
+        screen: "ending",
+        nextRoute: "shen",
+        ...Object.fromEntries(Object.keys(reset).filter((key) => key.startsWith("shen") || ["caoIdentitySeen", "caoFavor", "bloodChoice", "bloodLoss", "observationChoice", "effectiveInsight", "caoAnswers", "alchemyProgress", "medicalLevel", "gatheringProgress", "qingQingStudied", "fiveAnimalBook"].includes(key)).map((key) => [key, reset[key]])),
+      };
+    }
     return { ...createInitialState(), ...saved };
   } catch {
     return null;
@@ -150,10 +175,10 @@ function journalHtml() {
     items.push(["寅时 · 青衣来客", state.relationship ? `龙青鱼 · ${state.relationship}` : state.departed ? "擦肩而过" : "杀机未定", state.relationship ? "shifted" : "current"]);
   }
   if (state.roadTrial) {
-    items.push(["天明 · 黑水涧", state.roadTrial === "dive" ? "涧底丹纹" : "绕山而行", "shifted"]);
+    items.push(["天明 · 紫金河", state.roadTrial === "dive" ? "顺流抵达东湖" : "官道受阻", "shifted"]);
   }
   if (state.shenChapterStarted) {
-    items.push(["金陵 · 沈家丹房", state.shenChapterComplete ? "死局已破" : state.shenDeathMemory ? "一炷香前 · 再入死局" : "青炉差事", state.shenChapterComplete ? "shifted" : "current"]);
+    items.push(["金陵 · 沈家丹房", state.shenChapterComplete ? "虎口求生" : state.qingQingStudied ? "曹青考校" : state.bloodChoice ? "取血炼丹" : "无职可领", state.shenChapterComplete ? "shifted" : "current"]);
   }
   return `
     <div class="panel-title">江湖行录</div>
@@ -169,7 +194,6 @@ function characterPanelHtml() {
   const background = getBackground(state.backgroundId);
   const vow = getVow(state.vowId);
   const stage = MARTIAL_STAGES.find((item) => item.id === state.martialStage) || MARTIAL_STAGES[0];
-  const shenReward = state.shenReward ? SHEN_REWARDS[state.shenReward] : null;
   return `
     <div class="panel-body">
       <div>
@@ -199,10 +223,9 @@ function characterPanelHtml() {
           ${state.completedTempleTasks.includes("traveler_relic") ? `<div><strong>金陵东郊残图</strong><span>标出破庙外的旧路</span></div>` : ""}
           ${state.completedTempleTasks.includes("shen_promise") ? `<div><strong>沈字铜钱</strong><span>可作为金陵沈家信物</span></div>` : ""}
           ${state.mindArt ? `<div><strong>${MIND_ART.name}</strong><span>${MIND_ART.rank} · 龙青鱼所授</span></div>` : ""}
-          ${state.roadTrial === "dive" ? `<div><strong>铜匣残片</strong><span>刻有沈氏丹房纹记</span></div>` : ""}
-          ${state.shenOutcome ? `<div><strong>${escapeHtml(SHEN_SOLUTIONS[state.shenOutcome]?.title || "丹房所得")}</strong><span>${escapeHtml(SHEN_SOLUTIONS[state.shenOutcome]?.reward || state.shenStanding || "沈家已记下此事")}</span></div>` : ""}
-          ${shenReward ? `<div><strong>${escapeHtml(shenReward.name)}</strong><span>${escapeHtml(shenReward.effect)}</span></div>` : ""}
-          ${state.inventory.includes("shen_batch_clue") ? `<div><strong>伏脉藤药路批号</strong><span>可继续追查沈家丹房内应</span></div>` : ""}
+          ${state.roadTrial === "dive" ? `<div><strong>紫金河水路</strong><span>鱼跃龙门诀可缩短往返沈家的路程</span></div>` : ""}
+          ${state.inventory.includes(QINGQING_BOOK.id) ? `<div><strong>${QINGQING_BOOK.name}</strong><span>${state.qingQingStudied ? "已研习 · 医术入门" : "曹青所授 · 尚未研习"}</span></div>` : ""}
+          ${state.fiveAnimalBook ? `<div><strong>${FIVE_ANIMAL_PLAY.name}</strong><span>基础健体功 · 尚未练成</span></div>` : ""}
         </div>
       </div>
     </div>
@@ -238,21 +261,25 @@ function modeLabel() {
     nightTalk: "人物奇遇 · 破庙夜话",
     encounterReward: "奇遇结局 · 鱼跃龙门",
     mindArt: "心法灌顶 · 江鲤行波",
-    roadTrial: "天明 · 黑水涧",
+    roadTrial: "天明 · 紫金河",
     roadResult: "武学初试 · 去路已开",
     ending: "金陵道 · 第一夜终",
     gameDeath: "命灯熄灭 · 残灯回照",
     quietDeparture: "天明 · 擦肩而过",
-    shenArrival: "金陵城 · 沈宅侧巷",
-    shenGate: "沈家侧门 · 旧诺为凭",
-    shenBriefing: "沈家外院 · 丹房差事",
-    shenInvestigation: "午时前 · 青炉小室",
-    shenDeath: "丹火噬心 · 命灯再暗",
-    shenReturn: "一炷香前 · 死局重开",
-    shenResolution: "沈家丹房 · 死局已破",
-    shenReward: "沈家药阁 · 三选其一",
-    shenAftermath: "沈家外院 · 所得立验",
-    shenChapterEnding: "金陵城 · 日过午时",
+    shenArrival: "金陵东湖 · 沈家侧门",
+    shenJobs: "沈家外院 · 营生分配",
+    caoArrival: "沈家后院 · 炼药房",
+    caoFate: "逆天改命 · 曹青奇遇",
+    bloodDemand: "丹炉之前 · 取血炼药",
+    danObservation: "血气亏空 · 去留一念",
+    caoExamFire: "丹师考验 · 火候",
+    caoExamIngredients: "丹师考验 · 药序",
+    caoExamMotive: "虎口求生 · 最后一问",
+    qingQingReward: "酉时三刻 · 青青册",
+    qingQingStudy: "次日寅时 · 曹青考校",
+    fiveAnimalReward: "沈家后院 · 五禽戏",
+    shenDeath: "命灯熄灭 · 曹青杀机",
+    shenChapterEnding: "沈家丹房 · 暂得立足",
   };
   return labels[state.screen] || "大曜江湖";
 }
@@ -490,17 +517,17 @@ function renderMindArt() {
   return gameShell(`
     ${sceneHeader("心法灌顶", "鱼跃龙门诀", "龙青鱼并指点在你眉心。江鲤行波图化作一段陌生而完整的行气记忆。")}
     <article class="mind-art-card"><span>${escapeHtml(MIND_ART.rank)}</span><h2>${escapeHtml(MIND_ART.name)}</h2><p>${escapeHtml(MIND_ART.source)}</p><ul>${MIND_ART.traits.map((trait) => `<li>${escapeHtml(trait)}</li>`).join("")}</ul></article>
-    <div class="notice-block"><strong>武道并非只写在人物卡上</strong><br />庙后黑水涧挡着去往金陵的近路。刚得到的心法，立刻就有一次亲手验证的机会。</div>
-    <div class="action-list">${actionCard({ action: "to-road-trial", title: "前往庙后黑水涧", description: "选择潜入涧底，或沿更远的山道绕行。", source: "天明", meta: "武学初试", kind: "special" })}</div>
+    <div class="notice-block"><strong>武道并非只写在人物卡上</strong><br />从钟山到沈家还有很长一段路。以你的脚力和干粮，走官道很可能撑不到东湖；紫金河却能让这门水行心法立刻派上用场。</div>
+    <div class="action-list">${actionCard({ action: "to-road-trial", title: "下山前往紫金河", description: "选择顺流游往东湖，或沿更远的官道步行。", source: "天明", meta: "武学初试", kind: "special" })}</div>
   `);
 }
 
 function renderRoadTrial() {
   return gameShell(`
-    ${sceneHeader("天明 · 黑水涧", "近路沉在三丈深的寒水下面", "石阶在对岸继续，水面看不见桥。新得的心法能让你下潜，但涧底有什么仍是未知。")}
+    ${sceneHeader("钟山脚下 · 紫金河", "官道漫长，水路直通沈家所在的东湖", "你的体力与干粮都已见底。鱼跃龙门诀能让你在水中身法提高、消耗降低。")}
     <div class="action-list">
-      ${actionCard({ action: "road-trial", value: "dive", title: ROAD_TRIALS.dive.title, description: "运转江鲤行波图，从水下寻找旧路，也承担未知风险。", source: "鱼跃龙门诀", meta: ROAD_TRIALS.dive.reward, kind: "special" })}
-      ${actionCard({ action: "road-trial", value: "detour", title: ROAD_TRIALS.detour.title, description: "不试新功，沿山脊多走半日。", source: "稳妥", meta: ROAD_TRIALS.detour.reward })}
+      ${actionCard({ action: "road-trial", value: "dive", title: ROAD_TRIALS.dive.title, description: "运转江鲤行波图，沿紫金河半游半漂直抵东湖。", source: "鱼跃龙门诀", meta: ROAD_TRIALS.dive.reward, kind: "special" })}
+      ${actionCard({ action: "road-trial", value: "detour", title: ROAD_TRIALS.detour.title, description: "不下水，以当前脚力继续走漫长陆路。", source: "陆路", meta: ROAD_TRIALS.detour.reward })}
     </div>
   `);
 }
@@ -508,7 +535,7 @@ function renderRoadTrial() {
 function renderRoadResult() {
   const result = state.roadTrialResult;
   return gameShell(`
-    ${sceneHeader("黑水涧 · 去路已开", result?.title || "沿路而行", result?.result || "你平安离开破庙。")}
+    ${sceneHeader("紫金河 · 去路已定", result?.title || "沿路而行", result?.result || "你平安离开破庙。")}
     <div class="encounter-ledger"><div><span>选择</span><strong>${escapeHtml(result?.title || "未知")}</strong><p>${escapeHtml(result?.condition || "")}</p></div><div><span>结果</span><strong>${escapeHtml(result?.reward || "平安")}</strong><p>${state.roadTrial === "dive" ? "新心法已经真正改变了可走的道路。" : "安全与错过同时成立。"}</p></div></div>
     <div class="action-list">${actionCard({ action: "continue-road", title: "沿官道望向金陵城", description: "城门、沈家、漕帮与追查血书的人，都在前方。", source: "第一夜", meta: "告一段落", kind: "special" })}</div>
   `);
@@ -516,8 +543,10 @@ function renderRoadResult() {
 
 function renderEnding() {
   const hasShenToken = state.completedTempleTasks.includes("shen_promise");
+  const reachedShenByRiver = state.roadTrial === "dive";
+  const canEnterShen = hasShenToken && reachedShenByRiver;
   const routes = [
-    ["shen", "持沈字铜钱进城", "前往金陵沈家，追查丹房差事与铜匣残片。", "沈家 · 丹房"],
+    ["shen", "持沈字铜钱前往沈家", "沿紫金河抵达东湖，用老太爷旧诺换一份沈家营生。", "沈家 · 外院"],
     ["offering", "等到初一再回破庙", "按晴日、辰时与根骨条件，追索神秘贡品。", "破庙 · 地级奇遇"],
     ["linan", "沿漕帮水路去临安", "寻找龙青鱼留下的重逢条件，也踏入漕帮权争。", "漕帮 · 人物线"],
   ];
@@ -526,19 +555,20 @@ function renderEnding() {
     <div class="wudao-ending-grid">
       <div><span>人物</span><strong>${escapeHtml(state.name)}</strong><p>${escapeHtml(getBackground(state.backgroundId)?.name)} · ${escapeHtml(getVow(state.vowId)?.title)}</p></div>
       <div><span>命灯</span><strong>${state.lives} / ${LIFE_RULE.lives}</strong><p>${state.lastDeathChoice ? "已经用死亡确认过一次实力差距" : "尚未熄灭"}</p></div>
-      <div><span>武学</span><strong>${state.mindArt ? MIND_ART.name : "无"}</strong><p>${state.roadTrial === "dive" ? "已在黑水涧亲手运用" : state.mindArt ? "尚未冒险下水" : "青衣来客已成过路人"}</p></div>
+      <div><span>武学</span><strong>${state.mindArt ? MIND_ART.name : "无"}</strong><p>${state.roadTrial === "dive" ? "已在紫金河亲手运用" : state.mindArt ? "尚未选择水路" : "青衣来客已成过路人"}</p></div>
       <div><span>关系</span><strong>${escapeHtml(state.relationship || "无")}</strong><p>${state.relationship ? "临安重逢条件已出现" : "今夜未与任何势力结缘"}</p></div>
     </div>
     <div class="next-hooks">
       ${routes.map(([id, title, description, meta]) => actionCard({ action: "choose-route", value: id, title, description, source: state.nextRoute === id ? "已定" : "去路", meta, kind: state.nextRoute === id ? "special" : "" })).join("")}
     </div>
     ${state.nextRoute ? `<div class="notice-block"><strong>下一程已定</strong><br />晨雾散去后，你将沿这条路继续。</div>` : ""}
-    ${state.nextRoute === "shen" ? `<div class="action-list">${actionCard({ action: "start-shen-chapter", title: "持铜钱叩响沈家侧门", description: hasShenToken ? "把破庙墙后那枚旧诺，兑成一次进入丹房的机会。" : "你记得沈家这条路，却没有能让侧门开启的旧信物。", source: "金陵沈家", meta: hasShenToken ? "下一段" : "缺少沈字铜钱", kind: hasShenToken ? "special" : "", disabled: !hasShenToken })}</div>` : ""}
+    ${state.nextRoute === "shen" ? `<div class="action-list">${actionCard({ action: "start-shen-chapter", title: "持铜钱叩响沈家侧门", description: canEnterShen ? "你已顺紫金河抵达东湖，可以把破庙墙后的旧诺换成一份营生。" : !hasShenToken ? "你没有能让侧门开启的沈字铜钱。" : "官道路远，当前体力与干粮不足以在今日抵达沈家。", source: "金陵沈家", meta: canEnterShen ? "进入下一段" : !hasShenToken ? "缺少沈字铜钱" : "需要紫金河水路", kind: canEnterShen ? "special" : "", disabled: !canEnterShen })}</div>` : ""}
     <div class="button-row"><button class="secondary-button" data-action="restart">另起一世</button></div>
   `);
 }
 
-function renderShenArrival() {
+/* Removed pre-source-verification Shen plot. Kept in git history only; this block is inert.
+function renderLegacyShenArrival() {
   return gameShell(`
     ${sceneHeader("金陵城 · 辰时", "城门内的药香，比晨雾更早醒来", "沈家药铺占了半条青石街。正门接诊、东门卸药，只有最窄的西巷侧门不挂匾额。")}
     <div class="world-ledger shen-world-ledger">
@@ -550,7 +580,7 @@ function renderShenArrival() {
   `);
 }
 
-function renderShenGate() {
+function renderLegacyShenGate() {
   return gameShell(`
     ${sceneHeader("沈家侧门", "门后的人先看铜钱，再看你的手", "一名青衫女子用药布托起铜钱。她叫沈砚秋，掌外院丹房差事，也负责辨认所有来路不明的旧诺。")}
     <div class="npc-reveal-card shen-npc-card"><div class="reveal-seal">沈<br />砚<br />秋</div><div><span>沈家 · 丹房执事</span><h2>她要判断你是否值得兑现旧诺</h2><p>“铜钱是真的。你从哪里得来，又想让沈家替你做什么？”</p></div></div>
@@ -577,7 +607,7 @@ function shenBaseInvestigationPoints() {
   return 2;
 }
 
-function renderShenBriefing() {
+function renderLegacyShenBriefing() {
   return gameShell(`
     ${sceneHeader("沈家外院", "一枚旧诺，只能换一件事", shenGateResultText())}
     <div class="shen-trust-strip"><span>沈砚秋信任</span><strong>${state.shenTrust}</strong><p>${state.shenTrust >= 2 ? "多给一刻查验时间" : state.shenTrust >= 1 ? "按常例给两刻查验" : "受人盯守，只能查验一处"}</p></div>
@@ -618,7 +648,7 @@ function renderShenSolutionCard(id, kind = "") {
   });
 }
 
-function renderShenInvestigation() {
+function renderLegacyShenInvestigation() {
   const visibleIgnite = state.lives > 1 && !state.shenDeathMemory;
   return gameShell(`
     ${sceneHeader("乙字号丹房 · 午时前", "门、药与风道，至少有一处在等你送命", "沈砚秋离开后，外门药童搬来三筐药材。命格只显示午时结果：经脉封死，丹火爆燃，无人开门。")}
@@ -640,7 +670,7 @@ function renderShenInvestigation() {
   `);
 }
 
-function renderShenDeath() {
+function renderLegacyShenDeath() {
   return gameShell(`
     ${sceneHeader("乙字号丹房 · 午时", "药烟没有杀你，真正的死局在烟后面", "青炉点燃后，伏脉藤粉随回风槽灌入小室。四肢失去知觉时，门闩从外面落下。")}
     <div class="death-cause"><span>完整死因</span><strong>伏脉烟锁经 → 外门封死 → 丹火爆燃</strong></div>
@@ -650,7 +680,7 @@ function renderShenDeath() {
   `);
 }
 
-function renderShenReturn() {
+function renderLegacyShenReturn() {
   return gameShell(`
     ${sceneHeader("一炷香前", "青炉未燃，门闩还在你手边", "沈砚秋刚刚离开，三筐药材仍放在原位。身体没有伤，死亡的每一息却都在记忆里。")}
     <div class="cause-chain">
@@ -662,7 +692,7 @@ function renderShenReturn() {
   `);
 }
 
-function renderShenResolution() {
+function renderLegacyShenResolution() {
   const outcome = SHEN_SOLUTIONS[state.shenOutcome];
   return gameShell(`
     ${sceneHeader("沈家丹房 · 午时", outcome?.title || "死局已破", outcome?.result || "青炉平稳熄灭。")}
@@ -675,7 +705,7 @@ function renderShenResolution() {
   `);
 }
 
-function renderShenReward() {
+function renderLegacyShenReward() {
   return gameShell(`
     ${sceneHeader("沈家药阁", "把这一场死局，换成一份真正的成长", "沈砚秋只许你带走一项。选择会改变境界、属性或今后能进入的地方。")}
     <div class="reward-choice-grid">
@@ -687,7 +717,7 @@ function renderShenReward() {
   `);
 }
 
-function renderShenAftermath() {
+function renderLegacyShenAftermath() {
   const trials = {
     five_animals: {
       title: "药架正朝一名学徒倒下",
@@ -716,7 +746,7 @@ function renderShenAftermath() {
   `);
 }
 
-function renderShenChapterEnding() {
+function renderLegacyShenChapterEnding() {
   const reward = SHEN_REWARDS[state.shenReward];
   const outcome = SHEN_SOLUTIONS[state.shenOutcome];
   return gameShell(`
@@ -733,6 +763,172 @@ function renderShenChapterEnding() {
       <div><span>初一将至</span><strong>破庙神秘贡品</strong><p>晴日、辰时和根骨条件仍在等待。</p></div>
     </div>
     <div class="notice-block"><strong>金陵篇继续</strong><br />你已从无名耗材变成沈家愿意记住的差事人，也第一次有能力决定下一场危机怎么发生。</div>
+    <div class="button-row"><button class="secondary-button" data-action="restart">另起一世</button></div>
+  `);
+}
+
+*/
+function shenRequirementText(job) {
+  const names = { strength: "力道", agility: "身法", constitution: "根骨", insight: "悟性", basic_skill: "基础武功", arithmetic: "算术" };
+  const status = resolveShenJob(job.id, state.attributes, {
+    hasBasicSkill: state.skills.length > 0,
+    hasArithmetic: state.inventory.includes("arithmetic"),
+  });
+  return status.missing.map((id) => names[id] || id).join("、");
+}
+
+function renderShenArrival() {
+  return gameShell(`
+    ${sceneHeader("金陵东郊 · 东湖岸", "你拖着饥饿的身体，站到沈家侧门前", "若非鱼跃龙门诀让你顺紫金河而下，剩余干粮根本撑不到这里。朱漆侧门与石狮，已经比破庙高出另一个世界。")}
+    <div class="world-ledger shen-world-ledger">
+      <article class="world-fact"><span>沈家</span><strong>金陵本地豪强</strong><p>家宅、田产与护院自成规矩。信物能让他们履行旧诺，却不能让他们白养一个人。</p></article>
+      <article class="world-fact"><span>沈字铜钱</span><strong>老太爷留下的一次承诺</strong><p>门房认得铜钱，不敢赶你走，但承诺只保证给一口饭和一份营生。</p></article>
+      <article class="world-fact"><span>眼下处境</span><strong>饥饿 · 体力将尽</strong><p>你还没有踏入炼体，五维力量全来自怀中玉佩，任何一份差事都可能高于你的能力。</p></article>
+    </div>
+    <div class="action-list">${actionCard({ action: "present-shen-token", title: "把沈字铜钱交给门房", description: "门房验过旧物，转身去请外院管事。", source: "沈氏承诺", meta: "获得一次营生分配", kind: "special" })}</div>
+  `);
+}
+
+function renderShenJobs() {
+  return gameShell(`
+    ${sceneHeader("沈家外院", "沈家不养闲人", "八字胡管事摆出四份营生。逆天改命把要求与待遇一并显出，可你的身体连最低门槛都够不到。")}
+    <div class="quest-grid shen-clue-grid">
+      ${SHEN_JOBS.map((job) => {
+        const status = resolveShenJob(job.id, state.attributes, { hasBasicSkill: state.skills.length > 0, hasArithmetic: state.inventory.includes("arithmetic") });
+        return `<article class="quest-card ${status.available ? "completed" : ""}"><span>沈家营生</span><h2>${escapeHtml(job.name)}</h2><p>${escapeHtml(job.pay)}</p><small>${status.available ? "当前可以胜任" : `尚缺：${escapeHtml(shenRequirementText(job))}`}</small><div class="quest-state">${status.available ? "可领" : "不可领"}</div></article>`;
+      }).join("")}
+    </div>
+    <div class="notice-block"><strong>管事的处置</strong><br />肩不能挑，手不能提，连跑腿和算账也做不了。沈家不能毁诺，后院曹医师那里正缺一个“做轻巧活”的药童。</div>
+    <div class="action-list">${actionCard({ action: "accept-danroom-job", title: "接过杂役衣与两个白面馒头", description: "周围家丁听到“曹医师”三个字，望向你的眼神像在看一个死人。", source: "唯一去处", meta: "曹医师炼药房", kind: "danger" })}</div>
+  `);
+}
+
+function renderCaoArrival() {
+  return gameShell(`
+    ${sceneHeader("沈家后院 · 炼药房", "五名药童守着丹炉，没有一个人像能活过冬天", "他们面色惨白、眼眶发黑。穿灰黑长袍的曹医师枯瘦如柴，只看一眼，便说从未见过你这样孱弱却还活着的人。")}
+    <div class="npc-reveal-card shen-npc-card"><div class="reveal-seal">曹<br />青</div><div><span>沈家客卿 · 医师</span><h2>下人传言：进他丹房的人很少活过三个月</h2><p>他不问铜钱怎么来的，只在估量你还能取几次血。</p></div></div>
+    <div class="action-list">${actionCard({ action: "inspect-cao-fate", title: "对曹医师发动逆天改命", description: "先看清这个人身上的固定奇遇，再决定该逃、该告发，还是该设法取信。", source: "唯一命格", meta: "看见三条因果", kind: "special" })}</div>
+  `);
+}
+
+function renderCaoFate() {
+  return gameShell(`
+    ${sceneHeader("曹青 · 固定奇遇", "庞不凡、血灵丹经与毒师传承", "曹青只是化名。他的真名、所盗禁书和好感门槛同时浮现，但知道秘密不等于现在有能力利用。")}
+    <div class="quest-grid shen-clue-grid">
+      ${CAO_ENCOUNTERS.map((encounter) => `<article class="quest-card"><span>${escapeHtml(encounter.rank)}</span><h2>${escapeHtml(encounter.name)}</h2><p>${escapeHtml(encounter.condition)}</p><small>${escapeHtml(encounter.result)}</small></article>`).join("")}
+    </div>
+    <div class="notice-block"><strong>眼下最可行的路</strong><br />药王谷远在北地，泄密会先招来曹青追杀。你只能先靠近“毒师传承”的二十点好感门槛。</div>
+    <div class="action-list">${actionCard({ action: "face-blood-demand", title: "吃下两个馒头，等曹青开炉", description: "曹青把一把带红锈的菜刀丢到你脚边：取一碗血来。", source: "丹房死局", meta: "必须选择", kind: "danger" })}</div>
+  `);
+}
+
+function renderBloodDemand() {
+  return gameShell(`
+    ${sceneHeader("丹炉之前", "曹青要用你的血炼这一炉愈灵丹", "其他药童同时松了口气。反抗、拒绝或服从，逆天改命已经标出各自结果。")}
+    <div class="action-list">
+      ${Object.values(BLOOD_CHOICES).map((choice) => {
+        const result = resolveBloodChoice(choice.id, state.lives);
+        const deadly = choice.outcome === "death";
+        return actionCard({ action: "blood-choice", value: choice.id, title: choice.title, description: choice.description, source: deadly ? "杀机" : "忍耐", meta: result.available ? choice.forecast : "仅余一盏命灯 · 不可重试", kind: deadly ? "danger" : "special", disabled: !result.available });
+      }).join("")}
+    </div>
+  `);
+}
+
+function renderDanObservation() {
+  const insightReady = state.attributes.insight >= 3;
+  return gameShell(`
+    ${sceneHeader("沈家丹房 · 申时", "血已经倒进丹炉，你仍有一次让曹青记住你的机会", "手臂敷了止血药，身体虚弱。其他药童已经离开，曹青却没有阻止任何人旁观。")}
+    <div class="shen-investigation-meter"><span>当前悟性</span><strong>${state.attributes.insight}</strong><p>鱼跃龙门诀的“潜流于渊”会让与水相关的炼丹判定再加二。</p></div>
+    ${!insightReady ? `<div class="action-list">${actionCard({ action: "reallocate-insight", title: "把玉佩三点全部转到悟性", description: "暂时放弃力道和身法，把唯一能调动的力量用于记住火候、药序与水量。", source: "逆天改命", meta: "悟性变为三", kind: "special" })}</div>` : ""}
+    <div class="action-list">
+      ${actionCard({ action: "observation-choice", value: "rest", title: OBSERVATION_CHOICES.rest.title, description: "保住眼前体力，但曹青此后只把你当成普通取血药童。", source: "安全", meta: "奇遇：不堪大用" })}
+      ${actionCard({ action: "observation-choice", value: "watch", title: OBSERVATION_CHOICES.watch.title, description: "即使无力站稳，也盯住每一次加水、投药与换火。", source: "求生", meta: insightReady ? "有效悟性五 · 进入丹师考验" : "需要先把悟性提高到三", kind: "special", disabled: !insightReady })}
+    </div>
+  `);
+}
+
+function renderCaoExamFire() {
+  return gameShell(`
+    ${sceneHeader("丹炉熄火", CAO_QUESTIONS.fire.prompt, "曹青早已不看丹炉，只在观察你是否真的记住了他的动作。")}
+    <div class="action-list">
+      ${actionCard({ action: "cao-answer", value: "fire:forget", title: "承认没有记住", description: "曹青不会杀你，但也不会再给你第二次机会。", source: "退路", meta: "不堪大用" })}
+      ${actionCard({ action: "cao-answer", value: "fire:stew", title: "文火慢炖，再以大火收汁", description: "把烹饪猜法当成炼丹答案。", source: "错误", meta: state.lives > 1 ? "会被一掌打死" : "仅余一盏命灯", kind: "danger", disabled: state.lives <= 1 })}
+      ${actionCard({ action: "cao-answer", value: "fire:strong_slow_strong", title: "先大火，转文火，最后再以大火收丹", description: "完整复述刚才三次火候变化。", source: "悟性判定", meta: "曹青好感 +5", kind: "special" })}
+    </div>
+  `);
+}
+
+function renderCaoExamIngredients() {
+  return gameShell(`
+    ${sceneHeader("丹师考验 · 第二问", CAO_QUESTIONS.ingredients.prompt, "第一问让曹青第一次正眼看你；现在要证明那不是一次走运。")}
+    <div class="action-list">
+      ${actionCard({ action: "cao-answer", value: "ingredients:guess", title: "只说记住了朱砂与银汞", description: "遗漏水量、草药次序和百息间隔。", source: "错误", meta: state.lives > 1 ? "曹青认定你在糊弄" : "仅余一盏命灯", kind: "danger", disabled: state.lives <= 1 })}
+      ${actionCard({ action: "cao-answer", value: "ingredients:recite_order", title: "从半炉水开始，逐项复述投药与加水", description: "不懂药性便直说不懂，只把亲眼所见一项不漏地说出。", source: "记忆", meta: "曹青好感 +7", kind: "special" })}
+    </div>
+  `);
+}
+
+function renderCaoExamMotive() {
+  return gameShell(`
+    ${sceneHeader("丹师考验 · 最后一问", CAO_QUESTIONS.motive.prompt, "这不是收徒邀请，而是曹青用来排查沈家或北地探子的陷阱。")}
+    <div class="action-list">
+      ${actionCard({ action: "cao-answer", value: "motive:learn", title: "跪求他传授岐黄之术", description: "表现得过于急切，会让曹青认定你是来试探他的暗子。", source: "图谋不轨", meta: state.lives > 1 ? "银针穿眉 · 死亡" : "仅余一盏命灯", kind: "danger", disabled: state.lives <= 1 })}
+      ${actionCard({ action: "cao-answer", value: "motive:survive", title: "我只是想活命，没有别的奢求", description: "承认自己的弱小与处境，不索取、不装忠诚。", source: "同病相怜", meta: "曹青好感 +8", kind: "special" })}
+    </div>
+  `);
+}
+
+function renderShenDeath() {
+  return gameShell(`
+    ${sceneHeader("沈家丹房", "你把曹青当成了可以正面违逆的人", state.shenDeathReason || "灰袍只动了一瞬，你便失去了知觉。")}
+    <div class="death-cause"><span>死因</span><strong>${escapeHtml(state.shenDeathReason || "实力差距")}</strong></div>
+    <div class="death-verdict"><span>剩余命灯</span><strong>${state.lives}</strong><p>回照只能让你改选，不能让一个未入门少年挡下曹青。</p></div>
+    <div class="button-row"><button class="primary-button" data-action="return-shen-death">回到刚才的选择前</button></div>
+  `);
+}
+
+function renderQingQingReward() {
+  return gameShell(`
+    ${sceneHeader("酉时三刻 · 炼药房", "虎口求生", "曹青相信你只是想活下去，也认可你确实记住了整炉丹。他丢来一本自己早年写下的入门医书。")}
+    <div class="encounter-ledger"><div><span>随机奇遇</span><strong>虎口求生</strong><p>潜能 +180 · 曹青好感 20</p></div><div><span>所得</span><strong>${QINGQING_BOOK.name}</strong><p>炼丹进度 61% · 需要悟性三方可研习</p></div></div>
+    <div class="notice-block"><strong>曹青的规矩</strong><br />每天炼丹都可以来旁观、搭手。若是不堪大用，仍要继续献血。</div>
+    <div class="action-list">${actionCard({ action: "study-qingqing", title: "用潜能研习《青青册》", description: "把书中的草药辨认、舌苔脉象与基础医术变成真正掌握的知识。", source: "一夜苦读", meta: `潜能 -${QINGQING_BOOK.studyCost} · 医术入门`, kind: "special" })}</div>
+  `);
+}
+
+function renderQingQingStudy() {
+  return gameShell(`
+    ${sceneHeader("次日寅时", "曹青在院中摆出形似虎熊的古怪架势", "他察觉你从门缝偷看，没有赶人，只冷声问起昨夜那本书。")}
+    <div class="encounter-ledger"><div><span>${QINGQING_BOOK.name}</span><strong>一级 · 初学乍练</strong><p>医术入门，采集已有基础</p></div><div><span>曹青好感</span><strong>${state.caoFavor}</strong><p>二十点只够得到粗浅医药传授</p></div></div>
+    <div class="action-list">${actionCard({ action: "take-qingqing-test", title: "接受草药、舌苔与脉象考校", description: "答出书中基础问题；超出范围的针灸穴位则坦言尚未学到。", source: "医术判定", meta: "曹青好感 +10", kind: "special" })}</div>
+  `);
+}
+
+function renderFiveAnimalReward() {
+  return gameShell(`
+    ${sceneHeader("沈家后院", "曹青把一册《五禽戏》丢到你手里", "他警告你身体孱弱，昨夜失血后仍不休息，再这样下去活不过一年。随后传下一门没有杀伤力的健体术。")}
+    <div class="mind-art-card"><span>基础健体功</span><h2>${FIVE_ANIMAL_PLAY.name}</h2><p>${FIVE_ANIMAL_PLAY.description}</p><ul><li>虎势：练筋骨整劲</li><li>熊势：稳下盘气血</li><li>其余三势仍需继续研习</li></ul></div>
+    <div class="notice-block"><strong>尚未突破</strong><br />得到功法不等于已经炼成。你仍是未入门，只是终于有了一条可以自己走的炼体之路。</div>
+    <div class="action-list">${actionCard({ action: "finish-shen-original", title: "收好两册书，留在丹房活下去", description: "下一步是把《五禽戏》练入门，并在一个月内查清血书背后的万鲤堂。", source: "沈家立足", meta: "曹青好感 30", kind: "special" })}</div>
+  `);
+}
+
+function renderShenChapterEnding() {
+  const success = state.shenOutcome === "tiger_escape";
+  return gameShell(`
+    ${sceneHeader("沈家丹房", success ? "你没有破掉死局，只是让曹青暂时舍不得杀你" : "你活下来了，却仍只是一个取血药童", success ? "真正的原著破局，是把自己从一次性血料变成曹青眼中的可造之材。" : "回去休息保住了今天的体力，也永久错过了曹青这一次考验。")}
+    <div class="wudao-ending-grid shen-ending-grid">
+      <div><span>沈家身份</span><strong>${success ? "丹房药童" : "取血药童"}</strong><p>${success ? "可旁观炼丹并询问医术" : "每日仍可能被取血"}</p></div>
+      <div><span>曹青好感</span><strong>${state.caoFavor}</strong><p>${success ? "下一门槛：四十" : "不堪大用"}</p></div>
+      <div><span>生活能力</span><strong>${success ? "医术一级" : "未入门"}</strong><p>炼丹进度 ${state.alchemyProgress}%</p></div>
+      <div><span>武学</span><strong>${state.fiveAnimalBook ? FIVE_ANIMAL_PLAY.name : "无"}</strong><p>${state.fiveAnimalBook ? "已得秘籍 · 尚未练成" : "没有得到传授"}</p></div>
+    </div>
+    <div class="next-hooks shen-next-hooks">
+      <div><span>毒师传承</span><strong>好感四十</strong><p>继续学医炼丹，换取曹青更多心得。</p></div>
+      <div><span>身世试炼</span><strong>一个月后</strong><p>血书所指的金龙会万鲤堂仍会找来。</p></div>
+      <div><span>炼体之路</span><strong>${FIVE_ANIMAL_PLAY.name}</strong><p>练成之后，才算真正踏入武道第一境。</p></div>
+    </div>
     <div class="button-row"><button class="secondary-button" data-action="restart">另起一世</button></div>
   `);
 }
@@ -760,20 +956,24 @@ const renderers = {
   roadResult: renderRoadResult,
   ending: renderEnding,
   shenArrival: renderShenArrival,
-  shenGate: renderShenGate,
-  shenBriefing: renderShenBriefing,
-  shenInvestigation: renderShenInvestigation,
+  shenJobs: renderShenJobs,
+  caoArrival: renderCaoArrival,
+  caoFate: renderCaoFate,
+  bloodDemand: renderBloodDemand,
+  danObservation: renderDanObservation,
+  caoExamFire: renderCaoExamFire,
+  caoExamIngredients: renderCaoExamIngredients,
+  caoExamMotive: renderCaoExamMotive,
+  qingQingReward: renderQingQingReward,
+  qingQingStudy: renderQingQingStudy,
+  fiveAnimalReward: renderFiveAnimalReward,
   shenDeath: renderShenDeath,
-  shenReturn: renderShenReturn,
-  shenResolution: renderShenResolution,
-  shenReward: renderShenReward,
-  shenAftermath: renderShenAftermath,
   shenChapterEnding: renderShenChapterEnding,
 };
 
 function screenMode() {
   if (["gameDeath", "shenDeath"].includes(state.screen)) return "death";
-  if (["encounterReward", "mindArt", "roadResult", "ending", "quietDeparture", "shenResolution", "shenReward", "shenAftermath", "shenChapterEnding"].includes(state.screen)) return "settlement";
+  if (["encounterReward", "mindArt", "roadResult", "ending", "quietDeparture", "qingQingReward", "fiveAnimalReward", "shenChapterEnding"].includes(state.screen)) return "settlement";
   if (["landing", "worldIntro", "characterDraft", "vow", "destiny", "characterSheet"].includes(state.screen)) return "neutral";
   return "simulation";
 }
@@ -790,6 +990,16 @@ function handleDeath(choice) {
   state.lastDeathChoice = choice?.forecast || "正面激怒远强于自己的武者";
   track("death", { choice: choice?.id, lives: state.lives });
   moveTo("gameDeath");
+}
+
+function handleShenDeath(reason, node) {
+  if (state.lives <= 1) return;
+  state.lives -= 1;
+  state.shenDeathReason = reason;
+  state.shenDeathNode = node;
+  state.lastDeathChoice = reason;
+  track("shen_death", { node, lives: state.lives });
+  moveTo("shenDeath");
 }
 
 const handlers = {
@@ -907,6 +1117,7 @@ const handlers = {
     track("next_route", { route: value });
     refresh();
   },
+  /* Removed pre-source-verification handlers. The original-event flow below is authoritative.
   "start-shen-chapter": () => {
     if (state.screen !== "ending" || state.nextRoute !== "shen" || !state.completedTempleTasks.includes("shen_promise")) return;
     state.shenChapterStarted = true;
@@ -1001,6 +1212,133 @@ const handlers = {
     }
     state.shenChapterComplete = true;
     track("shen_reward_used", { reward: state.shenReward });
+    moveTo("shenChapterEnding");
+  },
+  */
+  "start-shen-chapter": () => {
+    if (state.screen !== "ending" || state.nextRoute !== "shen" || !state.completedTempleTasks.includes("shen_promise") || state.roadTrial !== "dive") return;
+    state.shenChapterStarted = true;
+    state.shenOriginalVersion = 1;
+    track("shen_original_started");
+    moveTo("shenArrival");
+  },
+  "present-shen-token": () => {
+    if (state.screen !== "shenArrival") return;
+    moveTo("shenJobs");
+  },
+  "accept-danroom-job": () => {
+    if (state.screen !== "shenJobs") return;
+    state.shenJob = "danroom";
+    moveTo("caoArrival");
+  },
+  "inspect-cao-fate": () => {
+    if (state.screen !== "caoArrival") return;
+    state.caoIdentitySeen = true;
+    moveTo("caoFate");
+  },
+  "face-blood-demand": () => {
+    if (state.screen !== "caoFate") return;
+    moveTo("bloodDemand");
+  },
+  "blood-choice": (value) => {
+    if (state.screen !== "bloodDemand" || state.bloodChoice) return;
+    const choice = resolveBloodChoice(value, state.lives);
+    if (!choice?.available) return;
+    if (choice.outcome === "death") {
+      return handleShenDeath(choice.forecast, "bloodDemand");
+    }
+    state.bloodChoice = value;
+    state.bloodLoss = 1;
+    state.attributes = { ...state.attributes, constitution: state.attributes.constitution - 1 };
+    track("cao_blood_choice", { choice: value });
+    moveTo("danObservation");
+  },
+  "reallocate-insight": () => {
+    if (state.screen !== "danObservation") return;
+    state.allocationId = "insight";
+    state.attributes = allocateJadeBonus("insight");
+    state.attributes.constitution -= state.bloodLoss;
+    refresh();
+  },
+  "observation-choice": (value) => {
+    if (state.screen !== "danObservation" || state.observationChoice) return;
+    const result = resolveObservationChoice(value, state.attributes, state.mindArt === MIND_ART.id);
+    if (!result || (value === "watch" && result.effectiveInsight < 3)) return;
+    state.observationChoice = value;
+    state.effectiveInsight = result.effectiveInsight;
+    track("cao_observation", { choice: value, insight: result.effectiveInsight });
+    if (result.outcome === "neglected") {
+      state.shenOutcome = "neglected";
+      state.shenChapterComplete = true;
+      return moveTo("shenChapterEnding");
+    }
+    moveTo("caoExamFire");
+  },
+  "cao-answer": (value) => {
+    const [questionId, answerId] = value.split(":");
+    const screens = { fire: "caoExamFire", ingredients: "caoExamIngredients", motive: "caoExamMotive" };
+    if (state.screen !== screens[questionId] || state.caoAnswers.includes(questionId)) return;
+    const result = resolveCaoAnswer(questionId, answerId, state.effectiveInsight);
+    if (!result?.available) return;
+    if (result.outcome === "death") {
+      const reasons = {
+        fire: "你胡乱回答火候，曹青认定你在戏弄他，一掌震断心脉。",
+        ingredients: "你遗漏大半药序却强作肯定，曹青不再容你开口。",
+        motive: "你急于拜师，曹青认定你是沈家或北地派来的探子，银针穿眉。",
+      };
+      return handleShenDeath(reasons[questionId], screens[questionId]);
+    }
+    if (result.outcome === "neglected") {
+      state.shenOutcome = "neglected";
+      state.shenChapterComplete = true;
+      return moveTo("shenChapterEnding");
+    }
+    state.caoAnswers.push(questionId);
+    if (questionId === "fire") {
+      state.caoFavor += 5;
+      return moveTo("caoExamIngredients");
+    }
+    if (questionId === "ingredients") {
+      state.caoFavor += 7;
+      return moveTo("caoExamMotive");
+    }
+    state.caoFavor += 8;
+    state.potential += 180;
+    state.alchemyProgress = 61;
+    state.shenOutcome = "tiger_escape";
+    if (!state.inventory.includes(QINGQING_BOOK.id)) state.inventory.push(QINGQING_BOOK.id);
+    track("cao_tiger_escape", { favor: state.caoFavor });
+    moveTo("qingQingReward");
+  },
+  "return-shen-death": () => {
+    if (state.screen !== "shenDeath" || !state.shenDeathNode || state.lives <= 0) return;
+    const node = state.shenDeathNode;
+    state.shenDeathNode = null;
+    state.shenDeathReason = null;
+    moveTo(node);
+  },
+  "study-qingqing": () => {
+    if (state.screen !== "qingQingReward" || state.qingQingStudied) return;
+    const status = canStudyQingQing(state.attributes.insight, state.potential);
+    if (!status.available) return;
+    state.potential -= QINGQING_BOOK.studyCost;
+    state.qingQingStudied = true;
+    state.medicalLevel = 1;
+    state.gatheringProgress = 66;
+    track("qingqing_studied");
+    moveTo("qingQingStudy");
+  },
+  "take-qingqing-test": () => {
+    if (state.screen !== "qingQingStudy" || !state.qingQingStudied || state.fiveAnimalBook) return;
+    state.caoFavor += 10;
+    state.fiveAnimalBook = true;
+    if (!state.skills.includes(FIVE_ANIMAL_PLAY.id)) state.skills.push(FIVE_ANIMAL_PLAY.id);
+    track("five_animal_received", { favor: state.caoFavor });
+    moveTo("fiveAnimalReward");
+  },
+  "finish-shen-original": () => {
+    if (state.screen !== "fiveAnimalReward" || !state.fiveAnimalBook) return;
+    state.shenChapterComplete = true;
     moveTo("shenChapterEnding");
   },
   restart: () => {

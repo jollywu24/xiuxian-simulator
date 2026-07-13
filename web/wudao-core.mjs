@@ -209,121 +209,148 @@ export const MIND_ART = {
 export const ROAD_TRIALS = {
   dive: {
     id: "dive",
-    title: "潜入黑水涧底",
+    title: "顺紫金河游往沈家",
     condition: "已习得鱼跃龙门诀",
-    result: "内息沿着江鲤行波图自行流转。你在冰冷涧水下找到一段沉没石阶，捞起刻有沈氏丹纹的铜匣残片。",
-    reward: "潜能一百 · 沈家丹房线索",
-    potential: 100,
+    result: "你从钟山脚下入水，借鱼跃龙门诀顺流而下。水中身法远胜陆路，体力将尽时，沈家大宅终于出现在东湖岸边。",
+    reward: "缩短路程 · 在饥饿前抵达沈家",
+    potential: 0,
   },
   detour: {
     id: "detour",
-    title: "沿山道绕行",
+    title: "沿官道步行",
     condition: "无",
-    result: "你避开深水，花了半日翻过山脊。路更安全，却错过了涧底沉没多年的东西。",
-    reward: "平安抵达金陵外道",
+    result: "你的脚力太弱，剩余干粮不足以支撑漫长官道。你只能在路边休息，暂时错过沈家开门的时辰。",
+    reward: "安全 · 暂时无法进入沈家路线",
     potential: 0,
   },
 };
 
-export const SHEN_CLUES = [
+export const SHEN_JOBS = [
   {
-    id: "ledger",
-    name: "药材簿上的新墨",
-    location: "东墙账台",
-    description: "今日入炉的宁神草被人改成了同色同形的伏脉藤，改字处没有丹师押印。",
-    unlock: "可援引沈家双押规矩，要求封炉复验",
+    id: "guard",
+    name: "外院护卫",
+    requirements: { strength: 5, agility: 4 },
+    requiresSkill: true,
+    pay: "每月二两 · 可学沈家基础武功",
   },
   {
-    id: "waterway",
-    name: "冷水槽里的逆流",
-    location: "丹炉背面",
-    description: "冷却水没有流向院外，而是被新铜管引入回风槽；药烟会先灌满值守小室。",
-    unlock: "鱼跃龙门诀可从水道潜入，改回风向",
+    id: "laborer",
+    name: "挑水劈柴杂役",
+    requirements: { strength: 4, constitution: 3 },
+    pay: "每月五钱 · 一日三餐",
   },
   {
-    id: "door_lock",
-    name: "门闩上的旧灰",
-    location: "西侧小门",
-    description: "门闩只能从外面落下，旧灰里有三道相同擦痕；这不是一次意外，而是重复过的手法。",
-    unlock: "确认死局需要有人在开炉后从外面封门",
+    id: "runner",
+    name: "跑腿小厮",
+    requirements: { agility: 3 },
+    pay: "每月三钱 · 一日两餐",
+  },
+  {
+    id: "clerk",
+    name: "账房学徒",
+    requirements: { insight: 4 },
+    requiresArithmetic: true,
+    pay: "每月八钱 · 包吃住",
   },
 ];
 
-export const SHEN_SOLUTIONS = {
-  ignite: {
-    id: "ignite",
-    title: "照令点燃青炉",
-    description: "不改变任何安排，亲自确认命格没有显示出来的最后一环。",
+export const CAO_ENCOUNTERS = [
+  {
+    id: "traitor",
+    rank: "地级",
+    name: "药王叛徒",
+    condition: "将曹青真实身份庞不凡的踪迹送往药王谷",
+    result: "可换取药王谷重赏，但消息泄露后，曹青与你不死不休。",
+  },
+  {
+    id: "blood_scripture",
+    rank: "地级",
+    name: "血灵丹经",
+    condition: "帮助曹青炼成血丹",
+    result: "提高曹青好感，并有机会接触以人血入药的血灵丹术。",
+  },
+  {
+    id: "poison_legacy",
+    rank: "阶段奇遇",
+    name: "毒师传承",
+    condition: "曹青好感达到二十、四十、六十与八十",
+    result: "依次获得医药辨认、炼丹医术、武功毒术与共同钻研丹经的机会。",
+  },
+];
+
+export const BLOOD_CHOICES = {
+  fight: {
+    id: "fight",
+    title: "抄起菜刀反抗",
+    description: "趁曹青靠近时刺向他。",
     outcome: "death",
-    potential: 0,
-    relation: null,
-    forecast: "伏脉烟封住经脉，门闩从外落下，丹火随后吞没小室。",
+    forecast: "未入后天境，无法伤到曹青，反被一掌毙命。",
   },
-  procedure: {
-    id: "procedure",
-    title: "按沈家规矩封炉复验",
-    description: "拿药材簿缺失的押印作证，要求两名丹师共同验药。",
-    outcome: "safe",
-    requirements: ["ledger"],
-    potential: 200,
-    relation: "可信差事人",
-    result: "沈砚秋依家规封炉。伏脉藤被当众验出，外门执役带走了换药的药童，但幕后递药之人抢先断了线。",
-    reward: "潜能二百 · 沈家信任 · 伏脉藤样本",
+  comply: {
+    id: "comply",
+    title: "割腕取一碗血",
+    description: "忍下这一刀，先保住性命，再找曹青愿意留下你的理由。",
+    outcome: "observe",
+    forecast: "体力永久受损 · 获得旁观炼丹的机会",
   },
-  waterway: {
-    id: "waterway",
-    title: "潜入冷水暗渠改风",
-    description: "借鱼跃龙门诀潜过狭窄水道，把毒烟导向无人灰池，再守住出口。",
-    outcome: "counter",
-    requirements: ["waterway"],
-    requiresMindArt: true,
-    potential: 300,
-    relation: "丹房救火人",
-    result: "午时毒烟尽数涌进灰池。前来堵死水口的换药人被你从水下拖住，丹房和两名药徒都保了下来。",
-    reward: "潜能三百 · 丹房水道图 · 换药人口供",
-  },
-  bait: {
-    id: "bait",
-    title: "假装中毒，引换药人补刀",
-    description: "按死前记忆伪造毒发，藏住呼吸，等对方进门回收毒证。",
-    outcome: "takeover",
-    requiresDeathMemory: true,
-    requiresMindArt: true,
-    potential: 450,
-    relation: "沈家救命恩人",
-    result: "你让青炉照常冒烟，倒在门后。换药人木七果然折返搜走药包，被你借水息从死角制住；他供出丹房内还有一名接应者。",
-    reward: "潜能四百五十 · 木七口供 · 内应名单残角",
+  refuse: {
+    id: "refuse",
+    title: "拒绝献血",
+    description: "没有武功、身份或援手，却当面违逆曹青。",
+    outcome: "death",
+    forecast: "曹青不会留下失去用途的药童。",
   },
 };
 
-export const SHEN_REWARDS = {
-  five_animals: {
-    id: "five_animals",
-    name: "《五禽桩》",
-    type: "基础锻体法",
-    description: "以虎、鹿、熊、猿、鸟五势熬炼筋骨，立刻踏入锻体第一重。",
-    cost: 300,
-    stage: "body",
-    effect: "潜能 -300 · 境界提升至锻体一重",
+export const OBSERVATION_CHOICES = {
+  rest: {
+    id: "rest",
+    title: "回偏房休息",
+    outcome: "neglected",
+    result: "曹青不再关注你，只把你当作每日取血的普通药童。",
   },
-  marrow_powder: {
-    id: "marrow_powder",
-    name: "洗髓散",
-    type: "沈家秘药",
-    description: "不急于突破，以药力补足逆天改命留下的先天亏空。",
-    cost: 0,
-    attribute: "constitution",
-    effect: "根骨永久 +1",
+  watch: {
+    id: "watch",
+    title: "忍住虚弱继续观看",
+    outcome: "exam",
+    result: "你把投药顺序、火候变化和用水比例牢牢记下。",
   },
-  herb_token: {
-    id: "herb_token",
-    name: "青木药牌",
-    type: "沈家门路",
-    description: "保留自由身，却能查阅外院药簿并接取沈家药材差事。",
-    cost: 0,
-    potential: 100,
-    effect: "潜能 +100 · 沈家药库入口",
+};
+
+export const CAO_QUESTIONS = {
+  fire: {
+    id: "fire",
+    prompt: "这一炉丹，火候如何变化？",
+    correct: "strong_slow_strong",
+    requiredInsight: 3,
   },
+  ingredients: {
+    id: "ingredients",
+    prompt: "药材与水的先后比例如何？",
+    correct: "recite_order",
+    requiredInsight: 3,
+  },
+  motive: {
+    id: "motive",
+    prompt: "你是真心想学岐黄之术？",
+    correct: "survive",
+  },
+};
+
+export const QINGQING_BOOK = {
+  id: "qingqing_book",
+  name: "《青青册》",
+  type: "医术与采集入门书",
+  requirement: 3,
+  studyCost: 85,
+  effect: "医术入门 · 采集入门 · 曹青好感可继续提升",
+};
+
+export const FIVE_ANIMAL_PLAY = {
+  id: "five_animal_play",
+  name: "《五禽戏》",
+  type: "基础健体功",
+  description: "曹青传下的强身之术，形似虎、鹿、熊、猿、鸟；没有杀伤力，需要继续修炼才能踏入炼体。",
 };
 
 export function getBackground(id) {
@@ -338,6 +365,8 @@ export function allocateJadeBonus(focus = "strength") {
   const values = Object.fromEntries(ATTRIBUTES.map((attribute) => [attribute.id, 0]));
   if (focus === "strength") {
     values.strength = 3;
+  } else if (focus === "insight") {
+    values.insight = 3;
   } else if (focus === "balanced") {
     values.constitution = 1;
     values.agility = 1;
@@ -388,24 +417,46 @@ export function resolveRoadTrial(choiceId, hasMindArt = false) {
   return { ...choice };
 }
 
-export function getShenClue(id) {
-  const clue = SHEN_CLUES.find((item) => item.id === id);
-  return clue ? { ...clue } : null;
+export function resolveShenJob(id, attributes = {}, capabilities = {}) {
+  const job = SHEN_JOBS.find((item) => item.id === id);
+  if (!job) return null;
+  const missing = Object.entries(job.requirements).filter(([attribute, required]) => Number(attributes[attribute] || 0) < required).map(([attribute]) => attribute);
+  if (job.requiresSkill && !capabilities.hasBasicSkill) missing.push("basic_skill");
+  if (job.requiresArithmetic && !capabilities.hasArithmetic) missing.push("arithmetic");
+  return { ...job, missing, available: missing.length === 0 };
 }
 
-export function resolveShenSolution(choiceId, context = {}) {
-  const solution = SHEN_SOLUTIONS[choiceId];
-  if (!solution) return null;
-  const clues = new Set(context.clues || []);
-  const missing = (solution.requirements || []).filter((requirement) => !clues.has(requirement));
-  if (solution.requiresMindArt && !context.hasMindArt) missing.push("mind_art");
-  if (solution.requiresDeathMemory && !context.deathMemory) missing.push("death_memory");
-  if (choiceId === "ignite" && Number(context.lives || 0) <= 1) missing.push("last_lamp");
-  return { ...solution, missing, available: missing.length === 0 };
+export function getCaoEncounter(id) {
+  const encounter = CAO_ENCOUNTERS.find((item) => item.id === id);
+  return encounter ? { ...encounter } : null;
 }
 
-export function getShenReward(id, potential = 0) {
-  const reward = SHEN_REWARDS[id];
-  if (!reward) return null;
-  return { ...reward, available: potential >= reward.cost, missingPotential: Math.max(0, reward.cost - potential) };
+export function resolveBloodChoice(id, lives = LIFE_RULE.lives) {
+  const choice = BLOOD_CHOICES[id];
+  if (!choice) return null;
+  const available = choice.outcome !== "death" || lives > 1;
+  return { ...choice, available };
+}
+
+export function resolveObservationChoice(id, attributes = {}, hasMindArt = false) {
+  const choice = OBSERVATION_CHOICES[id];
+  if (!choice) return null;
+  const effectiveInsight = Number(attributes.insight || 0) + (hasMindArt ? 2 : 0);
+  return { ...choice, effectiveInsight };
+}
+
+export function resolveCaoAnswer(questionId, answerId, effectiveInsight = 0) {
+  const question = CAO_QUESTIONS[questionId];
+  if (!question) return null;
+  const correct = answerId === question.correct;
+  const meetsInsight = Number(effectiveInsight) >= Number(question.requiredInsight || 0);
+  const available = correct ? meetsInsight : true;
+  const outcome = !correct ? (answerId === "forget" ? "neglected" : "death") : available ? "continue" : "locked";
+  return { questionId, answerId, correct, available, outcome };
+}
+
+export function canStudyQingQing(insight = 0, potential = 0) {
+  const missingInsight = Math.max(0, QINGQING_BOOK.requirement - Number(insight || 0));
+  const missingPotential = Math.max(0, QINGQING_BOOK.studyCost - Number(potential || 0));
+  return { available: missingInsight === 0 && missingPotential === 0, missingInsight, missingPotential };
 }
