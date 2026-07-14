@@ -55,7 +55,7 @@ attributes: {
 - 有效值由身体状态、武学、环境和伤势修正后计算；
 - 任何系统不得直接缓存有效值到存档。
 
-战斗中不得把五维合成单一“战斗力”。每个行动只允许一个主属性、一个辅属性；力道、根骨、身法、悟性和福缘的具体战斗职责、四道对抗门及临战重分规则见 [SYS-03 战斗、伤势与死亡系统](03_COMBAT_INJURY_DEATH.md)。
+战斗中不得把五维合成单一“战斗力”。每个行动只读取一项对应属性；属性、功法熟练、境界差、优势／劣势和伤势共同进入唯一行动值。具体规则见 [SYS-03 简明战斗、伤势与死亡系统](03_COMBAT_INJURY_DEATH.md)。
 
 ## 5. 武学数据模型
 
@@ -71,10 +71,12 @@ attributes: {
   mastery: { level: 1, progress: 0 },
   moves: ["seal_acupoint", "stop_bleeding", "pierce_vital"],
   combatRules: {
+    attribute: "insight",
+    range: "middle",
     masteryModifier: 0,
-    approaches: ["precise_needle", "quick_needle"],
-    superiorResults: ["disarm", "keep_momentum"],
-    realmBreakConditions: ["confirmed_acupoint_opening"]
+    commonMove: "seal_wrist",
+    specialMove: "subdue_acupoint",
+    passive: "observe_meridian_advantage"
   },
   passives: [],
   conflicts: []
@@ -88,9 +90,9 @@ attributes: {
 - 入门：至少能使用一式；
 - 熟练：可以改变行动深度；
 - 精通：解锁被动或组合；
-- 突破：品阶或规则发生变化。
+- 突破：品阶或规则发生变化，第一版不作为额外战斗熟练档位。
 
-战斗掌握修正统一为入门 `0`、熟练 `+1`、精通 `+2`、突破 `+3`，但每次提升还必须增加一项新做法、优势结果、克制、负荷变化、非杀戮结束方式或限定破阶条件。禁止只修改数值而不改变可玩规则。
+战斗掌握修正统一为入门 `0`、熟练 `+1`、精通 `+2`。每门功法在战斗中最多提供一个常用动作、一个条件特殊动作和一个被动特点；第一版不增加大成、化境等额外档位。
 
 ## 6. 武学类别
 
