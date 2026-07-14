@@ -63,5 +63,6 @@ npm test
 - `tests/wudao.test.mjs`：当前路线核心规则测试；
 - `scripts/cdp-smoke.mjs`：完整浏览器流程；
 - `docs/GAME_DESIGN.md`：世界结构、系统边界与后续内容设计。
+- `docs/STORY_BIBLE.md`：完整剧情时间轴、人物弧光、分支后果与后续连续性参考。
 
 `web/app.mjs`、`web/game-core.mjs` 与 `tests/core.test.mjs` 保留上一版规则作为迁移参考，不再由网页入口加载。
