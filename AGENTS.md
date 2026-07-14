@@ -102,6 +102,8 @@
 | `scripts/cdp-smoke.mjs` | 桌面和手机完整浏览器流程 |
 | `docs/GAME_DESIGN.md` | 世界结构、系统边界与后续内容 |
 | `docs/STORY_BIBLE.md` | 完整剧情线、人物弧光、分支后果与连续性 |
+| `docs/SYSTEM_ROADMAP.md` | 完整游戏系统优先级、依赖与剧情里程碑 |
+| `docs/systems/` | 事件、成长、战斗、医毒、关系、世界、界面和内容生产规格 |
 
 `web/app.mjs`、`web/game-core.mjs`、`tests/core.test.mjs` 是旧版迁移参考，当前网页不加载。除非用户要求清理，不要顺手重构或删除。
 
