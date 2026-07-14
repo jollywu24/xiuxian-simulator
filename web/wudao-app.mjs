@@ -47,13 +47,38 @@ import {
   reallocateExistingAttributes,
   templeTaskCost,
 } from "./wudao-core.mjs";
+import {
+  P0_STAKES,
+  createFirstBattle,
+  createP0State,
+  getBodyBreakthroughBoard,
+  getDiagnosisBoard,
+  getP0Item,
+  getP0Skill,
+  grantSpringRainNeedles,
+  migrateP0State,
+  resolveApeLegacy,
+  resolveBodyBreakthrough,
+  resolveDiagnosisAction,
+  resolveFirstBattleAction,
+  resolveIngredientSource,
+  resolveMidAutumnTravel,
+  resolveMonkeyTest,
+  resolveMonkeyConflict,
+  resolveMonkeyWine,
+  resolvePurpleDragonAlchemy,
+  resolveStakeTraining,
+  resolveThirdLadyTreatment,
+  resolveWoundTreatment,
+  chooseStake,
+} from "./wudao-p0-core.mjs";
 
 const STORAGE_KEY = "wudao-high-martial-v1";
 const app = document.querySelector("#app");
 
 function createInitialState() {
   return {
-    version: 3,
+    version: 4,
     screen: "landing",
     name: "陈司命",
     backgroundId: "mystery",
@@ -128,6 +153,7 @@ function createInitialState() {
     shenDeathReason: null,
     shenOutcome: null,
     shenChapterComplete: false,
+    p0: createP0State(),
     events: [],
   };
 }
@@ -135,8 +161,9 @@ function createInitialState() {
 function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (!saved || ![2, 3].includes(saved.version) || !saved.screen) return null;
-    const migrated = { ...createInitialState(), ...saved, version: 3 };
+    if (!saved || ![2, 3, 4].includes(saved.version) || !saved.screen) return null;
+    const migrated = { ...createInitialState(), ...saved, version: 4, p0: migrateP0State(saved.p0) };
+    if (migrated.p0.started && saved.p0?.items?.return_spring_pill === undefined) migrated.p0.items.return_spring_pill = Number(saved.alchemyPills || 0);
     if (saved.version === 2 && saved.shenChapterComplete && saved.fiveAnimalBook) {
       migrated.screen = "fiveAnimalReward";
       migrated.shenChapterComplete = false;
@@ -190,6 +217,18 @@ function refresh() {
 
 function shenAttributePool() {
   return 3 + Number(state.shenAttributeGains || 0);
+}
+
+function p0ClockText() {
+  const clock = state.p0?.clock || createP0State().clock;
+  const segments = { dawn: "卯时", morning: "辰时", afternoon: "申时", evening: "酉时", night: "亥时" };
+  return `大曜${clock.year}年八月${clock.day}日 · ${segments[clock.segment] || "夜"}`;
+}
+
+function p0RelationLabel(id) {
+  const relation = state.p0?.relationships?.[id];
+  if (!relation) return "尚未相识";
+  return `情分 ${relation.favor} · 信任 ${relation.trust} · 人情债 ${relation.debt}`;
 }
 
 function reallocateShenAttributes(focus) {
@@ -268,6 +307,17 @@ function journalHtml() {
             : state.qingQingStudied ? "丹房求生" : state.bloodChoice ? "取血炼丹" : "无职可领";
     items.push([state.shenLocation === "pharmacy" ? "金陵 · 东门药铺" : "金陵 · 沈家丹房", shenDetail, state.shenChapterComplete ? "shifted" : "current"]);
   }
+  if (state.p0?.started) {
+    const p0Detail = state.p0.complete
+      ? "神猿遗迹已见"
+      : state.p0.legacyOutcome ? "水洞残势入眼"
+        : state.p0.monkeyOutcome ? "灵猴已经认路"
+          : state.p0.bodyProgress ? "锻体一重"
+            : state.p0.stakeId ? `${P0_STAKES[state.p0.stakeId]?.name || "桩功"}入门`
+              : state.p0.battleOutcome ? "长街夜战已决"
+                : state.p0.treatmentOutcome ? "三夫人病局已定" : "三夫人病危";
+    items.push([state.p0.location === "ruined_temple" ? "金陵东郊 · 破庙" : "金陵东门 · 医武之路", p0Detail, state.p0.complete ? "shifted" : "current"]);
+  }
   return `
     <div class="panel-title">江湖行录</div>
     <div class="timeline-list">
@@ -315,8 +365,17 @@ function characterPanelHtml() {
           ${state.inventory.includes(QINGQING_BOOK.id) ? `<div><strong>${QINGQING_BOOK.name}</strong><span>${state.qingQingStudied ? `已研习 · 医术 ${state.medicalLevel}级 ${state.medicalProgress}%` : "曹青所授 · 尚未研习"}</span></div>` : ""}
           ${state.fiveAnimalBook ? `<div><strong>${FIVE_ANIMAL_PLAY.name}</strong><span>${state.fiveAnimalLevel ? `${state.fiveAnimalLevel}级 ${state.fiveAnimalProgress}% · ${escapeHtml(getFiveAnimalAspect(state.fiveAnimalAspect)?.name || "已入门")}` : "基础健体功 · 尚未练成"}</span></div>` : ""}
           ${state.fishingRodMethod ? `<div><strong>《打鱼杆法》</strong><span>王五所授 · 抄水拍鱼、劈浪戳鱼</span></div>` : ""}
-          ${state.inventory.includes("return_spring_pills") ? `<div><strong>六枚下品回春丹</strong><span>亲手炼成 · 止血补气</span></div>` : ""}
+          ${state.inventory.includes("return_spring_pills") && !state.p0?.started ? `<div><strong>${Number(state.alchemyPills || 0)}枚下品回春丹</strong><span>亲手炼成 · 止血补气</span></div>` : ""}
           ${state.inventory.includes("hundred_pills_notes") ? `<div><strong>《百丹注解》</strong><span>曹青所授 · 再成三丹可换武功</span></div>` : ""}
+          ${Object.entries(state.p0?.items || {}).filter(([, quantity]) => Number(quantity) > 0).map(([id, quantity]) => {
+            const item = getP0Item(id);
+            return item ? `<div><strong>${escapeHtml(item.name)}${Number(quantity) > 1 ? ` ×${Number(quantity)}` : ""}</strong><span>${escapeHtml(item.description)}</span></div>` : "";
+          }).join("")}
+          ${Object.entries(state.p0?.skills || {}).map(([id, progress]) => {
+            const skill = getP0Skill(id);
+            return skill ? `<div><strong>${escapeHtml(skill.name)}</strong><span>${escapeHtml(progress.stage === "learned" ? "已经入门" : "只得残线")} · ${Number(progress.progress || 0)}%</span></div>` : "";
+          }).join("")}
+          ${(state.p0?.wounds || []).map((wound) => `<div><strong>${wound.bodyPart === "leg" ? "腿伤" : wound.bodyPart === "shoulder" ? "肩伤" : "肋下刀伤"}</strong><span>伤势 ${Number(wound.severity || 0)} · 尚未痊愈</span></div>`).join("")}
         </div>
       </div>
     </div>
@@ -389,6 +448,28 @@ function modeLabel() {
     alchemyFailure: "药材焦坏 · 次日重试",
     shenDeath: "命灯熄灭 · 曹青杀机",
     shenChapterEnding: "东门药铺 · 首炉丹成",
+    thirdLadySummons: "金陵东门 · 沈府夜召",
+    thirdLadyDiagnosis: "沈家内宅 · 帘后问脉",
+    purpleDragonFormula: "三夫人病局 · 换血之方",
+    purpleDragonAlchemy: "东门药铺 · 一炉换血丹",
+    thirdLadyTreatment: "沈家内宅 · 封穴换血",
+    needleInheritance: "白栀云 · 春风化雨针",
+    p0Death: "命灯熄灭 · 旧局回照",
+    firstNeedleAmbush: "金陵长街 · 雨夜刀光",
+    firstKillAftermath: "针下留命 · 去留一念",
+    apprenticeshipOffer: "东门药铺 · 曹青问徒",
+    stakeChoice: "医武同源 · 两门桩功",
+    stakeTraining: "东门后院 · 一夜站桩",
+    bodyBreakthrough: "未入门尽头 · 锻体第一关",
+    midAutumnWarning: "八月十四 · 月将圆",
+    midAutumnDeparture: "八月十四 · 重返破庙",
+    templeOfferingSource: "金陵东郊 · 贡品有主",
+    monkeyTest: "破庙檐上 · 灵猴试客",
+    monkeyConflict: "庙后林间 · 群猴围攻",
+    monkeyWineChoice: "百果酒香 · 一瓢一念",
+    apeWaterCave: "庙后水洞 · 神猿残势",
+    p0Missed: "机缘窗闭 · 此路已失",
+    p0JourneyEnd: "八月十五 · 月落东郊",
   };
   return labels[state.screen] || "大曜江湖";
 }
@@ -1254,6 +1335,291 @@ function renderShenChapterEnding() {
       <div><span>江湖大典</span><strong>三个月后 · 百舸争流</strong><p>炼骨才够当船夫；你已先得水路与杆法。</p></div>
       <div><span>血书来客</span><strong>万鲤堂 · 孙不离</strong><p>沈家密会只揭开了金龙会的第一层。</p></div>
     </div>
+    <div class="button-row">
+      ${success && !state.p0.started ? `<button class="primary-button" data-action="start-p0-journey">拆开沈府夜送的急帖</button>` : ""}
+      ${success && state.p0.started && !state.p0.complete ? `<button class="primary-button" data-action="continue-p0-journey">循着旧行录继续赶路</button>` : ""}
+      <button class="secondary-button" data-action="restart">另起一世</button>
+    </div>
+  `);
+}
+
+function renderThirdLadySummons() {
+  return gameShell(`
+    ${sceneHeader(p0ClockText(), "沈府的青篷马车停在药铺门前", "来人只递上一枚内宅腰牌：三夫人白栀云练功后昏厥，沈家请曹青立刻入府。曹青把药箱推给你，说今夜由你先看。")}
+    <div class="encounter-ledger">
+      <div><span>你能带去的本事</span><strong>医术二级 · 炼丹二级</strong><p>能查脉象，也能亲手开炉。</p></div>
+      <div><span>病势</span><strong>四刻</strong><p>每多查一处，帘后之人的气息便弱一分。</p></div>
+      <div><span>沈府旧账</span><strong>互不信任</strong><p>救人可换门路；误诊也会记在你名下。</p></div>
+    </div>
+    <div class="action-list">
+      ${actionCard({ action: "third-lady-summons", value: "accept", title: "背上药箱，随车入沈府", description: "亲自判断病因，再决定是否接下这条命。", source: "限时病局", meta: "开启帘后问脉", kind: "special" })}
+      ${actionCard({ action: "third-lady-summons", value: "decline", title: "留在药铺，不碰沈家内宅", description: "保住眼前安稳；三夫人的病和她手里的针法从此与你无关。", source: "避事", meta: "永久错过" })}
+    </div>
+  `);
+}
+
+function renderThirdLadyDiagnosis() {
+  const board = getDiagnosisBoard(state.p0);
+  const observations = board.observations.length ? board.observations : ["尚未得到可以落笔的见闻"];
+  const did = (id) => state.p0.diagnosisActions.includes(id);
+  return gameShell(`
+    ${sceneHeader("沈家内宅 · 暖阁", "青纱帘后，白栀云的呼吸时断时续", "她并无外伤，手指却每隔数息便反扣掌心。你只有几刻时间判断：这是急病，还是练功留下的暗伤。")}
+    <div class="skill-gate-board">
+      <div><span>病势余刻</span><strong>${board.dangerClock}</strong></div>
+      <div><span>当前判断</span><strong>${board.diagnosis === "deviation" ? "经脉逆行" : "尚无定论"}</strong></div>
+      <div><span>白栀云</span><strong>${escapeHtml(p0RelationLabel("bai_zhiyun"))}</strong></div>
+    </div>
+    <div class="encounter-ledger">${observations.map((text, index) => `<div><span>见闻 ${index + 1}</span><strong>${escapeHtml(text)}</strong><p>${index ? "可与先前迹象互相印证。" : "这是你亲眼所得，并非传闻。"}</p></div>`).join("")}</div>
+    <div class="action-list">
+      ${actionCard({ action: "diagnose-third-lady", value: "observe", title: "先看呼吸与指节", description: "不触碰病人，从气息和痉挛寻找第一处异常。", source: "望诊", meta: did("observe") ? "已经查过" : "耗去一刻", disabled: did("observe") })}
+      ${actionCard({ action: "diagnose-third-lady", value: "pulse", title: "隔帘按住腕脉", description: "用《青青册》的脉理分辨三处经脉是否逆行。", source: "医术二级", meta: did("pulse") ? "已经查过" : "耗去一刻", kind: "special", disabled: did("pulse") || state.medicalLevel < 2 })}
+      ${actionCard({ action: "diagnose-third-lady", value: "ask_manual", title: "请她交出练功残页", description: "病因若来自功法，残页会比口述更可靠；她未必肯把秘密给一个外人。", source: "信任十", meta: did("ask_manual") ? "已经查过" : state.p0.relationships.bai_zhiyun.trust >= 10 ? "可以开口" : "仍被戒备", disabled: did("ask_manual") || state.p0.relationships.bai_zhiyun.trust < 10 })}
+      ${actionCard({ action: "conclude-third-lady", title: "落笔：不是急病，是强练功法所致", description: "以呼吸错乱和经脉逆行互相印证，停止继续查问，立刻寻换血之法。", source: "病因确证", meta: board.canConclude ? "结论成立" : "还缺相互印证的见闻", kind: "special", disabled: !board.canConclude })}
+    </div>
+  `);
+}
+
+function renderPurpleDragonFormula() {
+  const trust = state.p0.relationships.bai_zhiyun.trust;
+  return gameShell(`
+    ${sceneHeader("帘后残页 · 紫龙换血法", "要救她，先炼一枚紫龙换血丹", "紫鳞草引血，血藤芯束药，定脉砂压住逆行经脉。三味药都不在你手里；取药的路，会决定谁欠谁。")}
+    <div class="action-list">
+      ${actionCard({ action: "choose-ingredient-source", value: "cao", title: "请曹青打开私藏药匣", description: "用你在丹房和紫金河挣来的情分换三味药，不花银子。", source: "曹青情分", meta: state.caoFavor >= 40 ? `好感 ${state.caoFavor}` : "情分不足", kind: "special", disabled: state.caoFavor < 40 })}
+      ${actionCard({ action: "choose-ingredient-source", value: "shen", title: "让白栀云调沈家秘库", description: "药由沈家出，但你会亲眼看见秘库钥印，她也会更防着你。", source: "内宅权限", meta: trust >= 10 ? "猜疑增加" : "尚不肯开库", disabled: trust < 10 })}
+      ${actionCard({ action: "choose-ingredient-source", value: "merchant", title: "连夜去鬼市买齐三味药", description: "不欠人情，也不让沈家看见取药过程；六两银子当场结清。", source: "银货两讫", meta: `${state.shenSilver}/6 两`, disabled: state.shenSilver < 6 })}
+    </div>
+  `);
+}
+
+function renderPurpleDragonAlchemy() {
+  return gameShell(`
+    ${sceneHeader("沈府偏房 · 子时", "三味药只够开一炉", "紫鳞草最烈，早一息会冲散血藤，晚一息又压不住病势。曹青守门，不会替你动手。")}
+    <div class="encounter-ledger">
+      <div><span>紫鳞草</span><strong>一份</strong><p>引动衰弱气血。</p></div><div><span>血藤芯</span><strong>一份</strong><p>约束换血药力。</p></div><div><span>定脉砂</span><strong>一份</strong><p>压住逆行经脉。</p></div>
+    </div>
+    <div class="action-list">
+      ${actionCard({ action: "brew-purple-dragon", value: "strict", title: "按残页逐息换火", description: "不抢时间，三次退火都完整做完，让药力稳定相合。", source: "丹医同用", meta: "稳定换血丹", kind: "special" })}
+      ${actionCard({ action: "brew-purple-dragon", value: "rush", title: "猛火抢回一刻病势", description: "可以更快成丹，但紫鳞草的躁性会留在丹中。", source: "险炼", meta: "药力躁烈", kind: "danger" })}
+      ${actionCard({ action: "brew-purple-dragon", value: "substitute", title: "减去一次退火，强行收丹", description: "省下时辰，却会让三味药在炉中各走各路。", source: "省步", meta: "极易焦结", kind: "danger" })}
+    </div>
+  `);
+}
+
+function renderThirdLadyTreatment() {
+  const quality = { stable: "药性稳定", volatile: "药力躁烈", failed: "本炉焦结" }[state.p0.pillQuality] || "尚无成丹";
+  const hasPill = Number(state.p0.items.purple_dragon_blood_pill || 0) > 0;
+  return gameShell(`
+    ${sceneHeader("丑时一刻 · 暖阁", "白栀云的脉象已经弱到第四次停顿", `木盒里的结果是：${quality}。换血丹只能推开死门，若经脉没有先被封住，药力也可能把人送进去。`)}
+    <div class="action-list">
+      ${actionCard({ action: "treat-third-lady", value: "seal_then_pill", title: "先以银针封住三处逆脉，再送丹换血", description: "把医术和炼丹合成一条救法，先控制经脉，再引药力通行。", source: "完整救法", meta: hasPill ? "可施行" : "没有成丹", kind: "special", disabled: !hasPill })}
+      ${actionCard({ action: "treat-third-lady", value: "pill_direct", title: "直接喂下换血丹", description: "争抢最后几息，但把药力冲击全部留给病人承担。", source: "抢救", meta: hasPill ? "只能暂稳" : "没有成丹", kind: "danger", disabled: !hasPill })}
+      ${actionCard({ action: "treat-third-lady", value: "withdraw", title: "收起药箱，承认此局无力再救", description: "你能活着离开沈府；白栀云和她掌握的针法都会从这条路上消失。", source: "止损", meta: "永久错过" })}
+    </div>
+  `);
+}
+
+function renderNeedleInheritance() {
+  const outcome = state.p0.treatmentOutcome;
+  const result = outcome === "saved" ? "经脉归位，气息渐稳" : outcome === "saved_with_aftereffect" ? "性命保住，躁毒仍留在血中" : "病势暂时压住";
+  return gameShell(`
+    ${sceneHeader("天将明 · 沈府暖阁", result, "白栀云让侍女取来一只乌木针匣。她说这套春风化雨针既能救人，也能截脉制敌；今夜的人情，不该只用银子还。")}
+    <div class="encounter-ledger"><div><span>白栀云</span><strong>${escapeHtml(p0RelationLabel("bai_zhiyun"))}</strong><p>她记得你怎样判断、怎样用药。</p></div><div><span>春风化雨针</span><strong>医针亦是杀针</strong><p>拿到手后，下一场夜战就能亲自使用。</p></div></div>
+    <div class="action-list">${actionCard({ action: "receive-spring-needles", title: "接过针匣，记下封穴与穿喉两路手法", description: "银针入手，救人的次序和杀人的分寸都要由你决定。", source: "白栀云传艺", meta: "获得武学与针匣", kind: "special" })}</div>
+  `);
+}
+
+function renderP0Death() {
+  const memory = state.p0.deathMemory.at(-1);
+  return gameShell(`
+    ${sceneHeader("一盏命灯碎裂", state.p0.deathReason || "这一条路走到了死处", "火光退回灯芯，疼痛却没有退。你仍记得最后一眼看见的招式、呼吸和错处。")}
+    <div class="death-verdict"><span>带回的死中见闻</span><strong>${escapeHtml(memory || "强行前进并不能替代看清条件")}</strong><p>剩余命灯 ${state.lives}。回到最近因果节点后，这段记忆不会消失。</p></div>
+    <div class="button-row"><button class="primary-button" data-action="return-p0-death">循着残灯回到死前</button></div>
+  `);
+}
+
+function renderFirstNeedleAmbush() {
+  const battle = state.p0.battle || createFirstBattle();
+  const roundTwo = battle.round >= 2;
+  return gameShell(`
+    ${sceneHeader("东门长街 · 夜雨", "蒙面刀客从药铺檐影里压低右肩", "他挡住回路，不问姓名。雨水在右手刀锋上发亮，可你已经知道：能看见的未必是真正杀招。")}
+    <div class="battle-intent"><span>对手意图</span><strong>${escapeHtml(battle.enemyIntent)}</strong><p>${battle.observedFeint ? "你已看破右肩只是诱饵，真正短刃藏在左袖。" : battle.darkness ? "灯已熄灭，他的步法慢了一瞬。" : battle.enemyWounded ? "右腕中针，但左袖仍可递刀。" : "尚未看破虚实。"}</p></div>
+    ${state.p0.wounds.length ? `<div class="death-verdict"><span>带伤应战</span><strong>肋下见血</strong><p>再失手会让之后的站桩与突破更难。</p></div>` : ""}
+    <div class="action-list">
+      ${!roundTwo ? actionCard({ action: "first-battle-action", value: "observe", title: "让开半步，只看肩、胯与袖口", description: "放弃先手，用一轮换取对真正杀招的判断。", source: "观招", meta: "看破虚招", kind: "special" }) : ""}
+      ${!roundTwo ? actionCard({ action: "first-battle-action", value: "extinguish", title: "飞针打灭街边灯笼", description: "不与刀锋相碰，先改变雨夜里的视野和步速。", source: "借势", meta: "进入第二轮" }) : ""}
+      ${!roundTwo || !battle.enemyWounded ? actionCard({ action: "first-battle-action", value: "needle_wrist", title: "银针先取持刀手腕", description: "春风针第一次用于实战；制住明处的刀，却未必制住暗处杀招。", source: "新武学", meta: "立即兑现", kind: "special" }) : ""}
+      ${roundTwo ? actionCard({ action: "first-battle-action", value: "seal", title: "封住肩井与曲池，留他一命", description: "以针截断发力，换一个可以开口的活口。", source: "制伏", meta: "留下口供", kind: "special" }) : ""}
+      ${roundTwo ? actionCard({ action: "first-battle-action", value: "kill", title: "穿喉一针，不给第二次出刀", description: "你第一次亲手决定让一个人死。此后曹青看你的眼神也会不同。", source: "杀招", meta: "第一次杀人", kind: "danger" }) : ""}
+      ${roundTwo && !battle.playerWounded ? actionCard({ action: "first-battle-action", value: "reckless", title: "趁看破虚招强追一步", description: "你能避开左袖短刃的要害，却会被回锋割开肋下；带伤仍可继续决胜。", source: "负伤抢势", meta: "留下肋下刀伤", kind: "danger" }) : ""}
+      ${!roundTwo && state.lives > 1 ? actionCard({ action: "first-battle-action", value: "reckless", title: "迎着右手刀光抢攻", description: "把全部注意都交给明处刀锋，试着一针定胜负。", source: "死局", meta: "必死 · 可带回见闻", kind: "danger" }) : ""}
+      ${actionCard({ action: "first-battle-action", value: "flee", title: "翻过药铺矮墙，带针匣离开", description: "不查刀客来路，保住性命和刚得到的针法。", source: "退路", meta: "安全离开" })}
+    </div>
+  `);
+}
+
+function renderFirstKillAftermath() {
+  const outcomes = {
+    killed: ["刀客仰面倒进雨水", "你没有收回最后一针。第一条人命已经落在自己手上。"],
+    subdued: ["刀客四肢僵住，仍能开口", "活口可能交代来路，也会让幕后之人知道你会留手。"],
+    escaped: ["身后的刀声渐远", "你保住性命，却不知道是谁要杀药铺里的人。"],
+  };
+  const [title, subtitle] = outcomes[state.p0.battleOutcome] || ["雨夜已经过去", "你带着针匣回到药铺。"];
+  return gameShell(`
+    ${sceneHeader("长街夜战 · 已决", title, subtitle)}
+    <div class="encounter-ledger"><div><span>你的选择</span><strong>${state.p0.battleOutcome === "killed" ? "杀死" : state.p0.battleOutcome === "subdued" ? "制伏" : "脱身"}</strong><p>活口、死尸和逃路各会留下不同痕迹；曹青与幕后之人都会据此重新看你。</p></div><div><span>春风化雨针</span><strong>已经实战</strong><p>从医针变成了真正能决定生死的手段。</p></div></div>
+    <div class="action-list">${actionCard({ action: "return-after-battle", title: "带着夜战结果回东门药铺", description: "曹青还亮着灯。他会问清楚每一针落在何处。", source: "回去见师", meta: "决定师徒路", kind: "special" })}</div>
+  `);
+}
+
+function renderApprenticeshipOffer() {
+  return gameShell(`
+    ${sceneHeader("东门药铺 · 黎明", "曹青听完夜战，只问你愿不愿真正入他的门", "五禽戏只能健体，打鱼杆法也只是渔人手艺。若想跨进锻体，他愿传一门桩功；从此你也要替他担一部分仇怨。")}
+    <div class="action-list">
+      ${actionCard({ action: "apprenticeship-choice", value: "accept", title: "跪下奉茶，认曹青为师", description: "得到通往锻体的桩功，也把师门仇怨和规矩一起接下。", source: "师徒", meta: "选择一门桩功", kind: "special" })}
+      ${actionCard({ action: "apprenticeship-choice", value: "decline", title: "只谢传艺，不入师门", description: "保留医术、针法和自由，但失去这次锻体引路。", source: "独行", meta: "师徒缘止" })}
+    </div>
+  `);
+}
+
+function renderStakeChoice() {
+  return gameShell(`
+    ${sceneHeader("药铺后院 · 两张旧图", "曹青只让你从两门桩功里选一门", "枯木桩收伤纳药，定海桩借水稳身。今日养出的气血习性，八月十五赶回破庙时便会显出分别。")}
+    <div class="action-list">${Object.values(P0_STAKES).map((stake) => actionCard({ action: "choose-stake", value: stake.id, title: stake.name, description: stake.description, source: stake.id === "deadwood_stake" ? "守伤纳药" : "借水定身", meta: stake.travelBenefit, kind: "special" })).join("")}</div>
+  `);
+}
+
+function renderStakeTraining() {
+  const stake = P0_STAKES[state.p0.stakeId];
+  const treatableWound = state.p0.wounds.some((wound) => Number(wound.severity || 0) <= 2);
+  return gameShell(`
+    ${sceneHeader("后院石坪 · 月过中天", `第一夜只练${stake?.name || "桩功"}`, stake?.description || "曹青以竹梢敲正你的肩胯，让呼吸领着气血走。")}
+    <div class="skill-gate-board"><div><span>潜能</span><strong>${state.potential}/120</strong></div><div><span>伤势</span><strong>${state.p0.wounds.length ? "带伤" : "无碍"}</strong></div><div><span>修行所得</span><strong>入门三成</strong></div></div>
+    <div class="action-list">${actionCard({ action: "train-stake", title: "用一百二十潜能记住呼吸、肩胯与落足", description: "这一夜把桩架写进身体，往后才能靠它冲开锻体第一关。", source: "首次修炼", meta: "潜能 -120", kind: "special", disabled: state.potential < 120 })}</div>
+    ${treatableWound ? `<div class="action-list">
+      ${actionCard({ action: "treat-p0-wound", value: "needles", title: "先以春风针封住伤口周围气血", description: "用医术二级清创封穴，不耗丹药，但要把今夜站桩往后推一刻。", source: "医针治伤", meta: "清除轻中伤", kind: "special" })}
+      ${actionCard({ action: "treat-p0-wound", value: "return_spring", title: "服下一枚亲手炼成的回春丹", description: "以成丹补回血气，先把肋下或腿上的伤势稳住。", source: "下品回春丹", meta: `余 ${Number(state.p0.items.return_spring_pill || 0)} 枚`, disabled: Number(state.p0.items.return_spring_pill || 0) < 1 })}
+    </div>` : ""}
+  `);
+}
+
+function renderBodyBreakthrough() {
+  const board = getBodyBreakthroughBoard(state.p0, { potential: state.potential });
+  return gameShell(`
+    ${sceneHeader("鸡鸣之前 · 气血撞关", "未入门与锻体之间，只隔着一次敢不敢让全身气血同时醒来", "曹青让你按桩功呼吸缓推，不许抢在吐纳之前催血。那场夜战留下的生死感，此刻正好用来辨认极限。")}
+    <div class="skill-gate-board">${board.checks.map((check) => `<div><span>${escapeHtml(check.label)}</span><strong>${check.met ? "已具备" : "尚欠缺"}</strong></div>`).join("")}</div>
+    <div class="action-list">
+      ${actionCard({ action: "body-breakthrough", value: "steady", title: "让桩功领着气血，一寸寸推过四肢", description: "按曹青所教稳步撞关，不抢快，不绕过旧伤。", source: "稳破", meta: "潜能 -200 · 踏入锻体", kind: "special", disabled: !board.available })}
+      ${state.lives > 1 ? actionCard({ action: "body-breakthrough", value: "force", title: "趁血热强催全身，抢在一息内破关", description: "不让桩功领路，直接让气血冲撞旧伤和心脉。", source: "死局", meta: "必死 · 可带回见闻", kind: "danger", disabled: !board.available }) : ""}
+    </div>
+  `);
+}
+
+function renderMidAutumnWarning() {
+  return gameShell(`
+    ${sceneHeader("八月十四 · 黄昏", "沈家铜钱在袖中忽然发烫", "你想起三个月前破庙供桌上的陌生贡品：当时条件所示，八月十五才看得见供物从何而来。那扇窗只开一日。")}
+    <div class="encounter-ledger"><div><span>日期</span><strong>八月十四</strong><p>明日之前抵达破庙，才能撞见贡品主人。</p></div><div><span>新境界</span><strong>锻体一重</strong><p>第一次用新身体赶一段真正决定机缘的路。</p></div><div><span>可走水路</span><strong>鱼跃龙门诀</strong><p>旧武学和新桩功会共同改变赶路结果。</p></div></div>
+    <div class="action-list">${actionCard({ action: "prepare-mid-autumn", title: "收好针匣与干粮，今夜便走", description: "不等明日开城门，把一天的机缘窗握在自己手里。", source: "旧奇遇回响", meta: "选择赶路路线", kind: "special" })}</div>
+  `);
+}
+
+function renderMidAutumnDeparture() {
+  return gameShell(`
+    ${sceneHeader(p0ClockText(), "从金陵东门到破庙，有四种走法", "官道稳却慢，山路近却伤腿，紫金河最快但要敢在夜水里行气。你也可以留到明日，只是机缘不会等人。")}
+    <div class="action-list">
+      ${actionCard({ action: "mid-autumn-travel", value: "water", title: "借紫金河夜水直下东郊", description: "以鱼跃龙门诀借流行气；定海桩还能让你到岸时气血不乱。", source: "水路", meta: state.mindArt === MIND_ART.id ? "准时抵达" : "缺少水行心法", kind: "special", disabled: state.mindArt !== MIND_ART.id })}
+      ${actionCard({ action: "mid-autumn-travel", value: "mountain", title: "翻过东郊乱石岭抄近路", description: "早晨可到，但湿石会留下腿伤；枯木桩能把伤势压轻。", source: "山路", meta: "准时 · 可能带伤" })}
+      ${actionCard({ action: "mid-autumn-travel", value: "road", title: "等城门开后走东郊官道", description: "最安全，也最慢；赶到时太阳已经偏西。", source: "官道", meta: "迟到" })}
+      ${actionCard({ action: "mid-autumn-travel", value: "delay", title: "先在药铺休整一日", description: "伤和疲惫都不会增加，但八月十五的窗口会彻底关闭。", source: "休整", meta: "永久错过" })}
+    </div>
+  `);
+}
+
+function renderTempleOfferingSource() {
+  const fresh = state.p0.travelOutcome === "on_time_fresh";
+  return gameShell(`
+    ${sceneHeader("八月十五 · 破庙", "供桌上的鲜桃还沾着露水", fresh ? "定海桩让你从夜水上岸后仍气息平稳。檐角传来瓦片轻响，一团灰影正把贡品往庙后搬。" : "你及时赶到，也看见了供物并非香客所留：一只灰猴抱着桃子跃上残檐，回头看了你一眼。")}
+    <div class="action-list">${actionCard({ action: "follow-offering", title: "不碰供桌，循着瓦上的桃汁追去", description: "先看清贡品主人和庙后的路，再决定取不取机缘。", source: "见闻", meta: "发现檐上猴群", kind: "special" })}</div>
+  `);
+}
+
+function renderMonkeyTest() {
+  return gameShell(`
+    ${sceneHeader("破庙后檐 · 古橡树", "七八只灰猴围着一只缺耳老猴", "老猴没有立刻逃。它把一枚青果放在瓦上，又看向你的手，像是在等你先说明来意。")}
+    <div class="action-list">
+      ${actionCard({ action: "monkey-test", value: "share_peach", title: "把最后的山桃掰开，一半放在瓦上", description: "用破庙里曾救过你性命的食物，换猴群把你当成客人。", source: "山桃", meta: `${state.peaches}/1 枚`, kind: "special", disabled: state.peaches < 1 })}
+      ${actionCard({ action: "monkey-test", value: "trade", title: "留下一两碎银，不伸手抢青果", description: "猴子不认银钱，但认得你愿意留下东西再取东西。", source: "交换", meta: `${state.shenSilver}/1 两`, disabled: state.shenSilver < 1 })}
+      ${actionCard({ action: "monkey-test", value: "grab", title: "趁老猴转头，直接夺走青果", description: "能立刻拿到眼前东西，也会让整片山林都把你当贼。", source: "强取", meta: "猴群敌对", kind: "danger" })}
+    </div>
+  `);
+}
+
+function renderMonkeyConflict() {
+  const deadwood = state.p0.stakeId === "deadwood_stake";
+  const sea = state.p0.stakeId === "sea_stilling_stake";
+  return gameShell(`
+    ${sceneHeader("破庙后林 · 尖啸四起", "你刚抓住青果，石块与枯枝便从树冠一齐落下", "灵猴不与你比力气，只在枝头轮番追打。猴儿酒和水洞已经无望；现在要决定的是怎样从这场围攻里退走。")}
+    <div class="battle-intent"><span>猴群意图</span><strong>逼你离开破庙后山，并记住你的气味</strong><p>树冠太密，银针无法一次压住所有方向。你新学的桩功会决定能否稳住退路。</p></div>
+    <div class="action-list">
+      ${deadwood ? actionCard({ action: "monkey-conflict", value: "root_and_endure", title: "以枯木桩收紧呼吸，护住头脸硬退", description: "肩背会挨一记石块，却不让伤势乱了气血。", source: "神农枯木桩", meta: "轻伤退走", kind: "special" }) : ""}
+      ${sea ? actionCard({ action: "monkey-conflict", value: "anchor_and_withdraw", title: "借湿地定住双足，一步一退", description: "定海桩把滑泥中的重心钉稳，让你不被猴群逼下山坡。", source: "沧澜定海桩", meta: "无伤退走", kind: "special" }) : ""}
+      ${actionCard({ action: "monkey-conflict", value: "flee", title: "抱头冲下湿滑山坡", description: "最快离开猴群，却会在乱石间扭伤一条腿。", source: "夺路", meta: "腿伤二级", kind: "danger" })}
+    </div>
+  `);
+}
+
+function renderMonkeyWineChoice() {
+  return gameShell(`
+    ${sceneHeader("古橡树洞 · 百果香", "缺耳老猴拖出一只封泥小瓮", "酒气里有山泉、青果和多年沉积的药力。老猴先舔了一口，把瓮推到你面前；怎么分这瓮酒，它都会记住。")}
+    <div class="action-list">
+      ${actionCard({ action: "monkey-wine", value: "share", title: "只取一囊，其余推回猴群中间", description: "带走一份猴儿酒，也让老猴看见你愿意分利。", source: "分酒", meta: "猴儿酒 ×1 · 情分增加", kind: "special" })}
+      ${actionCard({ action: "monkey-wine", value: "drink", title: "当场饮下一盏，以新成锻体化开药力", description: "不把酒带走，直接让百果热流洗过筋骨。", source: "炼体", meta: "体魄 +1" })}
+      ${actionCard({ action: "monkey-wine", value: "keep", title: "把小瓮全部收入行囊", description: "得到两份猴儿酒；老猴不会翻脸，却会记下你一滴未留。", source: "独占", meta: "猴儿酒 ×2 · 情分下降", kind: "danger" })}
+    </div>
+  `);
+}
+
+function renderApeWaterCave() {
+  return gameShell(`
+    ${sceneHeader("庙后猴道 · 山泉水洞", "猴群拨开藤蔓，露出一面满是挥臂凹痕的石壁", "这些不是文字，也不是完整招式。每一道凹痕都像有巨猿曾在水压下挥棒，肩、脊、胯连成一线。你可以先记，也可以立刻仿。")}
+    <div class="action-list">
+      ${actionCard({ action: "ape-legacy", value: "observe", title: "逐道比对水痕，只记发力轮廓", description: "不冒险伤身，把神猿残势作为以后寻完整传承的线索。", source: "静观", meta: "获得残刻拓痕", kind: "special" })}
+      ${actionCard({ action: "ape-legacy", value: "imitate", title: "站进齐腰泉水，照石痕挥出第一式", description: "以锻体身躯亲试残势，能多记一分，也会扭伤尚不习惯的肩背。", source: "亲试", meta: "残势进度 +10 · 轻伤", kind: "danger" })}
+    </div>
+  `);
+}
+
+function renderP0Missed() {
+  const monkeyConflictText = {
+    endured: "枯木桩护住气血，你只带着肩背轻伤退到山下；猴群仍带走了酒瓮和秘密。",
+    withdrew_unhurt: "定海桩让你在湿坡上稳步退开，没有受伤；猴群却再也不许你接近后山。",
+    fled_wounded: "你冲下湿坡扭伤一条腿，猴群则带着酒瓮和秘密远离破庙。",
+  }[state.p0.missedDetail];
+  const reasons = {
+    third_lady: ["沈府暖阁的灯在天明前熄灭", "你没有接下或完成那场病局。白栀云、紫龙换血丹与春风化雨针都从此路消失。"],
+    treatment: ["换血没有救回帘后之人", "沈家封了暖阁，也封住了你继续追问针法与练功残页的门。"],
+    apprenticeship: ["曹青收回了两张桩功图", "你仍有针法和医术，却没有人替你指出锻体第一关。"],
+    travel: ["破庙供桌只剩干涸桃汁", "你来迟一步。猴群和它们藏在山后的路已经不见。"],
+    monkeys: ["尖啸声从一棵树传向另一棵树", monkeyConflictText || "从你强取青果的那一刻起，猴群便带着酒瓮和秘密远离破庙。"],
+  };
+  const [title, subtitle] = reasons[state.p0.missedReason] || ["这一条机缘已经合拢", "你保住了现有所得，也看清一次错过会带走什么。"];
+  return gameShell(`
+    ${sceneHeader("机缘已失", title, subtitle)}
+    <div class="button-row"><button class="primary-button" data-action="finish-p0-missed">把这次错过写进行录</button></div>
+  `);
+}
+
+function renderP0JourneyEnd() {
+  const legacy = state.p0.legacyOutcome ? "神猿残势" : "未见神猿遗迹";
+  const relation = state.p0.relationships.temple_monkeys;
+  return gameShell(`
+    ${sceneHeader("八月十五 · 月落东郊", state.p0.complete ? "破庙不再只是你活过第一夜的地方" : "这一程停在了机缘门外", state.p0.complete ? "你从病榻学会用医术定因果，从雨夜学会用针决定生死，又用一门桩功赶回旧地。猴群认得你，水洞也留下了下一门武学的方向。" : "你仍保有此前所有武学与关系，但没能把这一串机缘走到水洞深处。")}
+    <div class="wudao-ending-grid shen-ending-grid">
+      <div><span>医道结果</span><strong>${state.p0.treatmentOutcome === "saved" ? "白栀云脱险" : state.p0.treatmentOutcome || "未成"}</strong><p>${escapeHtml(p0RelationLabel("bai_zhiyun"))}</p></div>
+      <div><span>夜战结果</span><strong>${state.p0.battleOutcome === "killed" ? "第一次杀人" : state.p0.battleOutcome === "subdued" ? "留下活口" : state.p0.battleOutcome === "escaped" ? "保命脱身" : "未经历"}</strong><p>${state.p0.skills.spring_rain_needles ? "春风化雨针已经实战" : "针法未得"}</p></div>
+      <div><span>武道进境</span><strong>${state.martialStage === "body" ? "锻体一重" : "未入门"}</strong><p>${escapeHtml(P0_STAKES[state.p0.stakeId]?.name || "未选桩功")}</p></div>
+      <div><span>破庙新缘</span><strong>${legacy}</strong><p>灵猴情分 ${relation.favor} · 信任 ${relation.trust}</p></div>
+    </div>
+    <div class="next-hooks"><div><span>水洞石痕</span><strong>神猿挥棒只余半式</strong><p>若要补全，须先找到能承受山泉水压的兵器。</p></div><div><span>刀客来路</span><strong>东门夜杀并非偶遇</strong><p>${state.p0.battleOutcome === "subdued" ? "活口仍能追问。" : "死人和逃路都留下了不同线索。"}</p></div><div><span>沈家内宅</span><strong>练功残页另有来处</strong><p>白栀云为何强练此功，尚未说完。</p></div></div>
     <div class="button-row"><button class="secondary-button" data-action="restart">另起一世</button></div>
   `);
 }
@@ -1312,11 +1678,33 @@ const renderers = {
   alchemyFailure: renderAlchemyFailure,
   shenDeath: renderShenDeath,
   shenChapterEnding: renderShenChapterEnding,
+  thirdLadySummons: renderThirdLadySummons,
+  thirdLadyDiagnosis: renderThirdLadyDiagnosis,
+  purpleDragonFormula: renderPurpleDragonFormula,
+  purpleDragonAlchemy: renderPurpleDragonAlchemy,
+  thirdLadyTreatment: renderThirdLadyTreatment,
+  needleInheritance: renderNeedleInheritance,
+  p0Death: renderP0Death,
+  firstNeedleAmbush: renderFirstNeedleAmbush,
+  firstKillAftermath: renderFirstKillAftermath,
+  apprenticeshipOffer: renderApprenticeshipOffer,
+  stakeChoice: renderStakeChoice,
+  stakeTraining: renderStakeTraining,
+  bodyBreakthrough: renderBodyBreakthrough,
+  midAutumnWarning: renderMidAutumnWarning,
+  midAutumnDeparture: renderMidAutumnDeparture,
+  templeOfferingSource: renderTempleOfferingSource,
+  monkeyTest: renderMonkeyTest,
+  monkeyConflict: renderMonkeyConflict,
+  monkeyWineChoice: renderMonkeyWineChoice,
+  apeWaterCave: renderApeWaterCave,
+  p0Missed: renderP0Missed,
+  p0JourneyEnd: renderP0JourneyEnd,
 };
 
 function screenMode() {
-  if (["gameDeath", "shenDeath"].includes(state.screen)) return "death";
-  if (["encounterReward", "mindArt", "roadResult", "ending", "quietDeparture", "qingQingReward", "fiveAnimalReward", "shenPharmacy", "alchemyFailure", "shenChapterEnding"].includes(state.screen)) return "settlement";
+  if (["gameDeath", "shenDeath", "p0Death"].includes(state.screen)) return "death";
+  if (["encounterReward", "mindArt", "roadResult", "ending", "quietDeparture", "qingQingReward", "fiveAnimalReward", "shenPharmacy", "alchemyFailure", "shenChapterEnding", "needleInheritance", "firstKillAftermath", "midAutumnWarning", "p0Missed", "p0JourneyEnd"].includes(state.screen)) return "settlement";
   if (["landing", "worldIntro", "characterDraft", "vow", "destiny", "characterSheet"].includes(state.screen)) return "neutral";
   return "simulation";
 }
@@ -1343,6 +1731,26 @@ function handleShenDeath(reason, node) {
   state.lastDeathChoice = reason;
   track("shen_death", { node, lives: state.lives });
   moveTo("shenDeath");
+}
+
+function moveP0(screen, node, previousStatus = "complete", currentStatus = "active") {
+  const previous = state.p0.node;
+  if (previous && previous !== node) state.p0.eventStates[previous] = { status: previousStatus };
+  state.p0.eventStates[node] = { status: currentStatus };
+  state.p0.node = node;
+  state.p0.resumeScreen = screen;
+  moveTo(screen);
+}
+
+function handleP0Death(reason, memory, node) {
+  if (state.lives <= 1) return;
+  state.lives -= 1;
+  state.p0.deathReason = reason;
+  state.p0.deathNode = node;
+  state.p0.deathMemory = [...state.p0.deathMemory, memory];
+  state.lastDeathChoice = reason;
+  track("p0_death", { node, lives: state.lives });
+  moveTo("p0Death");
 }
 
 const handlers = {
@@ -1950,6 +2358,241 @@ const handlers = {
     if (state.screen !== "alchemyFailure") return;
     state.shenDay += 1;
     moveTo("firstAlchemy");
+  },
+  "start-p0-journey": () => {
+    if (state.screen !== "shenChapterEnding" || state.alchemyPills !== RETURN_SPRING_BREW.successPills || state.p0.started) return;
+    state.p0 = createP0State();
+    state.p0.started = true;
+    state.p0.items.return_spring_pill = Number(state.alchemyPills || 0);
+    state.p0.eventStates.third_lady_summons = { status: "active" };
+    state.p0.relationships.cao_qing.favor = state.caoFavor;
+    state.p0.relationships.cao_qing.trust = Math.max(45, state.caoFavor - 4);
+    track("third_lady_arc_started");
+    moveP0("thirdLadySummons", "third_lady_summons");
+  },
+  "continue-p0-journey": () => {
+    if (state.screen !== "shenChapterEnding" || !state.p0.started) return;
+    moveTo(state.p0.resumeScreen || "thirdLadySummons");
+  },
+  "third-lady-summons": (value) => {
+    if (state.screen !== "thirdLadySummons" || !["accept", "decline"].includes(value)) return;
+    if (value === "decline") {
+      state.p0.missedReason = "third_lady";
+      track("third_lady_declined");
+      return moveP0("p0Missed", "third_lady_missed", "missed");
+    }
+    state.p0.relationships.bai_zhiyun.trust = 10;
+    state.p0.relationships.bai_zhiyun.suspicion = 5;
+    track("third_lady_summons_accepted");
+    moveP0("thirdLadyDiagnosis", "third_lady_diagnosis");
+  },
+  "diagnose-third-lady": (value) => {
+    if (state.screen !== "thirdLadyDiagnosis") return;
+    const result = resolveDiagnosisAction(value, state.p0, { medicalLevel: state.medicalLevel });
+    if (!result?.available) return;
+    state.p0 = result.state;
+    track("third_lady_diagnosis", { action: value, evidence: result.evidence.id });
+    refresh();
+  },
+  "conclude-third-lady": () => {
+    if (state.screen !== "thirdLadyDiagnosis" || !getDiagnosisBoard(state.p0).canConclude) return;
+    state.p0.hypotheses.third_lady = { status: "confirmed", answer: "强练残缺功法导致经脉逆行" };
+    moveP0("purpleDragonFormula", "purple_dragon_formula");
+  },
+  "choose-ingredient-source": (value) => {
+    if (state.screen !== "purpleDragonFormula") return;
+    const result = resolveIngredientSource(value, state.p0, { caoFavor: state.caoFavor, silver: state.shenSilver });
+    if (!result?.available) return;
+    state.p0 = result.state;
+    state.shenSilver -= Number(result.costSilver || 0);
+    track("purple_dragon_ingredients", { source: value, silver: result.costSilver || 0 });
+    moveP0("purpleDragonAlchemy", "purple_dragon_alchemy");
+  },
+  "brew-purple-dragon": (value) => {
+    if (state.screen !== "purpleDragonAlchemy") return;
+    const result = resolvePurpleDragonAlchemy(value, state.p0, { medicalLevel: state.medicalLevel, alchemyLevel: state.alchemyLevel });
+    if (!result?.available) return;
+    state.p0 = result.state;
+    track("purple_dragon_alchemy", { choice: value, quality: result.outcome });
+    moveP0("thirdLadyTreatment", "third_lady_treatment");
+  },
+  "treat-third-lady": (value) => {
+    if (state.screen !== "thirdLadyTreatment") return;
+    const result = resolveThirdLadyTreatment(value, state.p0);
+    if (!result?.available) return;
+    state.p0 = result.state;
+    track("third_lady_treatment", { choice: value, outcome: result.outcome });
+    if (["failed", "missed"].includes(result.outcome)) {
+      state.p0.missedReason = "treatment";
+      return moveP0("p0Missed", "third_lady_missed", result.outcome === "failed" ? "failed" : "missed");
+    }
+    moveP0("needleInheritance", "needle_inheritance");
+  },
+  "receive-spring-needles": () => {
+    if (state.screen !== "needleInheritance" || state.p0.skills.spring_rain_needles) return;
+    state.p0 = grantSpringRainNeedles(state.p0).state;
+    if (!state.skills.includes("spring_rain_needles")) state.skills.push("spring_rain_needles");
+    state.p0.battle = createFirstBattle();
+    state.p0.checkpoint = null;
+    state.p0.checkpoint = structuredClone(state.p0);
+    track("spring_rain_needles_received");
+    moveP0("firstNeedleAmbush", "first_needle_ambush");
+  },
+  "first-battle-action": (value) => {
+    if (state.screen !== "firstNeedleAmbush") return;
+    const result = resolveFirstBattleAction(value, state.p0.battle, { hasNeedles: Number(state.p0.items.spring_rain_needles || 0) > 0 });
+    if (!result?.available) return;
+    if (result.outcome === "death") return handleP0Death(result.cause, result.memory, "firstNeedleAmbush");
+    state.p0.battle = result.battle;
+    if (result.outcome === "round") {
+      track("first_battle_round", { action: value, round: result.battle.round });
+      return refresh();
+    }
+    if (result.outcome === "wounded") {
+      if (!state.p0.wounds.some((wound) => wound.id === result.wound.id)) state.p0.wounds.push(result.wound);
+      track("first_battle_wound", { wound: result.wound.id });
+      return refresh();
+    }
+    state.p0.battleOutcome = result.outcome;
+    state.p0.firstKill = result.outcome === "killed";
+    state.p0.firstKillChoice = result.outcome;
+    track("first_battle_resolved", { outcome: result.outcome });
+    moveP0("firstKillAftermath", "first_kill_aftermath");
+  },
+  "return-p0-death": () => {
+    if (state.screen !== "p0Death" || !state.p0.checkpoint || state.lives <= 0) return;
+    const memories = [...state.p0.deathMemory];
+    const node = state.p0.deathNode;
+    state.p0 = migrateP0State(structuredClone(state.p0.checkpoint));
+    state.p0.deathMemory = memories;
+    state.p0.deathNode = null;
+    state.p0.deathReason = null;
+    if (node === "firstNeedleAmbush") state.p0.battle = createFirstBattle();
+    track("p0_death_return", { node });
+    moveP0(node, node === "firstNeedleAmbush" ? "first_needle_ambush" : "body_breakthrough");
+  },
+  "return-after-battle": () => {
+    if (state.screen !== "firstKillAftermath" || !state.p0.battleOutcome) return;
+    moveP0("apprenticeshipOffer", "apprenticeship_offer");
+  },
+  "apprenticeship-choice": (value) => {
+    if (state.screen !== "apprenticeshipOffer" || !["accept", "decline"].includes(value)) return;
+    if (value === "decline") {
+      state.p0.missedReason = "apprenticeship";
+      return moveP0("p0Missed", "apprenticeship_refused", "missed");
+    }
+    state.p0.apprentice = true;
+    track("cao_apprenticeship", { battleOutcome: state.p0.battleOutcome });
+    moveP0("stakeChoice", "stake_choice");
+  },
+  "choose-stake": (value) => {
+    if (state.screen !== "stakeChoice") return;
+    const result = chooseStake(value, state.p0);
+    if (!result) return;
+    state.p0 = result.state;
+    if (!state.skills.includes(value)) state.skills.push(value);
+    track("stake_chosen", { stake: value });
+    moveP0("stakeTraining", "stake_training");
+  },
+  "treat-p0-wound": (value) => {
+    if (state.screen !== "stakeTraining") return;
+    const result = resolveWoundTreatment(value, state.p0, { medicalLevel: state.medicalLevel });
+    if (!result?.available) return;
+    state.p0 = result.state;
+    if (result.treatment === "pill") state.alchemyPills = Math.max(0, state.alchemyPills - 1);
+    track("p0_wound_treated", { method: result.treatment });
+    refresh();
+  },
+  "train-stake": () => {
+    if (state.screen !== "stakeTraining") return;
+    const result = resolveStakeTraining(state.p0, { potential: state.potential });
+    if (!result?.available) return;
+    state.p0 = result.state;
+    state.potential -= result.potentialCost;
+    state.p0.checkpoint = null;
+    state.p0.checkpoint = structuredClone(state.p0);
+    track("stake_trained", { stake: state.p0.stakeId, cost: result.potentialCost });
+    moveP0("bodyBreakthrough", "body_breakthrough");
+  },
+  "body-breakthrough": (value) => {
+    if (state.screen !== "bodyBreakthrough") return;
+    const result = resolveBodyBreakthrough(value, state.p0, { potential: state.potential });
+    if (!result?.available) return;
+    if (result.outcome === "death") return handleP0Death(result.cause, result.memory, "bodyBreakthrough");
+    state.p0 = result.state;
+    state.potential -= result.potentialCost;
+    state.martialStage = "body";
+    track("body_breakthrough", { stake: state.p0.stakeId, cost: result.potentialCost });
+    moveP0("midAutumnWarning", "mid_autumn_warning");
+  },
+  "prepare-mid-autumn": () => {
+    if (state.screen !== "midAutumnWarning" || state.martialStage !== "body") return;
+    moveP0("midAutumnDeparture", "mid_autumn_departure");
+  },
+  "mid-autumn-travel": (value) => {
+    if (state.screen !== "midAutumnDeparture") return;
+    const result = resolveMidAutumnTravel(value, state.p0, { hasWaterMindArt: state.mindArt === MIND_ART.id });
+    if (!result?.available) return;
+    state.p0 = result.state;
+    track("mid_autumn_travel", { route: value, outcome: result.outcome });
+    if (!result.onTime) {
+      state.p0.missedReason = "travel";
+      return moveP0("p0Missed", "mid_autumn_missed", "expired");
+    }
+    moveP0("templeOfferingSource", "temple_offering_source");
+  },
+  "follow-offering": () => {
+    if (state.screen !== "templeOfferingSource") return;
+    moveP0("monkeyTest", "monkey_test");
+  },
+  "monkey-test": (value) => {
+    if (state.screen !== "monkeyTest") return;
+    const result = resolveMonkeyTest(value, state.p0, { peaches: state.peaches, silver: state.shenSilver });
+    if (!result?.available) return;
+    state.p0 = result.state;
+    state.peaches -= result.peachCost;
+    state.shenSilver -= result.silverCost;
+    track("monkey_test", { choice: value, outcome: result.outcome });
+    if (result.outcome === "hostile") {
+      return moveP0("monkeyConflict", "monkey_conflict");
+    }
+    moveP0("monkeyWineChoice", "monkey_wine_choice");
+  },
+  "monkey-conflict": (value) => {
+    if (state.screen !== "monkeyConflict") return;
+    const result = resolveMonkeyConflict(value, state.p0);
+    if (!result?.available) return;
+    state.p0 = result.state;
+    state.p0.missedReason = "monkeys";
+    state.p0.missedDetail = result.outcome;
+    track("monkey_conflict", { choice: value, outcome: result.outcome });
+    moveP0("p0Missed", "mid_autumn_missed", "failed");
+  },
+  "monkey-wine": (value) => {
+    if (state.screen !== "monkeyWineChoice") return;
+    const result = resolveMonkeyWine(value, state.p0);
+    if (!result?.available) return;
+    state.p0 = result.state;
+    if (result.bodyGain) {
+      state.shenAttributeGains += result.bodyGain;
+      state.attributes = { ...state.attributes, constitution: Number(state.attributes.constitution || 0) + result.bodyGain };
+    }
+    track("monkey_wine", { choice: value, outcome: result.outcome });
+    moveP0("apeWaterCave", "ape_water_cave");
+  },
+  "ape-legacy": (value) => {
+    if (state.screen !== "apeWaterCave") return;
+    const result = resolveApeLegacy(value, state.p0);
+    if (!result?.available) return;
+    state.p0 = result.state;
+    if (!state.skills.includes("ape_legacy_clue")) state.skills.push("ape_legacy_clue");
+    track("ape_legacy", { choice: value, outcome: result.outcome });
+    moveP0("p0JourneyEnd", "p0_journey_end");
+  },
+  "finish-p0-missed": () => {
+    if (state.screen !== "p0Missed") return;
+    state.p0.journeyClosed = true;
+    moveP0("p0JourneyEnd", "p0_journey_end");
   },
   restart: () => {
     clearState();

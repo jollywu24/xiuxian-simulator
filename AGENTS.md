@@ -66,7 +66,7 @@
 
 ## 5. 当前流程
 
-`landing → worldIntro → characterDraft → vow → destiny → characterSheet → templeWake → fateSight → allocation → templeTasks → ladyArrival → ladyPressure → ladyTest → nightTalk → encounterReward → mindArt → roadTrial → roadResult → ending → shenArrival → shenJobs → caoArrival → caoFate → bloodDemand → danObservation → caoExamFire → caoExamIngredients → caoExamMotive → qingQingReward → qingQingStudy → fiveAnimalReward → shenDaily → fiveAnimalChoice → shenMeeting → shenFuChoice → shenPharmacy → shenDaily → shenErrand → fishingPrep → riverFishing → treasureFish → wangTeaching → caoReturn → caoGuidance → alchemyLesson → firstAlchemy → shenChapterEnding`
+`landing → worldIntro → characterDraft → vow → destiny → characterSheet → templeWake → fateSight → allocation → templeTasks → ladyArrival → ladyPressure → ladyTest → nightTalk → encounterReward → mindArt → roadTrial → roadResult → ending → shenArrival → shenJobs → caoArrival → caoFate → bloodDemand → danObservation → caoExamFire → caoExamIngredients → caoExamMotive → qingQingReward → qingQingStudy → fiveAnimalReward → shenDaily → fiveAnimalChoice → shenMeeting → shenFuChoice → shenPharmacy → shenDaily → shenErrand → fishingPrep → riverFishing → treasureFish → wangTeaching → caoReturn → caoGuidance → alchemyLesson → firstAlchemy → shenChapterEnding → thirdLadySummons → thirdLadyDiagnosis → purpleDragonFormula → purpleDragonAlchemy → thirdLadyTreatment → needleInheritance → firstNeedleAmbush → firstKillAftermath → apprenticeshipOffer → stakeChoice → stakeTraining → bodyBreakthrough → midAutumnWarning → midAutumnDeparture → templeOfferingSource → monkeyTest → monkeyWineChoice → apeWaterCave → p0JourneyEnd`
 
 支路：
 
@@ -80,6 +80,10 @@
 - 取血后选择休息会结束沈家路线，选择观察才进入炼丹盘问；
 - 沈家日常透支进入 `shenDeath`，回照时恢复到当日开始；
 - 首炉炼丹失败进入 `alchemyFailure`，不消耗命灯，次日可重试。
+- 三夫人病局可失败或主动退出并进入 `p0Missed`；
+- 春风针夜战与强行锻体死亡进入 `p0Death`，保留死因见闻并回到各自最近节点；
+- 夜战可杀死、制伏或逃离，拜师可拒绝，桩功必须二选一；
+- 八月十五官道或延误会错过灵猴，强取会令猴群敌对。
 
 新增场景时必须同步：
 
@@ -96,10 +100,14 @@
 | --- | --- |
 | `web/index.html` | 页面入口与元信息 |
 | `web/wudao-core.mjs` | 世界、人物、五维、命灯、奇遇、关系、心法与道路纯规则 |
+| `web/wudao-p0-core.mjs` | 条件与效果、病例、物品、关系、战斗、伤势、桩功、突破、时间和灵猴规则 |
+| `web/content/p0/` | 第三十至五十四章的目录与事件节点 |
 | `web/wudao-app.mjs` | 状态机、渲染、事件委托与本地存档 |
 | `web/styles.css` | 江湖、死亡、奇遇视觉与手机响应式 |
 | `tests/wudao.test.mjs` | 当前纯高武路线规则测试 |
+| `tests/p0-systems.test.mjs` | 三个新篇章与通用系统规则测试 |
 | `scripts/cdp-smoke.mjs` | 桌面和手机完整浏览器流程 |
+| `scripts/validate-p0-content.mjs` | 内容目录、坏跳转与首次兑现校验 |
 | `docs/GAME_DESIGN.md` | 世界结构、系统边界与后续内容 |
 | `docs/STORY_BIBLE.md` | 完整剧情线、人物弧光、分支后果与连续性 |
 | `docs/SYSTEM_ROADMAP.md` | 完整游戏系统优先级、依赖与剧情里程碑 |
@@ -128,9 +136,11 @@
 
 核心不访问 DOM、`localStorage` 或网络。所有返回对象保持 JSON 可序列化。
 
+第三十至五十四章的新规则优先写入 `web/wudao-p0-core.mjs`，静态目录和内容节点位于 `web/content/p0/`。通用效果必须带稳定ID并保持幂等；内容目录必须通过 `npm run validate:content`。
+
 ## 8. 状态与存档
 
-存档键为 `wudao-high-martial-v1`，当前状态 `version` 为 `3`。旧版 `version: 2` 存档会迁移；已取得五禽秘籍的旧存档会回到秘籍结算页继续新流程。
+存档键为 `wudao-high-martial-v1`，当前状态 `version` 为 `4`。旧版 `version: 2`、`version: 3` 存档会迁移；已取得五禽秘籍的版本2存档会回到秘籍结算页继续新流程。
 
 `createInitialState()` 是状态事实来源，关键字段包括：
 
@@ -144,6 +154,7 @@
 - 每日时段、体力、饱腹、当日快照与行动记录；
 - 医术、五禽戏、炼丹、钓鱼、《打鱼杆法》和王五好感；
 - 沈家密会、沈福门路、黄金钱鳘、首炉回春丹与通关倾向。
+- `p0`嵌套状态：统一物品、武学、见闻、假设、多维关系、病例时钟、战斗、伤势、桩功、连续日期、地点状态、灵猴关系、死因记忆与回照节点。
 
 handler 必须检查当前条件，避免重复领取潜能、物品或关系奖励。状态只能存放 JSON 可序列化值。
 
@@ -160,6 +171,7 @@ handler 必须检查当前条件，避免重复领取潜能、物品或关系奖
 
 ```bash
 npm test
+npm run validate:content
 ```
 
 浏览器流程：
@@ -183,7 +195,11 @@ node scripts/cdp-smoke.mjs 9225
 - 沈家密会、医术二级与完整钓鱼条件板；
 - 黄金钱鳘、王五六十好感和《打鱼杆法》；
 - 曹青四十好感、七点有效悟性、一次炼丹失败重试与六枚回春丹；
-- 五禽戏不会使境界直接变为锻体，以及本地存档恢复；
+- 三夫人诊断、三种药材来源、三种丹药品质、救治结果和白栀云多维关系；
+- 春风化雨针立即实战、敌人意图、左袖杀招和三种夜战结果；
+- 拜师、两门桩功、潜能消耗和锻体突破；
+- 八月十五四条路线、桩功旅行差异、灵猴关系、猴儿酒和神猿遗迹；
+- 版本2／3迁移到版本4，以及完整终章存档恢复；
 - 桌面和手机无横向溢出；
 - 页面运行异常为空。
 

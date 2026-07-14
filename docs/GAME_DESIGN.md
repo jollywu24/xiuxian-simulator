@@ -219,9 +219,27 @@ NPC、门派、世家、帮会和朝廷机构属于世界本身，不属于“�
 
 首次炼丹提供真实火候选择。错误会烧坏一炉药材并在次日重试，不消耗命灯；正确复现曹青的全部步骤，固定得到六枚下品回春丹、炼丹二级十二进度、《百丹注解》和“三种新丹换真正武功”的承诺。
 
+### 6.6 三夫人病危与紫龙换血丹
+
+首炉炼丹成功后，沈府夜召把已有医术和炼丹能力带入第一次完整病例。玩家不能直接看见病因，必须在四刻病势内通过望诊、切脉或索要练功残页取得见闻；呼吸错乱与经脉逆行互相印证后，才能确认是强练残缺功法所致。
+
+紫龙换血丹需要紫鳞草、血藤芯和定脉砂。药材可以由曹青情分、白栀云的沈家权限或六两银子取得，分别改变信任、戒心和库存。炼制区分稳定、躁烈与焦结；治疗区分先封穴再服丹、直接服丹与放弃。完整救治使白栀云同时产生情分、信任和救命债，并传下既可封穴止血、也可穿喉制敌的《春风化雨针》。
+
+### 6.7 雨夜战斗、拜师选桩与锻体突破
+
+取得针法后立刻进入东门长街夜战。战斗状态包含轮次、距离、地形、敌人意图、虚招、暗处短刃和伤势。第一轮观察、灭灯或先伤手腕会改变第二轮；看破左袖藏刀后可制伏、杀死或逃离。贸然只盯右手会死亡，并把左袖杀招作为见闻带回最近节点。只剩一盏命灯时，明确必死行动不再出现。
+
+夜战结果被曹青用于决定师徒关系。入门后从神农枯木桩与沧澜定海桩中二选一：前者擅长带伤和纳药，后者擅长水边定身与行气。首次站桩消耗一百二十潜能，锻体突破再消耗二百潜能，并检查桩功、伤势和真实生死见闻。成功后境界变为锻体一重。
+
+### 6.8 八月十五、返回旧地图与灵猴遗迹
+
+连续日历推进到八月十四。玩家必须在八月十五窗口内返回破庙：紫金河水路最快，官道会迟到，山路会产生腿伤，停留休整则永久错过。定海桩让水路抵达时保持气血平稳，枯木桩减轻山路伤势。
+
+准时抵达会发现供桌贡品来自檐上灵猴。分享山桃、留下银钱或强取青果决定猴群情分、信任与敌意；猴儿酒可分享、当场炼体或全部带走。只有非敌对关系才会开放庙后猴道与神猿水洞。水洞内可安全记录挥棒残势，或亲身模仿并承担肩伤。完成后破庙从开局地点转为可长期返回的关系与传承入口。
+
 ## 7. 当前完整流程
 
-`landing → worldIntro → characterDraft → vow → destiny → characterSheet → templeWake → fateSight → allocation → templeTasks → ladyArrival → ladyPressure → ladyTest → nightTalk → encounterReward → mindArt → roadTrial → roadResult → ending → shenArrival → shenJobs → caoArrival → caoFate → bloodDemand → danObservation → caoExamFire → caoExamIngredients → caoExamMotive → qingQingReward → qingQingStudy → fiveAnimalReward → shenDaily → fiveAnimalChoice → shenDaily → shenMeeting → shenFuChoice → shenPharmacy → shenDaily → shenErrand → fishingPrep → riverFishing → riverCatch → wangEncounter → riverFishing → treasureFish → treasureShare → wangTeaching → caoReturn → caoGuidance → alchemyLesson → firstAlchemy → shenChapterEnding`
+`landing → worldIntro → characterDraft → vow → destiny → characterSheet → templeWake → fateSight → allocation → templeTasks → ladyArrival → ladyPressure → ladyTest → nightTalk → encounterReward → mindArt → roadTrial → roadResult → ending → shenArrival → shenJobs → caoArrival → caoFate → bloodDemand → danObservation → caoExamFire → caoExamIngredients → caoExamMotive → qingQingReward → qingQingStudy → fiveAnimalReward → shenDaily → fiveAnimalChoice → shenDaily → shenMeeting → shenFuChoice → shenPharmacy → shenDaily → shenErrand → fishingPrep → riverFishing → riverCatch → wangEncounter → riverFishing → treasureFish → treasureShare → wangTeaching → caoReturn → caoGuidance → alchemyLesson → firstAlchemy → shenChapterEnding → thirdLadySummons → thirdLadyDiagnosis → purpleDragonFormula → purpleDragonAlchemy → thirdLadyTreatment → needleInheritance → firstNeedleAmbush → firstKillAftermath → apprenticeshipOffer → stakeChoice → stakeTraining → bodyBreakthrough → midAutumnWarning → midAutumnDeparture → templeOfferingSource → monkeyTest → monkeyWineChoice → apeWaterCave → p0JourneyEnd`
 
 支路：
 
@@ -236,15 +254,19 @@ NPC、门派、世家、帮会和朝廷机构属于世界本身，不属于“�
 - 丹房日常透支会进入 `shenDeath`，回照时恢复到当日开始；
 - 沈福银子隐瞒、放弃钓鱼、割断宝鱼线、独吞宝鱼或向曹青隐瞒晚归都会形成不同的提前收束；
 - 首炉炼丹选错火候进入 `alchemyFailure`，次日保留记忆和能力重新尝试，不消耗命灯。
+- 三夫人夜召可拒绝；误诊、焦丹、错误救治或主动撤手会进入 `p0Missed`，永久失去白栀云与针法后续；
+- 春风针夜战和强行锻体可进入 `p0Death`；仍有命灯时保留死因见闻并回到各自最近节点；
+- 夜战可杀死、制伏或逃离，拜师也可拒绝；这些结果会留在后续状态而不是只替换文本；
+- 八月十五走官道或延误会错过灵猴，强取青果会令猴群敌对；水路和山路按已选桩功产生不同结果。
 
 ## 8. 首章收束与后续入口
 
-本段完整路线同时形成两组成果：
+首炉炼丹以前形成两组成果：
 
 1. 丹医立足：医术二级、曹青好感四十九、回春丹六枚、《百丹注解》和武功承诺；
 2. 水陆求道：黄金钱鳘、王五六十好感、五百潜能、一点力道与《打鱼杆法》。
 
-结算根据日常研习行动的医道、武道次数突出其中一种倾向，但已经取得的另一组能力不被抹去。下一段只能从已核对的原作因果中选择：百丹注解三丹考验、百舸争流的炼骨门槛、万鲤堂孙不离的血书旧债，或晴日初一重返破庙。未经核对的内容明确作为原创扩展，不冒充原作情节。
+结算根据日常研习行动的医道、武道次数突出其中一种倾向，但已经取得的另一组能力不被抹去。第三十至五十四章继续形成三组成果：白栀云救命关系与春风化雨针、曹青师徒与一门桩功、锻体一重与灵猴水洞入口。下一段从已核对的第五十五章起继续处理曹青离场、沈福利益冲突与七杀秘密；未经核对的内容明确作为原创扩展，不冒充原作情节。
 
 ## 9. 界面与叙事规则
 

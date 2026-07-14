@@ -1391,6 +1391,35 @@ h1 {
   line-height: 1.65;
 }
 
+.battle-intent {
+  margin-top: 22px;
+  padding: 18px 20px;
+  border: 1px solid var(--danger);
+  border-left-width: 4px;
+  background: rgba(146, 49, 49, 0.08);
+}
+
+.battle-intent span {
+  color: var(--danger);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+}
+
+.battle-intent strong {
+  display: block;
+  margin: 8px 0;
+  color: var(--text);
+  font-family: var(--font-story);
+  font-size: 19px;
+  line-height: 1.55;
+}
+
+.battle-intent p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
 .npc-reveal-card {
   display: grid;
   grid-template-columns: 120px 1fr;

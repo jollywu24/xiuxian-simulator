@@ -2,12 +2,14 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { createFirstBattle, createP0State } from "../web/wudao-p0-core.mjs";
 
 const port = Number(process.argv[2] || 9225);
 const tabs = await (await fetch(`http://127.0.0.1:${port}/json`)).json();
 const tab = tabs.find((item) => item.type === "page" && /^https?:\/\/(127\.0\.0\.1|localhost)/.test(item.url));
 if (!tab) throw new Error(`No browser page found on debugging port ${port}`);
 const pageOrigin = new URL(tab.url).origin;
+const storageId = { securityOrigin: pageOrigin, isLocalStorage: true };
 
 const socket = new WebSocket(tab.webSocketDebuggerUrl);
 let id = 0;
@@ -40,6 +42,16 @@ async function evaluate(expression) {
   const result = await send("Runtime.evaluate", { expression, awaitPromise: true, returnByValue: true });
   if (result.exceptionDetails) throw new Error(result.exceptionDetails.exception?.description || "Page evaluation failed");
   return result.result.value;
+}
+
+async function writeSave(value) {
+  await send("DOMStorage.setDOMStorageItem", { storageId, key: "wudao-high-martial-v1", value: JSON.stringify(value) });
+}
+
+async function reloadWithSave(value) {
+  await writeSave(value);
+  await send("Page.reload", { ignoreCache: false });
+  await new Promise((resolve) => setTimeout(resolve, 250));
 }
 
 async function click(action, value = null) {
@@ -300,14 +312,88 @@ const mobileEnding = await snapshot("shen-ending-mobile");
 assert.ok(mobileEnding.scrollWidth <= 390);
 await screenshot("wudao-shen-ending-mobile.png");
 
+const preP0StoredItems = await send("DOMStorage.getDOMStorageItems", { storageId });
+const preP0Entry = preP0StoredItems.entries.find(([key]) => key === "wudao-high-martial-v1");
+if (!preP0Entry) throw new Error("Missing save before version 3 migration check");
+const versionThreeSave = JSON.parse(preP0Entry[1]);
+versionThreeSave.version = 3;
+delete versionThreeSave.p0;
+await reloadWithSave(versionThreeSave);
+assert.match(await text(), /六枚下品回春丹/);
+assert.ok(await evaluate(`Boolean(document.querySelector('[data-action="start-p0-journey"]'))`));
+
+await click("start-p0-journey");
+assert.match(await text(), /三夫人白栀云练功后昏厥/);
+assert.match(await text(), /病势\s*四刻/);
+const mobileSummons = await snapshot("third-lady-summons-mobile");
+assert.ok(mobileSummons.scrollWidth <= 390);
+await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
+
+await click("third-lady-summons", "accept");
+assert.match(await text(), /尚无定论/);
+assert.equal(await evaluate(`document.querySelector('[data-action="conclude-third-lady"]').disabled`), true);
+await click("diagnose-third-lady", "observe");
+await click("diagnose-third-lady", "pulse");
+assert.match(await text(), /经脉逆行/);
+assert.match(await text(), /呼吸与脉搏并不同步/);
+assert.equal(await evaluate(`document.querySelector('[data-action="conclude-third-lady"]').disabled`), false);
+await click("conclude-third-lady");
+assert.match(await text(), /紫龙换血丹/);
+assert.equal(await evaluate(`document.querySelectorAll('[data-action="choose-ingredient-source"]:not(:disabled)').length`), 3);
+await click("choose-ingredient-source", "cao");
+await click("brew-purple-dragon", "strict");
+assert.match(await text(), /药性稳定/);
+await click("treat-third-lady", "seal_then_pill");
+assert.match(await text(), /经脉归位，气息渐稳/);
+assert.match(await text(), /情分 30 · 信任 35 · 人情债 40/);
+await click("receive-spring-needles");
+assert.match(await text(), /春风针第一次用于实战/);
+assert.equal(await evaluate(`document.querySelector('[data-action="first-battle-action"][data-value="reckless"]')`), null);
+await click("first-battle-action", "observe");
+assert.match(await text(), /真正的短刃藏在左袖/);
+await click("first-battle-action", "kill");
+assert.match(await text(), /第一条人命/);
+await click("return-after-battle");
+await click("apprenticeship-choice", "accept");
+assert.match(await text(), /神农枯木桩/);
+assert.match(await text(), /沧澜定海桩/);
+await click("choose-stake", "sea_stilling_stake");
+await click("train-stake");
+assert.match(await text(), /一次真正的生死见闻\s*已具备/);
+assert.equal(await evaluate(`document.querySelector('[data-action="body-breakthrough"][data-value="force"]')`), null);
+await click("body-breakthrough", "steady");
+assert.match(await text(), /锻体一重/);
+await click("prepare-mid-autumn");
+assert.match(await text(), /从金陵东门到破庙，有四种走法/);
+await click("mid-autumn-travel", "water");
+assert.match(await text(), /定海桩让你从夜水上岸后仍气息平稳/);
+await click("follow-offering");
+assert.match(await text(), /缺耳老猴/);
+await click("monkey-test", "share_peach");
+await click("monkey-wine", "share");
+assert.match(await text(), /神猿残势/);
+await click("ape-legacy", "observe");
+assert.match(await text(), /破庙不再只是你活过第一夜的地方/);
+assert.match(await text(), /白栀云脱险/);
+assert.match(await text(), /第一次杀人/);
+assert.match(await text(), /锻体一重/);
+assert.match(await text(), /神猿残势/);
+assert.doesNotMatch(await text(), /现实|论坛|武道局|其他玩家|其它玩家|太虚命盘|归尘门|黑日|Demo|P0|P1|P2|测试|原型/);
+await screenshot("wudao-p0-ending-desktop.png");
+await send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
+const mobileP0Ending = await snapshot("p0-ending-mobile");
+assert.ok(mobileP0Ending.scrollWidth <= 390);
+await screenshot("wudao-p0-ending-mobile.png");
+
 const storedItems = await send("DOMStorage.getDOMStorageItems", { storageId: { securityOrigin: pageOrigin, isLocalStorage: true } });
 const savedEntry = storedItems.entries.find(([key]) => key === "wudao-high-martial-v1");
 if (!savedEntry) throw new Error("Missing local save after complete flow");
 const saved = JSON.parse(savedEntry[1]);
 assert.equal(saved.backgroundId, "mystery");
 assert.equal(saved.vowId, "path");
+assert.equal(saved.version, 4);
 assert.equal(saved.lives, 1);
-assert.equal(saved.potential, 1529);
+assert.equal(saved.potential, 1209);
 assert.equal(saved.relationship, "莫逆之交");
 assert.equal(saved.mindArt, "carp_dragon_gate");
 assert.equal(saved.roadTrial, "dive");
@@ -331,14 +417,81 @@ assert.equal(saved.wangFavor, 60);
 assert.equal(saved.fishingRodMethod, true);
 assert.equal(saved.attributes.insight, 5);
 assert.equal(saved.attributes.constitution, -1);
-assert.equal(saved.martialStage, "mortal");
-assert.deepEqual(saved.skills, ["five_animal_play", "fishing_rod_method"]);
+assert.equal(saved.martialStage, "body");
+assert.deepEqual(saved.skills, ["five_animal_play", "fishing_rod_method", "spring_rain_needles", "sea_stilling_stake", "ape_legacy_clue"]);
+assert.equal(saved.p0.complete, true);
+assert.equal(saved.p0.treatmentOutcome, "saved");
+assert.equal(saved.p0.battleOutcome, "killed");
+assert.equal(saved.p0.stakeId, "sea_stilling_stake");
+assert.equal(saved.p0.bodyProgress, 1);
+assert.equal(saved.p0.travelOutcome, "on_time_fresh");
+assert.equal(saved.p0.monkeyOutcome, "friend");
+assert.equal(saved.p0.legacyOutcome, "observed");
+assert.equal(saved.p0.items.monkey_wine, 1);
+
+const treatmentFailureSave = structuredClone(saved);
+treatmentFailureSave.screen = "thirdLadyTreatment";
+treatmentFailureSave.lives = 2;
+treatmentFailureSave.p0 = createP0State();
+treatmentFailureSave.p0.started = true;
+treatmentFailureSave.p0.node = "third_lady_treatment";
+treatmentFailureSave.p0.pillQuality = "volatile";
+treatmentFailureSave.p0.items.purple_dragon_blood_pill = 1;
+await reloadWithSave(treatmentFailureSave);
+await click("treat-third-lady", "pill_direct");
+assert.match(await text(), /换血没有救回帘后之人/);
+
+const deathBranchSave = structuredClone(saved);
+deathBranchSave.screen = "firstNeedleAmbush";
+deathBranchSave.lives = 2;
+deathBranchSave.p0 = createP0State();
+deathBranchSave.p0.started = true;
+deathBranchSave.p0.node = "first_needle_ambush";
+deathBranchSave.p0.items.spring_rain_needles = 1;
+deathBranchSave.p0.skills.spring_rain_needles = { stage: "learned", progress: 0 };
+deathBranchSave.p0.battle = createFirstBattle();
+deathBranchSave.p0.checkpoint = structuredClone(deathBranchSave.p0);
+await reloadWithSave(deathBranchSave);
+await click("first-battle-action", "reckless");
+assert.match(await text(), /带回的死中见闻/);
+assert.match(await text(), /左袖/);
+await click("return-p0-death");
+assert.match(await text(), /蒙面刀客/);
+assert.equal(await evaluate(`document.querySelector('[data-action="first-battle-action"][data-value="reckless"]')`), null);
+
+for (const branch of [
+  { stakeId: "deadwood_stake", action: "root_and_endure", expected: /枯木桩护住气血.*肩背轻伤/ },
+  { stakeId: "sea_stilling_stake", action: "anchor_and_withdraw", expected: /定海桩让你在湿坡上稳步退开，没有受伤/ },
+]) {
+  const conflictSave = structuredClone(saved);
+  conflictSave.screen = "monkeyConflict";
+  conflictSave.p0 = createP0State();
+  conflictSave.p0.started = true;
+  conflictSave.p0.node = "monkey_conflict";
+  conflictSave.p0.stakeId = branch.stakeId;
+  conflictSave.p0.monkeyOutcome = "hostile";
+  await reloadWithSave(conflictSave);
+  await click("monkey-conflict", branch.action);
+  assert.match(await text(), branch.expected);
+}
+
+const lateTravelSave = structuredClone(saved);
+lateTravelSave.screen = "midAutumnDeparture";
+lateTravelSave.p0 = createP0State();
+lateTravelSave.p0.started = true;
+lateTravelSave.p0.node = "mid_autumn_departure";
+lateTravelSave.p0.stakeId = "sea_stilling_stake";
+await reloadWithSave(lateTravelSave);
+await click("mid-autumn-travel", "road");
+assert.match(await text(), /破庙供桌只剩干涸桃汁/);
+
+await reloadWithSave(saved);
 
 await send("Page.reload", { ignoreCache: false });
 await new Promise((resolve) => setTimeout(resolve, 250));
-assert.match(await text(), /曹青好感/);
-assert.match(await text(), /五禽戏/);
-assert.match(await text(), /六枚下品回春丹/);
+assert.match(await text(), /白栀云脱险/);
+assert.match(await text(), /神猿残势/);
+assert.match(await text(), /锻体一重/);
 assert.deepEqual(pageErrors, []);
 
 process.stdout.write(`${JSON.stringify({ ok: true, checkpoints, saved: {

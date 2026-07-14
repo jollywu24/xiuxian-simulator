@@ -1,10 +1,11 @@
 {
   "name": "wudao-novel-route",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "type": "module",
   "scripts": {
     "test": "node --test tests/*.test.mjs",
+    "validate:content": "node scripts/validate-p0-content.mjs",
     "serve": "python3 -m http.server 8080 --directory web"
   }
 }
