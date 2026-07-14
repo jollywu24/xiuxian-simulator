@@ -43,9 +43,9 @@
 
 ```js
 attributes: {
-  base: { strength: 0, root: 0, agility: 0, insight: 0, fortune: 0 },
-  earned: { strength: 1, root: 0, agility: 0, insight: 1, fortune: 0 },
-  allocation: { strength: 0, root: 0, agility: 0, insight: 5, fortune: 0 }
+  base: { strength: 0, constitution: 0, agility: 0, insight: 0, fortune: 0 },
+  earned: { strength: 1, constitution: 0, agility: 0, insight: 1, fortune: 0 },
+  allocation: { strength: 0, constitution: 0, agility: 0, insight: 5, fortune: 0 }
 }
 ```
 
@@ -54,6 +54,8 @@ attributes: {
 - `allocation`是逆天改命当前分配；
 - 有效值由身体状态、武学、环境和伤势修正后计算；
 - 任何系统不得直接缓存有效值到存档。
+
+战斗中不得把五维合成单一“战斗力”。每个行动只允许一个主属性、一个辅属性；力道、根骨、身法、悟性和福缘的具体战斗职责、四道对抗门及临战重分规则见 [SYS-03 战斗、伤势与死亡系统](03_COMBAT_INJURY_DEATH.md)。
 
 ## 5. 武学数据模型
 
@@ -68,6 +70,12 @@ attributes: {
   prerequisites: [],
   mastery: { level: 1, progress: 0 },
   moves: ["seal_acupoint", "stop_bleeding", "pierce_vital"],
+  combatRules: {
+    masteryModifier: 0,
+    approaches: ["precise_needle", "quick_needle"],
+    superiorResults: ["disarm", "keep_momentum"],
+    realmBreakConditions: ["confirmed_acupoint_opening"]
+  },
   passives: [],
   conflicts: []
 }
@@ -81,6 +89,8 @@ attributes: {
 - 熟练：可以改变行动深度；
 - 精通：解锁被动或组合；
 - 突破：品阶或规则发生变化。
+
+战斗掌握修正统一为入门 `0`、熟练 `+1`、精通 `+2`、突破 `+3`，但每次提升还必须增加一项新做法、优势结果、克制、负荷变化、非杀戮结束方式或限定破阶条件。禁止只修改数值而不改变可玩规则。
 
 ## 6. 武学类别
 
