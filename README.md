@@ -77,5 +77,6 @@ npm run validate:content
 - `docs/STORY_BIBLE.md`：当前完整剧情，以及原著第30—127章的后续篇章、人物弧光、分支后果与单世界改编参考。
 - `docs/SYSTEM_ROADMAP.md`：完整游戏仍需制作的系统、依赖、优先级和剧情里程碑。
 - `docs/systems/`：八份独立系统制作规格与验收标准。
+- `docs/WANDERING_SWORD_DESIGN_REFERENCE.md`：《逸剑风云决》的世界、人物、武学、战斗与支线设计拆解，以及对本项目的采用／改造／舍弃建议。
 
 `web/app.mjs`、`web/game-core.mjs` 与 `tests/core.test.mjs` 保留上一版规则作为迁移参考，不再由网页入口加载。
