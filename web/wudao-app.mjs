@@ -49,18 +49,26 @@ import {
 } from "./wudao-core.mjs";
 import {
   P0_STAKES,
+  createDeathRecord,
   createFirstBattle,
   createP0State,
+  evaluateCombatAction,
+  getAssailantPlotBoard,
   getBodyBreakthroughBoard,
   getDiagnosisBoard,
+  getFirstBattleActions,
   getP0Item,
   getP0Skill,
+  getSceneActions,
   grantSpringRainNeedles,
   migrateP0State,
+  recordDeath,
   resolveApeLegacy,
   resolveBodyBreakthrough,
   resolveDiagnosisAction,
   resolveFirstBattleAction,
+  resolveAssailantCounterAction,
+  resolveAssailantTrace,
   resolveIngredientSource,
   resolveMidAutumnTravel,
   resolveMonkeyTest,
@@ -75,10 +83,12 @@ import {
 
 const STORAGE_KEY = "wudao-high-martial-v1";
 const app = document.querySelector("#app");
+const COMBAT_ATTRIBUTE_NAMES = { constitution: "根骨", insight: "悟性", agility: "身法", strength: "力道", fortune: "福缘" };
+const COMBAT_STAGE_NAMES = { mortal: "未入门", body: "锻体", qi: "聚气", meridian: "通脉", master: "宗师" };
 
 function createInitialState() {
   return {
-    version: 4,
+    version: 5,
     screen: "landing",
     name: "陈司命",
     backgroundId: "mystery",
@@ -161,8 +171,8 @@ function createInitialState() {
 function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (!saved || ![2, 3, 4].includes(saved.version) || !saved.screen) return null;
-    const migrated = { ...createInitialState(), ...saved, version: 4, p0: migrateP0State(saved.p0) };
+    if (!saved || ![2, 3, 4, 5].includes(saved.version) || !saved.screen) return null;
+    const migrated = { ...createInitialState(), ...saved, version: 5, p0: migrateP0State(saved.p0) };
     if (migrated.p0.started && saved.p0?.items?.return_spring_pill === undefined) migrated.p0.items.return_spring_pill = Number(saved.alchemyPills || 0);
     if (saved.version === 2 && saved.shenChapterComplete && saved.fiveAnimalBook) {
       migrated.screen = "fiveAnimalReward";
@@ -231,6 +241,26 @@ function p0RelationLabel(id) {
   return `情分 ${relation.favor} · 信任 ${relation.trust} · 人情债 ${relation.debt}`;
 }
 
+function p0SkillStageLabel(progress = {}) {
+  if (progress.stage === "mastered" || Number(progress.progress || 0) >= 100) return "精通";
+  if (progress.stage === "skilled" || Number(progress.progress || 0) >= 60) return "熟练";
+  if (progress.stage === "learned") return "入门";
+  return "只得残线";
+}
+
+function p0CombatContext() {
+  const knownFacts = state.p0.deathRecords.some((record) => record.id === "left_sleeve_blade") ? ["left_sleeve_blade"] : [];
+  return {
+    attributes: state.attributes,
+    playerStage: state.martialStage,
+    skills: state.p0.skills,
+    wounds: state.p0.wounds,
+    knownFacts,
+    canRiskDeath: state.lives > 1,
+    hasNeedles: Number(state.p0.items.spring_rain_needles || 0) > 0,
+  };
+}
+
 function reallocateShenAttributes(focus) {
   const attributes = reallocateExistingAttributes(shenAttributePool(), focus);
   attributes.constitution -= Number(state.bloodLoss || 0);
@@ -271,12 +301,13 @@ function setupShell(content, narrow = false) {
   return `<main class="setup-shell"><section class="setup-card ${narrow ? "narrow" : ""}">${content}</section></main>`;
 }
 
-function actionCard({ action, value = "", title, description, source = "", meta = "", kind = "", disabled = false }) {
+function actionCard({ action, value = "", title, description, source = "", meta = "", detail = "", kind = "", disabled = false }) {
   return `
     <button type="button" class="action-card ${kind}" data-action="${escapeHtml(action)}" data-value="${escapeHtml(value)}" ${disabled ? "disabled" : ""}>
       <span>
         <span class="action-title">${source ? `<span class="action-source">${escapeHtml(source)}</span>` : ""}${escapeHtml(title)}</span>
         <span class="action-description">${escapeHtml(description)}</span>
+        ${detail ? `<span class="action-reason">${escapeHtml(detail)}</span>` : ""}
       </span>
       <span class="action-meta">${escapeHtml(meta)}</span>
     </button>
@@ -314,7 +345,8 @@ function journalHtml() {
         : state.p0.monkeyOutcome ? "灵猴已经认路"
           : state.p0.bodyProgress ? "锻体一重"
             : state.p0.stakeId ? `${P0_STAKES[state.p0.stakeId]?.name || "桩功"}入门`
-              : state.p0.battleOutcome ? "长街夜战已决"
+              : state.p0.assailantPlot?.outcome ? "夜袭回报已经改写"
+                : state.p0.battleOutcome ? "长街夜战已决"
                 : state.p0.treatmentOutcome ? "三夫人病局已定" : "三夫人病危";
     items.push([state.p0.location === "ruined_temple" ? "金陵东郊 · 破庙" : "金陵东门 · 医武之路", p0Detail, state.p0.complete ? "shifted" : "current"]);
   }
@@ -373,9 +405,10 @@ function characterPanelHtml() {
           }).join("")}
           ${Object.entries(state.p0?.skills || {}).map(([id, progress]) => {
             const skill = getP0Skill(id);
-            return skill ? `<div><strong>${escapeHtml(skill.name)}</strong><span>${escapeHtml(progress.stage === "learned" ? "已经入门" : "只得残线")} · ${Number(progress.progress || 0)}%</span></div>` : "";
+            return skill ? `<div><strong>${escapeHtml(skill.name)}</strong><span>${escapeHtml(p0SkillStageLabel(progress))} · ${Number(progress.progress || 0)}%</span></div>` : "";
           }).join("")}
           ${(state.p0?.wounds || []).map((wound) => `<div><strong>${wound.bodyPart === "leg" ? "腿伤" : wound.bodyPart === "shoulder" ? "肩伤" : "肋下刀伤"}</strong><span>伤势 ${Number(wound.severity || 0)} · 尚未痊愈</span></div>`).join("")}
+          ${(state.p0?.deathRecords || []).map((record) => `<div><strong>死劫 · ${escapeHtml(record.location)}</strong><span>${escapeHtml(record.cause)} · 已记住：${escapeHtml(record.insight)}</span></div>`).join("")}
         </div>
       </div>
     </div>
@@ -457,6 +490,9 @@ function modeLabel() {
     p0Death: "命灯熄灭 · 旧局回照",
     firstNeedleAmbush: "金陵长街 · 雨夜刀光",
     firstKillAftermath: "针下留命 · 去留一念",
+    assailantTrace: "东门长街 · 雨中回报",
+    assailantCounterplan: "东水门 · 借局反制",
+    assailantPlotResult: "旧局易手 · 因果已改",
     apprenticeshipOffer: "东门药铺 · 曹青问徒",
     stakeChoice: "医武同源 · 两门桩功",
     stakeTraining: "东门后院 · 一夜站桩",
@@ -1430,29 +1466,49 @@ function renderNeedleInheritance() {
 
 function renderP0Death() {
   const memory = state.p0.deathMemory.at(-1);
+  const record = state.p0.deathRecords.at(-1);
   return gameShell(`
     ${sceneHeader("一盏命灯碎裂", state.p0.deathReason || "这一条路走到了死处", "火光退回灯芯，疼痛却没有退。你仍记得最后一眼看见的招式、呼吸和错处。")}
-    <div class="death-verdict"><span>带回的死中见闻</span><strong>${escapeHtml(memory || "强行前进并不能替代看清条件")}</strong><p>剩余命灯 ${state.lives}。回到最近因果节点后，这段记忆不会消失。</p></div>
+    <div class="death-verdict"><span>${record ? escapeHtml(`${record.location} · 死劫履历`) : "带回的死中见闻"}</span><strong>${escapeHtml(memory || "强行前进并不能替代看清条件")}</strong><p>${record ? `死因：${escapeHtml(record.cause)}` : ""}剩余命灯 ${state.lives}。回到最近因果节点后，这段记忆不会消失，也会直接改变可见胜算。</p></div>
     <div class="button-row"><button class="primary-button" data-action="return-p0-death">循着残灯回到死前</button></div>
   `);
 }
 
 function renderFirstNeedleAmbush() {
   const battle = state.p0.battle || createFirstBattle();
-  const roundTwo = battle.round >= 2;
+  const context = p0CombatContext();
+  const actions = getFirstBattleActions(battle, context);
+  const technique = getP0Skill(state.p0.activeMartial?.technique);
+  const knownSleeve = battle.knownFacts?.includes("left_sleeve_blade");
   return gameShell(`
     ${sceneHeader("东门长街 · 夜雨", "蒙面刀客从药铺檐影里压低右肩", "他挡住回路，不问姓名。雨水在右手刀锋上发亮，可你已经知道：能看见的未必是真正杀招。")}
-    <div class="battle-intent"><span>对手意图</span><strong>${escapeHtml(battle.enemyIntent)}</strong><p>${battle.observedFeint ? "你已看破右肩只是诱饵，真正短刃藏在左袖。" : battle.darkness ? "灯已熄灭，他的步法慢了一瞬。" : battle.enemyWounded ? "右腕中针，但左袖仍可递刀。" : "尚未看破虚实。"}</p></div>
+    <div class="battle-layout">
+      <div class="battle-status">
+        <div><span>你</span><strong>${escapeHtml(COMBAT_STAGE_NAMES[state.martialStage] || state.martialStage)}</strong></div>
+        <div><span>刀客</span><strong>${escapeHtml(COMBAT_STAGE_NAMES[battle.enemyStage] || battle.enemyStage)}</strong></div>
+        <div><span>距离</span><strong>${battle.range === "close" ? "贴身" : battle.range === "far" ? "远离" : "适中"}</strong></div>
+        <div><span>当前运用</span><strong>${escapeHtml(technique?.name || "徒手")}</strong></div>
+      </div>
+      <div class="battle-intent ${knownSleeve || battle.observedFeint ? "known" : "uncertain"}"><span>第 ${battle.round} 轮 · 对手意图</span><strong>${escapeHtml(battle.enemyIntent)}</strong><p>${battle.observedFeint || knownSleeve ? "左袖杀招已经看清；现在要决定留活口、取命，还是脱身。" : battle.darkness ? "灯已熄灭，他的步法慢了一瞬。" : battle.enemyWounded ? "右腕中针，但左袖仍可递刀。" : "后手未明。先观察、借势或冒险抢攻，结果会读取对应五维与武学。"}</p></div>
+      ${battle.lastResult ? `<div class="battle-log"><p><strong>刚才：</strong>${escapeHtml(battle.lastResult)}</p></div>` : ""}
+    </div>
     ${state.p0.wounds.length ? `<div class="death-verdict"><span>带伤应战</span><strong>肋下见血</strong><p>再失手会让之后的站桩与突破更难。</p></div>` : ""}
     <div class="action-list">
-      ${!roundTwo ? actionCard({ action: "first-battle-action", value: "observe", title: "让开半步，只看肩、胯与袖口", description: "放弃先手，用一轮换取对真正杀招的判断。", source: "观招", meta: "看破虚招", kind: "special" }) : ""}
-      ${!roundTwo ? actionCard({ action: "first-battle-action", value: "extinguish", title: "飞针打灭街边灯笼", description: "不与刀锋相碰，先改变雨夜里的视野和步速。", source: "借势", meta: "进入第二轮" }) : ""}
-      ${!roundTwo || !battle.enemyWounded ? actionCard({ action: "first-battle-action", value: "needle_wrist", title: "银针先取持刀手腕", description: "春风针第一次用于实战；制住明处的刀，却未必制住暗处杀招。", source: "新武学", meta: "立即兑现", kind: "special" }) : ""}
-      ${roundTwo ? actionCard({ action: "first-battle-action", value: "seal", title: "封住肩井与曲池，留他一命", description: "以针截断发力，换一个可以开口的活口。", source: "制伏", meta: "留下口供", kind: "special" }) : ""}
-      ${roundTwo ? actionCard({ action: "first-battle-action", value: "kill", title: "穿喉一针，不给第二次出刀", description: "你第一次亲手决定让一个人死。此后曹青看你的眼神也会不同。", source: "杀招", meta: "第一次杀人", kind: "danger" }) : ""}
-      ${roundTwo && !battle.playerWounded ? actionCard({ action: "first-battle-action", value: "reckless", title: "趁看破虚招强追一步", description: "你能避开左袖短刃的要害，却会被回锋割开肋下；带伤仍可继续决胜。", source: "负伤抢势", meta: "留下肋下刀伤", kind: "danger" }) : ""}
-      ${!roundTwo && state.lives > 1 ? actionCard({ action: "first-battle-action", value: "reckless", title: "迎着右手刀光抢攻", description: "把全部注意都交给明处刀锋，试着一针定胜负。", source: "死局", meta: "必死 · 可带回见闻", kind: "danger" }) : ""}
-      ${actionCard({ action: "first-battle-action", value: "flee", title: "翻过药铺矮墙，带针匣离开", description: "不查刀客来路，保住性命和刚得到的针法。", source: "退路", meta: "安全离开" })}
+      ${actions.map((entry) => {
+        const evaluation = entry.evaluation;
+        const attribute = entry.attribute ? COMBAT_ATTRIBUTE_NAMES[entry.attribute] : "局势";
+        return actionCard({
+          action: "first-battle-action",
+          value: entry.id,
+          title: entry.title,
+          description: `${entry.description} 得手：${entry.successPreview}；风险：${entry.riskPreview}。`,
+          source: `${entry.intent} · ${entry.objectName}`,
+          meta: evaluation.available ? `${evaluation.ratingLabel} · ${attribute}` : "不可用",
+          detail: evaluation.available ? `依据：${evaluation.reasons.join("；")}` : evaluation.reason,
+          kind: evaluation.rating === "fatal" || evaluation.rating === "dangerous" ? "danger" : entry.skillId || evaluation.rating === "safe" ? "special" : "",
+          disabled: !evaluation.available,
+        });
+      }).join("")}
     </div>
   `);
 }
@@ -1467,13 +1523,84 @@ function renderFirstKillAftermath() {
   return gameShell(`
     ${sceneHeader("长街夜战 · 已决", title, subtitle)}
     <div class="encounter-ledger"><div><span>你的选择</span><strong>${state.p0.battleOutcome === "killed" ? "杀死" : state.p0.battleOutcome === "subdued" ? "制伏" : "脱身"}</strong><p>活口、死尸和逃路各会留下不同痕迹；曹青与幕后之人都会据此重新看你。</p></div><div><span>春风化雨针</span><strong>已经实战</strong><p>从医针变成了真正能决定生死的手段。</p></div></div>
-    <div class="action-list">${actionCard({ action: "return-after-battle", title: "带着夜战结果回东门药铺", description: "曹青还亮着灯。他会问清楚每一针落在何处。", source: "回去见师", meta: "决定师徒路", kind: "special" })}</div>
+    <div class="action-list">${actionCard({ action: "read-night-trace", title: "先处理长街上留下的人与痕迹", description: "刀客不是来逞凶，他必须在丑时前向某个人回报成败。活口、尸身与脚印各有不同入口。", source: "夜袭未完", meta: "追查回报渠道", kind: "special" })}</div>
+  `);
+}
+
+function assailantBoardHtml() {
+  const board = getAssailantPlotBoard(state.p0);
+  return `<div class="quest-grid compact-board">${board.checks.map((check) => `<article class="quest-card ${check.met ? "completed" : "locked"}"><span>${check.met ? "已经看破" : "尚未看破"}</span><h2>${escapeHtml(check.label)}</h2><div class="quest-state">${check.met ? "已掌握" : "缺少条件"}</div></article>`).join("")}</div>`;
+}
+
+function renderAssailantTrace() {
+  const actions = getSceneActions("assailant_trace", { battleOutcome: state.p0.battleOutcome });
+  const openings = {
+    subdued: ["活口的目光总往左袖夹层飘", "他可以撒谎，但藏不住自己最怕你拿到什么。"],
+    killed: ["雨水从尸身左袖冲出一线黑灰", "口供已经没有了，物件留下的次序却仍能说话。"],
+    escaped: ["檐下水痕每隔七步断一次", "刀客在绕路确认无人跟踪；只追刀光会被发现，追雨痕还有机会。"],
+  };
+  const [title, subtitle] = openings[state.p0.battleOutcome] || ["夜雨正在洗掉痕迹", "若不立刻决定，这条线会在天亮前消失。"];
+  return gameShell(`
+    ${sceneHeader("东门长街 · 丑时将近", title, subtitle)}
+    ${assailantBoardHtml()}
+    <div class="action-list">
+      ${actions.map((entry) => {
+        const evaluation = evaluateCombatAction(entry, null, { ...p0CombatContext(), enemyStage: null });
+        const attribute = entry.attribute ? COMBAT_ATTRIBUTE_NAMES[entry.attribute] : "不冒险";
+        return actionCard({ action: "assailant-trace", value: entry.id, title: entry.title, description: `${entry.description} 得手：${entry.successPreview}；风险：${entry.riskPreview}。`, source: `${entry.verb} · ${entry.objectName}`, meta: `${evaluation.ratingLabel} · ${attribute}`, detail: evaluation.reasons.join("；"), kind: entry.id === "leave_trace" ? "" : "special" });
+      }).join("")}
+    </div>
+  `);
+}
+
+function renderAssailantCounterplan() {
+  const board = getAssailantPlotBoard(state.p0);
+  const actions = getSceneActions("assailant_counterplan", { plotReady: board.ready });
+  return gameShell(`
+    ${sceneHeader("东水门 · 丑时前", "刀客不是最后一环，你已经握住他的回报方式", "鱼鳞铜签、暗语和交接时辰原本都属于幕后者。现在你可以只求自保，也可以让这条旧路替你送出一条新消息。")}
+    ${assailantBoardHtml()}
+    <div class="battle-intent known"><span>眼前命途</span><strong>${board.ready ? "四项条件已经齐备，可以反用这套灭口回报" : "条件仍有缺口，只能先护人或截断渠道"}</strong><p>伪报会接管敌人的判断；改写刻痕会把接头者引到指定地点；告知白栀云则优先保人。</p></div>
+    <div class="action-list">
+      ${actions.map((entry) => {
+        const evaluation = evaluateCombatAction(entry, null, { ...p0CombatContext(), enemyStage: null });
+        const attribute = entry.attribute ? COMBAT_ATTRIBUTE_NAMES[entry.attribute] : "不较量";
+        return actionCard({ action: "assailant-counterplan", value: entry.id, title: entry.title, description: `${entry.description} 得手：${entry.successPreview}；风险：${entry.riskPreview}。`, source: `${entry.intent} · ${entry.objectName}`, meta: `${evaluation.ratingLabel} · ${attribute}`, detail: evaluation.reasons.join("；"), kind: entry.id === "send_false_report" || entry.id === "reverse_meeting" ? "special" : "" });
+      }).join("")}
+    </div>
+  `);
+}
+
+function renderAssailantPlotResult() {
+  const outcomes = {
+    false_report: ["假消息已经沿旧路送出", "幕后者会以为针匣与持针人都已沉进雨夜。下一次动手前，他仍会使用这条回报渠道。", "回报渠道易手"],
+    false_report_exposed: ["暗语对了，语气却露出破绽", "接头者没有现身。敌人已经知道刀客失手，之后会避开原有渠道。", "敌人提高戒备"],
+    reverse_meeting: ["交接刻痕被改到了沈家废渡", "下一名接头者会走进你指定的地方。你没有抓住他，却已经能安排下一次相见。", "设下反向会面"],
+    meeting_mark_exposed: ["新刻痕没能骗过接头者", "桥洞下只留下一道刮痕。敌人知道有人动过铜签，却不知道你是谁。", "旧渠道作废"],
+    bai_guarded: ["白栀云收下铜签，立刻换了三处守夜", "你没有利用敌人的耳目，却让被盯上的人活过了最危险的一夜。", "优先护住白栀云"],
+    channel_destroyed: ["铜签被磨成一块无字废铜", "敌人无法确认刀客成败，你也失去了顺藤摸瓜的入口。", "斩断回报渠道"],
+    abandoned: ["你收住脚步，让夜雨洗去最后一段痕迹", "没有人发现你继续追查，刀客背后的回报渠道也在丑时之后合拢。", "保全自身，放弃追查"],
+    spotted: ["檐下水痕突然折返", "刀客发现身后有人，带着铜签消失在东水门外。旧渠道今夜不会再出现。", "追踪被反身察觉"],
+    clue_lost: ["活口与尸身都没能再开口", "关键痕迹在迟疑中消失。你保住夜战结果，却没能摸到幕后人的回报方式。", "回报线索断绝"],
+  };
+  const [title, subtitle, result] = outcomes[state.p0.assailantPlot?.outcome] || ["雨夜没有留下答案", "有些机会只在一个时辰里存在。", "回报窗口关闭"];
+  return gameShell(`
+    ${sceneHeader("丑时 · 东水门", title, subtitle)}
+    <div class="encounter-ledger"><div><span>夜袭处置</span><strong>${escapeHtml(result)}</strong><p>从今夜起，敌人会按这份结果判断你，也会因此改变下一次来路。</p></div><div><span>当前关系</span><strong>${escapeHtml(p0RelationLabel("bai_zhiyun"))}</strong><p>护人、设局与藏锋留下的不是同一种人情。</p></div></div>
+    <div class="action-list">${actionCard({ action: "finish-assailant-plot", title: "带着今夜的结果回东门药铺", description: "曹青还亮着灯。他会问你用了哪一针、追到了哪一步，又为何在丑时前停手。", source: "回去见师", meta: "决定师徒路", kind: "special" })}</div>
   `);
 }
 
 function renderApprenticeshipOffer() {
+  const plotOutcomes = {
+    false_report: "你不仅活下来，还让敌人的回报渠道暂时为你所用。",
+    reverse_meeting: "你把下一次见面的地点改到了自己选定的渡口。",
+    bai_guarded: "你先护住白栀云，让沈家连夜换了守备。",
+    channel_destroyed: "你截断回报，没有让任何人知道刀客成败。",
+    abandoned: "你没有追查回报渠道，只把夜战本身带了回来。",
+    spotted: "追踪被反身察觉，旧回报渠道已经废弃。",
+  };
   return gameShell(`
-    ${sceneHeader("东门药铺 · 黎明", "曹青听完夜战，只问你愿不愿真正入他的门", "五禽戏只能健体，打鱼杆法也只是渔人手艺。若想跨进锻体，他愿传一门桩功；从此你也要替他担一部分仇怨。")}
+    ${sceneHeader("东门药铺 · 黎明", "曹青听完夜战，只问你愿不愿真正入他的门", `${plotOutcomes[state.p0.assailantPlot?.outcome] || "你已经用春风针决定过一次生死。"} 五禽戏只能健体，打鱼杆法也只是渔人手艺。若想跨进锻体，他愿传一门桩功；从此你也要替他担一部分仇怨。`)}
     <div class="action-list">
       ${actionCard({ action: "apprenticeship-choice", value: "accept", title: "跪下奉茶，认曹青为师", description: "得到通往锻体的桩功，也把师门仇怨和规矩一起接下。", source: "师徒", meta: "选择一门桩功", kind: "special" })}
       ${actionCard({ action: "apprenticeship-choice", value: "decline", title: "只谢传艺，不入师门", description: "保留医术、针法和自由，但失去这次锻体引路。", source: "独行", meta: "师徒缘止" })}
@@ -1611,15 +1738,28 @@ function renderP0Missed() {
 function renderP0JourneyEnd() {
   const legacy = state.p0.legacyOutcome ? "神猿残势" : "未见神猿遗迹";
   const relation = state.p0.relationships.temple_monkeys;
+  const plotLabels = {
+    false_report: "回报渠道易手",
+    false_report_exposed: "伪报被识破",
+    reverse_meeting: "接头地点已改",
+    meeting_mark_exposed: "刻痕被看破",
+    bai_guarded: "白栀云已有防备",
+    channel_destroyed: "回报渠道已断",
+    abandoned: "没有继续追查",
+    spotted: "追踪时被察觉",
+    clue_lost: "关键痕迹已经消失",
+  };
   return gameShell(`
     ${sceneHeader("八月十五 · 月落东郊", state.p0.complete ? "破庙不再只是你活过第一夜的地方" : "这一程停在了机缘门外", state.p0.complete ? "你从病榻学会用医术定因果，从雨夜学会用针决定生死，又用一门桩功赶回旧地。猴群认得你，水洞也留下了下一门武学的方向。" : "你仍保有此前所有武学与关系，但没能把这一串机缘走到水洞深处。")}
     <div class="wudao-ending-grid shen-ending-grid">
       <div><span>医道结果</span><strong>${state.p0.treatmentOutcome === "saved" ? "白栀云脱险" : state.p0.treatmentOutcome || "未成"}</strong><p>${escapeHtml(p0RelationLabel("bai_zhiyun"))}</p></div>
       <div><span>夜战结果</span><strong>${state.p0.battleOutcome === "killed" ? "第一次杀人" : state.p0.battleOutcome === "subdued" ? "留下活口" : state.p0.battleOutcome === "escaped" ? "保命脱身" : "未经历"}</strong><p>${state.p0.skills.spring_rain_needles ? "春风化雨针已经实战" : "针法未得"}</p></div>
+      <div><span>夜袭后手</span><strong>${escapeHtml(plotLabels[state.p0.assailantPlot?.outcome] || "回报窗口关闭")}</strong><p>${state.p0.evidence.includes("assailant_channel_controlled") ? "敌人的旧耳目暂时会替你送话" : "后续敌人会按这一夜的结果调整行动"}</p></div>
       <div><span>武道进境</span><strong>${state.martialStage === "body" ? "锻体一重" : "未入门"}</strong><p>${escapeHtml(P0_STAKES[state.p0.stakeId]?.name || "未选桩功")}</p></div>
       <div><span>破庙新缘</span><strong>${legacy}</strong><p>灵猴情分 ${relation.favor} · 信任 ${relation.trust}</p></div>
+      <div><span>死劫履历</span><strong>${state.p0.deathRecords.length} 次</strong><p>${state.p0.deathRecords.length ? escapeHtml(state.p0.deathRecords.at(-1).insight) : "尚未在这一程熄灭命灯"}</p></div>
     </div>
-    <div class="next-hooks"><div><span>水洞石痕</span><strong>神猿挥棒只余半式</strong><p>若要补全，须先找到能承受山泉水压的兵器。</p></div><div><span>刀客来路</span><strong>东门夜杀并非偶遇</strong><p>${state.p0.battleOutcome === "subdued" ? "活口仍能追问。" : "死人和逃路都留下了不同线索。"}</p></div><div><span>沈家内宅</span><strong>练功残页另有来处</strong><p>白栀云为何强练此功，尚未说完。</p></div></div>
+    <div class="next-hooks"><div><span>水洞石痕</span><strong>神猿挥棒只余半式</strong><p>若要补全，须先找到能承受山泉水压的兵器。</p></div><div><span>刀客来路</span><strong>${escapeHtml(plotLabels[state.p0.assailantPlot?.outcome] || "东门夜杀并非偶遇")}</strong><p>${state.p0.evidence.includes("assailant_channel_controlled") ? "下一次假回报可以继续误导幕后者。" : state.p0.evidence.includes("receiver_route_reversed") ? "沈家废渡会成为下一次反向会面。" : "敌人的下一步将由这一夜留下的痕迹决定。"}</p></div><div><span>沈家内宅</span><strong>练功残页另有来处</strong><p>白栀云为何强练此功，尚未说完。</p></div></div>
     <div class="button-row"><button class="secondary-button" data-action="restart">另起一世</button></div>
   `);
 }
@@ -1687,6 +1827,9 @@ const renderers = {
   p0Death: renderP0Death,
   firstNeedleAmbush: renderFirstNeedleAmbush,
   firstKillAftermath: renderFirstKillAftermath,
+  assailantTrace: renderAssailantTrace,
+  assailantCounterplan: renderAssailantCounterplan,
+  assailantPlotResult: renderAssailantPlotResult,
   apprenticeshipOffer: renderApprenticeshipOffer,
   stakeChoice: renderStakeChoice,
   stakeTraining: renderStakeTraining,
@@ -1704,7 +1847,7 @@ const renderers = {
 
 function screenMode() {
   if (["gameDeath", "shenDeath", "p0Death"].includes(state.screen)) return "death";
-  if (["encounterReward", "mindArt", "roadResult", "ending", "quietDeparture", "qingQingReward", "fiveAnimalReward", "shenPharmacy", "alchemyFailure", "shenChapterEnding", "needleInheritance", "firstKillAftermath", "midAutumnWarning", "p0Missed", "p0JourneyEnd"].includes(state.screen)) return "settlement";
+  if (["encounterReward", "mindArt", "roadResult", "ending", "quietDeparture", "qingQingReward", "fiveAnimalReward", "shenPharmacy", "alchemyFailure", "shenChapterEnding", "needleInheritance", "firstKillAftermath", "assailantPlotResult", "midAutumnWarning", "p0Missed", "p0JourneyEnd"].includes(state.screen)) return "settlement";
   if (["landing", "worldIntro", "characterDraft", "vow", "destiny", "characterSheet"].includes(state.screen)) return "neutral";
   return "simulation";
 }
@@ -1742,14 +1885,22 @@ function moveP0(screen, node, previousStatus = "complete", currentStatus = "acti
   moveTo(screen);
 }
 
-function handleP0Death(reason, memory, node) {
+function handleP0Death(reason, memory, node, causeId = "unknown_death") {
   if (state.lives <= 1) return;
   state.lives -= 1;
   state.p0.deathReason = reason;
   state.p0.deathNode = node;
-  state.p0.deathMemory = [...state.p0.deathMemory, memory];
+  const locations = { firstNeedleAmbush: "东门长街", bodyBreakthrough: "东门药铺后院" };
+  state.p0 = recordDeath(state.p0, createDeathRecord({
+    id: causeId,
+    location: locations[node] || "未知死局",
+    cause: reason,
+    insight: memory,
+    returnedTo: node === "firstNeedleAmbush" ? "刀客现身之前" : "突破之前",
+    round: node === "firstNeedleAmbush" ? state.p0.battle?.round || null : null,
+  }));
   state.lastDeathChoice = reason;
-  track("p0_death", { node, lives: state.lives });
+  track("p0_death", { node, causeId, lives: state.lives });
   moveTo("p0Death");
 }
 
@@ -2431,8 +2582,9 @@ const handlers = {
   "receive-spring-needles": () => {
     if (state.screen !== "needleInheritance" || state.p0.skills.spring_rain_needles) return;
     state.p0 = grantSpringRainNeedles(state.p0).state;
+    state.p0.activeMartial.foundation = state.mindArt || null;
     if (!state.skills.includes("spring_rain_needles")) state.skills.push("spring_rain_needles");
-    state.p0.battle = createFirstBattle();
+    state.p0.battle = createFirstBattle({ knownFacts: p0CombatContext().knownFacts });
     state.p0.checkpoint = null;
     state.p0.checkpoint = structuredClone(state.p0);
     track("spring_rain_needles_received");
@@ -2440,16 +2592,28 @@ const handlers = {
   },
   "first-battle-action": (value) => {
     if (state.screen !== "firstNeedleAmbush") return;
-    const result = resolveFirstBattleAction(value, state.p0.battle, { hasNeedles: Number(state.p0.items.spring_rain_needles || 0) > 0 });
+    const result = resolveFirstBattleAction(value, state.p0.battle, p0CombatContext());
     if (!result?.available) return;
-    if (result.outcome === "death") return handleP0Death(result.cause, result.memory, "firstNeedleAmbush");
+    if (result.outcome === "death") return handleP0Death(result.cause, result.memory, "firstNeedleAmbush", result.causeId);
     state.p0.battle = result.battle;
+    if (result.wound) {
+      const existing = state.p0.wounds.find((wound) => wound.id === result.wound.id);
+      if (existing) existing.severity = Math.max(Number(existing.severity || 0), Number(result.wound.severity || 0));
+      else state.p0.wounds.push(result.wound);
+    }
+    state.p0.battleHistory = [...state.p0.battleHistory, {
+      battleId: result.battle.id,
+      round: result.battle.round,
+      action: value,
+      intent: result.intent,
+      result: result.outcome,
+      rating: result.evaluation?.rating || null,
+    }];
     if (result.outcome === "round") {
       track("first_battle_round", { action: value, round: result.battle.round });
       return refresh();
     }
     if (result.outcome === "wounded") {
-      if (!state.p0.wounds.some((wound) => wound.id === result.wound.id)) state.p0.wounds.push(result.wound);
       track("first_battle_wound", { wound: result.wound.id });
       return refresh();
     }
@@ -2462,17 +2626,40 @@ const handlers = {
   "return-p0-death": () => {
     if (state.screen !== "p0Death" || !state.p0.checkpoint || state.lives <= 0) return;
     const memories = [...state.p0.deathMemory];
+    const deathRecords = structuredClone(state.p0.deathRecords);
     const node = state.p0.deathNode;
     state.p0 = migrateP0State(structuredClone(state.p0.checkpoint));
     state.p0.deathMemory = memories;
+    state.p0.deathRecords = deathRecords;
     state.p0.deathNode = null;
     state.p0.deathReason = null;
-    if (node === "firstNeedleAmbush") state.p0.battle = createFirstBattle();
+    if (node === "firstNeedleAmbush") state.p0.battle = createFirstBattle({ knownFacts: deathRecords.some((record) => record.id === "left_sleeve_blade") ? ["left_sleeve_blade"] : [] });
     track("p0_death_return", { node });
     moveP0(node, node === "firstNeedleAmbush" ? "first_needle_ambush" : "body_breakthrough");
   },
-  "return-after-battle": () => {
+  "read-night-trace": () => {
     if (state.screen !== "firstKillAftermath" || !state.p0.battleOutcome) return;
+    moveP0("assailantTrace", "assailant_trace");
+  },
+  "assailant-trace": (value) => {
+    if (state.screen !== "assailantTrace") return;
+    const result = resolveAssailantTrace(value, state.p0, p0CombatContext());
+    if (!result?.available) return;
+    state.p0 = result.state;
+    track("assailant_trace", { action: value, outcome: result.outcome });
+    if (result.continueTo === "counterplan") return moveP0("assailantCounterplan", "assailant_counterplan");
+    moveP0("assailantPlotResult", "assailant_plot_result", result.outcome === "abandoned" ? "missed" : "failed");
+  },
+  "assailant-counterplan": (value) => {
+    if (state.screen !== "assailantCounterplan") return;
+    const result = resolveAssailantCounterAction(value, state.p0, p0CombatContext());
+    if (!result?.available) return;
+    state.p0 = result.state;
+    track("assailant_counterplan", { action: value, outcome: result.outcome });
+    moveP0("assailantPlotResult", "assailant_plot_result", ["false_report", "reverse_meeting"].includes(result.outcome) ? "completed" : "resolved");
+  },
+  "finish-assailant-plot": () => {
+    if (state.screen !== "assailantPlotResult" || !state.p0.assailantPlot?.outcome) return;
     moveP0("apprenticeshipOffer", "apprenticeship_offer");
   },
   "apprenticeship-choice": (value) => {
@@ -2518,7 +2705,7 @@ const handlers = {
     if (state.screen !== "bodyBreakthrough") return;
     const result = resolveBodyBreakthrough(value, state.p0, { potential: state.potential });
     if (!result?.available) return;
-    if (result.outcome === "death") return handleP0Death(result.cause, result.memory, "bodyBreakthrough");
+    if (result.outcome === "death") return handleP0Death(result.cause, result.memory, "bodyBreakthrough", "forced_body_breakthrough");
     state.p0 = result.state;
     state.potential -= result.potentialCost;
     state.martialStage = "body";

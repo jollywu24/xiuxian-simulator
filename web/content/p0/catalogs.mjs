@@ -42,6 +42,13 @@ export const P0_ITEMS = [
     description: "既可止血封穴，也能在一念之间夺命。",
   },
   {
+    id: "fish_scale_token",
+    name: "鱼鳞铜签",
+    category: "clue",
+    tags: ["assailant", "signal", "counterplan"],
+    description: "刀客用来回报成败的凭证，背面刻着东水门桥洞与丑时暗记。",
+  },
+  {
     id: "monkey_wine",
     name: "猴儿酒",
     category: "treasure",

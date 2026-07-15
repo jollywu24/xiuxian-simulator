@@ -12,15 +12,22 @@ import {
   chooseStake,
   createFirstBattle,
   createP0State,
+  createDeathRecord,
   evaluateConditions,
+  getAssailantPlotBoard,
   getBodyBreakthroughBoard,
   getDiagnosisBoard,
+  getFirstBattleActions,
+  getSceneActions,
   grantSpringRainNeedles,
   migrateP0State,
+  recordDeath,
   resolveApeLegacy,
   resolveBodyBreakthrough,
   resolveDiagnosisAction,
   resolveFirstBattleAction,
+  resolveAssailantCounterAction,
+  resolveAssailantTrace,
   resolveIngredientSource,
   resolveMidAutumnTravel,
   resolveMonkeyTest,
@@ -47,18 +54,34 @@ function trainedState(stakeId = "sea_stilling_stake") {
   return resolveStakeTraining(p0, { potential: 500 }).state;
 }
 
+function battleContext(overrides = {}) {
+  return {
+    hasNeedles: true,
+    canRiskDeath: true,
+    attributes: { constitution: 0, insight: 5, agility: 0, strength: 0, fortune: 0 },
+    playerStage: "mortal",
+    skills: { spring_rain_needles: { stage: "skilled", progress: 60 } },
+    wounds: [],
+    knownFacts: [],
+    ...overrides,
+  };
+}
+
 test("P0内容目录的篇章、跳转和首次兑现均通过校验", () => {
   const result = validateP0Content();
-  assert.deepEqual(result, { ok: true, errors: [], nodeCount: 23, arcCount: 3 });
+  assert.deepEqual(result, { ok: true, errors: [], nodeCount: 26, arcCount: 3 });
 });
 
-test("旧存档缺少的新字段会由版本4嵌套状态补齐", () => {
+test("版本4存档缺少的版本5字段会由嵌套状态补齐", () => {
   const migrated = migrateP0State({ started: true, relationships: { bai_zhiyun: { favor: 7 } }, clock: { day: 15 } });
   assert.equal(migrated.relationships.bai_zhiyun.favor, 7);
   assert.equal(migrated.relationships.bai_zhiyun.suspicion, 5);
   assert.equal(migrated.clock.day, 15);
   assert.equal(migrated.clock.year, 427);
   assert.deepEqual(migrated.wounds, []);
+  assert.deepEqual(migrated.activeMartial, { foundation: null, technique: null, stance: null });
+  assert.equal(migrated.assailantPlot.stage, "unknown");
+  assert.deepEqual(migrated.deathRecords, []);
 });
 
 test("P0状态可完整写入JSON，且所有集合都有稳定默认值", () => {
@@ -152,7 +175,8 @@ test("先封穴再服稳定换血丹才得到完整救治与三维关系回报",
 test("春风化雨针同时成为随身物和可用武学", () => {
   const result = grantSpringRainNeedles(createP0State());
   assert.equal(result.state.items.spring_rain_needles, 1);
-  assert.equal(result.state.skills.spring_rain_needles.stage, "learned");
+  assert.equal(result.state.skills.spring_rain_needles.stage, "skilled");
+  assert.equal(result.state.activeMartial.technique, "spring_rain_needles");
 });
 
 test("第一次遭遇刀客时贸然出手会死亡并留下可利用记忆", () => {
@@ -163,18 +187,93 @@ test("第一次遭遇刀客时贸然出手会死亡并留下可利用记忆", ()
 });
 
 test("看破虚招后可选择制伏、杀死或离开，真实改变结果", () => {
-  const observed = resolveFirstBattleAction("observe", createFirstBattle(), { hasNeedles: true }).battle;
-  assert.equal(resolveFirstBattleAction("seal", observed, { hasNeedles: true }).outcome, "subdued");
-  assert.equal(resolveFirstBattleAction("kill", observed, { hasNeedles: true }).outcome, "killed");
-  assert.equal(resolveFirstBattleAction("flee", observed, { hasNeedles: true }).outcome, "escaped");
+  const context = battleContext();
+  const observed = resolveFirstBattleAction("observe", createFirstBattle(), context).battle;
+  assert.equal(resolveFirstBattleAction("seal", observed, context).outcome, "subdued");
+  assert.equal(resolveFirstBattleAction("kill", observed, context).outcome, "killed");
+  assert.equal(resolveFirstBattleAction("flee", observed, context).outcome, "escaped");
 });
 
 test("战斗失误会留下限制修炼的部位伤势", () => {
-  const roundTwo = resolveFirstBattleAction("observe", createFirstBattle(), { hasNeedles: true }).battle;
-  const result = resolveFirstBattleAction("reckless", roundTwo, { hasNeedles: true });
+  const context = battleContext();
+  const roundTwo = resolveFirstBattleAction("observe", createFirstBattle(), context).battle;
+  const result = resolveFirstBattleAction("reckless", roundTwo, context);
   assert.equal(result.outcome, "wounded");
   assert.equal(result.wound.bodyPart, "torso");
   assert.ok(result.wound.tags.includes("limits_training"));
+});
+
+test("夜战胜算真实读取对应属性、境界、针法熟练与已知破绽", () => {
+  const battle = createFirstBattle();
+  const low = getFirstBattleActions(battle, battleContext({ attributes: { insight: 1 } })).find((action) => action.id === "observe").evaluation;
+  const high = getFirstBattleActions(battle, battleContext({ attributes: { insight: 5, strength: 9 } })).find((action) => action.id === "observe").evaluation;
+  assert.equal(low.rating, "dangerous");
+  assert.equal(high.rating, "safe");
+  assert.equal(high.score, getFirstBattleActions(battle, battleContext({ attributes: { insight: 5, strength: 0 } })).find((action) => action.id === "observe").evaluation.score);
+
+  const observed = resolveFirstBattleAction("observe", battle, battleContext()).battle;
+  const skilled = getFirstBattleActions(observed, battleContext()).find((action) => action.id === "seal").evaluation;
+  const untrained = getFirstBattleActions(observed, battleContext({ skills: { spring_rain_needles: { stage: "known", progress: 0 } } })).find((action) => action.id === "seal").evaluation;
+  const sameStage = getFirstBattleActions(observed, battleContext({ playerStage: "body" })).find((action) => action.id === "seal").evaluation;
+  const woundedFlee = getFirstBattleActions(observed, battleContext({ wounds: [{ id: "leg_cut", bodyPart: "leg", severity: 2 }] })).find((action) => action.id === "flee").evaluation;
+  const healthyFlee = getFirstBattleActions(observed, battleContext()).find((action) => action.id === "flee").evaluation;
+  assert.equal(skilled.available, true);
+  assert.equal(untrained.available, false);
+  assert.ok(sameStage.score > skilled.score);
+  assert.ok(woundedFlee.score < healthyFlee.score);
+  assert.ok(skilled.reasons.some((reason) => /看破左袖/.test(reason)));
+});
+
+test("同一套动作与对象协议连续驱动夜战、追查和反向计划", () => {
+  const battleActions = getSceneActions("first_needle_ambush", { round: 1, hasOpening: false, canRiskDeath: true });
+  const traceActions = getSceneActions("assailant_trace", { battleOutcome: "killed" });
+  const counterActions = getSceneActions("assailant_counterplan", { plotReady: true });
+  assert.ok([battleActions, traceActions, counterActions].every((actions) => actions.every((action) => action.id && action.verb && action.objectId && action.intent)));
+  assert.ok(traceActions.some((action) => action.id === "search_sleeves"));
+  assert.ok(counterActions.some((action) => action.id === "send_false_report"));
+});
+
+test("不同夜战结果打开不同追查入口，齐备条件后可接管敌人回报", () => {
+  for (const [outcome, actionId] of [["subdued", "question_captive"], ["killed", "search_sleeves"], ["escaped", "follow_rain_marks"]]) {
+    const p0 = createP0State();
+    p0.battleOutcome = outcome;
+    const traced = resolveAssailantTrace(actionId, p0, battleContext({ attributes: { insight: 5, agility: 5 } }));
+    assert.equal(traced.outcome, "seen_through");
+    assert.equal(getAssailantPlotBoard(traced.state).ready, true);
+  }
+  const p0 = createP0State();
+  p0.battleOutcome = "killed";
+  const traced = resolveAssailantTrace("search_sleeves", p0, battleContext()).state;
+  const countered = resolveAssailantCounterAction("send_false_report", traced, battleContext());
+  assert.equal(countered.outcome, "false_report");
+  assert.ok(countered.state.evidence.includes("assailant_channel_controlled"));
+  const abandoned = resolveAssailantTrace("leave_trace", p0, battleContext());
+  assert.equal(abandoned.outcome, "abandoned");
+  assert.equal(abandoned.continueTo, "result");
+});
+
+test("战斗意图产生不同长期结果，护人会改变关系而毁签不会", () => {
+  const p0 = createP0State();
+  p0.assailantPlot.stage = "seen_through";
+  p0.assailantPlot.clues = ["target_needle_holder", "signal_medicine_returned", "fish_scale_token", "rain_report_window"];
+  p0.items.fish_scale_token = 1;
+  const guarded = resolveAssailantCounterAction("warn_bai", p0, battleContext()).state;
+  const hidden = resolveAssailantCounterAction("destroy_channel", p0, battleContext()).state;
+  assert.equal(guarded.relationships.bai_zhiyun.trust, p0.relationships.bai_zhiyun.trust + 8);
+  assert.equal(hidden.relationships.bai_zhiyun.trust, p0.relationships.bai_zhiyun.trust);
+  assert.equal(hidden.items.fish_scale_token, 0);
+});
+
+test("死劫履历记录地点、死因与见闻，重复死因只累计次数", () => {
+  const record = createDeathRecord({ id: "left_sleeve_blade", location: "东门长街", cause: "左袖短刃穿心", insight: "真正杀招藏在左袖", returnedTo: "刀客现身之前", round: 1 });
+  const once = recordDeath(createP0State(), record);
+  const twice = recordDeath(once, record);
+  assert.equal(twice.deathRecords.length, 1);
+  assert.equal(twice.deathRecords[0].count, 2);
+  assert.deepEqual(twice.deathMemory, ["真正杀招藏在左袖"]);
+  const battle = createFirstBattle({ knownFacts: ["left_sleeve_blade"] });
+  const reckless = getFirstBattleActions(battle, battleContext()).find((action) => action.id === "reckless");
+  assert.equal(reckless.evaluation.rating, "fatal");
 });
 
 test("轻中伤可以用春风针或回春丹真正清除", () => {

@@ -110,6 +110,34 @@ export const P0_CONTENT_NODES = [
     id: "first_kill_aftermath",
     arc: "apprenticeship",
     title: "针下留命",
+    actions: [{ id: "read_trace", next: "assailant_trace", outcomes: ["continue"] }],
+  },
+  {
+    id: "assailant_trace",
+    arc: "apprenticeship",
+    title: "雨中回报",
+    actions: [
+      { id: "question_captive", next: "assailant_counterplan", outcomes: ["seen_through"] },
+      { id: "search_sleeves", next: "assailant_counterplan", outcomes: ["seen_through"] },
+      { id: "follow_rain_marks", next: "assailant_counterplan", outcomes: ["seen_through", "spotted"] },
+      { id: "leave_trace", next: "assailant_plot_result", outcomes: ["abandoned"] },
+    ],
+  },
+  {
+    id: "assailant_counterplan",
+    arc: "apprenticeship",
+    title: "借敌人之手",
+    actions: [
+      { id: "send_false_report", next: "assailant_plot_result", outcomes: ["false_report", "exposed"] },
+      { id: "reverse_meeting", next: "assailant_plot_result", outcomes: ["reverse_meeting", "exposed"] },
+      { id: "warn_bai", next: "assailant_plot_result", outcomes: ["guarded"] },
+      { id: "destroy_channel", next: "assailant_plot_result", outcomes: ["hidden"] },
+    ],
+  },
+  {
+    id: "assailant_plot_result",
+    arc: "apprenticeship",
+    title: "旧局易手",
     actions: [{ id: "return", next: "apprenticeship_offer", outcomes: ["continue"] }],
   },
   {

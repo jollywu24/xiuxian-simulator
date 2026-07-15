@@ -33,6 +33,8 @@ export function createP0State() {
     battleOutcome: null,
     firstKill: false,
     firstKillChoice: null,
+    activeMartial: { foundation: null, technique: null, stance: null },
+    battleHistory: [],
     wounds: [],
     apprentice: false,
     stakeId: null,
@@ -47,6 +49,14 @@ export function createP0State() {
     wineChoice: null,
     legacyOutcome: null,
     deathMemory: [],
+    deathRecords: [],
+    assailantPlot: {
+      stage: "unknown",
+      clues: [],
+      traceAction: null,
+      counterAction: null,
+      outcome: null,
+    },
     checkpoint: null,
     log: [],
   };
@@ -55,6 +65,16 @@ export function createP0State() {
 export function migrateP0State(savedP0) {
   const defaults = createP0State();
   const source = savedP0 && typeof savedP0 === "object" ? savedP0 : {};
+  const legacyDeathRecords = Array.isArray(source.deathRecords)
+    ? source.deathRecords
+    : (source.deathMemory || []).map((insight, index) => ({
+        id: `legacy_death_${index + 1}`,
+        location: "旧日死局",
+        cause: "旧存档未记下完整死因",
+        insight,
+        returnedTo: "最近因果节点",
+        count: 1,
+      }));
   return {
     ...defaults,
     ...source,
@@ -62,6 +82,13 @@ export function migrateP0State(savedP0) {
     items: { ...defaults.items, ...(source.items || {}) },
     skills: { ...defaults.skills, ...(source.skills || {}) },
     hypotheses: { ...defaults.hypotheses, ...(source.hypotheses || {}) },
+    activeMartial: { ...defaults.activeMartial, ...(source.activeMartial || {}) },
+    assailantPlot: {
+      ...defaults.assailantPlot,
+      ...(source.assailantPlot || {}),
+      clues: [...(source.assailantPlot?.clues || [])],
+    },
+    deathRecords: legacyDeathRecords,
     relationships: {
       ...defaults.relationships,
       ...(source.relationships || {}),
@@ -190,6 +217,20 @@ export function validateP0Content() {
     const duplicates = catalogIds.filter((id, index) => catalogIds.indexOf(id) !== index);
     if (duplicates.length) errors.push(`${catalogName}目录ID重复：${[...new Set(duplicates)].join(",")}`);
   }
+  for (const [sceneId, actions] of Object.entries(P0_SCENE_ACTIONS)) {
+    const node = P0_CONTENT_NODES.find((entry) => entry.id === sceneId);
+    if (!node) {
+      errors.push(`动作协议场景不存在：${sceneId}`);
+      continue;
+    }
+    const seenActions = new Set();
+    for (const action of actions) {
+      if (!action.id || !action.verb || !action.objectId || !action.objectName || !action.intent) errors.push(`动作协议字段不全：${sceneId}/${action.id || "unknown"}`);
+      if (seenActions.has(action.id)) errors.push(`动作协议重复：${sceneId}/${action.id}`);
+      seenActions.add(action.id);
+      if (!node.actions.some((entry) => entry.id === action.id)) errors.push(`动作协议未登记到内容节点：${sceneId}/${action.id}`);
+    }
+  }
   return { ok: errors.length === 0, errors, nodeCount: P0_CONTENT_NODES.length, arcCount: P0_ARCS.length };
 }
 
@@ -287,10 +328,139 @@ export function resolveThirdLadyTreatment(choiceId, p0) {
   return { available: true, outcome, ...applyEffects(p0, effects) };
 }
 
+const ATTRIBUTE_LABELS = {
+  constitution: "根骨",
+  insight: "悟性",
+  agility: "身法",
+  strength: "力道",
+  fortune: "福缘",
+};
+
+const STAGE_ORDER = { mortal: 0, body: 1, qi: 2, meridian: 3, master: 4 };
+
+export const P0_SCENE_ACTIONS = {
+  first_needle_ambush: [
+    { id: "observe", verb: "观察", objectId: "night_assailant", objectName: "蒙面刀客", rounds: [1], intent: "识招", attribute: "insight", difficulty: 3, title: "让开半步，只看肩、胯与袖口", description: "放弃先手，用一轮换取对真正杀招的判断。", successPreview: "看破藏在左袖的短刃", riskPreview: "看慢一步会被刀锋擦伤" },
+    { id: "extinguish", verb: "改变", objectId: "street_lantern", objectName: "街边灯笼", rounds: [1], intent: "借势", attribute: "agility", difficulty: 2, title: "借雨掠过檐下，打灭灯笼", description: "不与刀锋相碰，先夺走对手看路的光。", successPreview: "让刀客慢下一步", riskPreview: "身法不足会在转身时挨刀" },
+    { id: "needle_wrist", verb: "出针", objectId: "weapon_wrist", objectName: "持刀手腕", rounds: [1, 2, 3], intent: "夺械", attribute: "insight", skillId: "spring_rain_needles", difficulty: 4, title: "春风针·封腕", description: "银针先取持刀手；若仍未看破暗招，腕停刀未必停。", successPreview: "封住明处刀腕", riskPreview: "未知后手可能直取要害" },
+    { id: "seal", verb: "封穴", objectId: "assailant_meridians", objectName: "肩井与曲池", minRound: 2, requiresOpening: true, intent: "制伏", attribute: "insight", skillId: "spring_rain_needles", difficulty: 4, title: "春风针·封穴留命", description: "截断肩肘发力，留下一个能开口的活口。", successPreview: "制伏并保留口供", riskPreview: "失手会让左袖短刃逼近" },
+    { id: "kill", verb: "穿喉", objectId: "assailant_throat", objectName: "刀客咽喉", minRound: 2, requiresOpening: true, intent: "杀死", attribute: "insight", skillId: "spring_rain_needles", difficulty: 3, title: "春风针·穿喉", description: "不给第二次出刀，也永远失去他的口供。", successPreview: "立即结束夜战", riskPreview: "留下尸体与第一条人命" },
+    { id: "reckless", verb: "抢攻", objectId: "night_assailant", objectName: "蒙面刀客", rounds: [1, 2, 3], intent: "强攻", attribute: "strength", difficulty: 3, title: "迎刀抢进，逼他退步", description: "以力道撞开刀路；第一轮若仍盯着右手，会踏进死局。", successPreview: "逼乱刀客脚步", riskPreview: "未看破左袖时可能当场身死" },
+    { id: "flee", verb: "脱离", objectId: "pharmacy_wall", objectName: "药铺矮墙", rounds: [1, 2, 3], intent: "脱身", attribute: "agility", difficulty: 0, ignoreStage: true, title: "翻过药铺矮墙脱身", description: "放弃追查刀客来路，保住性命和针匣。", successPreview: "安全离开长街", riskPreview: "敌人的回报渠道仍会运转" },
+  ],
+  assailant_trace: [
+    { id: "question_captive", verb: "盘问", objectId: "night_assailant", objectName: "受制刀客", onlyOutcome: "subdued", intent: "追查", attribute: "insight", difficulty: 2, title: "循着他看向袖口的眼神盘问", description: "不问主人姓名，只问谁等回报、用什么暗语。", successPreview: "取得暗语、铜签和交接时辰", riskPreview: "逼得太急会让他咬破毒囊" },
+    { id: "search_sleeves", verb: "搜查", objectId: "fallen_assailant", objectName: "刀客尸身", onlyOutcome: "killed", intent: "追查", attribute: "insight", difficulty: 2, title: "先查左袖夹层，再翻腰间暗袋", description: "死亡夺走口供，却留下无法自行销毁的凭证。", successPreview: "拼出回报暗语和交接地点", riskPreview: "巡夜更夫随时可能转进长街" },
+    { id: "follow_rain_marks", verb: "追踪", objectId: "rain_footprints", objectName: "雨中足印", onlyOutcome: "escaped", intent: "追查", attribute: "agility", difficulty: 2, title: "不追刀光，只追檐下断续水痕", description: "保持一条街的距离，看他把回报凭证藏到哪里。", successPreview: "找到暗语、铜签和交接时辰", riskPreview: "身法不足会被反身发现" },
+    { id: "leave_trace", verb: "放弃", objectId: "night_trace", objectName: "雨夜痕迹", intent: "保全", title: "收住脚步，先把夜战结果带回药铺", description: "不再碰这条线，避免下一名接头者察觉异常。", successPreview: "安全返回药铺", riskPreview: "永久失去这次回报窗口" },
+  ],
+  assailant_counterplan: [
+    { id: "send_false_report", verb: "伪报", objectId: "assailant_channel", objectName: "灭口回报渠道", intent: "接管", attribute: "insight", difficulty: 3, requiresReadyPlot: true, title: "照暗语送出“药已回炉”", description: "让幕后人相信刀客得手，暂时把他的耳目变成你的耳目。", successPreview: "接管回报渠道", riskPreview: "措辞露馅会让下一批人提前戒备" },
+    { id: "reverse_meeting", verb: "改写", objectId: "meeting_mark", objectName: "交接刻痕", intent: "设局", attribute: "fortune", difficulty: 2, requiresReadyPlot: true, title: "把交接刻痕改到沈家废渡", description: "不发假消息，只让接头者走进你选好的地方。", successPreview: "留下可反查的接头地点", riskPreview: "福缘不足时，对方可能察觉刻痕新旧" },
+    { id: "warn_bai", verb: "告知", objectId: "bai_zhiyun", objectName: "白栀云", intent: "护人", title: "把铜签与暗语交给白栀云", description: "先保住被盯上的人，不再冒险利用敌人的渠道。", successPreview: "白栀云提高戒备并更信任你", riskPreview: "幕后人发现旧渠道失去回应" },
+    { id: "destroy_channel", verb: "毁去", objectId: "fish_scale_token", objectName: "鱼鳞铜签", intent: "藏锋", title: "磨平铜签，截断这一夜的来往", description: "不求追凶，只让对方无法确认刀客究竟成败。", successPreview: "暂时隐藏夜战结果", riskPreview: "无法继续反查接头者" },
+  ],
+};
+
+export function getSceneActions(sceneId, context = {}) {
+  const actions = P0_SCENE_ACTIONS[sceneId] || [];
+  return actions.filter((action) => {
+    if (action.onlyOutcome && action.onlyOutcome !== context.battleOutcome) return false;
+    if (action.rounds && !action.rounds.includes(Number(context.round || 1))) return false;
+    if (action.minRound && Number(context.round || 1) < action.minRound) return false;
+    if (action.requiresOpening && !context.hasOpening) return false;
+    if (action.requiresReadyPlot && !context.plotReady) return false;
+    if (action.id === "reckless" && Number(context.round || 1) === 1 && context.canRiskDeath === false) return false;
+    if (action.id === "needle_wrist" && context.enemyWounded) return false;
+    return true;
+  }).map((action) => structuredClone(action));
+}
+
+function skillMastery(skill) {
+  if (!skill || skill.stage === "known") return { available: false, bonus: 0, label: "尚未入门" };
+  if (skill.stage === "mastered" || Number(skill.progress || 0) >= 100) return { available: true, bonus: 2, label: "精通" };
+  if (skill.stage === "skilled" || Number(skill.progress || 0) >= 60) return { available: true, bonus: 1, label: "熟练" };
+  return { available: true, bonus: 0, label: "入门" };
+}
+
+function stageModifier(playerStage, enemyStage, ignoreStage = false) {
+  if (ignoreStage || !enemyStage) return { value: 0, label: null, blocked: false };
+  const difference = Number(STAGE_ORDER[playerStage] || 0) - Number(STAGE_ORDER[enemyStage] || 0);
+  if (difference >= 1) return { value: 2, label: `高于对手一境`, blocked: false };
+  if (difference === 0) return { value: 0, label: "与对手同境", blocked: false };
+  if (difference === -1) return { value: -2, label: `低于对手一境`, blocked: false };
+  if (difference === -2) return { value: -4, label: `低于对手两境`, blocked: false };
+  return { value: -4, label: `相差三境，不能正面取胜`, blocked: true };
+}
+
+function actionAdvantage(action, battle, context) {
+  const knownFacts = new Set([...(battle?.knownFacts || []), ...(context.knownFacts || [])]);
+  if (action.id === "observe" && knownFacts.has("left_sleeve_blade")) return "死中见闻已指出左袖";
+  if (action.id === "extinguish" && battle?.terrain?.includes("rain")) return "雨夜灯焰不稳";
+  if (["needle_wrist", "seal", "kill", "reckless"].includes(action.id)) {
+    if (battle?.observedFeint || knownFacts.has("left_sleeve_blade")) return "已经看破左袖后手";
+    if (battle?.darkness) return "灯灭使刀客慢了一步";
+    if (battle?.enemyWounded) return "持刀手已经受制";
+  }
+  return null;
+}
+
+function actionDisadvantage(action, battle, context) {
+  const knownFacts = new Set([...(battle?.knownFacts || []), ...(context.knownFacts || [])]);
+  if (["needle_wrist", "reckless"].includes(action.id) && Number(battle?.round || 1) === 1 && !knownFacts.has("left_sleeve_blade")) return "左袖仍有未知后手";
+  return null;
+}
+
+function relevantWoundPenalty(action, wounds = []) {
+  if (action.attribute === "agility") return wounds.some((wound) => wound.bodyPart === "leg" && Number(wound.severity || 0) >= 2) ? 1 : 0;
+  if (action.attribute === "strength") return wounds.some((wound) => ["arm", "shoulder", "torso"].includes(wound.bodyPart) && Number(wound.severity || 0) >= 2) ? 1 : 0;
+  if (action.skillId) return wounds.some((wound) => ["arm", "shoulder"].includes(wound.bodyPart) && Number(wound.severity || 0) >= 2) ? 1 : 0;
+  return 0;
+}
+
+export function evaluateCombatAction(action, battle, context = {}) {
+  if (!action) return { available: false, reason: "没有这个行动。" };
+  const mastery = action.skillId ? skillMastery(context.skills?.[action.skillId]) : { available: true, bonus: 0, label: null };
+  if (action.skillId && !mastery.available) return { available: false, reason: `尚未真正学会${getP0Skill(action.skillId)?.name || "这门武学"}。` };
+  if (!action.attribute) return { available: true, rating: "safe", ratingLabel: "稳妥", tier: "success", reasons: ["无需正面较量"], score: 0, difficulty: 0, action };
+  const attributeValue = Number(context.attributes?.[action.attribute] || 0);
+  const stage = stageModifier(context.playerStage || "mortal", context.enemyStage || battle?.enemyStage, action.ignoreStage);
+  if (stage.blocked && !["识招", "借势", "脱身"].includes(action.intent)) return { available: false, reason: "境界相差太远，只能观察、借势或脱身。", action };
+  const advantage = actionAdvantage(action, battle, context);
+  const disadvantage = actionDisadvantage(action, battle, context);
+  const woundPenalty = relevantWoundPenalty(action, context.wounds || []);
+  const score = attributeValue + mastery.bonus + stage.value + (advantage ? 2 : 0) - (disadvantage ? 2 : 0) - woundPenalty;
+  let tier = "failure";
+  if (score >= action.difficulty + 2) tier = "great";
+  else if (score >= action.difficulty) tier = "success";
+  else if (score === action.difficulty - 1) tier = "costly";
+  const knownFatal = action.id === "reckless" && Number(battle?.round || 1) === 1 && (battle?.knownFacts || []).includes("left_sleeve_blade");
+  const scriptedFatal = action.id === "reckless" && Number(battle?.round || 1) === 1;
+  let rating = ["great", "success"].includes(tier) ? "safe" : tier === "costly" ? "viable" : "dangerous";
+  if (disadvantage && !["great", "success"].includes(tier)) rating = "dangerous";
+  if (knownFatal) rating = "fatal";
+  const ratingLabel = { safe: "稳妥", viable: "可行", dangerous: "凶险", fatal: "必死" }[rating];
+  const reasons = [`${ATTRIBUTE_LABELS[action.attribute]} ${attributeValue}`];
+  if (mastery.label) reasons.push(`${getP0Skill(action.skillId)?.name || action.skillId}${mastery.label} ${mastery.bonus ? `+${mastery.bonus}` : ""}`.trim());
+  if (stage.label) reasons.push(stage.label);
+  if (advantage) reasons.push(`${advantage}：有利`);
+  if (disadvantage) reasons.push(`${disadvantage}：不利`);
+  if (woundPenalty) reasons.push("相关伤势妨碍行动");
+  return { available: true, rating, ratingLabel, tier: scriptedFatal ? "failure" : tier, reasons, score, difficulty: action.difficulty, attribute: action.attribute, skillId: action.skillId || null, advantage: Boolean(advantage), disadvantage: Boolean(disadvantage), action };
+}
+
+export function getFirstBattleActions(battle, context = {}) {
+  const next = battle || createFirstBattle();
+  const hasOpening = Boolean(next.observedFeint || next.darkness || next.enemyWounded || next.knownFacts?.includes("left_sleeve_blade"));
+  return getSceneActions("first_needle_ambush", { round: next.round, hasOpening, enemyWounded: next.enemyWounded, canRiskDeath: context.canRiskDeath })
+    .map((action) => ({ ...action, evaluation: evaluateCombatAction(action, next, { ...context, enemyStage: next.enemyStage }) }));
+}
+
 export function grantSpringRainNeedles(p0) {
   return applyEffects(p0, [
     { id: "spring_needles_item", type: "addItem", itemId: "spring_rain_needles", quantity: 1 },
-    { id: "spring_needles_skill", type: "addSkill", skillId: "spring_rain_needles", stage: "learned", progress: 0 },
+    { id: "spring_needles_skill", type: "addSkill", skillId: "spring_rain_needles", stage: "skilled", progress: 60 },
+    { id: "spring_needles_active", type: "set", path: "activeMartial.technique", value: "spring_rain_needles" },
   ]);
 }
 
@@ -313,17 +483,23 @@ export function resolveWoundTreatment(choiceId, p0, context = {}) {
   return null;
 }
 
-export function createFirstBattle() {
+export function createFirstBattle(options = {}) {
+  const knownFacts = [...new Set(options.knownFacts || [])];
   return {
     id: "first_needle_ambush",
     round: 1,
     range: "mid",
     terrain: ["alley", "night", "rain"],
-    enemyIntent: "蒙面刀客压低右肩，正借雨声逼近。",
+    enemyStage: "body",
+    enemyIntent: knownFacts.includes("left_sleeve_blade") ? "右手刀光仍是诱饵，左袖短刃正等你抢进。" : "蒙面刀客压低右肩，正借雨声逼近。",
+    knownFacts,
     observedFeint: false,
     darkness: false,
     enemyWounded: false,
     playerWounded: false,
+    lastResult: null,
+    history: [],
+    chosenIntent: null,
     finished: false,
   };
 }
@@ -331,55 +507,169 @@ export function createFirstBattle() {
 export function resolveFirstBattleAction(actionId, battle, context = {}) {
   const next = structuredClone(battle || createFirstBattle());
   if (next.finished) return { available: false, reason: "这一战已经结束。" };
-  if (!context.hasNeedles && ["needle_wrist", "seal", "kill"].includes(actionId)) return { available: false, reason: "手中没有可用银针。" };
+  const listed = getFirstBattleActions(next, context).find((entry) => entry.id === actionId);
+  if (!listed) return { available: false, reason: "眼下不能这样行动。" };
+  if (!listed.evaluation.available) return listed.evaluation;
+  if (!context.hasNeedles && listed.skillId) return { available: false, reason: "手中没有可用银针。" };
+  const evaluation = listed.evaluation;
+  next.chosenIntent = listed.intent;
+  const historyEntry = { round: next.round, actionId, verb: listed.verb, objectId: listed.objectId, intent: listed.intent, tier: evaluation.tier };
+  const wound = (severity = 2) => ({ id: "left_rib_cut", type: "cut", bodyPart: "torso", severity, tags: ["limits_training"] });
+  const advance = (resultText, intentText) => {
+    next.round += 1;
+    next.lastResult = resultText;
+    next.enemyIntent = intentText;
+    next.history.push(historyEntry);
+  };
+  const finish = (outcome, resultText) => {
+    next.finished = true;
+    next.lastResult = resultText;
+    next.history.push(historyEntry);
+    return { available: true, outcome, intent: listed.intent, evaluation, battle: next };
+  };
   if (next.round === 1) {
+    if (actionId === "reckless") {
+      next.history.push(historyEntry);
+      return { available: true, outcome: "death", causeId: "left_sleeve_blade", cause: "你只盯着右手，左袖短刃从肋下穿入。", memory: "刀客右肩是诱饵，杀招藏在左袖。", intent: listed.intent, evaluation, battle: next };
+    }
     if (actionId === "observe") {
-      next.observedFeint = true;
-      next.round = 2;
-      next.enemyIntent = "他右手仍在引你注意，真正的短刃藏在左袖。";
-      return { available: true, outcome: "round", battle: next };
+      const failed = evaluation.tier === "failure";
+      next.observedFeint = !failed;
+      if (!failed && !next.knownFacts.includes("left_sleeve_blade")) next.knownFacts.push("left_sleeve_blade");
+      if (failed) next.playerWounded = true;
+      advance(failed ? "你看慢了一瞬，肋下先被刀锋擦开。" : "你没有追右手刀光，终于看见左袖短刃。", failed ? "刀客已经贴近，左袖仍藏在雨幕里。" : "右手仍在诱你，左袖短刃才是真正杀招。");
+      return { available: true, outcome: "round", wound: failed ? wound(2) : evaluation.tier === "costly" ? wound(1) : null, intent: listed.intent, evaluation, battle: next };
     }
     if (actionId === "extinguish") {
-      next.darkness = true;
-      next.round = 2;
-      next.enemyIntent = "灯灭后，他的脚步慢了一瞬。";
-      return { available: true, outcome: "round", battle: next };
+      const failed = evaluation.tier === "failure";
+      next.darkness = !failed;
+      if (failed) next.playerWounded = true;
+      advance(failed ? "你没能先灯一步，转身时肋下见血。" : "针尾扫灭灯焰，刀客在黑暗里慢下一步。", failed ? "灯仍亮着，刀客已经逼到适中距离。" : "灯灭后，他放低脚步摸向你的方位。");
+      return { available: true, outcome: "round", wound: failed ? wound(2) : evaluation.tier === "costly" ? wound(1) : null, intent: listed.intent, evaluation, battle: next };
     }
     if (actionId === "needle_wrist") {
+      if (evaluation.tier === "failure") {
+        next.history.push(historyEntry);
+        return { available: true, outcome: "death", causeId: "left_sleeve_blade", cause: "银针封住右腕，左袖短刃却已从肋下穿入。", memory: "封住明处刀腕并不等于封住左袖杀招。", intent: listed.intent, evaluation, battle: next };
+      }
       next.enemyWounded = true;
-      next.round = 2;
-      next.enemyIntent = "右腕中针，左袖短刃仍朝你腹间递来。";
-      return { available: true, outcome: "round", battle: next };
+      if (evaluation.tier === "costly") next.playerWounded = true;
+      advance(evaluation.tier === "costly" ? "银针封住右腕，你也被左袖刀锋擦开肋下。" : "银针准确没入持刀手腕。", "右腕已僵，左袖短刃仍朝你腹间递来。");
+      return { available: true, outcome: "round", wound: evaluation.tier === "costly" ? wound(1) : null, intent: listed.intent, evaluation, battle: next };
     }
-    if (actionId === "flee") {
-      next.finished = true;
-      return { available: true, outcome: "escaped", battle: next };
-    }
-    if (actionId === "reckless" || actionId === "kill" || actionId === "seal") {
-      return { available: true, outcome: "death", cause: "你只盯着右手，左袖短刃从肋下穿入。", memory: "刀客右肩是诱饵，杀招藏在左袖。", battle: next };
-    }
+    if (actionId === "flee") return finish("escaped", "你翻过矮墙，刀声被雨幕隔在身后。");
   }
   if (next.round >= 2) {
-    if (actionId === "seal" && (next.observedFeint || next.darkness || next.enemyWounded)) {
-      next.finished = true;
-      return { available: true, outcome: "subdued", battle: next };
-    }
-    if (actionId === "kill" && (next.observedFeint || next.darkness || next.enemyWounded)) {
-      next.finished = true;
-      return { available: true, outcome: "killed", battle: next };
-    }
-    if (actionId === "flee") {
-      next.finished = true;
-      return { available: true, outcome: "escaped", battle: next };
+    if (actionId === "flee") return finish("escaped", "你借矮墙脱离刀路，保住针匣离开长街。");
+    if (["seal", "kill"].includes(actionId) && evaluation.tier !== "failure") return finish(actionId === "seal" ? "subdued" : "killed", actionId === "seal" ? "银针封住肩肘两穴，刀客四肢僵住跪进雨水。" : "最后一针穿喉，刀客仰面倒进积水。代价随结果而来。");
+    if (["seal", "kill"].includes(actionId) && evaluation.tier === "failure") {
+      if (next.playerWounded || next.round >= 3) {
+        next.history.push(historyEntry);
+        return { available: true, outcome: "death", causeId: "failed_finisher", cause: "你第二次抢穴仍慢半步，左袖短刃沿旧伤送进心口。", memory: "结束战斗前必须先真正制造优势，不能只凭看见破绽。", intent: listed.intent, evaluation, battle: next };
+      }
+      next.playerWounded = true;
+      advance("银针擦穴而过，刀锋在肋下留下伤口。", "刀客要沿着你的伤口继续逼近。");
+      return { available: true, outcome: "wounded", wound: wound(2), intent: listed.intent, evaluation, battle: next };
     }
     if (actionId === "needle_wrist" && !next.enemyWounded) {
-      next.enemyWounded = true;
-      next.round += 1;
-      return { available: true, outcome: "round", battle: next };
+      if (evaluation.tier !== "failure") next.enemyWounded = true;
+      if (["failure", "costly"].includes(evaluation.tier)) next.playerWounded = true;
+      advance(next.enemyWounded ? "持刀右腕终于被针封住。" : "针尖被刀背磕开，肋下再添一道伤。", next.enemyWounded ? "刀客只剩左袖短刃可以一搏。" : "刀客顺势压向你的旧伤。");
+      const suffered = ["failure", "costly"].includes(evaluation.tier) ? wound(evaluation.tier === "failure" ? 2 : 1) : null;
+      return { available: true, outcome: suffered ? "wounded" : "round", wound: suffered, intent: listed.intent, evaluation, battle: next };
     }
-    return { available: true, outcome: "wounded", wound: { id: "left_rib_cut", type: "cut", bodyPart: "torso", severity: 2, tags: ["limits_training"] }, battle: { ...next, playerWounded: true, round: next.round + 1 } };
+    if (actionId === "reckless") {
+      if (["great", "success"].includes(evaluation.tier)) next.enemyWounded = true;
+      next.playerWounded = !["great", "success"].includes(evaluation.tier);
+      advance(next.enemyWounded ? "你撞开刀路，逼得他左脚踏进积水。" : "你没能撞开刀势，肋下被回锋割伤。", next.enemyWounded ? "刀客下盘已乱，正在收回左袖。" : "刀客正沿伤口继续压进。");
+      const suffered = next.playerWounded ? wound(evaluation.tier === "failure" ? 2 : 1) : null;
+      return { available: true, outcome: suffered ? "wounded" : "round", wound: suffered, intent: listed.intent, evaluation, battle: next };
+    }
   }
   return null;
+}
+
+export function createDeathRecord({ id, location, cause, insight, returnedTo, round = null }) {
+  return { id, location, cause, insight, returnedTo, round, count: 1 };
+}
+
+export function recordDeath(p0, record) {
+  const next = structuredClone(p0);
+  const existing = next.deathRecords.find((entry) => entry.id === record.id);
+  if (existing) existing.count = Number(existing.count || 1) + 1;
+  else next.deathRecords.push(structuredClone(record));
+  if (record.insight && !next.deathMemory.includes(record.insight)) next.deathMemory.push(record.insight);
+  return next;
+}
+
+function addPlotClues(plot, clues) {
+  plot.clues = [...new Set([...(plot.clues || []), ...clues])];
+}
+
+export function getAssailantPlotBoard(p0) {
+  const clues = new Set(p0.assailantPlot?.clues || []);
+  const checks = [
+    { id: "target", label: "知道刀客要确认谁已经死去", met: clues.has("target_needle_holder") },
+    { id: "signal", label: "知道回报暗语“药已回炉”", met: clues.has("signal_medicine_returned") },
+    { id: "token", label: "取得鱼鳞铜签", met: clues.has("fish_scale_token") },
+    { id: "window", label: "知道丑时前送到东水门桥洞", met: clues.has("rain_report_window") },
+  ];
+  return { stage: p0.assailantPlot?.stage || "unknown", checks, ready: checks.every((check) => check.met), outcome: p0.assailantPlot?.outcome || null };
+}
+
+export function resolveAssailantTrace(actionId, p0, context = {}) {
+  const action = getSceneActions("assailant_trace", { battleOutcome: p0.battleOutcome }).find((entry) => entry.id === actionId);
+  if (!action) return { available: false, reason: "这条痕迹与眼前结果对不上。" };
+  const next = structuredClone(p0);
+  const plot = next.assailantPlot;
+  plot.traceAction = actionId;
+  if (actionId === "leave_trace") {
+    plot.stage = "missed";
+    plot.outcome = "abandoned";
+    return { available: true, outcome: "abandoned", continueTo: "result", action, state: next };
+  }
+  const evaluation = evaluateCombatAction(action, null, { ...context, enemyStage: null });
+  if (!evaluation.available) return evaluation;
+  if (evaluation.tier === "failure") {
+    plot.stage = "missed";
+    plot.outcome = actionId === "follow_rain_marks" ? "spotted" : "clue_lost";
+    return { available: true, outcome: plot.outcome, continueTo: "result", action, evaluation, state: next };
+  }
+  addPlotClues(plot, ["target_needle_holder", "signal_medicine_returned", "fish_scale_token", "rain_report_window"]);
+  plot.stage = "seen_through";
+  if (!next.evidence.includes("assailant_report_chain")) next.evidence.push("assailant_report_chain");
+  next.items.fish_scale_token = 1;
+  return { available: true, outcome: "seen_through", continueTo: "counterplan", action, evaluation, state: next };
+}
+
+export function resolveAssailantCounterAction(actionId, p0, context = {}) {
+  const board = getAssailantPlotBoard(p0);
+  const action = getSceneActions("assailant_counterplan", { plotReady: board.ready }).find((entry) => entry.id === actionId);
+  if (!action) return { available: false, reason: "还没有足够条件走这条路。", board };
+  const next = structuredClone(p0);
+  const plot = next.assailantPlot;
+  plot.counterAction = actionId;
+  const evaluation = evaluateCombatAction(action, null, { ...context, enemyStage: null });
+  if (!evaluation.available) return evaluation;
+  if (actionId === "send_false_report") {
+    plot.stage = evaluation.tier === "failure" ? "exposed" : "controlled";
+    plot.outcome = evaluation.tier === "failure" ? "false_report_exposed" : "false_report";
+    if (evaluation.tier !== "failure" && !next.evidence.includes("assailant_channel_controlled")) next.evidence.push("assailant_channel_controlled");
+  } else if (actionId === "reverse_meeting") {
+    plot.stage = evaluation.tier === "failure" ? "exposed" : "controlled";
+    plot.outcome = evaluation.tier === "failure" ? "meeting_mark_exposed" : "reverse_meeting";
+    if (evaluation.tier !== "failure" && !next.evidence.includes("receiver_route_reversed")) next.evidence.push("receiver_route_reversed");
+  } else if (actionId === "warn_bai") {
+    plot.stage = "broken";
+    plot.outcome = "bai_guarded";
+    next.relationships.bai_zhiyun.trust += 8;
+    next.relationships.bai_zhiyun.debt += 5;
+  } else {
+    plot.stage = "hidden";
+    plot.outcome = "channel_destroyed";
+    next.items.fish_scale_token = 0;
+  }
+  return { available: true, outcome: plot.outcome, action, evaluation, state: next };
 }
 
 export const P0_STAKES = {
@@ -404,6 +694,7 @@ export function chooseStake(stakeId, p0) {
   return applyEffects(p0, [
     { id: "chosen_stake", type: "set", path: "stakeId", value: stakeId },
     { id: `learn_${stakeId}`, type: "addSkill", skillId: stakeId, stage: "known", progress: 0 },
+    { id: "active_stance", type: "set", path: "activeMartial.stance", value: stakeId },
     { id: "apprentice_confirmed", type: "set", path: "apprentice", value: true },
   ]);
 }

@@ -66,7 +66,7 @@
 
 ## 5. 当前流程
 
-`landing → worldIntro → characterDraft → vow → destiny → characterSheet → templeWake → fateSight → allocation → templeTasks → ladyArrival → ladyPressure → ladyTest → nightTalk → encounterReward → mindArt → roadTrial → roadResult → ending → shenArrival → shenJobs → caoArrival → caoFate → bloodDemand → danObservation → caoExamFire → caoExamIngredients → caoExamMotive → qingQingReward → qingQingStudy → fiveAnimalReward → shenDaily → fiveAnimalChoice → shenMeeting → shenFuChoice → shenPharmacy → shenDaily → shenErrand → fishingPrep → riverFishing → treasureFish → wangTeaching → caoReturn → caoGuidance → alchemyLesson → firstAlchemy → shenChapterEnding → thirdLadySummons → thirdLadyDiagnosis → purpleDragonFormula → purpleDragonAlchemy → thirdLadyTreatment → needleInheritance → firstNeedleAmbush → firstKillAftermath → apprenticeshipOffer → stakeChoice → stakeTraining → bodyBreakthrough → midAutumnWarning → midAutumnDeparture → templeOfferingSource → monkeyTest → monkeyWineChoice → apeWaterCave → p0JourneyEnd`
+`landing → worldIntro → characterDraft → vow → destiny → characterSheet → templeWake → fateSight → allocation → templeTasks → ladyArrival → ladyPressure → ladyTest → nightTalk → encounterReward → mindArt → roadTrial → roadResult → ending → shenArrival → shenJobs → caoArrival → caoFate → bloodDemand → danObservation → caoExamFire → caoExamIngredients → caoExamMotive → qingQingReward → qingQingStudy → fiveAnimalReward → shenDaily → fiveAnimalChoice → shenMeeting → shenFuChoice → shenPharmacy → shenDaily → shenErrand → fishingPrep → riverFishing → treasureFish → wangTeaching → caoReturn → caoGuidance → alchemyLesson → firstAlchemy → shenChapterEnding → thirdLadySummons → thirdLadyDiagnosis → purpleDragonFormula → purpleDragonAlchemy → thirdLadyTreatment → needleInheritance → firstNeedleAmbush → firstKillAftermath → assailantTrace → assailantCounterplan → assailantPlotResult → apprenticeshipOffer → stakeChoice → stakeTraining → bodyBreakthrough → midAutumnWarning → midAutumnDeparture → templeOfferingSource → monkeyTest → monkeyWineChoice → apeWaterCave → p0JourneyEnd`
 
 支路：
 
@@ -83,6 +83,8 @@
 - 三夫人病局可失败或主动退出并进入 `p0Missed`；
 - 春风针夜战与强行锻体死亡进入 `p0Death`，保留死因见闻并回到各自最近节点；
 - 夜战可杀死、制伏或逃离，拜师可拒绝，桩功必须二选一；
+- 夜战行动读取对应五维、境界差、春风针熟练、已知破绽和相关伤势；杀死、制伏与逃离分别开放搜尸、盘问和追踪入口；
+- 回报秘密链需补齐目标、暗语、鱼鳞铜签和交接时辰，可伪报接管、改写交接、优先护人或毁签藏锋；
 - 八月十五官道或延误会错过灵猴，强取会令猴群敌对。
 
 新增场景时必须同步：
@@ -131,6 +133,10 @@
 - `SHEN_DAILY_ACTIONS`、`SHEN_DAILY_RULES`：丹房日常的时段、体力与饱腹；
 - `FIVE_ANIMAL_ASPECTS`、`FISHING_PREPARATIONS`：五禽属性选择和钓鱼条件；
 - `TREASURE_FISH_CHOICES`、`RETURN_SPRING_BREW`：宝鱼风险与首炉炼丹；
+- `P0_SCENE_ACTIONS`、`getSceneActions()`：夜战、追查与反制共用的“动作＋对象”协议；
+- `evaluateCombatAction()`、`getFirstBattleActions()`：单属性、武学熟练、境界差、优势／劣势和伤势的简明判定；
+- `getAssailantPlotBoard()`、`resolveAssailantTrace()`、`resolveAssailantCounterAction()`：夜袭回报秘密链；
+- `createDeathRecord()`、`recordDeath()`：结构化死劫履历与重复死因累计；
 - `allocateJadeBonus()`、`templeTaskCost()`：五维重分和环境代价；
 - `resolveLadyChoice()`、`resolveNightTalk()`、`resolveRoadTrial()`、`resolveShenJob()`、`resolveBloodChoice()`、`resolveCaoAnswer()`：选择结果。
 
@@ -140,7 +146,7 @@
 
 ## 8. 状态与存档
 
-存档键为 `wudao-high-martial-v1`，当前状态 `version` 为 `4`。旧版 `version: 2`、`version: 3` 存档会迁移；已取得五禽秘籍的版本2存档会回到秘籍结算页继续新流程。
+存档键为 `wudao-high-martial-v1`，当前状态 `version` 为 `5`。旧版 `version: 2`、`version: 3`、`version: 4` 存档会迁移；已取得五禽秘籍的版本2存档会回到秘籍结算页继续新流程。
 
 `createInitialState()` 是状态事实来源，关键字段包括：
 
@@ -155,6 +161,7 @@
 - 医术、五禽戏、炼丹、钓鱼、《打鱼杆法》和王五好感；
 - 沈家密会、沈福门路、黄金钱鳘、首炉回春丹与通关倾向。
 - `p0`嵌套状态：统一物品、武学、见闻、假设、多维关系、病例时钟、战斗、伤势、桩功、连续日期、地点状态、灵猴关系、死因记忆与回照节点。
+- `p0.activeMartial`记录当前根基、招式和桩功；`battleHistory`记录行动意图与结果；`deathRecords`记录地点、死因、见闻和回照；`assailantPlot`记录回报秘密链条件与反制结果。
 
 handler 必须检查当前条件，避免重复领取潜能、物品或关系奖励。状态只能存放 JSON 可序列化值。
 
@@ -197,9 +204,12 @@ node scripts/cdp-smoke.mjs 9225
 - 曹青四十好感、七点有效悟性、一次炼丹失败重试与六枚回春丹；
 - 三夫人诊断、三种药材来源、三种丹药品质、救治结果和白栀云多维关系；
 - 春风化雨针立即实战、敌人意图、左袖杀招和三种夜战结果；
+- 五维、境界、武学熟练、破绽与伤势真实改变夜战胜算；
+- 三种夜战结果对应不同追查入口，四项回报条件和伪报／设局／护人／毁签结果进入存档；
+- 死劫履历回照后改变敌人意图和可见行动风险；
 - 拜师、两门桩功、潜能消耗和锻体突破；
 - 八月十五四条路线、桩功旅行差异、灵猴关系、猴儿酒和神猿遗迹；
-- 版本2／3迁移到版本4，以及完整终章存档恢复；
+- 版本2／3／4迁移到版本5，以及完整终章存档恢复；
 - 桌面和手机无横向溢出；
 - 页面运行异常为空。
 
