@@ -86,6 +86,27 @@ const STORAGE_KEY = "wudao-high-martial-v1";
 const app = document.querySelector("#app");
 const COMBAT_ATTRIBUTE_NAMES = { constitution: "根骨", insight: "悟性", agility: "身法", strength: "力道", fortune: "福缘" };
 const COMBAT_STAGE_NAMES = { mortal: "未入门", body: "锻体", qi: "聚气", meridian: "通脉", master: "宗师" };
+const COMBAT_CHECK_LABELS = { great: "大成", success: "得手", costly: "得手有损", failure: "失手" };
+
+function freshFateSeed() {
+  const fixedSeed = new URLSearchParams(window.location.search).get("seed");
+  if (fixedSeed) return fixedSeed.slice(0, 120);
+  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+  if (globalThis.crypto?.getRandomValues) {
+    const values = globalThis.crypto.getRandomValues(new Uint32Array(2));
+    return `${values[0].toString(16)}-${values[1].toString(16)}`;
+  }
+  return `dayao-${Date.now()}`;
+}
+
+function legacyFateSeed(saved) {
+  return [
+    "legacy",
+    saved?.name || "陈司命",
+    saved?.backgroundId || "mystery",
+    saved?.events?.[0]?.at || 4270812,
+  ].join("-");
+}
 
 function createInitialState() {
   return {
@@ -94,6 +115,7 @@ function createInitialState() {
     name: "陈司命",
     backgroundId: "mystery",
     vowId: "path",
+    fateSeed: freshFateSeed(),
     destinyRevealed: false,
     allocationId: "balanced",
     attributes: allocateJadeBonus("balanced"),
@@ -175,6 +197,7 @@ function loadState() {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
     if (!saved || ![2, 3, 4, 5].includes(saved.version) || !saved.screen) return null;
     const migrated = { ...createInitialState(), ...saved, version: 5, p0: migrateP0State(saved.p0) };
+    migrated.fateSeed = saved.fateSeed || legacyFateSeed(saved);
     if (migrated.p0.started && saved.p0?.items?.return_spring_pill === undefined) migrated.p0.items.return_spring_pill = Number(saved.alchemyPills || 0);
     if (saved.version === 2 && saved.shenChapterComplete && saved.fiveAnimalBook) {
       migrated.screen = "fiveAnimalReward";
@@ -260,6 +283,8 @@ function p0CombatContext() {
     knownFacts,
     canRiskDeath: state.lives > 1,
     hasNeedles: Number(state.p0.items.spring_rain_needles || 0) > 0,
+    battleEdge: state.p0.battleEdge,
+    fateSeed: state.fateSeed,
   };
 }
 
@@ -1559,11 +1584,25 @@ function renderNeedleInheritance() {
   `);
 }
 
+function combatCheckResultHtml(check, resultText = "") {
+  if (!check) return resultText ? `<div class="battle-log"><p><strong>结果：</strong>${escapeHtml(resultText)}</p></div>` : "";
+  const modifier = Number(check.modifier || 0);
+  const signedModifier = modifier >= 0 ? `+${modifier}` : `${modifier}`;
+  return `
+    <div class="combat-check-result ${escapeHtml(check.tier || "failure")}">
+      <span>因果骰 · ${escapeHtml(check.tierLabel || COMBAT_CHECK_LABELS[check.tier] || "落定")}</span>
+      <strong><b>${Number(check.roll || 0)}</b><i>${escapeHtml(signedModifier)}</i><em>${Number(check.total || 0)}</em></strong>
+      <p>骰面 ${Number(check.roll || 0)}，行动修正 ${escapeHtml(signedModifier)}，合计 ${Number(check.total || 0)}；目标 ${Number(check.target || 0)}。${escapeHtml(resultText)}</p>
+    </div>
+  `;
+}
+
 function renderP0Death() {
   const memory = state.p0.deathMemory.at(-1);
   const record = state.p0.deathRecords.at(-1);
   return gameShell(`
     ${sceneHeader("一盏命灯碎裂", state.p0.deathReason || "这一条路走到了死处", "火光退回灯芯，疼痛却没有退。你仍记得最后一眼看见的招式、呼吸和错处。")}
+    ${record?.check ? combatCheckResultHtml(record.check, record.cause) : ""}
     <div class="death-verdict"><span>${record ? escapeHtml(`${record.location} · 死劫履历`) : "带回的死中见闻"}</span><strong>${escapeHtml(memory || "强行前进并不能替代看清条件")}</strong><p>${record ? `死因：${escapeHtml(record.cause)}` : ""}剩余命灯 ${state.lives}。回到最近因果节点后，这段记忆不会消失，也会直接改变可见胜算。</p></div>
     <div class="button-row"><button class="primary-button" data-action="return-p0-death">循着残灯回到死前</button></div>
   `);
@@ -1585,7 +1624,7 @@ function renderFirstNeedleAmbush() {
         <div><span>当前运用</span><strong>${escapeHtml(technique?.name || "徒手")}</strong></div>
       </div>
       <div class="battle-intent ${knownSleeve || battle.observedFeint ? "known" : "uncertain"}"><span>第 ${battle.round} 轮 · 对手意图</span><strong>${escapeHtml(battle.enemyIntent)}</strong><p>${battle.observedFeint || knownSleeve ? "左袖杀招已经看清；现在要决定留活口、取命，还是脱身。" : battle.darkness ? "灯已熄灭，他的步法慢了一瞬。" : battle.enemyWounded ? "右腕中针，但左袖仍可递刀。" : "后手未明。先观察、借势或冒险抢攻，结果会读取对应五维与武学。"}</p></div>
-      ${battle.lastResult ? `<div class="battle-log"><p><strong>刚才：</strong>${escapeHtml(battle.lastResult)}</p></div>` : ""}
+      ${battle.lastCheck ? combatCheckResultHtml(battle.lastCheck, battle.lastResult) : battle.lastResult ? `<div class="battle-log"><p><strong>刚才：</strong>${escapeHtml(battle.lastResult)}</p></div>` : ""}
     </div>
     ${state.p0.wounds.length ? `<div class="death-verdict"><span>带伤应战</span><strong>肋下见血</strong><p>再失手会让之后的站桩与突破更难。</p></div>` : ""}
     <div class="action-list">
@@ -1599,7 +1638,9 @@ function renderFirstNeedleAmbush() {
           description: `${entry.description} 得手：${entry.successPreview}；风险：${entry.riskPreview}。`,
           source: `${entry.intent} · ${entry.objectName}`,
           meta: evaluation.available ? `${evaluation.ratingLabel} · ${attribute}` : "不可用",
-          detail: evaluation.available ? `依据：${evaluation.reasons.join("；")}` : evaluation.reason,
+          detail: evaluation.available
+            ? `${evaluation.check ? `因果骰 ${evaluation.check.die}，行动修正 ${evaluation.check.modifier >= 0 ? `+${evaluation.check.modifier}` : evaluation.check.modifier}，目标 ${evaluation.check.target}；` : ""}依据：${evaluation.reasons.join("；")}`
+            : evaluation.reason,
           kind: evaluation.rating === "fatal" || evaluation.rating === "dangerous" ? "danger" : entry.skillId || evaluation.rating === "safe" ? "special" : "",
           disabled: !evaluation.available,
         });
@@ -1615,9 +1656,16 @@ function renderFirstKillAftermath() {
     escaped: ["身后的刀声渐远", "你保住性命，却不知道是谁要杀药铺里的人。"],
   };
   const [title, subtitle] = outcomes[state.p0.battleOutcome] || ["雨夜已经过去", "你带着针匣回到药铺。"];
+  const grade = COMBAT_CHECK_LABELS[state.p0.battleOutcomeGrade] || "战局已决";
+  const edgeText = {
+    intact_captive: "毒囊尚未咬破，活口与口供都保持完整",
+    intact_token: "左袖夹层没有受损，凭证更容易辨认",
+    unseen_exit: "刀客没有看清你的退路，追踪时仍有先手",
+    bloodied_finish: "目标虽成，伤口会继续影响之后的行动",
+  }[state.p0.battleEdge] || "这一战的代价已经写进伤势与后续痕迹";
   return gameShell(`
     ${sceneHeader("长街夜战 · 已决", title, subtitle)}
-    <div class="encounter-ledger"><div><span>你的选择</span><strong>${state.p0.battleOutcome === "killed" ? "杀死" : state.p0.battleOutcome === "subdued" ? "制伏" : "脱身"}</strong><p>活口、死尸和逃路各会留下不同痕迹；曹青与幕后之人都会据此重新看你。</p></div><div><span>春风化雨针</span><strong>已经实战</strong><p>从医针变成了真正能决定生死的手段。</p></div></div>
+    <div class="encounter-ledger"><div><span>你的选择</span><strong>${state.p0.battleOutcome === "killed" ? "杀死" : state.p0.battleOutcome === "subdued" ? "制伏" : "脱身"}</strong><p>活口、死尸和逃路各会留下不同痕迹；曹青与幕后之人都会据此重新看你。</p></div><div><span>判定结果</span><strong>${escapeHtml(grade)}</strong><p>${escapeHtml(edgeText)}</p></div><div><span>春风化雨针</span><strong>已经实战</strong><p>从医针变成了真正能决定生死的手段。</p></div></div>
     <div class="action-list">${actionCard({ action: "read-night-trace", title: "先处理长街上留下的人与痕迹", description: "刀客不是来逞凶，他必须在丑时前向某个人回报成败。活口、尸身与脚印各有不同入口。", source: "夜袭未完", meta: "追查回报渠道", kind: "special" })}</div>
   `);
 }
@@ -2008,6 +2056,22 @@ function recordNarrativeChoice(target) {
   state.narrativeLog = [...log, record].slice(-24);
 }
 
+function appendNarrativeOutcome(text) {
+  if (!text || !Array.isArray(state.narrativeLog) || !state.narrativeLog.length) return;
+  const record = state.narrativeLog.at(-1);
+  const lines = Array.isArray(record.lines) ? record.lines : [];
+  record.lines = [...lines, { type: "narration", speaker: "", text: String(text).slice(0, 300) }].slice(-4);
+}
+
+function combatOutcomeText(result) {
+  if (!result) return "";
+  const check = result.check;
+  const checkText = check
+    ? `因果骰掷出 ${check.roll}，加上行动修正 ${check.modifier >= 0 ? `+${check.modifier}` : check.modifier}，合计 ${check.total}，判定为${check.tierLabel || COMBAT_CHECK_LABELS[check.tier] || "落定"}。`
+    : "";
+  return `${checkText}${result.battle?.lastResult || result.cause || ""}`;
+}
+
 function handleDeath(choice) {
   if (state.lives <= 1) return;
   state.lives -= 1;
@@ -2035,7 +2099,7 @@ function moveP0(screen, node, previousStatus = "complete", currentStatus = "acti
   moveTo(screen);
 }
 
-function handleP0Death(reason, memory, node, causeId = "unknown_death") {
+function handleP0Death(reason, memory, node, causeId = "unknown_death", check = null) {
   if (state.lives <= 1) return;
   state.lives -= 1;
   state.p0.deathReason = reason;
@@ -2048,6 +2112,7 @@ function handleP0Death(reason, memory, node, causeId = "unknown_death") {
     insight: memory,
     returnedTo: node === "firstNeedleAmbush" ? "刀客现身之前" : "突破之前",
     round: node === "firstNeedleAmbush" ? state.p0.battle?.round || null : null,
+    check,
   }));
   state.lastDeathChoice = reason;
   track("p0_death", { node, causeId, lives: state.lives });
@@ -2762,7 +2827,6 @@ const handlers = {
     if (state.screen !== "firstNeedleAmbush") return;
     const result = resolveFirstBattleAction(value, state.p0.battle, p0CombatContext());
     if (!result?.available) return;
-    if (result.outcome === "death") return handleP0Death(result.cause, result.memory, "firstNeedleAmbush", result.causeId);
     state.p0.battle = result.battle;
     if (result.wound) {
       const existing = state.p0.wounds.find((wound) => wound.id === result.wound.id);
@@ -2776,7 +2840,10 @@ const handlers = {
       intent: result.intent,
       result: result.outcome,
       rating: result.evaluation?.rating || null,
+      check: result.check || null,
     }];
+    appendNarrativeOutcome(combatOutcomeText(result));
+    if (result.outcome === "death") return handleP0Death(result.cause, result.memory, "firstNeedleAmbush", result.causeId, result.check);
     if (result.outcome === "round") {
       track("first_battle_round", { action: value, round: result.battle.round });
       return refresh();
@@ -2786,6 +2853,8 @@ const handlers = {
       return refresh();
     }
     state.p0.battleOutcome = result.outcome;
+    state.p0.battleOutcomeGrade = result.check?.tier || null;
+    state.p0.battleEdge = result.edge || (result.check?.tier === "costly" ? "bloodied_finish" : null);
     state.p0.firstKill = result.outcome === "killed";
     state.p0.firstKillChoice = result.outcome;
     track("first_battle_resolved", { outcome: result.outcome });

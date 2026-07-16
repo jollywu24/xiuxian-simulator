@@ -22,6 +22,7 @@ import {
   grantSpringRainNeedles,
   migrateP0State,
   recordDeath,
+  rollCausalDie,
   resolveApeLegacy,
   resolveBodyBreakthrough,
   resolveDiagnosisAction,
@@ -56,6 +57,7 @@ function trainedState(stakeId = "sea_stilling_stake") {
 
 function battleContext(overrides = {}) {
   return {
+    fateSeed: "seed-0",
     hasNeedles: true,
     canRiskDeath: true,
     attributes: { constitution: 0, insight: 5, agility: 0, strength: 0, fortune: 0 },
@@ -179,6 +181,31 @@ test("春风化雨针同时成为随身物和可用武学", () => {
   assert.equal(result.state.activeMartial.technique, "spring_rain_needles");
 });
 
+test("同一因果节点的骰点固定，四档结果都能进入不同战况", () => {
+  assert.equal(rollCausalDie("seed-0", "same-node"), rollCausalDie("seed-0", "same-node"));
+  const outcomes = {
+    great: resolveFirstBattleAction("observe", createFirstBattle(), battleContext({ fateSeed: "seed-2" })),
+    success: resolveFirstBattleAction("observe", createFirstBattle(), battleContext({ fateSeed: "seed-0" })),
+    costly: resolveFirstBattleAction("observe", createFirstBattle(), battleContext({ fateSeed: "seed-14" })),
+    failure: resolveFirstBattleAction("observe", createFirstBattle(), battleContext({ fateSeed: "seed-3" })),
+  };
+  assert.deepEqual(Object.fromEntries(Object.entries(outcomes).map(([key, result]) => [key, result.check.tier])), {
+    great: "great",
+    success: "success",
+    costly: "costly",
+    failure: "failure",
+  });
+  assert.equal(outcomes.great.battle.upperHand, true);
+  assert.equal(outcomes.costly.battle.observedFeint, true);
+  assert.equal(outcomes.costly.wound.severity, 1);
+  assert.equal(outcomes.failure.battle.observedFeint, false);
+  assert.equal(outcomes.failure.wound.severity, 2);
+  assert.deepEqual(
+    outcomes.success.check,
+    resolveFirstBattleAction("observe", createFirstBattle(), battleContext({ fateSeed: "seed-0" })).check,
+  );
+});
+
 test("第一次遭遇刀客时贸然出手会死亡并留下可利用记忆", () => {
   const battle = createFirstBattle();
   const result = resolveFirstBattleAction("reckless", battle, { hasNeedles: true });
@@ -194,6 +221,21 @@ test("看破虚招后可选择制伏、杀死或离开，真实改变结果", ()
   assert.equal(resolveFirstBattleAction("flee", observed, context).outcome, "escaped");
 });
 
+test("大成会把完整活口、凭证或退路变成下一步追查优势", () => {
+  const context = battleContext({ fateSeed: "seed-2" });
+  const observed = resolveFirstBattleAction("observe", createFirstBattle(), context).battle;
+  const subdued = resolveFirstBattleAction("seal", observed, context);
+  assert.equal(subdued.outcome, "subdued");
+  assert.equal(subdued.check.tier, "great");
+  assert.equal(subdued.edge, "intact_captive");
+
+  const p0 = createP0State();
+  p0.battleOutcome = "subdued";
+  p0.battleEdge = subdued.edge;
+  const traced = resolveAssailantTrace("question_captive", p0, battleContext({ battleEdge: subdued.edge }));
+  assert.ok(traced.evaluation.reasons.some((reason) => /毒囊尚未咬破/.test(reason)));
+});
+
 test("战斗失误会留下限制修炼的部位伤势", () => {
   const context = battleContext();
   const roundTwo = resolveFirstBattleAction("observe", createFirstBattle(), context).battle;
@@ -201,6 +243,19 @@ test("战斗失误会留下限制修炼的部位伤势", () => {
   assert.equal(result.outcome, "wounded");
   assert.equal(result.wound.bodyPart, "torso");
   assert.ok(result.wound.tags.includes("limits_training"));
+});
+
+test("连续严重失手会进入命灯死局，不会把战斗推进到无行动轮次", () => {
+  const context = battleContext({ fateSeed: "seed-3" });
+  const first = resolveFirstBattleAction("observe", createFirstBattle(), context);
+  const second = resolveFirstBattleAction("needle_wrist", first.battle, battleContext({
+    fateSeed: "seed-3",
+    wounds: [first.wound],
+  }));
+  assert.equal(first.check.tier, "failure");
+  assert.equal(second.outcome, "death");
+  assert.equal(second.check.tier, "failure");
+  assert.match(second.memory, /换法或脱身/);
 });
 
 test("夜战胜算真实读取对应属性、境界、针法熟练与已知破绽", () => {
