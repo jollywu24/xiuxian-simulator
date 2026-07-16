@@ -47,6 +47,7 @@ import {
   reallocateExistingAttributes,
   templeTaskCost,
 } from "./wudao-core.mjs";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -318,6 +319,57 @@ function sceneHeader(eyebrow, title, subtitle = "") {
   return `<header class="scene-head"><p class="eyebrow">${escapeHtml(eyebrow)}</p><h1 class="scene-title">${escapeHtml(title)}</h1>${subtitle ? `<p class="scene-subtitle">${escapeHtml(subtitle)}</p>` : ""}</header>`;
 }
 
+function sceneMarkerState(value) {
+  return ["available", "completed", "danger", "special", "locked", "known", "unknown", "allied"].includes(value) ? value : "known";
+}
+
+function sceneVisualHtml() {
+  const scene = getScenePresentation(state.screen, state);
+  if (!scene) return "";
+  const route = getRoutePresentation(state.screen, state);
+  const routeById = Object.fromEntries((route?.nodes || []).map((node) => [node.id, node]));
+  const routeEdges = (route?.edges || []).map((edge) => {
+    const from = routeById[edge.from];
+    const to = routeById[edge.to];
+    if (!from || !to) return "";
+    return `<line x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}"></line>`;
+  }).join("");
+
+  return `
+    <section class="scene-experience" aria-label="${escapeHtml(scene.title)}">
+      <div class="scene-canvas tone-${escapeHtml(scene.tone)}" data-scene-id="${escapeHtml(scene.id)}" role="img" aria-label="${escapeHtml(scene.alt)}" style="--scene-image:url('${escapeHtml(scene.image)}')">
+        <div class="scene-vignette" aria-hidden="true"></div>
+        ${scene.hotspots.map((hotspot) => `
+          <button type="button" class="scene-hotspot ${sceneMarkerState(hotspot.state)}" data-action="inspect-scene-object" data-value="${escapeHtml(hotspot.id)}" style="--marker-x:${hotspot.x}%;--marker-y:${hotspot.y}%" aria-label="查看${escapeHtml(hotspot.label)}">
+            <span class="scene-hotspot-ring" aria-hidden="true"></span><span class="scene-marker-label">${escapeHtml(hotspot.label)}</span>
+          </button>
+        `).join("")}
+        ${scene.actors.map((actor) => `
+          <button type="button" class="scene-actor ${sceneMarkerState(actor.state)} actor-${escapeHtml(actor.kind)}" data-action="inspect-scene-actor" data-value="${escapeHtml(actor.id)}" style="--marker-x:${actor.x}%;--marker-y:${actor.y}%" aria-label="查看${escapeHtml(actor.label)}">
+            <span class="actor-silhouette" aria-hidden="true"></span><span class="scene-marker-label">${escapeHtml(actor.label)}</span>
+          </button>
+        `).join("")}
+        <div class="scene-player" style="--marker-x:${scene.player.x}%;--marker-y:${scene.player.y}%" aria-label="${escapeHtml(scene.player.label)}在此"><span aria-hidden="true">命</span><b>${escapeHtml(scene.player.label)}</b></div>
+      </div>
+      <div class="scene-inspection" data-scene-inspection aria-live="polite"><span>眼前</span><strong>${escapeHtml(scene.title)}</strong><p>${escapeHtml(scene.summary)}</p></div>
+      ${route ? `
+        <details class="route-board">
+          <summary><span><small>行路图</small><strong>${escapeHtml(route.title)}</strong></span><i>展开</i></summary>
+          <div class="route-map" data-route-map>
+            <svg class="route-edges" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${routeEdges}</svg>
+            ${route.nodes.map((node) => `
+              <button type="button" class="route-node ${["current", "reached", "known", "locked"].includes(node.status) ? node.status : "known"}" data-action="inspect-route-node" data-value="${escapeHtml(node.id)}" style="--node-x:${node.x}%;--node-y:${node.y}%">
+                <span aria-hidden="true"></span><b>${escapeHtml(node.label)}</b>
+              </button>
+            `).join("")}
+          </div>
+          <p class="route-caption">${escapeHtml(route.summary)}</p>
+        </details>
+      ` : ""}
+    </section>
+  `;
+}
+
 function journalHtml() {
   const items = [
     ["大曜 · 金陵道", state.destinyRevealed ? "命格已醒" : "无名少年初入江湖", "current"],
@@ -416,6 +468,7 @@ function characterPanelHtml() {
 }
 
 function gameShell(content) {
+  const visual = sceneVisualHtml();
   return `
     <main class="game-shell">
       <header class="topbar">
@@ -425,7 +478,7 @@ function gameShell(content) {
       </header>
       <div class="game-grid">
         <aside class="panel timeline-panel">${journalHtml()}</aside>
-        <section class="scene-panel">${content}</section>
+        <section class="scene-panel ${visual ? "has-visual-scene" : ""}">${visual}<div class="${visual ? "narrative-deck" : ""}">${content}</div></section>
         <aside class="panel character-panel">${characterPanelHtml()}</aside>
       </div>
     </main>
@@ -1858,6 +1911,20 @@ function render() {
   app.innerHTML = renderer();
 }
 
+function updateSceneInspection(kind, title, detail, markerClass, value) {
+  const panel = app.querySelector("[data-scene-inspection]");
+  if (!panel) return;
+  const kindNode = panel.querySelector("span");
+  const titleNode = panel.querySelector("strong");
+  const detailNode = panel.querySelector("p");
+  if (kindNode) kindNode.textContent = kind;
+  if (titleNode) titleNode.textContent = title;
+  if (detailNode) detailNode.textContent = detail;
+  app.querySelectorAll(".scene-hotspot, .scene-actor, .route-node").forEach((node) => node.classList.remove("selected"));
+  const marker = [...app.querySelectorAll(`.${markerClass}`)].find((node) => node.dataset.value === value);
+  marker?.classList.add("selected");
+}
+
 function handleDeath(choice) {
   if (state.lives <= 1) return;
   state.lives -= 1;
@@ -1905,6 +1972,24 @@ function handleP0Death(reason, memory, node, causeId = "unknown_death") {
 }
 
 const handlers = {
+  "inspect-scene-object": (value) => {
+    const scene = getScenePresentation(state.screen, state);
+    const hotspot = scene?.hotspots.find((item) => item.id === value);
+    if (!hotspot) return;
+    updateSceneInspection("所见", hotspot.label, hotspot.detail, "scene-hotspot", value);
+  },
+  "inspect-scene-actor": (value) => {
+    const scene = getScenePresentation(state.screen, state);
+    const actor = scene?.actors.find((item) => item.id === value);
+    if (!actor) return;
+    updateSceneInspection("人物", actor.label, actor.detail, "scene-actor", value);
+  },
+  "inspect-route-node": (value) => {
+    const route = getRoutePresentation(state.screen, state);
+    const node = route?.nodes.find((item) => item.id === value);
+    if (!node) return;
+    updateSceneInspection("去处", node.label, node.detail, "route-node", value);
+  },
   "new-journey": () => {
     clearState();
     state = createInitialState();

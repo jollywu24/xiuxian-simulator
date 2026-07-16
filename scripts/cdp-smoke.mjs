@@ -78,6 +78,10 @@ async function snapshot(label) {
     title: document.querySelector("h1")?.textContent?.trim() || "",
     viewport: [innerWidth, innerHeight],
     scrollWidth: document.documentElement.scrollWidth,
+    sceneId: document.querySelector("[data-scene-id]")?.dataset.sceneId || "",
+    hotspotCount: document.querySelectorAll(".scene-hotspot").length,
+    actorLabels: [...document.querySelectorAll(".scene-actor .scene-marker-label")].map((item) => item.textContent.trim()),
+    routeNodeCount: document.querySelectorAll(".route-node").length,
     actions: [...document.querySelectorAll("[data-action]")].map((item) => [item.dataset.action, item.dataset.value]),
     text: document.querySelector("#app")?.innerText?.slice(0, 600) || ""
   }))()`);
@@ -144,6 +148,9 @@ await screenshot("wudao-temple-encounters-desktop.png");
 await send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
 const mobileTasks = await snapshot("temple-tasks-mobile");
 assert.ok(mobileTasks.scrollWidth <= 390);
+assert.equal(mobileTasks.sceneId, "ruined_temple");
+assert.ok(mobileTasks.hotspotCount >= 4);
+assert.ok(mobileTasks.routeNodeCount >= 2);
 await screenshot("wudao-temple-encounters-mobile.png");
 await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
 await click("temple-task", "traveler_relic");
@@ -160,6 +167,7 @@ await screenshot("wudao-lady-arrival-desktop.png");
 await send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
 const mobileLady = await snapshot("lady-mobile");
 assert.ok(mobileLady.scrollWidth <= 390);
+assert.deepEqual(mobileLady.actorLabels, ["青衣妇人"]);
 await screenshot("wudao-lady-arrival-mobile.png");
 await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
 
@@ -178,6 +186,9 @@ await click("receive-mind-art");
 assert.equal(await evaluate(`document.querySelectorAll(".mind-art-card li").length`), 3);
 await click("to-road-trial");
 assert.match(await text(), /紫金河/);
+const roadVisual = await snapshot("road-visual");
+assert.equal(roadVisual.sceneId, "purple_gold_river");
+assert.ok(roadVisual.routeNodeCount >= 4);
 await click("road-trial", "dive");
 assert.match(await text(), /顺紫金河|东湖/);
 assert.match(await text(), /缩短路程/);
@@ -196,6 +207,7 @@ await screenshot("wudao-ending-desktop.png");
 await click("start-shen-chapter");
 assert.match(await text(), /东湖岸/);
 assert.match(await text(), /老太爷留下的一次承诺/);
+assert.equal((await snapshot("shen-side-gate")).sceneId, "shen_side_gate");
 await click("present-shen-token");
 assert.equal(await evaluate(`document.querySelectorAll(".quest-card").length`), 4);
 assert.match(await text(), /外院护卫/);
@@ -203,6 +215,7 @@ assert.match(await text(), /不可领/);
 await click("accept-danroom-job");
 assert.match(await text(), /曹医师/);
 assert.match(await text(), /五名药童/);
+assert.equal((await snapshot("shen-danroom")).sceneId, "shen_danroom");
 await click("inspect-cao-fate");
 assert.match(await text(), /庞不凡/);
 assert.match(await text(), /药王叛徒/);

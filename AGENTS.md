@@ -93,8 +93,9 @@
 2. `handlers` 状态转移；
 3. `screenMode()` 视觉模式；
 4. `createInitialState()` 默认字段；
-5. 浏览器完整流程；
-6. README 与设计文档。
+5. 如属于已可视化地点，同步 `wudao-scenes.mjs` 的场景物件、人物与路线；
+6. 浏览器完整流程；
+7. README 与设计文档。
 
 ## 6. 代码地图
 
@@ -105,9 +106,12 @@
 | `web/wudao-p0-core.mjs` | 条件与效果、病例、物品、关系、战斗、伤势、桩功、突破、时间和灵猴规则 |
 | `web/content/p0/` | 第三十至五十四章的目录与事件节点 |
 | `web/wudao-app.mjs` | 状态机、渲染、事件委托与本地存档 |
-| `web/styles.css` | 江湖、死亡、奇遇视觉与手机响应式 |
+| `web/wudao-scenes.mjs` | 2D场景物件、人物站位和已知路线视图 |
+| `web/assets/scenes/` | 破庙、紫金河、沈家侧门和丹房背景图 |
+| `web/styles.css` | 江湖、死亡、场景热点、路线与手机响应式 |
 | `tests/wudao.test.mjs` | 当前纯高武路线规则测试 |
 | `tests/p0-systems.test.mjs` | 三个新篇章与通用系统规则测试 |
+| `tests/wudao-scenes.test.mjs` | 场景揭示、物件状态与路线开放测试 |
 | `scripts/cdp-smoke.mjs` | 桌面和手机完整浏览器流程 |
 | `scripts/validate-p0-content.mjs` | 内容目录、坏跳转与首次兑现校验 |
 | `docs/GAME_DESIGN.md` | 世界结构、系统边界与后续内容 |
@@ -190,6 +194,7 @@ node scripts/cdp-smoke.mjs 9225
 浏览器检查至少覆盖：
 
 - 世界入场无现实、论坛、武道局或其他玩家；
+- 破庙、紫金河、沈家侧门与丹房按剧情切换，手机热点和行路图无横向溢出；
 - 人物车卡、逆天改命、双灯照命；
 - 两项固定奇遇和一项锁定条件；
 - 青衣妇人身份延迟揭示；
