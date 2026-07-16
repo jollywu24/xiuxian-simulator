@@ -1,0 +1,1138 @@
+:root {
+  color-scheme: dark;
+  --page: #091014;
+  --panel: #111c21;
+  --panel-soft: #17252b;
+  --panel-deep: #0c171b;
+  --text: #e5e4dc;
+  --muted: #9ba9a7;
+  --faint: #687977;
+  --line: rgba(143, 174, 169, 0.2);
+  --line-strong: rgba(143, 174, 169, 0.4);
+  --jade: #7eaaa5;
+  --jade-bright: #abd0c9;
+  --gold: #d0a45b;
+  --red: #d36d61;
+  --ink: #05090b;
+  --story: "Songti SC", "STSong", "SimSun", serif;
+  --ui: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --number: ui-monospace, "SFMono-Regular", Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  min-height: 100%;
+  background: var(--page);
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 15% 0%, rgba(71, 111, 112, 0.18), transparent 32rem),
+    radial-gradient(circle at 90% 100%, rgba(104, 58, 48, 0.14), transparent 38rem),
+    var(--page);
+  font-family: var(--ui);
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button,
+select {
+  color: inherit;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+summary:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--jade-bright);
+  outline-offset: 3px;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+.combat-shell {
+  display: grid;
+  width: min(1240px, 100%);
+  min-height: 100vh;
+  margin: 0 auto;
+  grid-template-columns: minmax(340px, 0.78fr) minmax(520px, 1.22fr);
+  border-right: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+  background: rgba(9, 16, 20, 0.72);
+}
+
+.scene-column {
+  min-width: 0;
+  padding: 22px;
+  border-right: 1px solid var(--line);
+  background: rgba(5, 11, 14, 0.64);
+}
+
+.scene-frame {
+  position: sticky;
+  top: 22px;
+  height: min(54vh, 530px);
+  min-height: 390px;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  background:
+    linear-gradient(to bottom, transparent 0 60%, rgba(2, 7, 9, 0.8) 92%),
+    linear-gradient(145deg, #1a2b31 0%, #0a1418 48%, #101c20 100%);
+  box-shadow: inset 0 -80px 100px rgba(0, 0, 0, 0.5), 0 20px 50px rgba(0, 0, 0, 0.2);
+}
+
+.scene-frame::before {
+  position: absolute;
+  inset: 62% 0 0;
+  content: "";
+  background:
+    repeating-linear-gradient(172deg, transparent 0 19px, rgba(151, 190, 190, 0.08) 20px 21px),
+    linear-gradient(to bottom, rgba(42, 66, 68, 0.26), #05090b);
+  transform: skewY(-3deg);
+}
+
+.scene-frame::after {
+  position: absolute;
+  right: -15%;
+  bottom: 13%;
+  width: 86%;
+  height: 3px;
+  content: "";
+  opacity: 0.34;
+  background: linear-gradient(90deg, transparent, #d4e4df 35%, transparent);
+  box-shadow: 0 11px 0 rgba(169, 199, 194, 0.15), 0 22px 0 rgba(169, 199, 194, 0.08);
+  transform: rotate(-4deg);
+}
+
+.eave {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: -8%;
+  width: 78%;
+  height: 88px;
+  border-bottom: 5px solid #101719;
+  background: linear-gradient(12deg, #0b1012 45%, #1d292b 46% 55%, #080c0e 56%);
+  transform: skewX(-13deg);
+}
+
+.rain {
+  position: absolute;
+  z-index: 3;
+  inset: -30%;
+  opacity: 0.22;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(105deg, transparent 0 17px, rgba(192, 220, 216, 0.65) 18px 19px, transparent 20px 35px);
+  animation: rain-fall 1.5s linear infinite;
+}
+
+.rain-two {
+  opacity: 0.1;
+  background-size: 46px 46px;
+  animation-duration: 2.4s;
+}
+
+@keyframes rain-fall {
+  from { transform: translate3d(-5%, -8%, 0); }
+  to { transform: translate3d(5%, 8%, 0); }
+}
+
+.lantern {
+  position: absolute;
+  z-index: 4;
+  top: 78px;
+  left: 22%;
+  width: 40px;
+  height: 62px;
+  border: 2px solid #5a3a25;
+  background: #b75b32;
+  box-shadow: 0 0 45px rgba(207, 108, 55, 0.58);
+  transition: opacity 280ms ease, filter 280ms ease;
+}
+
+.lantern::before {
+  position: absolute;
+  top: -19px;
+  left: 17px;
+  width: 2px;
+  height: 18px;
+  content: "";
+  background: #594b3d;
+}
+
+.lantern i {
+  position: absolute;
+  inset: 8px 6px;
+  border-right: 1px solid rgba(70, 29, 16, 0.5);
+  border-left: 1px solid rgba(70, 29, 16, 0.5);
+}
+
+.lantern.out {
+  opacity: 0.28;
+  filter: grayscale(1);
+  box-shadow: none;
+}
+
+.fighter {
+  position: absolute;
+  z-index: 5;
+  bottom: 20%;
+  width: 74px;
+  height: 190px;
+  transition: transform 300ms ease, filter 300ms ease;
+}
+
+.fighter::before {
+  position: absolute;
+  top: 0;
+  left: 21px;
+  width: 37px;
+  height: 37px;
+  border-radius: 50%;
+  content: "";
+  background: #05090b;
+  box-shadow: 0 0 0 1px rgba(185, 207, 202, 0.12);
+}
+
+.fighter i {
+  position: absolute;
+  top: 32px;
+  left: 15px;
+  width: 50px;
+  height: 126px;
+  background: linear-gradient(100deg, #05090b 0 48%, #101a1d 49%);
+  clip-path: polygon(26% 0, 71% 0, 100% 84%, 67% 100%, 10% 100%, 0 56%);
+}
+
+.fighter i::after {
+  position: absolute;
+  top: 23px;
+  width: 91px;
+  height: 17px;
+  content: "";
+  background: #060a0c;
+}
+
+.fighter span {
+  position: absolute;
+  bottom: -18px;
+  left: 50%;
+  color: var(--muted);
+  font-family: var(--story);
+  font-size: 12px;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+.fighter.player {
+  left: 21%;
+  transform: scale(0.94);
+}
+
+.fighter.player i::after {
+  left: 25px;
+  transform: rotate(-18deg);
+  transform-origin: left center;
+}
+
+.fighter.enemy {
+  right: 20%;
+}
+
+.fighter.enemy i::after {
+  right: 22px;
+  transform: rotate(21deg);
+  transform-origin: right center;
+}
+
+.fighter.enemy::after {
+  position: absolute;
+  z-index: -1;
+  top: 68px;
+  right: 47px;
+  width: 112px;
+  height: 2px;
+  content: "";
+  background: linear-gradient(90deg, transparent, #d6dbd4);
+  box-shadow: 0 0 9px rgba(222, 231, 225, 0.4);
+  transform: rotate(18deg);
+  transform-origin: right;
+}
+
+.fighter.enemy.wounded {
+  filter: drop-shadow(0 0 8px rgba(199, 73, 61, 0.5));
+  transform: translateX(8px) rotate(2deg);
+}
+
+.scene-frame.known .fighter.enemy::before {
+  box-shadow: -12px 26px 0 -9px var(--red), 0 0 0 1px rgba(185, 207, 202, 0.12);
+}
+
+.scene-frame.settled .fighter.enemy {
+  transform: translateY(24px) rotate(7deg);
+}
+
+.blade-line {
+  position: absolute;
+  z-index: 6;
+  top: 47%;
+  right: 20%;
+  width: 34%;
+  height: 1px;
+  opacity: 0.62;
+  background: linear-gradient(90deg, transparent, #f0eee2, transparent);
+  transform: rotate(-11deg);
+}
+
+.scene-caption {
+  position: absolute;
+  z-index: 8;
+  right: 18px;
+  bottom: 18px;
+  left: 18px;
+  padding: 14px 16px;
+  border-left: 3px solid var(--jade);
+  background: rgba(4, 10, 12, 0.74);
+  backdrop-filter: blur(8px);
+}
+
+.scene-caption span,
+.scene-caption strong {
+  display: block;
+}
+
+.scene-caption span {
+  margin-bottom: 5px;
+  color: var(--jade-bright);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+}
+
+.scene-caption strong {
+  font-family: var(--story);
+  font-size: clamp(18px, 2vw, 26px);
+  font-weight: 500;
+}
+
+.battle-status {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.battle-status > div {
+  min-width: 0;
+  padding: 11px 7px;
+  text-align: center;
+  border: 1px solid var(--line);
+  background: var(--panel-deep);
+}
+
+.battle-status span,
+.battle-status strong {
+  display: block;
+}
+
+.battle-status span {
+  color: var(--faint);
+  font-size: 9px;
+}
+
+.battle-status strong {
+  margin-top: 4px;
+  overflow: hidden;
+  color: var(--text);
+  font-family: var(--number);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fate-settings {
+  margin-top: 10px;
+  border: 1px solid var(--line);
+  background: var(--panel-deep);
+}
+
+.fate-settings > summary {
+  display: flex;
+  min-height: 50px;
+  padding: 11px 14px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.fate-settings > summary::-webkit-details-marker {
+  display: none;
+}
+
+.fate-settings > summary span {
+  color: var(--jade);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+}
+
+.fate-settings > summary strong {
+  font-family: var(--story);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.setting-body {
+  padding: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.setting-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 11px 15px;
+}
+
+.range-setting {
+  display: grid;
+  gap: 7px;
+}
+
+.range-setting span {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.range-setting b {
+  color: var(--jade-bright);
+  font-family: var(--number);
+}
+
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--jade);
+}
+
+.select-grid {
+  display: grid;
+  margin-top: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.select-grid label {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+select {
+  width: 100%;
+  min-height: 39px;
+  padding: 7px 9px;
+  border: 1px solid var(--line-strong);
+  border-radius: 0;
+  background: var(--panel);
+}
+
+.fact-toggle {
+  display: flex;
+  margin-top: 13px;
+  padding: 10px;
+  align-items: flex-start;
+  gap: 10px;
+  border: 1px solid var(--line);
+  cursor: pointer;
+}
+
+.fact-toggle input {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  accent-color: var(--red);
+}
+
+.fact-toggle span,
+.fact-toggle strong,
+.fact-toggle small {
+  display: block;
+}
+
+.fact-toggle strong {
+  font-family: var(--story);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.fact-toggle small {
+  margin-top: 4px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.scene-links {
+  display: flex;
+  padding: 13px 2px 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.scene-links a,
+.scene-links button {
+  padding: 0;
+  color: var(--muted);
+  border: 0;
+  background: transparent;
+  font-size: 11px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.scene-links a:hover,
+.scene-links button:hover {
+  color: var(--jade-bright);
+}
+
+.battle-column {
+  min-width: 0;
+  padding: 34px clamp(20px, 4vw, 52px) 70px;
+}
+
+.battle-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.battle-heading span {
+  color: var(--jade);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+}
+
+.battle-heading h1 {
+  max-width: 620px;
+  margin: 10px 0 0;
+  font-family: var(--story);
+  font-size: clamp(25px, 3.6vw, 43px);
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.battle-heading button {
+  flex: 0 0 auto;
+  padding: 8px 11px;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  background: transparent;
+  cursor: pointer;
+}
+
+.intent-board {
+  margin-top: 26px;
+  padding: 18px 20px;
+  border: 1px solid var(--line-strong);
+  background: var(--panel);
+}
+
+.intent-board.known {
+  border-left: 4px solid var(--jade);
+}
+
+.intent-board.uncertain {
+  border-style: dashed;
+  border-left: 4px solid var(--red);
+}
+
+.intent-board span,
+.intent-board strong {
+  display: block;
+}
+
+.intent-board span {
+  color: var(--red);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+}
+
+.intent-board.known span {
+  color: var(--jade-bright);
+}
+
+.intent-board strong {
+  margin-top: 8px;
+  font-family: var(--story);
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.intent-board p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.condition-row {
+  display: grid;
+  margin-top: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid var(--line);
+  background: var(--panel-deep);
+}
+
+.condition-row span {
+  min-width: 0;
+  padding: 11px 13px;
+  color: var(--faint);
+  font-size: 9px;
+}
+
+.condition-row span + span {
+  border-left: 1px solid var(--line);
+}
+
+.condition-row strong {
+  display: block;
+  margin-top: 4px;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.result-strip,
+.check-board {
+  margin-top: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--line-strong);
+  border-left: 4px solid var(--jade);
+  background: var(--panel-soft);
+}
+
+.result-strip span,
+.result-strip strong {
+  display: block;
+}
+
+.result-strip span,
+.check-board > span {
+  color: var(--jade-bright);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+}
+
+.result-strip strong {
+  margin-top: 7px;
+  font-family: var(--story);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+.check-board.failure,
+.check-board.costly {
+  border-left-color: var(--red);
+}
+
+.check-board.failure > span,
+.check-board.costly > span {
+  color: var(--red);
+}
+
+.check-numbers {
+  display: flex;
+  margin-top: 10px;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--number);
+}
+
+.check-numbers b {
+  font-size: 28px;
+}
+
+.check-numbers i {
+  color: var(--muted);
+  font-size: 15px;
+  font-style: normal;
+}
+
+.check-numbers em {
+  padding-left: 9px;
+  color: var(--gold);
+  border-left: 1px solid var(--line-strong);
+  font-size: 28px;
+  font-style: normal;
+}
+
+.check-board p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.action-heading {
+  display: flex;
+  margin: 30px 0 11px;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.action-heading span,
+.action-heading strong {
+  display: block;
+}
+
+.action-heading span {
+  color: var(--gold);
+  font-family: var(--story);
+  font-size: 19px;
+}
+
+.action-heading strong,
+.action-heading small {
+  margin-top: 3px;
+  color: var(--faint);
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.action-heading small {
+  max-width: 250px;
+  text-align: right;
+  line-height: 1.5;
+}
+
+.action-list {
+  display: grid;
+  gap: 9px;
+}
+
+.choice {
+  border: 1px solid var(--line);
+  background: rgba(19, 31, 36, 0.72);
+  transition: border-color 180ms ease, background 180ms ease, transform 180ms ease;
+}
+
+.choice:hover {
+  border-color: var(--jade);
+  background: var(--panel-soft);
+  transform: translateX(3px);
+}
+
+.choice.special {
+  border-left: 3px solid var(--gold);
+}
+
+.choice.danger {
+  border-left: 3px solid var(--red);
+}
+
+.choice.unavailable {
+  opacity: 0.5;
+}
+
+.choice > button {
+  display: grid;
+  width: 100%;
+  padding: 15px 15px 12px;
+  grid-template-columns: 26px minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 12px;
+  color: var(--text);
+  text-align: left;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.choice > button:disabled {
+  cursor: not-allowed;
+}
+
+.choice-number {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  color: var(--faint);
+  border: 1px solid var(--line-strong);
+  font-family: var(--number);
+  font-size: 10px;
+}
+
+.choice-copy {
+  min-width: 0;
+}
+
+.choice-copy small,
+.choice-copy strong,
+.choice-copy p,
+.choice-preview {
+  display: block;
+}
+
+.choice-copy small {
+  color: var(--jade);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+
+.choice-copy strong {
+  margin-top: 5px;
+  font-family: var(--story);
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.choice-copy p,
+.choice-preview {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.choice-copy p {
+  margin: 6px 0 0;
+}
+
+.choice-preview {
+  margin-top: 5px;
+  color: var(--faint);
+}
+
+.risk-mark {
+  padding: 5px 8px;
+  color: var(--jade-bright);
+  border: 1px solid currentColor;
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+.danger .risk-mark {
+  color: var(--red);
+}
+
+.special .risk-mark {
+  color: var(--gold);
+}
+
+.choice details {
+  border-top: 1px solid var(--line);
+}
+
+.choice details summary {
+  padding: 8px 15px 8px 53px;
+  color: var(--faint);
+  font-size: 9px;
+  cursor: pointer;
+}
+
+.choice details p {
+  margin: 0;
+  padding: 0 15px 12px 53px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.death-board,
+.outcome-board {
+  margin-top: 15px;
+  padding: 20px;
+  border: 1px solid var(--line-strong);
+  background: var(--panel);
+}
+
+.death-board {
+  border-left: 4px solid var(--red);
+}
+
+.outcome-board {
+  border-left: 4px solid var(--gold);
+}
+
+.death-board > span,
+.outcome-board > span {
+  color: var(--red);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+}
+
+.outcome-board > span {
+  color: var(--gold);
+}
+
+.death-board > strong,
+.outcome-board > strong {
+  display: block;
+  margin-top: 8px;
+  font-family: var(--story);
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.death-board > p,
+.outcome-board > p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.primary-command {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 16px;
+  padding: 11px 14px;
+  color: var(--ink);
+  border: 0;
+  background: var(--jade-bright);
+  font-family: var(--story);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.battle-history {
+  margin-top: 18px;
+  border: 1px solid var(--line);
+}
+
+.battle-history > summary {
+  display: flex;
+  min-height: 45px;
+  padding: 11px 14px;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.battle-history > summary span {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  color: var(--jade-bright);
+  border: 1px solid var(--line-strong);
+  font-family: var(--number);
+  font-size: 9px;
+}
+
+.battle-history ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+}
+
+.battle-history li {
+  padding: 12px 14px;
+}
+
+.battle-history li + li {
+  border-top: 1px solid var(--line);
+}
+
+.battle-history li span {
+  color: var(--faint);
+  font-size: 9px;
+}
+
+.battle-history li strong {
+  margin-left: 8px;
+  color: var(--jade-bright);
+  font-family: var(--story);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.battle-history li p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.battle-history li small {
+  display: block;
+  margin-top: 5px;
+  color: var(--gold);
+  font-family: var(--number);
+  font-size: 9px;
+}
+
+@media (max-width: 880px) {
+  .combat-shell {
+    display: block;
+    border: 0;
+  }
+
+  .scene-column {
+    padding: 10px 10px 0;
+    border-right: 0;
+  }
+
+  .scene-frame {
+    position: relative;
+    top: auto;
+    height: 42vh;
+    min-height: 300px;
+  }
+
+  .battle-column {
+    padding: 26px 14px max(44px, env(safe-area-inset-bottom));
+  }
+
+  .battle-heading h1 {
+    font-size: clamp(26px, 8vw, 38px);
+  }
+
+  .battle-heading button {
+    display: none;
+  }
+
+  .fate-settings:not([open]) .setting-body {
+    display: none;
+  }
+}
+
+@media (max-width: 540px) {
+  .scene-frame {
+    min-height: 270px;
+  }
+
+  .fighter {
+    bottom: 18%;
+    transform: scale(0.78);
+    transform-origin: bottom center;
+  }
+
+  .fighter.player {
+    left: 14%;
+    transform: scale(0.74);
+  }
+
+  .fighter.enemy {
+    right: 13%;
+  }
+
+  .lantern {
+    left: 18%;
+  }
+
+  .battle-status {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .setting-grid,
+  .select-grid,
+  .condition-row {
+    grid-template-columns: 1fr;
+  }
+
+  .condition-row span + span {
+    border-top: 1px solid var(--line);
+    border-left: 0;
+  }
+
+  .condition-row strong {
+    white-space: normal;
+  }
+
+  .action-heading {
+    display: block;
+  }
+
+  .action-heading small {
+    display: block;
+    margin-top: 7px;
+    text-align: left;
+  }
+
+  .choice > button {
+    grid-template-columns: 24px minmax(0, 1fr);
+  }
+
+  .risk-mark {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .choice details summary,
+  .choice details p {
+    padding-left: 51px;
+  }
+}
+
+@media (max-width: 880px) and (orientation: landscape) and (max-height: 560px) {
+  .combat-shell {
+    display: grid;
+    grid-template-columns: minmax(290px, 0.9fr) minmax(440px, 1.1fr);
+  }
+
+  .scene-column {
+    padding: 8px;
+    border-right: 1px solid var(--line);
+  }
+
+  .scene-frame {
+    position: sticky;
+    top: 8px;
+    height: calc(100vh - 148px);
+    min-height: 250px;
+  }
+
+  .scene-caption {
+    right: 10px;
+    bottom: 10px;
+    left: 10px;
+    padding: 9px 11px;
+  }
+
+  .battle-column {
+    padding: 18px 14px 40px;
+  }
+
+  .battle-heading h1 {
+    font-size: 27px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
