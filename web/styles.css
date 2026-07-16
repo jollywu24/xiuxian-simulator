@@ -1743,13 +1743,16 @@ h1 {
 }
 
 .game-shell {
-  width: min(1500px, 100%);
+  width: 100%;
   min-height: 100vh;
   margin: 0 auto;
-  padding: 18px clamp(12px, 2.4vw, 32px) 30px;
+  padding: 12px 14px 78px;
 }
 
 .topbar {
+  position: sticky;
+  top: 8px;
+  z-index: 40;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
@@ -1757,8 +1760,9 @@ h1 {
   gap: 20px;
   padding: 8px 14px;
   border: 1px solid var(--line);
-  background: var(--panel);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  background: color-mix(in srgb, var(--panel-solid) 88%, transparent);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.16);
+  backdrop-filter: blur(18px);
 }
 
 .brand-mini {
@@ -1816,9 +1820,9 @@ h1 {
 
 .game-grid {
   display: grid;
-  grid-template-columns: 230px minmax(480px, 1fr) 286px;
-  gap: 14px;
-  margin-top: 14px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  margin-top: 10px;
   align-items: start;
 }
 
@@ -1841,12 +1845,78 @@ h1 {
 }
 
 .scene-panel.has-visual-scene {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(370px, 0.72fr);
+  align-items: start;
   padding: 0;
 }
 
 .narrative-deck {
+  position: relative;
   padding: clamp(24px, 4vw, 54px);
-  border-top: 1px solid var(--line);
+  counter-reset: story-actions;
+}
+
+.story-stage-shell .scene-panel {
+  width: min(1000px, 100%);
+  margin-inline: auto;
+  padding: 0;
+}
+
+.story-stage-shell .narrative-deck {
+  min-height: calc(100vh - 104px);
+}
+
+.world-stage-shell .narrative-deck {
+  min-height: calc(100vh - 104px);
+  padding: clamp(26px, 3vw, 44px) clamp(22px, 2.7vw, 40px) 86px;
+  border-left: 1px solid var(--line-strong);
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.1), transparent 22px),
+    color-mix(in srgb, var(--panel-solid) 94%, transparent);
+}
+
+.world-stage-shell .narrative-deck .scene-head {
+  margin: 0 0 24px;
+}
+
+.world-stage-shell .narrative-deck .scene-title {
+  font-size: clamp(27px, 3.1vw, 40px);
+}
+
+.world-stage-shell .narrative-deck .story-copy {
+  font-size: 16px;
+  line-height: 1.88;
+}
+
+.narrative-deck .action-card:not(:disabled) {
+  padding-left: 52px;
+  counter-increment: story-actions;
+}
+
+.narrative-deck .action-card:not(:disabled)::before {
+  position: absolute;
+  top: 16px;
+  left: 17px;
+  display: grid;
+  width: 24px;
+  height: 24px;
+  color: var(--accent-dark);
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+  content: counter(story-actions);
+  font-family: var(--font-number);
+  font-size: 11px;
+  place-items: center;
+}
+
+.world-stage-shell .narrative-deck .action-card {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+
+.world-stage-shell .narrative-deck .action-meta {
+  text-align: left;
 }
 
 .scene-experience {
@@ -1854,6 +1924,20 @@ h1 {
   gap: 0;
   padding: 14px;
   background: color-mix(in srgb, var(--panel-solid) 80%, #05090b);
+}
+
+.world-stage-shell .scene-experience {
+  position: sticky;
+  top: 0;
+  grid-template-rows: minmax(250px, 1fr) auto auto;
+  height: calc(100vh - 108px);
+  min-height: 600px;
+}
+
+.world-stage-shell .scene-canvas {
+  height: 100%;
+  min-height: 250px;
+  aspect-ratio: auto;
 }
 
 .scene-canvas {
@@ -2307,6 +2391,102 @@ h1 {
   margin: 0;
   font-size: 11px;
   line-height: 1.55;
+}
+
+.utility-dock {
+  position: fixed;
+  bottom: 16px;
+  left: 22px;
+  z-index: 60;
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.dock-drawer {
+  position: relative;
+}
+
+.dock-drawer > summary {
+  display: flex;
+  min-width: 72px;
+  min-height: 48px;
+  padding: 6px 12px 6px 7px;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+  border: 1px solid var(--line-strong);
+  background: color-mix(in srgb, var(--panel-solid) 92%, transparent);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.34);
+  cursor: pointer;
+  list-style: none;
+  backdrop-filter: blur(16px);
+}
+
+.dock-drawer > summary::-webkit-details-marker {
+  display: none;
+}
+
+.dock-drawer > summary strong {
+  font-family: var(--font-story);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.dock-drawer[open] > summary {
+  color: var(--accent-dark);
+  border-color: var(--accent);
+  background: var(--panel-solid);
+}
+
+.dock-glyph {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  color: var(--accent-dark);
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+  font-family: var(--font-story);
+  place-items: center;
+}
+
+.dock-sheet {
+  position: absolute;
+  bottom: calc(100% + 9px);
+  left: 0;
+  width: min(360px, calc(100vw - 28px));
+  max-height: min(72vh, 680px);
+  padding: 20px;
+  overflow: auto;
+  color: var(--text);
+  border: 1px solid var(--line-strong);
+  background: color-mix(in srgb, var(--panel-solid) 96%, transparent);
+  box-shadow: 0 20px 54px rgba(0, 0, 0, 0.46);
+  backdrop-filter: blur(20px);
+}
+
+.character-panel .dock-sheet {
+  width: min(430px, calc(100vw - 28px));
+}
+
+.dock-sheet .panel-title {
+  margin-top: 18px;
+}
+
+.dock-sheet > .panel-title:first-child,
+.dock-sheet .panel-body > :first-child .panel-title:first-child {
+  margin-top: 0;
+}
+
+.character-panel .panel-body {
+  display: grid;
+  gap: 22px;
+}
+
+.character-panel .wudao-avatar {
+  width: 54px;
+  height: 54px;
 }
 
 .scene-head {
@@ -3307,22 +3487,16 @@ h1 {
 }
 
 @media (max-width: 1120px) {
-  .game-grid {
-    grid-template-columns: 210px minmax(0, 1fr);
-  }
-
-  .character-panel {
-    grid-column: 1 / -1;
-  }
-
-  .character-panel .panel-body {
-    display: grid;
-    grid-template-columns: 240px 1fr 1fr;
-    gap: 18px;
+  .scene-panel.has-visual-scene {
+    grid-template-columns: minmax(0, 1.28fr) minmax(340px, 0.82fr);
   }
 
   .scene-panel {
     min-height: auto;
+  }
+
+  .world-stage-shell .scene-experience {
+    min-height: 560px;
   }
 }
 
@@ -3447,7 +3621,7 @@ h1 {
   }
 
   .timeline-panel {
-    display: none;
+    display: block;
   }
 
   .scene-panel {
@@ -3455,6 +3629,7 @@ h1 {
   }
 
   .scene-panel.has-visual-scene {
+    display: block;
     padding: 0;
   }
 
@@ -3462,8 +3637,22 @@ h1 {
     padding: 8px;
   }
 
+  .world-stage-shell .scene-experience {
+    position: relative;
+    top: auto;
+    grid-template-rows: auto auto auto;
+    height: auto;
+    min-height: 0;
+  }
+
   .scene-canvas {
     min-height: 205px;
+  }
+
+  .world-stage-shell .scene-canvas {
+    height: auto;
+    min-height: 205px;
+    aspect-ratio: 16 / 9;
   }
 
   .scene-marker-label {
@@ -3507,6 +3696,39 @@ h1 {
     padding: 28px 18px;
   }
 
+  .world-stage-shell .narrative-deck {
+    min-height: 0;
+    padding: 30px 18px 82px;
+    border-top: 1px solid var(--line-strong);
+    border-left: 0;
+    background: var(--panel-solid);
+  }
+
+  .utility-dock {
+    bottom: 8px;
+    left: 8px;
+  }
+
+  .dock-drawer > summary {
+    min-width: 46px;
+    min-height: 46px;
+    padding: 6px;
+  }
+
+  .dock-drawer > summary strong {
+    display: none;
+  }
+
+  .dock-sheet,
+  .character-panel .dock-sheet {
+    position: fixed;
+    bottom: 62px;
+    left: 8px;
+    width: calc(100vw - 16px);
+    max-height: 68vh;
+    padding: 17px;
+  }
+
   .character-panel .panel-body {
     display: block;
   }
@@ -3535,6 +3757,158 @@ h1 {
 
   .action-meta {
     text-align: left;
+  }
+}
+
+@media (max-width: 920px) and (orientation: landscape) and (max-height: 600px) {
+  .game-shell {
+    padding: 6px 8px 58px;
+  }
+
+  .topbar {
+    top: 4px;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    min-height: 48px;
+    padding: 5px 9px;
+  }
+
+  .brand-mini > span:last-child {
+    display: none;
+  }
+
+  .brand-seal {
+    width: 28px;
+    height: 28px;
+  }
+
+  .mode-badge {
+    grid-column: auto;
+    grid-row: auto;
+    min-width: 0;
+    padding: 5px 10px;
+    overflow: hidden;
+    border-top: 0;
+    border-right: 1px solid var(--line);
+    border-left: 1px solid var(--line);
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .resource-row {
+    gap: 9px;
+  }
+
+  .game-grid {
+    margin-top: 6px;
+  }
+
+  .scene-panel.has-visual-scene {
+    display: grid;
+    grid-template-columns: minmax(0, 1.28fr) minmax(310px, 0.92fr);
+    height: calc(100vh - 70px);
+    min-height: 0;
+  }
+
+  .world-stage-shell .scene-experience {
+    position: relative;
+    top: auto;
+    grid-template-rows: minmax(0, 1fr) auto auto;
+    height: 100%;
+    min-height: 0;
+    padding: 6px;
+  }
+
+  .world-stage-shell .scene-canvas {
+    height: 100%;
+    min-height: 0;
+    aspect-ratio: auto;
+  }
+
+  .scene-inspection {
+    grid-template-columns: auto minmax(100px, auto) 1fr;
+    min-height: 52px;
+    padding: 8px 10px;
+  }
+
+  .scene-inspection strong {
+    font-size: 13px;
+  }
+
+  .scene-inspection p {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: 11px;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .route-board summary {
+    min-height: 40px;
+    padding: 6px 10px;
+  }
+
+  .route-board summary small {
+    display: none;
+  }
+
+  .world-stage-shell .narrative-deck {
+    height: 100%;
+    min-height: 0;
+    padding: 18px 16px 68px;
+    overflow-y: auto;
+    border-top: 0;
+    border-left: 1px solid var(--line-strong);
+  }
+
+  .world-stage-shell .narrative-deck .scene-head {
+    margin-bottom: 17px;
+  }
+
+  .world-stage-shell .narrative-deck .scene-title {
+    margin-bottom: 8px;
+    font-size: clamp(22px, 3.4vw, 29px);
+  }
+
+  .world-stage-shell .narrative-deck .scene-subtitle,
+  .world-stage-shell .narrative-deck .story-copy {
+    font-size: 13px;
+    line-height: 1.72;
+  }
+
+  .world-stage-shell .narrative-deck .action-list {
+    gap: 8px;
+    margin-top: 18px;
+  }
+
+  .world-stage-shell .narrative-deck .action-card {
+    padding: 12px 12px 12px 45px;
+  }
+
+  .narrative-deck .action-card:not(:disabled)::before {
+    top: 12px;
+    left: 12px;
+    width: 22px;
+    height: 22px;
+  }
+
+  .action-title {
+    font-size: 15px;
+  }
+
+  .utility-dock {
+    bottom: 6px;
+    left: 8px;
+  }
+
+  .dock-drawer > summary {
+    min-height: 42px;
+  }
+
+  .dock-sheet,
+  .character-panel .dock-sheet {
+    width: min(420px, calc(100vw - 16px));
+    max-height: calc(100vh - 64px);
   }
 }
 

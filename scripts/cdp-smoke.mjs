@@ -82,6 +82,12 @@ async function snapshot(label) {
     hotspotCount: document.querySelectorAll(".scene-hotspot").length,
     actorLabels: [...document.querySelectorAll(".scene-actor .scene-marker-label")].map((item) => item.textContent.trim()),
     routeNodeCount: document.querySelectorAll(".route-node").length,
+    dockCount: document.querySelectorAll(".dock-drawer").length,
+    splitView: (() => {
+      const stage = document.querySelector(".scene-experience")?.getBoundingClientRect();
+      const narrative = document.querySelector(".narrative-deck")?.getBoundingClientRect();
+      return Boolean(stage && narrative && Math.abs(stage.top - narrative.top) < 8 && narrative.left >= stage.right - 2);
+    })(),
     actions: [...document.querySelectorAll("[data-action]")].map((item) => [item.dataset.action, item.dataset.value]),
     text: document.querySelector("#app")?.innerText?.slice(0, 600) || ""
   }))()`);
@@ -144,6 +150,9 @@ assert.equal(await evaluate(`document.querySelectorAll(".quest-card").length`), 
 assert.match(await text(), /旅人遗物/);
 assert.match(await text(), /沈氏承诺/);
 assert.match(await text(), /神秘贡品/);
+const desktopTasks = await snapshot("temple-tasks-desktop");
+assert.equal(desktopTasks.dockCount, 2);
+assert.equal(desktopTasks.splitView, true);
 await screenshot("wudao-temple-encounters-desktop.png");
 await send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
 const mobileTasks = await snapshot("temple-tasks-mobile");
@@ -151,7 +160,17 @@ assert.ok(mobileTasks.scrollWidth <= 390);
 assert.equal(mobileTasks.sceneId, "ruined_temple");
 assert.ok(mobileTasks.hotspotCount >= 4);
 assert.ok(mobileTasks.routeNodeCount >= 2);
+assert.equal(mobileTasks.splitView, false);
 await screenshot("wudao-temple-encounters-mobile.png");
+await send("Emulation.setDeviceMetricsOverride", { width: 844, height: 390, deviceScaleFactor: 1, mobile: true });
+const landscapeTasks = await snapshot("temple-tasks-landscape");
+assert.ok(landscapeTasks.scrollWidth <= 844);
+assert.equal(landscapeTasks.splitView, true);
+assert.equal(landscapeTasks.dockCount, 2);
+assert.equal(await evaluate(`(() => { const drawer = document.querySelector(".character-panel"); drawer.querySelector("summary").click(); return drawer.open; })()`), true);
+await evaluate(`document.querySelector(".timeline-panel summary").click()`);
+assert.equal(await evaluate(`document.querySelector(".timeline-panel").open && !document.querySelector(".character-panel").open`), true);
+await screenshot("wudao-temple-encounters-landscape.png");
 await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
 await click("temple-task", "traveler_relic");
 await click("temple-task", "shen_promise");

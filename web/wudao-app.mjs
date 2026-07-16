@@ -470,17 +470,25 @@ function characterPanelHtml() {
 function gameShell(content) {
   const visual = sceneVisualHtml();
   return `
-    <main class="game-shell">
+    <main class="game-shell ${visual ? "world-stage-shell" : "story-stage-shell"}">
       <header class="topbar">
         <div class="brand-mini"><span class="brand-seal">武</span><span>大曜江湖</span></div>
         <div class="mode-badge">${escapeHtml(modeLabel())}</div>
         <div class="resource-row"><div class="resource"><span>命灯</span><strong>${state.lives}</strong></div><div class="resource"><span>潜能</span><strong>${state.potential}</strong></div></div>
       </header>
       <div class="game-grid">
-        <aside class="panel timeline-panel">${journalHtml()}</aside>
-        <section class="scene-panel ${visual ? "has-visual-scene" : ""}">${visual}<div class="${visual ? "narrative-deck" : ""}">${content}</div></section>
-        <aside class="panel character-panel">${characterPanelHtml()}</aside>
+        <section class="scene-panel ${visual ? "has-visual-scene" : "narrative-only"}">${visual}<div class="narrative-deck">${content}</div></section>
       </div>
+      <nav class="utility-dock" aria-label="随身册">
+        <details class="dock-drawer timeline-panel">
+          <summary><span class="dock-glyph" aria-hidden="true">行</span><strong>行录</strong></summary>
+          <div class="dock-sheet">${journalHtml()}</div>
+        </details>
+        <details class="dock-drawer character-panel">
+          <summary><span class="dock-glyph" aria-hidden="true">命</span><strong>人物</strong></summary>
+          <div class="dock-sheet">${characterPanelHtml()}</div>
+        </details>
+      </nav>
     </main>
   `;
 }
@@ -2886,6 +2894,14 @@ app.addEventListener("input", (event) => {
   const button = app.querySelector('[data-action="to-vow"]');
   if (button) button.disabled = !state.name.trim() || !state.backgroundId;
 });
+
+app.addEventListener("toggle", (event) => {
+  const drawer = event.target.closest?.(".dock-drawer");
+  if (!drawer?.open) return;
+  app.querySelectorAll(".dock-drawer[open]").forEach((other) => {
+    if (other !== drawer) other.removeAttribute("open");
+  });
+}, true);
 
 document.addEventListener("keydown", (event) => {
   if (event.target.matches("input, textarea") || !/^[1-9]$/.test(event.key)) return;
