@@ -60,6 +60,8 @@ npm run serve
 
 战斗模块可以通过 `http://127.0.0.1:8080/combat.html` 独立进入。该入口直接读取现有夜战规则，支持调整五维、境界、针法、伤势、死中见闻与固定因果，并可在手机竖屏和横屏下反复验证命灯回照、杀／擒／逃及部位伤势。
 
+[手机打开战斗演武](https://jollywu24.github.io/xiuxian-simulator/combat-lab/combat.html)
+
 已有调试浏览器运行在 `9225` 端口时，可执行 `npm run smoke:combat` 检查桌面、手机竖屏、手机横屏、死亡和回照流程。
 
 ## 验证

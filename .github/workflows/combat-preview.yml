@@ -1,0 +1,45 @@
+name: Deploy combat branch preview
+
+on:
+  push:
+    branches: [codex/combat-lab]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}combat-lab/combat.html
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout published main
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          path: published
+      - name: Checkout combat branch
+        uses: actions/checkout@v6
+        with:
+          path: branch
+      - name: Add combat preview without replacing the published root
+        run: |
+          mkdir -p published/web/combat-lab
+          cp -R branch/web/. published/web/combat-lab/
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload static site
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: published/web
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
