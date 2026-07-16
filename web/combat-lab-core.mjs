@@ -1,8 +1,10 @@
 import {
   createFirstBattle,
   getFirstBattleActions,
+  getFirstBattleIntentBoard,
+  getFirstBattleVitality,
   resolveFirstBattleAction,
-} from "./wudao-p0-core.mjs";
+} from "./wudao-p0-core.mjs?v=20260716.4";
 
 export const COMBAT_LAB_DEFAULTS = Object.freeze({
   fateSeed: "seed-0",
@@ -75,7 +77,7 @@ export function createCombatLabSession(options = {}) {
   return {
     setup,
     lives: setup.lives,
-    battle: createFirstBattle({ knownFacts: setup.knownFacts }),
+    battle: createFirstBattle({ knownFacts: setup.knownFacts, context: setup }),
     wounds: clone(setup.wounds),
     deathMemory: [],
     history: [],
@@ -105,6 +107,16 @@ export function getCombatLabActions(session) {
   return getFirstBattleActions(session.battle, getCombatLabContext(session));
 }
 
+export function getCombatLabBattleBoard(session) {
+  const context = getCombatLabContext(session);
+  return {
+    vitality: getFirstBattleVitality(session.battle, context),
+    intent: getFirstBattleIntentBoard(session.battle, context),
+    objective: session.battle.objective,
+    environment: clone(session.battle.environment || []),
+  };
+}
+
 export function resolveCombatLabAction(session, actionId) {
   if (session.status !== "fighting") {
     return { available: false, reason: "这场推演已经落定。" };
@@ -122,6 +134,7 @@ export function resolveCombatLabAction(session, actionId) {
     outcome: result.outcome,
     rating: result.evaluation?.rating || null,
     check: result.check || null,
+    impact: result.impact || null,
     text: result.battle.lastResult || result.cause || "",
   });
 
@@ -160,7 +173,7 @@ export function rewindCombatLabDeath(session) {
     next.result?.causeId === "left_sleeve_blade" ? "left_sleeve_blade" : null,
   ]);
   next.setup.knownFacts = learnedFacts;
-  next.battle = createFirstBattle({ knownFacts: learnedFacts });
+  next.battle = createFirstBattle({ knownFacts: learnedFacts, context: next.setup });
   next.wounds = clone(next.setup.wounds);
   next.status = "fighting";
   next.result = null;

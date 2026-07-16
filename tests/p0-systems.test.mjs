@@ -18,6 +18,8 @@ import {
   getBodyBreakthroughBoard,
   getDiagnosisBoard,
   getFirstBattleActions,
+  getFirstBattleIntentBoard,
+  getFirstBattleVitality,
   getSceneActions,
   grantSpringRainNeedles,
   migrateP0State,
@@ -211,6 +213,69 @@ test("第一次遭遇刀客时贸然出手会死亡并留下可利用记忆", ()
   const result = resolveFirstBattleAction("reckless", battle, { hasNeedles: true });
   assert.equal(result.outcome, "death");
   assert.match(result.memory, /左袖/);
+  assert.equal(result.battle.vitality.player.current, 0);
+});
+
+test("血条读取根骨、境界和既有伤势，并真实记录双方气血变化", () => {
+  const context = battleContext({
+    attributes: { constitution: 2, insight: 5, agility: 0, strength: 0, fortune: 0 },
+    playerStage: "body",
+    wounds: [{ id: "old_cut", bodyPart: "torso", severity: 2 }],
+  });
+  const battle = createFirstBattle({ context });
+  assert.deepEqual(getFirstBattleVitality(battle, context).player, { current: 16, max: 20 });
+  assert.deepEqual(getFirstBattleVitality(battle, context).enemy, { current: 18, max: 18 });
+
+  const observed = resolveFirstBattleAction("observe", battle, context);
+  const wrist = resolveFirstBattleAction("needle_wrist", observed.battle, context);
+  assert.ok(wrist.impact.enemyDamage > 0);
+  assert.equal(wrist.battle.vitality.enemy.current, 18 - wrist.impact.enemyDamage);
+  assert.ok(wrist.battle.history.at(-1).impact);
+});
+
+test("旧存档中的夜战缺少气血字段时会在继续行动前补齐", () => {
+  const legacyBattle = createFirstBattle();
+  delete legacyBattle.vitality;
+  delete legacyBattle.objective;
+  delete legacyBattle.environment;
+  const context = battleContext();
+  assert.deepEqual(getFirstBattleVitality(legacyBattle, context).player, { current: 12, max: 12 });
+  const continued = resolveFirstBattleAction("observe", legacyBattle, context);
+  assert.equal(continued.available, true);
+  assert.deepEqual(continued.battle.vitality.player, { current: 12, max: 12 });
+  assert.match(continued.battle.objective, /活过伏击/);
+  assert.ok(continued.battle.environment.some((entry) => entry.id === "street_lantern"));
+});
+
+test("敌招顺序、环境和气血共同形成新版战局预览", () => {
+  const context = battleContext();
+  const battle = createFirstBattle({ context });
+  const intent = getFirstBattleIntentBoard(battle, context);
+  const actions = getFirstBattleActions(battle, context);
+  assert.equal(intent.sequence.length, 2);
+  assert.match(intent.target, /尚未看清/);
+  assert.ok(battle.environment.some((entry) => entry.id === "street_lantern"));
+  assert.ok(actions.every((action) => action.impactPreview?.success && action.impactPreview?.risk));
+});
+
+test("气血归零会进入命灯死局，制伏与击杀会留下不同敌方血量", () => {
+  const context = battleContext();
+  const exhausted = createFirstBattle({
+    context,
+    vitality: {
+      player: { current: 2, max: 12 },
+      enemy: { current: 18, max: 18 },
+    },
+  });
+  const death = resolveFirstBattleAction("observe", exhausted, battleContext({ fateSeed: "seed-14" }));
+  assert.equal(death.outcome, "death");
+  assert.equal(death.battle.vitality.player.current, 0);
+
+  const observed = resolveFirstBattleAction("observe", createFirstBattle({ context }), context).battle;
+  const subdued = resolveFirstBattleAction("seal", observed, context);
+  const killed = resolveFirstBattleAction("kill", observed, context);
+  assert.equal(subdued.battle.vitality.enemy.current, 1);
+  assert.equal(killed.battle.vitality.enemy.current, 0);
 });
 
 test("看破虚招后可选择制伏、杀死或离开，真实改变结果", () => {

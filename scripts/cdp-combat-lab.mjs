@@ -64,6 +64,10 @@ async function snapshot(label) {
     actionCount: document.querySelectorAll("[data-action-id]").length,
     disabledCount: document.querySelectorAll("[data-action-id]:disabled").length,
     settingsCount: document.querySelectorAll("[data-setting]").length,
+    vitalityCount: document.querySelectorAll(".duel-vitality .vitality-track").length,
+    vitalityValues: [...document.querySelectorAll(".duel-vitality [role='meter']")].map((item) => Number(item.getAttribute("aria-valuenow"))),
+    intentStepCount: document.querySelectorAll(".intent-sequence li").length,
+    objectiveVisible: Boolean(document.querySelector(".battle-objective")),
     deathVisible: Boolean(document.querySelector(".death-board")),
     outcomeVisible: Boolean(document.querySelector(".outcome-board"))
   }))()`);
@@ -108,11 +112,15 @@ assert.ok(desktop.scrollWidth <= 1280);
 assert.ok(desktop.actionIds.includes("observe"));
 assert.ok(desktop.actionIds.includes("reckless"));
 assert.ok(desktop.settingsCount >= 9);
+assert.equal(desktop.vitalityCount, 2);
+assert.equal(desktop.intentStepCount, 2);
+assert.equal(desktop.objectiveVisible, true);
 const desktopShot = await screenshot("wudao-combat-lab-desktop.png");
 
 await clickAction("observe");
 const observed = await snapshot("observed");
 assert.match(observed.text, /左袖杀招已经看清/);
+assert.ok(observed.vitalityValues[0] <= desktop.vitalityValues[0]);
 assert.ok(observed.actionIds.includes("seal"));
 assert.ok(observed.actionIds.includes("kill"));
 await clickAction("seal");
@@ -125,6 +133,7 @@ await navigate();
 const portrait = await snapshot("portrait");
 assert.ok(portrait.scrollWidth <= 390);
 assert.ok(portrait.actionCount >= 5);
+assert.equal(portrait.vitalityCount, 2);
 const portraitShot = await screenshot("wudao-combat-lab-portrait.png");
 
 await clickAction("reckless");
@@ -142,6 +151,7 @@ await navigate();
 const landscape = await snapshot("landscape");
 assert.ok(landscape.scrollWidth <= 844);
 assert.ok(landscape.actionCount >= 5);
+assert.equal(landscape.vitalityCount, 2);
 const landscapeShot = await screenshot("wudao-combat-lab-landscape.png");
 
 assert.deepEqual(pageErrors, []);

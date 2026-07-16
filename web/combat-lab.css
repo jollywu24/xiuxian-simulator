@@ -13,6 +13,8 @@
   --jade-bright: #abd0c9;
   --gold: #d0a45b;
   --red: #d36d61;
+  --blood: #b8463f;
+  --blood-bright: #e47b6d;
   --ink: #05090b;
   --story: "Songti SC", "STSong", "SimSun", serif;
   --ui: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
@@ -363,6 +365,12 @@ button:disabled {
   white-space: nowrap;
 }
 
+.scene-vitality {
+  display: grid;
+  margin-top: 8px;
+  gap: 7px;
+}
+
 .fate-settings {
   margin-top: 10px;
   border: 1px solid var(--line);
@@ -547,8 +555,128 @@ select {
   cursor: pointer;
 }
 
+.battle-objective {
+  margin-top: 24px;
+  padding: 12px 15px;
+  border: 1px solid rgba(208, 164, 91, 0.35);
+  border-left: 3px solid var(--gold);
+  background: rgba(70, 50, 25, 0.16);
+}
+
+.battle-objective span,
+.battle-objective strong {
+  display: block;
+}
+
+.battle-objective span {
+  color: var(--gold);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+}
+
+.battle-objective strong {
+  margin-top: 5px;
+  font-family: var(--story);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.duel-vitality {
+  display: grid;
+  margin-top: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.vitality-card {
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  background: var(--panel-deep);
+}
+
+.vitality-copy {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.vitality-copy span {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vitality-copy strong {
+  flex: 0 0 auto;
+  color: var(--text);
+  font-family: var(--number);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.vitality-copy b {
+  color: var(--jade-bright);
+  font-size: 16px;
+}
+
+.vitality-copy i {
+  margin: 0 4px;
+  color: var(--faint);
+  font-style: normal;
+}
+
+.vitality-track {
+  position: relative;
+  height: 8px;
+  margin-top: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(214, 224, 219, 0.12);
+  background:
+    repeating-linear-gradient(90deg, transparent 0 calc(10% - 1px), rgba(255, 255, 255, 0.08) calc(10% - 1px) 10%),
+    #050a0c;
+}
+
+.vitality-track i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #416e68, var(--jade-bright));
+  box-shadow: 0 0 14px rgba(126, 170, 165, 0.28);
+  transition: width 280ms ease, background 280ms ease;
+}
+
+.vitality-card.enemy .vitality-track i {
+  background: linear-gradient(90deg, #71342f, var(--blood-bright));
+  box-shadow: 0 0 14px rgba(184, 70, 63, 0.3);
+}
+
+.vitality-card.enemy .vitality-copy b {
+  color: var(--blood-bright);
+}
+
+.vitality-card.wounded .vitality-track i,
+.vitality-card.critical .vitality-track i {
+  background: linear-gradient(90deg, #793a32, var(--blood-bright));
+}
+
+.vitality-card.critical {
+  border-color: rgba(211, 109, 97, 0.55);
+}
+
+.vitality-card.critical .vitality-track i {
+  animation: vitality-pulse 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes vitality-pulse {
+  from { opacity: 0.6; }
+  to { opacity: 1; }
+}
+
 .intent-board {
-  margin-top: 26px;
+  margin-top: 10px;
   padding: 18px 20px;
   border: 1px solid var(--line-strong);
   background: var(--panel);
@@ -591,6 +719,103 @@ select {
   color: var(--muted);
   font-size: 12px;
   line-height: 1.65;
+}
+
+.intent-sequence {
+  display: grid;
+  margin: 13px 0 0;
+  padding: 0;
+  gap: 6px;
+  list-style: none;
+}
+
+.intent-sequence li {
+  display: grid;
+  padding: 7px 9px;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  background: rgba(5, 11, 14, 0.4);
+}
+
+.intent-sequence b {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  color: var(--red);
+  border: 1px solid currentColor;
+  font-family: var(--number);
+  font-size: 9px;
+  font-weight: 500;
+}
+
+.intent-board.known .intent-sequence b {
+  color: var(--jade-bright);
+}
+
+.intent-sequence span {
+  color: var(--text);
+  font-size: 11px;
+  letter-spacing: 0;
+  line-height: 1.5;
+}
+
+.battle-state-board {
+  display: grid;
+  margin-top: 10px;
+  grid-template-columns: 0.8fr 1.2fr;
+  border: 1px solid var(--line);
+  background: var(--panel-deep);
+}
+
+.battle-state-board > div {
+  min-width: 0;
+  padding: 12px 13px;
+}
+
+.battle-state-board > div + div {
+  border-left: 1px solid var(--line);
+}
+
+.battle-state-board span,
+.battle-state-board strong {
+  display: block;
+}
+
+.battle-state-board span {
+  color: var(--jade);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+}
+
+.battle-state-board strong {
+  margin-top: 5px;
+  font-family: var(--story);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.battle-state-board ul {
+  display: flex;
+  margin: 6px 0 0;
+  padding: 0;
+  flex-wrap: wrap;
+  gap: 5px;
+  list-style: none;
+}
+
+.battle-state-board li {
+  padding: 4px 6px;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  font-size: 9px;
+}
+
+.battle-state-board li.out {
+  color: var(--faint);
+  text-decoration: line-through;
 }
 
 .condition-row {
@@ -793,7 +1018,8 @@ select {
 .choice-copy small,
 .choice-copy strong,
 .choice-copy p,
-.choice-preview {
+.choice-preview,
+.choice-impact {
   display: block;
 }
 
@@ -811,7 +1037,8 @@ select {
 }
 
 .choice-copy p,
-.choice-preview {
+.choice-preview,
+.choice-impact {
   color: var(--muted);
   font-size: 11px;
   line-height: 1.6;
@@ -824,6 +1051,13 @@ select {
 .choice-preview {
   margin-top: 5px;
   color: var(--faint);
+}
+
+.choice-impact {
+  margin-top: 4px;
+  color: var(--gold);
+  font-family: var(--number);
+  font-size: 9px;
 }
 
 .risk-mark {
@@ -1007,6 +1241,10 @@ select {
     min-height: 300px;
   }
 
+  .scene-vitality {
+    display: none;
+  }
+
   .battle-column {
     padding: 26px 14px max(44px, env(safe-area-inset-bottom));
   }
@@ -1054,11 +1292,14 @@ select {
 
   .setting-grid,
   .select-grid,
-  .condition-row {
+  .condition-row,
+  .duel-vitality,
+  .battle-state-board {
     grid-template-columns: 1fr;
   }
 
-  .condition-row span + span {
+  .condition-row span + span,
+  .battle-state-board > div + div {
     border-top: 1px solid var(--line);
     border-left: 0;
   }

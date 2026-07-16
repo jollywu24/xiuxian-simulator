@@ -1420,6 +1420,46 @@ h1 {
   line-height: 1.7;
 }
 
+.battle-intent ol {
+  display: grid;
+  margin: 12px 0 0;
+  padding: 0;
+  gap: 6px;
+  list-style: none;
+}
+
+.battle-intent li {
+  display: grid;
+  padding: 7px 9px;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--panel-soft) 70%, transparent);
+}
+
+.battle-intent li b {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  color: var(--danger);
+  border: 1px solid currentColor;
+  font-family: var(--font-number);
+  font-size: 9px;
+}
+
+.battle-intent li span {
+  color: var(--text);
+  font-size: 11px;
+  letter-spacing: 0;
+  line-height: 1.5;
+}
+
+.battle-intent.known li b {
+  color: var(--spirit);
+}
+
 .npc-reveal-card {
   display: grid;
   grid-template-columns: 120px 1fr;
@@ -3172,6 +3212,109 @@ h1 {
   margin: 0 auto;
 }
 
+.combat-objective {
+  margin-bottom: 10px;
+  padding: 12px 15px;
+  border: 1px solid color-mix(in srgb, var(--gold) 45%, var(--line));
+  border-left: 3px solid var(--gold);
+  background: color-mix(in srgb, var(--gold) 8%, var(--panel-soft));
+}
+
+.combat-objective span,
+.combat-objective strong {
+  display: block;
+}
+
+.combat-objective span {
+  color: var(--gold);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.combat-objective strong {
+  margin-top: 5px;
+  font-family: var(--font-story);
+  font-size: 15px;
+}
+
+.combat-vitality-grid {
+  display: grid;
+  margin-bottom: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.combat-vitality-card {
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  background: var(--panel-soft);
+}
+
+.combat-vitality-card > div:first-child {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.combat-vitality-card span {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.combat-vitality-card strong {
+  flex: 0 0 auto;
+  font-family: var(--font-number);
+  font-size: 12px;
+}
+
+.combat-vitality-card strong b {
+  color: var(--spirit);
+  font-size: 16px;
+}
+
+.combat-vitality-card.enemy strong b {
+  color: var(--danger);
+}
+
+.combat-vitality-card strong i {
+  margin: 0 4px;
+  color: var(--muted);
+  font-style: normal;
+}
+
+.combat-vitality-track {
+  height: 8px;
+  margin-top: 8px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background:
+    repeating-linear-gradient(90deg, transparent 0 calc(10% - 1px), rgba(255, 255, 255, 0.08) calc(10% - 1px) 10%),
+    var(--panel-solid);
+}
+
+.combat-vitality-track i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--spirit) 58%, #17302d), var(--spirit));
+  transition: width 240ms ease;
+}
+
+.combat-vitality-card.enemy .combat-vitality-track i,
+.combat-vitality-card.wounded .combat-vitality-track i,
+.combat-vitality-card.critical .combat-vitality-track i {
+  background: linear-gradient(90deg, #6f2d2d, var(--danger));
+}
+
+.combat-vitality-card.critical {
+  border-color: color-mix(in srgb, var(--danger) 60%, var(--line));
+}
+
 .battle-status {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -3196,6 +3339,62 @@ h1 {
 .battle-status strong {
   font-family: var(--font-number);
   font-size: 22px;
+}
+
+.combat-state-board {
+  display: grid;
+  margin-bottom: 12px;
+  grid-template-columns: 0.8fr 1.2fr;
+  border: 1px solid var(--line);
+  background: var(--panel-soft);
+}
+
+.combat-state-board > div {
+  min-width: 0;
+  padding: 12px 13px;
+}
+
+.combat-state-board > div + div {
+  border-left: 1px solid var(--line);
+}
+
+.combat-state-board > div > span,
+.combat-state-board strong {
+  display: block;
+}
+
+.combat-state-board > div > span {
+  color: var(--spirit);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.combat-state-board strong {
+  margin-top: 5px;
+  font-family: var(--font-story);
+  font-size: 14px;
+}
+
+.combat-state-board ul {
+  display: flex;
+  margin: 6px 0 0;
+  padding: 0;
+  flex-wrap: wrap;
+  gap: 5px;
+  list-style: none;
+}
+
+.combat-state-board li {
+  padding: 4px 6px;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  font-size: 9px;
+}
+
+.combat-state-board li.out {
+  color: var(--muted);
+  text-decoration: line-through;
 }
 
 .intent-panel {
@@ -3996,6 +4195,16 @@ h1 {
   .world-ledger,
   .birth-facts {
     grid-template-columns: 1fr;
+  }
+
+  .combat-vitality-grid,
+  .combat-state-board {
+    grid-template-columns: 1fr;
+  }
+
+  .combat-state-board > div + div {
+    border-top: 1px solid var(--line);
+    border-left: 0;
   }
 
   .shen-trust-strip,

@@ -1,11 +1,12 @@
 import {
   COMBAT_LAB_DEFAULTS,
+  getCombatLabBattleBoard,
   createCombatLabSession,
   getCombatLabActions,
   restartCombatLab,
   resolveCombatLabAction,
   rewindCombatLabDeath,
-} from "./combat-lab-core.mjs";
+} from "./combat-lab-core.mjs?v=20260716.4";
 
 const root = document.querySelector("#combat-lab");
 
@@ -64,6 +65,28 @@ function woundLabel(wound) {
   return `${parts[wound.bodyPart] || "身上"}${levels[Number(wound.severity || 1)] || "带伤"}`;
 }
 
+function rangeLabel(range) {
+  return range === "close" ? "贴身" : range === "far" ? "远离" : "适中";
+}
+
+function vitalityBarHtml(label, stage, vitality, side) {
+  const current = Math.max(0, Number(vitality.current || 0));
+  const maximum = Math.max(1, Number(vitality.max || 1));
+  const percent = Math.max(0, Math.min(100, Math.round((current / maximum) * 100)));
+  const condition = percent <= 25 ? "critical" : percent <= 50 ? "wounded" : "";
+  return `
+    <div class="vitality-card ${escapeHtml(side)} ${condition}">
+      <div class="vitality-copy">
+        <span>${escapeHtml(label)} · ${escapeHtml(stage)}</span>
+        <strong><b>${current}</b><i>/</i>${maximum}</strong>
+      </div>
+      <div class="vitality-track" role="meter" aria-label="${escapeHtml(`${label}气血`)}" aria-valuemin="0" aria-valuemax="${maximum}" aria-valuenow="${current}">
+        <i style="width:${percent}%"></i>
+      </div>
+    </div>
+  `;
+}
+
 function checkHtml(check, text = "") {
   if (!check) return text ? `<div class="result-strip"><span>战果</span><strong>${escapeHtml(text)}</strong></div>` : "";
   return `
@@ -97,7 +120,8 @@ function actionHtml(entry, index) {
           <small>${escapeHtml(entry.intent)} · ${escapeHtml(entry.objectName)}</small>
           <strong>${escapeHtml(entry.title)}</strong>
           <p>${escapeHtml(entry.description)}</p>
-          <span class="choice-preview">得手：${escapeHtml(entry.successPreview)} · 风险：${escapeHtml(entry.riskPreview)}</span>
+          <span class="choice-preview">兑现：${escapeHtml(entry.successPreview)} · 风险：${escapeHtml(entry.riskPreview)}</span>
+          <span class="choice-impact">气血：${escapeHtml(entry.impactPreview.success)} · ${escapeHtml(entry.impactPreview.risk)} · ${escapeHtml(entry.impactPreview.position)}</span>
         </span>
         <span class="risk-mark">${escapeHtml(evaluation.available ? evaluation.ratingLabel : "不可用")}</span>
       </button>
@@ -175,6 +199,7 @@ function settingHtml() {
 
 function sceneHtml() {
   const battle = session.battle;
+  const board = getCombatLabBattleBoard(session);
   const knownSleeve = battle.knownFacts.includes("left_sleeve_blade") || battle.observedFeint;
   const finished = session.status !== "fighting";
   return `
@@ -195,8 +220,12 @@ function sceneHtml() {
       <div class="battle-status">
         <div><span>你</span><strong>${escapeHtml(STAGE_LABELS[session.setup.playerStage])}</strong></div>
         <div><span>刀客</span><strong>锻体</strong></div>
-        <div><span>距离</span><strong>${battle.range === "mid" ? "适中" : escapeHtml(battle.range)}</strong></div>
+        <div><span>距离</span><strong>${escapeHtml(rangeLabel(battle.range))}</strong></div>
         <div><span>命灯</span><strong>${"●".repeat(session.lives)}${"○".repeat(2 - session.lives)}</strong></div>
+      </div>
+      <div class="scene-vitality">
+        ${vitalityBarHtml("陈司命", STAGE_LABELS[session.setup.playerStage], board.vitality.player, "player")}
+        ${vitalityBarHtml("蒙面刀客", "锻体", board.vitality.enemy, "enemy")}
       </div>
       ${settingHtml()}
       <div class="scene-links">
@@ -245,6 +274,7 @@ function historyHtml() {
             <span>${entry.round ? `第 ${Number(entry.round)} 轮` : "回照"}</span>
             <strong>${escapeHtml(entry.intent || "因果回转")}</strong>
             <p>${escapeHtml(entry.text)}</p>
+            ${entry.impact ? `<small>气血变化：你 -${Number(entry.impact.playerDamage || 0)}，刀客 -${Number(entry.impact.enemyDamage || 0)}；余 ${Number(entry.impact.playerHp || 0)} / ${Number(entry.impact.enemyHp || 0)}</small>` : ""}
             ${entry.check ? `<small>骰面 ${Number(entry.check.roll)} ${escapeHtml(signed(entry.check.modifier))} = ${Number(entry.check.total)} · ${escapeHtml(entry.check.tierLabel)}</small>` : ""}
           </li>
         `).join("")}
@@ -255,6 +285,7 @@ function historyHtml() {
 
 function battleHtml() {
   const battle = session.battle;
+  const board = getCombatLabBattleBoard(session);
   const actions = getCombatLabActions(session);
   const knownSleeve = battle.knownFacts.includes("left_sleeve_blade") || battle.observedFeint;
   const wounds = session.wounds.length ? session.wounds.map(woundLabel).join(" · ") : "无伤";
@@ -267,16 +298,37 @@ function battleHtml() {
         </div>
         <button type="button" data-command="restart">重开此局</button>
       </header>
+      <div class="battle-objective">
+        <span>战斗目的</span>
+        <strong>${escapeHtml(board.objective)}</strong>
+      </div>
+      <div class="duel-vitality">
+        ${vitalityBarHtml("陈司命", STAGE_LABELS[session.setup.playerStage], board.vitality.player, "player")}
+        ${vitalityBarHtml("蒙面刀客", "锻体", board.vitality.enemy, "enemy")}
+      </div>
       <div class="intent-board ${knownSleeve ? "known" : "uncertain"}">
-        <span>第 ${Number(battle.round)} 轮 · 对手意图</span>
+        <span>敌招 · 第 ${Number(battle.round)} 轮 · 威胁 ${Number(board.intent.threat)}</span>
         <strong>${escapeHtml(battle.enemyIntent)}</strong>
+        <ol class="intent-sequence">
+          ${board.intent.sequence.map((step, index) => `<li><b>${index + 1}</b><span>${escapeHtml(step)}</span></li>`).join("")}
+        </ol>
         <p>${knownSleeve
-          ? "左袖杀招已经看清；现在可以留活口、取命，或脱身。"
+          ? `目标：${escapeHtml(board.intent.target)}。左袖杀招已经看清；现在可以留活口、取命，或脱身。`
           : battle.darkness
-            ? "灯已熄灭，他的步法慢了一瞬。"
+            ? `目标：${escapeHtml(board.intent.target)}。灯已熄灭，他的步法慢了一瞬。`
             : battle.enemyWounded
-              ? "右腕中针，但左袖仍可递刀。"
-              : "后手未明。观察、借势与抢攻会读取不同五维和战场条件。"}</p>
+              ? `目标：${escapeHtml(board.intent.target)}。右腕中针，但左袖仍可递刀。`
+              : `目标：${escapeHtml(board.intent.target)}。后手未明。观察、借势与抢攻会读取不同五维和战场条件。`}</p>
+      </div>
+      <div class="battle-state-board">
+        <div>
+          <span>战局</span>
+          <strong>${escapeHtml(rangeLabel(battle.range))} · ${battle.upperHand ? "抢得先机" : battle.playerWounded ? "带伤受压" : "互相试探"}</strong>
+        </div>
+        <div>
+          <span>环境对象</span>
+          <ul>${board.environment.map((entry) => `<li class="${escapeHtml(entry.state)}">${escapeHtml(entry.name)} · ${escapeHtml({ lit: "仍亮", out: "已灭", cover: "可遮挡", escape: "可脱身" }[entry.state] || entry.state)}</li>`).join("")}</ul>
+        </div>
       </div>
       <div class="condition-row">
         <span>当前运用<strong>春风化雨针</strong></span>
@@ -293,8 +345,8 @@ function battleHtml() {
       ${outcomeHtml()}
       ${session.status === "fighting" ? `
         <div class="action-heading">
-          <div><span>选择下一手</span><strong>数字键 1—9 亦可出手</strong></div>
-          <small>行动会读取对应属性、武学、境界差、优势与伤势。</small>
+          <div><span>选择 · 预测</span><strong>数字键 1—9 亦可出手</strong></div>
+          <small>气血变化、落点与主要风险会在出手前公开。</small>
         </div>
         <div class="action-list">${actions.map(actionHtml).join("")}</div>
       ` : ""}

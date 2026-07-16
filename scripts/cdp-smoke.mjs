@@ -119,8 +119,8 @@ const checkpoints = [];
 checkpoints.push(await snapshot("landing"));
 assert.equal(checkpoints.at(-1).title, "武道");
 assert.ok(checkpoints.at(-1).scrollWidth <= 1280);
-assert.match(await evaluate(`document.querySelector('script[type="module"]')?.src || ""`), /wudao-app\.mjs\?v=20260716\.3/);
-assert.match(await evaluate(`document.querySelector('link[rel="stylesheet"]')?.href || ""`), /styles\.css\?v=20260716\.3/);
+assert.match(await evaluate(`document.querySelector('script[type="module"]')?.src || ""`), /wudao-app\.mjs\?v=20260716\.4/);
+assert.match(await evaluate(`document.querySelector('link[rel="stylesheet"]')?.href || ""`), /styles\.css\?v=20260716\.4/);
 assert.match(checkpoints.at(-1).text, /大曜四百二十七年/);
 assert.doesNotMatch(checkpoints.at(-1).text, /现实|论坛|武道局|其他玩家|其它玩家|太虚命盘|归尘门|黑日|Demo|P0|P1|P2|测试|原型/);
 

@@ -58,6 +58,8 @@ import {
   getBodyBreakthroughBoard,
   getDiagnosisBoard,
   getFirstBattleActions,
+  getFirstBattleIntentBoard,
+  getFirstBattleVitality,
   getP0Item,
   getP0Skill,
   getSceneActions,
@@ -80,7 +82,7 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260716.3";
+} from "./wudao-p0-core.mjs?v=20260716.4";
 
 const STORAGE_KEY = "wudao-high-martial-v1";
 const app = document.querySelector("#app");
@@ -1597,6 +1599,19 @@ function combatCheckResultHtml(check, resultText = "") {
   `;
 }
 
+function combatVitalityBarHtml(label, stage, vitality, side) {
+  const current = Math.max(0, Number(vitality.current || 0));
+  const maximum = Math.max(1, Number(vitality.max || 1));
+  const percent = Math.max(0, Math.min(100, Math.round((current / maximum) * 100)));
+  const condition = percent <= 25 ? "critical" : percent <= 50 ? "wounded" : "";
+  return `
+    <div class="combat-vitality-card ${escapeHtml(side)} ${condition}">
+      <div><span>${escapeHtml(label)} · ${escapeHtml(stage)}</span><strong><b>${current}</b><i>/</i>${maximum}</strong></div>
+      <div class="combat-vitality-track" role="meter" aria-label="${escapeHtml(`${label}气血`)}" aria-valuemin="0" aria-valuemax="${maximum}" aria-valuenow="${current}"><i style="width:${percent}%"></i></div>
+    </div>
+  `;
+}
+
 function renderP0Death() {
   const memory = state.p0.deathMemory.at(-1);
   const record = state.p0.deathRecords.at(-1);
@@ -1609,21 +1624,39 @@ function renderP0Death() {
 }
 
 function renderFirstNeedleAmbush() {
-  const battle = state.p0.battle || createFirstBattle();
   const context = p0CombatContext();
+  const battle = state.p0.battle || createFirstBattle({ knownFacts: context.knownFacts, context });
   const actions = getFirstBattleActions(battle, context);
+  const vitality = getFirstBattleVitality(battle, context);
+  const intent = getFirstBattleIntentBoard(battle, context);
   const technique = getP0Skill(state.p0.activeMartial?.technique);
   const knownSleeve = battle.knownFacts?.includes("left_sleeve_blade");
+  const range = battle.range === "close" ? "贴身" : battle.range === "far" ? "远离" : "适中";
+  const environment = (battle.environment || []).map((entry) => `<li class="${escapeHtml(entry.state)}">${escapeHtml(entry.name)} · ${escapeHtml({ lit: "仍亮", out: "已灭", cover: "可遮挡", escape: "可脱身" }[entry.state] || entry.state)}</li>`).join("");
   return gameShell(`
     ${sceneHeader("东门长街 · 夜雨", "蒙面刀客从药铺檐影里压低右肩", "他挡住回路，不问姓名。雨水在右手刀锋上发亮，可你已经知道：能看见的未必是真正杀招。")}
     <div class="battle-layout">
+      <div class="combat-objective"><span>战斗目的</span><strong>${escapeHtml(battle.objective || "活过伏击，并决定留下活口、取命或脱身。")}</strong></div>
+      <div class="combat-vitality-grid">
+        ${combatVitalityBarHtml("陈司命", COMBAT_STAGE_NAMES[state.martialStage] || state.martialStage, vitality.player, "player")}
+        ${combatVitalityBarHtml("蒙面刀客", COMBAT_STAGE_NAMES[battle.enemyStage] || battle.enemyStage, vitality.enemy, "enemy")}
+      </div>
       <div class="battle-status">
         <div><span>你</span><strong>${escapeHtml(COMBAT_STAGE_NAMES[state.martialStage] || state.martialStage)}</strong></div>
         <div><span>刀客</span><strong>${escapeHtml(COMBAT_STAGE_NAMES[battle.enemyStage] || battle.enemyStage)}</strong></div>
-        <div><span>距离</span><strong>${battle.range === "close" ? "贴身" : battle.range === "far" ? "远离" : "适中"}</strong></div>
+        <div><span>距离</span><strong>${escapeHtml(range)}</strong></div>
         <div><span>当前运用</span><strong>${escapeHtml(technique?.name || "徒手")}</strong></div>
       </div>
-      <div class="battle-intent ${knownSleeve || battle.observedFeint ? "known" : "uncertain"}"><span>第 ${battle.round} 轮 · 对手意图</span><strong>${escapeHtml(battle.enemyIntent)}</strong><p>${battle.observedFeint || knownSleeve ? "左袖杀招已经看清；现在要决定留活口、取命，还是脱身。" : battle.darkness ? "灯已熄灭，他的步法慢了一瞬。" : battle.enemyWounded ? "右腕中针，但左袖仍可递刀。" : "后手未明。先观察、借势或冒险抢攻，结果会读取对应五维与武学。"}</p></div>
+      <div class="battle-intent ${knownSleeve || battle.observedFeint ? "known" : "uncertain"}">
+        <span>敌招 · 第 ${battle.round} 轮 · 威胁 ${Number(intent.threat)}</span>
+        <strong>${escapeHtml(battle.enemyIntent)}</strong>
+        <ol>${intent.sequence.map((step, index) => `<li><b>${index + 1}</b><span>${escapeHtml(step)}</span></li>`).join("")}</ol>
+        <p>目标：${escapeHtml(intent.target)}。${battle.observedFeint || knownSleeve ? "左袖杀招已经看清；现在要决定留活口、取命，还是脱身。" : battle.darkness ? "灯已熄灭，他的步法慢了一瞬。" : battle.enemyWounded ? "右腕中针，但左袖仍可递刀。" : "后手未明。先观察、借势或冒险抢攻，结果会读取对应五维与武学。"}</p>
+      </div>
+      <div class="combat-state-board">
+        <div><span>战局</span><strong>${escapeHtml(range)} · ${battle.upperHand ? "抢得先机" : battle.playerWounded ? "带伤受压" : "互相试探"}</strong></div>
+        <div><span>环境对象</span><ul>${environment}</ul></div>
+      </div>
       ${battle.lastCheck ? combatCheckResultHtml(battle.lastCheck, battle.lastResult) : battle.lastResult ? `<div class="battle-log"><p><strong>刚才：</strong>${escapeHtml(battle.lastResult)}</p></div>` : ""}
     </div>
     ${state.p0.wounds.length ? `<div class="death-verdict"><span>带伤应战</span><strong>肋下见血</strong><p>再失手会让之后的站桩与突破更难。</p></div>` : ""}
@@ -1635,7 +1668,7 @@ function renderFirstNeedleAmbush() {
           action: "first-battle-action",
           value: entry.id,
           title: entry.title,
-          description: `${entry.description} 得手：${entry.successPreview}；风险：${entry.riskPreview}。`,
+          description: `${entry.description} 兑现：${entry.successPreview}；风险：${entry.riskPreview}。气血预估：${entry.impactPreview.success}；${entry.impactPreview.risk}；${entry.impactPreview.position}。`,
           source: `${entry.intent} · ${entry.objectName}`,
           meta: evaluation.available ? `${evaluation.ratingLabel} · ${attribute}` : "不可用",
           detail: evaluation.available
@@ -2069,7 +2102,10 @@ function combatOutcomeText(result) {
   const checkText = check
     ? `因果骰掷出 ${check.roll}，加上行动修正 ${check.modifier >= 0 ? `+${check.modifier}` : check.modifier}，合计 ${check.total}，判定为${check.tierLabel || COMBAT_CHECK_LABELS[check.tier] || "落定"}。`
     : "";
-  return `${checkText}${result.battle?.lastResult || result.cause || ""}`;
+  const impact = result.impact
+    ? `气血变化：你失去 ${Number(result.impact.playerDamage || 0)}，刀客失去 ${Number(result.impact.enemyDamage || 0)}。`
+    : "";
+  return `${checkText}${impact}${result.battle?.lastResult || result.cause || ""}`;
 }
 
 function handleDeath(choice) {
@@ -2817,7 +2853,7 @@ const handlers = {
     state.p0 = grantSpringRainNeedles(state.p0).state;
     state.p0.activeMartial.foundation = state.mindArt || null;
     if (!state.skills.includes("spring_rain_needles")) state.skills.push("spring_rain_needles");
-    state.p0.battle = createFirstBattle({ knownFacts: p0CombatContext().knownFacts });
+    state.p0.battle = createFirstBattle({ knownFacts: p0CombatContext().knownFacts, context: p0CombatContext() });
     state.p0.checkpoint = null;
     state.p0.checkpoint = structuredClone(state.p0);
     track("spring_rain_needles_received");
@@ -2841,6 +2877,7 @@ const handlers = {
       result: result.outcome,
       rating: result.evaluation?.rating || null,
       check: result.check || null,
+      impact: result.impact || null,
     }];
     appendNarrativeOutcome(combatOutcomeText(result));
     if (result.outcome === "death") return handleP0Death(result.cause, result.memory, "firstNeedleAmbush", result.causeId, result.check);
@@ -2870,7 +2907,10 @@ const handlers = {
     state.p0.deathRecords = deathRecords;
     state.p0.deathNode = null;
     state.p0.deathReason = null;
-    if (node === "firstNeedleAmbush") state.p0.battle = createFirstBattle({ knownFacts: deathRecords.some((record) => record.id === "left_sleeve_blade") ? ["left_sleeve_blade"] : [] });
+    if (node === "firstNeedleAmbush") {
+      const knownFacts = deathRecords.some((record) => record.id === "left_sleeve_blade") ? ["left_sleeve_blade"] : [];
+      state.p0.battle = createFirstBattle({ knownFacts, context: { ...p0CombatContext(), knownFacts } });
+    }
     track("p0_death_return", { node });
     moveP0(node, node === "firstNeedleAmbush" ? "first_needle_ambush" : "body_breakthrough");
   },
