@@ -83,12 +83,19 @@ async function snapshot(label) {
     actorLabels: [...document.querySelectorAll(".scene-actor .scene-marker-label")].map((item) => item.textContent.trim()),
     routeNodeCount: document.querySelectorAll(".route-node").length,
     dockCount: document.querySelectorAll(".dock-drawer").length,
+    narrativeHistoryCount: document.querySelectorAll(".narrative-entry").length,
+    choiceConditionCount: document.querySelectorAll(".choice-condition").length,
+    narrativeOverflow: (() => {
+      const narrative = document.querySelector(".narrative-deck");
+      return narrative ? narrative.scrollWidth - narrative.clientWidth : 0;
+    })(),
     splitView: (() => {
       const stage = document.querySelector(".scene-experience")?.getBoundingClientRect();
       const narrative = document.querySelector(".narrative-deck")?.getBoundingClientRect();
       return Boolean(stage && narrative && Math.abs(stage.top - narrative.top) < 8 && narrative.left >= stage.right - 2);
     })(),
     actions: [...document.querySelectorAll("[data-action]")].map((item) => [item.dataset.action, item.dataset.value]),
+    currentText: document.querySelector("[data-narrative-current]")?.innerText?.slice(0, 1200) || "",
     text: document.querySelector("#app")?.innerText?.slice(0, 600) || ""
   }))()`);
 }
@@ -153,6 +160,7 @@ assert.match(await text(), /神秘贡品/);
 const desktopTasks = await snapshot("temple-tasks-desktop");
 assert.equal(desktopTasks.dockCount, 2);
 assert.equal(desktopTasks.splitView, true);
+assert.ok(desktopTasks.narrativeOverflow <= 1);
 await screenshot("wudao-temple-encounters-desktop.png");
 await send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
 const mobileTasks = await snapshot("temple-tasks-mobile");
@@ -191,6 +199,10 @@ await screenshot("wudao-lady-arrival-mobile.png");
 await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
 
 await click("lady-choice", "deny_beggar");
+assert.ok(await evaluate(`document.querySelectorAll(".narrative-entry").length > 0`));
+assert.match(await evaluate(`document.querySelector(".narrative-entry:last-child .player-choice")?.innerText || ""`), /我不是乞丐/);
+await evaluate(`document.querySelector(".narrative-deck").scrollTop = 0`);
+await screenshot("wudao-narrative-history-desktop.png");
 await click("lady-pressure", "yield");
 await click("lady-test", "refuse");
 assert.match(await text(), /陆连山/);
@@ -214,7 +226,8 @@ assert.match(await text(), /缩短路程/);
 await click("continue-road");
 
 checkpoints.push(await snapshot("ending"));
-assert.match(checkpoints.at(-1).text, /第一夜之后/);
+assert.match(checkpoints.at(-1).currentText, /第一夜之后/);
+assert.ok(checkpoints.at(-1).narrativeOverflow <= 1);
 assert.match(await text(), /沈字铜钱/);
 assert.match(await text(), /神秘贡品/);
 assert.match(await text(), /临安/);
@@ -364,6 +377,24 @@ await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, dev
 await click("third-lady-summons", "accept");
 assert.match(await text(), /尚无定论/);
 assert.equal(await evaluate(`document.querySelector('[data-action="conclude-third-lady"]').disabled`), true);
+const lockedTrustChoice = await evaluate(`(() => {
+  const action = document.querySelector('[data-action="conclude-third-lady"]');
+  const entry = action?.closest(".choice-entry");
+  const condition = entry?.querySelector(".choice-condition");
+  condition?.querySelector("summary")?.click();
+  return {
+    unavailable: entry?.classList.contains("unavailable") || false,
+    status: condition?.querySelector(".condition-status")?.textContent || "",
+    open: condition?.open || false,
+    detail: condition?.innerText || "",
+  };
+})()`);
+assert.equal(lockedTrustChoice.unavailable, true);
+assert.equal(lockedTrustChoice.open, true);
+assert.match(lockedTrustChoice.status, /条件未满足/);
+assert.match(lockedTrustChoice.detail, /病因确证|相互印证/);
+assert.ok(await evaluate(`document.querySelectorAll(".choice-entry.special").length > 0`));
+await screenshot("wudao-choice-conditions-desktop.png");
 await click("diagnose-third-lady", "observe");
 await click("diagnose-third-lady", "pulse");
 assert.match(await text(), /经脉逆行/);
@@ -384,7 +415,7 @@ assert.equal(await evaluate(`document.querySelector('[data-action="first-battle-
 await send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
 const mobileBattle = await snapshot("first-battle-mobile");
 assert.ok(mobileBattle.scrollWidth <= 390);
-assert.match(mobileBattle.text, /稳妥 · 悟性/);
+assert.match(mobileBattle.currentText, /稳妥 · 悟性/);
 await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
 await click("first-battle-action", "observe");
 assert.match(await text(), /左袖短刃才是真正杀招/);
@@ -400,7 +431,7 @@ assert.match(await text(), /四项条件已经齐备/);
 await send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
 const mobileCounterplan = await snapshot("assailant-counterplan-mobile");
 assert.ok(mobileCounterplan.scrollWidth <= 390);
-assert.match(mobileCounterplan.text, /照暗语送出“药已回炉”/);
+assert.match(mobileCounterplan.currentText, /照暗语送出“药已回炉”/);
 await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
 await click("assailant-counterplan", "send_false_report");
 assert.match(await text(), /假消息已经沿旧路送出/);
@@ -444,6 +475,9 @@ const saved = JSON.parse(savedEntry[1]);
 assert.equal(saved.backgroundId, "mystery");
 assert.equal(saved.vowId, "path");
 assert.equal(saved.version, 5);
+assert.ok(Array.isArray(saved.narrativeLog));
+assert.ok(saved.narrativeLog.length > 0 && saved.narrativeLog.length <= 24);
+assert.ok(saved.narrativeLog.every((entry) => entry.title && entry.choice && Array.isArray(entry.lines)));
 assert.equal(saved.lives, 1);
 assert.equal(saved.potential, 1209);
 assert.equal(saved.relationship, "莫逆之交");

@@ -164,6 +164,7 @@ function createInitialState() {
     shenDeathReason: null,
     shenOutcome: null,
     shenChapterComplete: false,
+    narrativeLog: [],
     p0: createP0State(),
     events: [],
   };
@@ -303,15 +304,28 @@ function setupShell(content, narrow = false) {
 }
 
 function actionCard({ action, value = "", title, description, source = "", meta = "", detail = "", kind = "", disabled = false }) {
+  const tone = disabled ? "unavailable" : kind === "special" ? "important" : kind === "danger" ? "danger" : "available";
+  const status = disabled ? "条件未满足" : kind === "special" ? "重要选择" : kind === "danger" ? "高风险" : "可以尝试";
+  const conditionLead = source || (disabled ? "尚有缺口" : "行动条件");
+  const conditionDetail = detail || [
+    source ? `关联：${source}` : "",
+    meta ? `当前：${meta}` : "",
+    disabled ? "此刻不能执行，但可以查看缺少的条件。" : "当前条件允许尝试；结果仍由行动本身决定。",
+  ].filter(Boolean).join("；");
   return `
-    <button type="button" class="action-card ${kind}" data-action="${escapeHtml(action)}" data-value="${escapeHtml(value)}" ${disabled ? "disabled" : ""}>
-      <span>
-        <span class="action-title">${source ? `<span class="action-source">${escapeHtml(source)}</span>` : ""}${escapeHtml(title)}</span>
-        <span class="action-description">${escapeHtml(description)}</span>
-        ${detail ? `<span class="action-reason">${escapeHtml(detail)}</span>` : ""}
-      </span>
-      <span class="action-meta">${escapeHtml(meta)}</span>
-    </button>
+    <div class="choice-entry ${escapeHtml(kind)} ${disabled ? "unavailable" : ""}">
+      <button type="button" class="action-card ${escapeHtml(kind)}" data-action="${escapeHtml(action)}" data-value="${escapeHtml(value)}" data-choice-title="${escapeHtml(title)}" data-choice-source="${escapeHtml(source)}" data-choice-meta="${escapeHtml(meta)}" data-choice-kind="${escapeHtml(kind)}" ${disabled ? "disabled" : ""}>
+        <span>
+          <span class="action-title">${escapeHtml(title)}</span>
+          <span class="action-description">${escapeHtml(description)}</span>
+        </span>
+        <span class="action-meta">${escapeHtml(meta)}</span>
+      </button>
+      <details class="choice-condition ${tone}">
+        <summary><span class="condition-status">${escapeHtml(status)}</span><strong>${escapeHtml(conditionLead)}</strong><i aria-hidden="true">＋</i></summary>
+        <div><span>判定说明</span><p>${escapeHtml(conditionDetail)}</p>${meta ? `<small>${escapeHtml(meta)}</small>` : ""}</div>
+      </details>
+    </div>
   `;
 }
 
@@ -321,6 +335,26 @@ function sceneHeader(eyebrow, title, subtitle = "") {
 
 function sceneMarkerState(value) {
   return ["available", "completed", "danger", "special", "locked", "known", "unknown", "allied"].includes(value) ? value : "known";
+}
+
+function narrativeHistoryHtml() {
+  const records = Array.isArray(state.narrativeLog) ? state.narrativeLog.slice(-14) : [];
+  if (!records.length) return "";
+  return `
+    <section class="narrative-history" aria-label="此前经过">
+      <div class="narrative-history-heading"><span>此前</span><strong>已经发生</strong></div>
+      ${records.map((record) => `
+        <article class="narrative-entry ${record.choiceKind === "special" ? "important" : record.choiceKind === "danger" ? "danger" : ""}">
+          <span class="narrative-context">${escapeHtml(record.context)}</span>
+          <h2>${escapeHtml(record.title)}</h2>
+          ${(record.lines || []).map((line) => line.type === "dialogue"
+            ? `<p class="dialogue-line"><strong>${escapeHtml(line.speaker || "人物")}</strong>${escapeHtml(line.text)}</p>`
+            : `<p class="narration-line">${escapeHtml(line.text)}</p>`).join("")}
+          <p class="player-choice"><strong>你</strong><span>${escapeHtml(record.choice)}</span>${record.choiceSource ? `<small>${escapeHtml(record.choiceSource)}</small>` : ""}</p>
+        </article>
+      `).join("")}
+    </section>
+  `;
 }
 
 function sceneVisualHtml() {
@@ -477,7 +511,7 @@ function gameShell(content) {
         <div class="resource-row"><div class="resource"><span>命灯</span><strong>${state.lives}</strong></div><div class="resource"><span>潜能</span><strong>${state.potential}</strong></div></div>
       </header>
       <div class="game-grid">
-        <section class="scene-panel ${visual ? "has-visual-scene" : "narrative-only"}">${visual}<div class="narrative-deck">${content}</div></section>
+        <section class="scene-panel ${visual ? "has-visual-scene" : "narrative-only"}">${visual}<div class="narrative-deck">${narrativeHistoryHtml()}<section class="narrative-current" data-narrative-current>${content}</section></div></section>
       </div>
       <nav class="utility-dock" aria-label="随身册">
         <details class="dock-drawer timeline-panel">
@@ -1917,6 +1951,11 @@ function render() {
   document.body.dataset.mode = screenMode();
   const renderer = renderers[state.screen] || renderLanding;
   app.innerHTML = renderer();
+  requestAnimationFrame(() => {
+    const deck = app.querySelector(".world-stage-shell .narrative-deck");
+    const current = deck?.querySelector("[data-narrative-current]");
+    if (deck && current) deck.scrollTop = Math.max(0, current.offsetTop - 18);
+  });
 }
 
 function updateSceneInspection(kind, title, detail, markerClass, value) {
@@ -1931,6 +1970,42 @@ function updateSceneInspection(kind, title, detail, markerClass, value) {
   app.querySelectorAll(".scene-hotspot, .scene-actor, .route-node").forEach((node) => node.classList.remove("selected"));
   const marker = [...app.querySelectorAll(`.${markerClass}`)].find((node) => node.dataset.value === value);
   marker?.classList.add("selected");
+}
+
+function recordNarrativeChoice(target) {
+  const current = target.closest(".narrative-deck")?.querySelector("[data-narrative-current]");
+  if (!current || !target.matches(".action-card, .inline-button")) return;
+  const title = current.querySelector(".scene-title")?.textContent?.trim();
+  if (!title) return;
+  const actor = app.querySelector(".scene-actor .scene-marker-label")?.textContent?.trim() || "人物";
+  const rawLines = [
+    ...current.querySelectorAll(".scene-subtitle, .story-copy p, .battle-intent p"),
+  ].map((node) => node.textContent?.trim()).filter(Boolean);
+  const lines = [...new Set(rawLines)].slice(0, 3).map((text) => ({
+    type: /[“”「」]/.test(text) ? "dialogue" : "narration",
+    speaker: /[“”「」]/.test(text) ? actor : "",
+    text: text.slice(0, 240),
+  }));
+  const choiceCard = target.closest(".quest-card");
+  const choice = target.dataset.choiceTitle
+    || choiceCard?.querySelector("h2, h3")?.textContent?.trim()
+    || target.textContent?.trim()
+    || "继续";
+  const choiceSource = target.dataset.choiceSource
+    || choiceCard?.querySelector(":scope > span")?.textContent?.trim()
+    || target.dataset.choiceMeta
+    || "";
+  const record = {
+    id: `${Date.now()}-${state.events.length}`,
+    context: modeLabel(),
+    title: title.slice(0, 80),
+    lines,
+    choice: choice.slice(0, 120),
+    choiceSource: choiceSource.slice(0, 80),
+    choiceKind: target.dataset.choiceKind || "",
+  };
+  const log = Array.isArray(state.narrativeLog) ? state.narrativeLog : [];
+  state.narrativeLog = [...log, record].slice(-24);
 }
 
 function handleDeath(choice) {
@@ -2884,6 +2959,7 @@ const handlers = {
 app.addEventListener("click", (event) => {
   const target = event.target.closest("[data-action]");
   if (!target || target.disabled) return;
+  recordNarrativeChoice(target);
   handlers[target.dataset.action]?.(target.dataset.value || "");
 });
 
