@@ -21,14 +21,28 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout published main
         uses: actions/checkout@v6
+        with:
+          path: published
+      - name: Checkout optional combat preview
+        id: combat-preview
+        continue-on-error: true
+        uses: actions/checkout@v6
+        with:
+          ref: codex/combat-lab
+          path: combat-preview
+      - name: Add combat preview without replacing the published root
+        if: steps.combat-preview.outcome == 'success'
+        run: |
+          mkdir -p published/web/combat-lab
+          cp -R combat-preview/web/. published/web/combat-lab/
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload static site
         uses: actions/upload-pages-artifact@v4
         with:
-          path: web
+          path: published/web
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
