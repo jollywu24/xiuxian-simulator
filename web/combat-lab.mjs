@@ -1,12 +1,13 @@
 import {
   COMBAT_LAB_DEFAULTS,
-  getCombatLabBattleBoard,
   createCombatLabSession,
   getCombatLabActions,
+  getCombatLabBattleBoard,
+  getCombatLabRecommendations,
   restartCombatLab,
   resolveCombatLabAction,
   rewindCombatLabDeath,
-} from "./combat-lab-core.mjs?v=20260716.4";
+} from "./combat-lab-core.mjs?v=20260716.5";
 
 const root = document.querySelector("#combat-lab");
 
@@ -23,8 +24,26 @@ const STAGE_LABELS = {
   body: "锻体",
 };
 
+const ENVIRONMENT_COPY = {
+  street_lantern: {
+    name: "灯笼",
+    panelTitle: "利用灯笼",
+    hint: "灯火既能照见刀路，也会替屋脊弩手标出你的身形。",
+  },
+  eave_pillar: {
+    name: "檐柱",
+    panelTitle: "借用檐柱",
+    hint: "檐柱可以遮断直线杀招，也会限制自己的腾挪。",
+  },
+  pharmacy_wall: {
+    name: "矮墙",
+    panelTitle: "踏上矮墙",
+    hint: "翻墙可脱身，借墙反跃则会把退路换成一次强攻。",
+  },
+};
+
 const OUTCOME_LABELS = {
-  subdued: "留得活口",
+  subdued: "留下活口",
   killed: "针下取命",
   escaped: "脱身离去",
   death: "命灯碎裂",
@@ -38,7 +57,15 @@ const EDGE_LABELS = {
 };
 
 let session = createCombatLabSession();
-let settingsExpanded = window.innerWidth > 880;
+let selectedEnvironment = null;
+let selectedTarget = "night_assailant";
+let arsenalOpen = false;
+let visualState = {
+  animating: false,
+  previousVitality: null,
+  effect: null,
+};
+let effectTimer = null;
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -52,6 +79,35 @@ function escapeHtml(value) {
 function signed(value) {
   const number = Number(value || 0);
   return number >= 0 ? `+${number}` : `${number}`;
+}
+
+function clampPercent(current, maximum) {
+  return Math.max(0, Math.min(100, (Number(current || 0) / Math.max(1, Number(maximum || 1))) * 100));
+}
+
+function iconSvg(id) {
+  const icons = {
+    eye: '<path d="M2 12s3.8-6 10-6 10 6 10 6-3.8 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="2.5"/>',
+    lantern: '<path d="M8 3h8M7 6h10l1 3v8l-2 3H8l-2-3V9l1-3Z"/><path d="M9 9h6M9 17h6M12 20v2"/>',
+    needles: '<path d="m5 19 12-12M8 21 20 9M3 16 15 4"/><circle cx="16.5" cy="4.5" r="1"/><circle cx="20.5" cy="8.5" r="1"/><circle cx="4.5" cy="15.5" r="1"/>',
+    fire: '<path d="M12 22c4 0 7-2.8 7-6.5 0-3-1.8-5.5-4.8-8.5.2 3-1.3 4.2-2.4 5.2.1-4.3-2.4-7-4.5-9.2.2 4.3-2.3 6.2-2.3 10.5C5 18.8 8.2 22 12 22Z"/><path d="M9.2 18.3c0 2 1.2 3.7 2.8 3.7 1.8 0 3-1.4 3-3.4 0-1.4-.8-2.7-2.2-4.2 0 1.5-.7 2.4-1.4 3.1-.2-1.5-.9-2.6-1.7-3.5-.1 1.7-.5 2.8-.5 4.3Z"/>',
+    shadow: '<path d="M4 19c2.5-5.5 5.5-8.5 9-9 3-.4 5.4 1 7 4-3.2-.5-5.6.2-7.2 2.2C10.5 19 7.6 20 4 19Z"/><path d="M5 6h7M8 3v6"/>',
+    impact: '<path d="m4 20 5.5-5.5M14.5 9.5 20 4M7 4l2.5 5.5M14.5 14.5 20 17M12 2v4M2 12h4M18 12h4M12 18v4"/>',
+    escape: '<path d="M4 20 20 4M8 4h12v12"/><path d="M4 8v12h12"/>',
+    blade: '<path d="m4 20 3-6L17 4l3 3-10 10-6 3Z"/><path d="m14 7 3 3M5 19l-2 2"/>',
+    bow: '<path d="M6 3c7 2 7 16 0 18M18 3c-7 2-7 16 0 18M6 12h12"/><path d="m14 9 4 3-4 3"/>',
+    command: '<path d="m12 3 3 6 6 .8-4.5 4.4 1.1 6.3L12 17.6l-5.6 2.9 1.1-6.3L3 9.8 9 9l3-6Z"/>',
+    bag: '<path d="M8 7h8l3 5v8H5v-8l3-5Z"/><path d="M9 7V4h6v3M9 13h6"/>',
+    stance: '<circle cx="12" cy="5" r="2"/><path d="m12 7-2 5 3 3-2 6M10 12l-5 3M13 15l6 3"/>',
+    close: '<path d="m6 6 12 12M18 6 6 18"/>',
+  };
+  return `<svg viewBox="0 0 24 24" aria-hidden="true">${icons[id] || icons.blade}</svg>`;
+}
+
+function riskClass(entry) {
+  if (entry.evaluation.rating === "fatal" || entry.evaluation.rating === "dangerous") return "danger";
+  if (entry.evaluation.rating === "safe") return "safe";
+  return "viable";
 }
 
 function woundLabel(wound) {
@@ -69,124 +125,215 @@ function rangeLabel(range) {
   return range === "close" ? "贴身" : range === "far" ? "远离" : "适中";
 }
 
-function vitalityBarHtml(label, stage, vitality, side) {
+function hpBarHtml({ label, vitality, side, portrait, previous }) {
   const current = Math.max(0, Number(vitality.current || 0));
   const maximum = Math.max(1, Number(vitality.max || 1));
-  const percent = Math.max(0, Math.min(100, Math.round((current / maximum) * 100)));
-  const condition = percent <= 25 ? "critical" : percent <= 50 ? "wounded" : "";
+  const currentPercent = clampPercent(current, maximum);
+  const previousPercent = clampPercent(previous?.current ?? current, previous?.max ?? maximum);
   return `
-    <div class="vitality-card ${escapeHtml(side)} ${condition}">
-      <div class="vitality-copy">
-        <span>${escapeHtml(label)} · ${escapeHtml(stage)}</span>
-        <strong><b>${current}</b><i>/</i>${maximum}</strong>
-      </div>
-      <div class="vitality-track" role="meter" aria-label="${escapeHtml(`${label}气血`)}" aria-valuemin="0" aria-valuemax="${maximum}" aria-valuenow="${current}">
-        <i style="width:${percent}%"></i>
+    <div class="fighter-hud ${escapeHtml(side)}" style="--hp-current:${currentPercent}%;--hp-lag:${Math.max(currentPercent, previousPercent)}%">
+      ${portrait ? `<img src="${escapeHtml(portrait)}" alt="" />` : ""}
+      <div class="fighter-hud-copy">
+        <div><strong>${escapeHtml(label)}</strong><b>${current}<i>/</i>${maximum}</b></div>
+        <div class="hp-track" role="meter" aria-label="${escapeHtml(`${label}气血`)}" aria-valuemin="0" aria-valuemax="${maximum}" aria-valuenow="${current}">
+          <span class="hp-lag"></span>
+          <span class="hp-current"></span>
+        </div>
       </div>
     </div>
   `;
 }
 
-function checkHtml(check, text = "") {
-  if (!check) return text ? `<div class="result-strip"><span>战果</span><strong>${escapeHtml(text)}</strong></div>` : "";
+function unitRailHtml(board) {
   return `
-    <div class="check-board ${escapeHtml(check.tier)}">
-      <span>因果骰 · ${escapeHtml(check.tierLabel)}</span>
-      <div class="check-numbers">
-        <b>${Number(check.roll)}</b>
-        <i>${escapeHtml(signed(check.modifier))}</i>
-        <em>${Number(check.total)}</em>
-      </div>
-      <p>骰面 ${Number(check.roll)}，行动修正 ${escapeHtml(signed(check.modifier))}，合计 ${Number(check.total)}；目标 ${Number(check.target)}。${escapeHtml(text)}</p>
+    <div class="enemy-rail" aria-label="敌方单位">
+      ${board.units.map((unit) => {
+        const percent = clampPercent(unit.current, unit.max);
+        const previousEnemy = unit.id === "night_assailant" ? visualState.previousVitality?.enemy : null;
+        const lagPercent = clampPercent(previousEnemy?.current ?? unit.current, previousEnemy?.max ?? unit.max);
+        const selected = selectedTarget === unit.id;
+        const icon = unit.id === "roof_crossbow" ? "bow" : unit.id === "black_leader" ? "command" : "blade";
+        return `
+          <button type="button" class="enemy-unit ${selected ? "selected" : ""} ${unit.active ? "active" : "support"}" data-target-id="${escapeHtml(unit.id)}" aria-pressed="${selected}">
+            <span class="unit-portrait"><img src="${escapeHtml(unit.portrait)}" alt="" />${iconSvg(icon)}</span>
+            <span class="unit-copy">
+              <span><strong>${escapeHtml(unit.name)}</strong><b>${Number(unit.current)}<i>/</i>${Number(unit.max)}</b></span>
+              <span class="unit-hp" style="--unit-hp-current:${percent}%;--unit-hp-lag:${Math.max(percent, lagPercent)}%" role="meter" aria-label="${escapeHtml(`${unit.name}气血`)}" aria-valuemin="0" aria-valuemax="${Number(unit.max)}" aria-valuenow="${Number(unit.current)}">
+                <i class="unit-hp-lag"></i>
+                <i class="unit-hp-current"></i>
+              </span>
+              <small>${escapeHtml(unit.intent)}</small>
+            </span>
+          </button>
+        `;
+      }).join("")}
     </div>
   `;
 }
 
-function actionHtml(entry, index) {
-  const evaluation = entry.evaluation;
-  const kind = evaluation.rating === "fatal" || evaluation.rating === "dangerous"
-    ? "danger"
-    : evaluation.rating === "safe"
-      ? "special"
-      : "";
-  const detail = evaluation.available
-    ? `${evaluation.check ? `因果骰 ${evaluation.check.die} · 修正 ${signed(evaluation.check.modifier)} · 目标 ${evaluation.check.target}；` : ""}${evaluation.reasons.join("；")}`
-    : evaluation.reason;
+function effectHtml() {
+  const effect = visualState.effect;
+  if (!effect) return "";
+  const fragments = [];
+  if (effect.enemyDamage > 0) fragments.push(`<span class="float-number enemy-damage">−${Number(effect.enemyDamage)}</span>`);
+  if (effect.playerDamage > 0) fragments.push(`<span class="float-number player-damage">−${Number(effect.playerDamage)}</span>`);
+  if (effect.status) fragments.push(`<span class="brush-status">${escapeHtml(effect.status)}</span>`);
+  if (effect.actionId === "needle_wrist") fragments.push('<i class="needle-flight"></i><i class="impact-spark"></i>');
+  if (effect.actionId === "extinguish") fragments.push('<i class="lantern-flare"></i>');
+  return `<div class="combat-effects ${escapeHtml(effect.outcome || "")}" aria-hidden="true">${fragments.join("")}</div>`;
+}
+
+function sceneHtml(board) {
+  const battle = session.battle;
+  const knownSleeve = battle.knownFacts.includes("left_sleeve_blade") || battle.observedFeint;
+  const lantern = board.environment.find((entry) => entry.id === "street_lantern");
+  const targetIntent = board.units.find((entry) => entry.id === selectedTarget)?.intent || battle.enemyIntent;
   return `
-    <article class="choice ${escapeHtml(kind)} ${evaluation.available ? "" : "unavailable"}">
-      <button type="button" data-action-id="${escapeHtml(entry.id)}" ${evaluation.available ? "" : "disabled"}>
-        <span class="choice-number">${index + 1}</span>
-        <span class="choice-copy">
-          <small>${escapeHtml(entry.intent)} · ${escapeHtml(entry.objectName)}</small>
-          <strong>${escapeHtml(entry.title)}</strong>
-          <p>${escapeHtml(entry.description)}</p>
-          <span class="choice-preview">兑现：${escapeHtml(entry.successPreview)} · 风险：${escapeHtml(entry.riskPreview)}</span>
-          <span class="choice-impact">气血：${escapeHtml(entry.impactPreview.success)} · ${escapeHtml(entry.impactPreview.risk)} · ${escapeHtml(entry.impactPreview.position)}</span>
-        </span>
-        <span class="risk-mark">${escapeHtml(evaluation.available ? evaluation.ratingLabel : "不可用")}</span>
-      </button>
-      <details>
-        <summary>查看判定依据</summary>
-        <p>${escapeHtml(detail)}</p>
-      </details>
-    </article>
+    <section class="battle-stage ${battle.darkness ? "darkened" : ""} ${session.status !== "fighting" ? "settled" : ""}">
+      <header class="stage-heading">
+        <div>
+          <span>金陵 · 雨巷</span>
+          <h1>东门伏杀</h1>
+        </div>
+        <nav>
+          <a href="./index.html">返回江湖</a>
+          <button type="button" data-command="restart">重演此局</button>
+        </nav>
+      </header>
+      ${unitRailHtml(board)}
+      <div class="scene-art">
+        <div class="scene-vignette"></div>
+        <div class="rain-layer"></div>
+        <button type="button" class="target-hotspot blade-target ${selectedTarget === "night_assailant" ? "selected" : ""}" data-target-id="night_assailant" aria-label="选择蒙面刀客">
+          <span>${knownSleeve ? "左袖藏刃" : "逼近试探"}</span>
+        </button>
+        <button type="button" class="target-hotspot crossbow-target ${selectedTarget === "roof_crossbow" ? "selected" : ""}" data-target-id="roof_crossbow" aria-label="选择屋脊弩手">
+          <span>${battle.darkness ? "失去视线" : "瞄准"}</span>
+        </button>
+        <button type="button" class="target-hotspot leader-target ${selectedTarget === "black_leader" ? "selected" : ""}" data-target-id="black_leader" aria-label="选择黑衣头目">
+          <span>蓄势</span>
+        </button>
+        <button type="button" class="environment-hotspot lantern-spot ${selectedEnvironment === "street_lantern" ? "selected" : ""} ${lantern?.state === "out" ? "spent" : ""}" data-environment-id="street_lantern" aria-pressed="${selectedEnvironment === "street_lantern"}">
+          ${iconSvg("lantern")}<span>${lantern?.state === "out" ? "灯灭" : "灯笼"}</span>
+        </button>
+        <button type="button" class="environment-hotspot pillar-spot ${selectedEnvironment === "eave_pillar" ? "selected" : ""}" data-environment-id="eave_pillar" aria-pressed="${selectedEnvironment === "eave_pillar"}">
+          <span>檐柱</span>
+        </button>
+        <button type="button" class="environment-hotspot wall-spot ${selectedEnvironment === "pharmacy_wall" ? "selected" : ""}" data-environment-id="pharmacy_wall" aria-pressed="${selectedEnvironment === "pharmacy_wall"}">
+          <span>矮墙</span>
+        </button>
+        <div class="intent-thread">
+          <span>敌招</span>
+          <strong>${escapeHtml(targetIntent)}</strong>
+          <ol>
+            ${board.intent.sequence.map((step, index) => `<li class="${index === 0 ? "current" : ""}"><b>${index + 1}</b>${escapeHtml(step)}</li>`).join("")}
+          </ol>
+        </div>
+        ${effectHtml()}
+      </div>
+    </section>
   `;
 }
 
-function settingHtml() {
+function contextActionHtml(entry, index) {
+  const unavailable = !entry.evaluation.available;
+  const impact = entry.impactPreview;
+  const damage = impact.success;
+  return `
+    <button type="button" class="context-action ${riskClass(entry)} ${index === 0 ? "primary" : ""}" data-action-id="${escapeHtml(entry.id)}" ${unavailable || visualState.animating ? "disabled" : ""}>
+      <span class="action-icon">${iconSvg(entry.display.icon)}</span>
+      <span class="action-copy">
+        <strong>${escapeHtml(entry.display.title)}</strong>
+        <small>${escapeHtml(entry.display.consequence)}</small>
+      </span>
+      <span class="action-risk">
+        <b>${escapeHtml(entry.evaluation.ratingLabel)}</b>
+        <small>${escapeHtml(damage)}</small>
+      </span>
+      <i class="action-arrow">→</i>
+    </button>
+  `;
+}
+
+function allActionHtml(entry) {
+  const unavailable = !entry.evaluation.available;
+  return `
+    <button type="button" class="arsenal-action ${riskClass(entry)}" data-action-id="${escapeHtml(entry.id)}" ${unavailable || visualState.animating ? "disabled" : ""}>
+      <span>${iconSvg(entry.objectId === "street_lantern" ? "lantern" : entry.objectId === "pharmacy_wall" ? "escape" : entry.skillId ? "needles" : "blade")}</span>
+      <span>
+        <small>${escapeHtml(entry.intent)} · ${escapeHtml(entry.objectName)}</small>
+        <strong>${escapeHtml(entry.title)}</strong>
+        <p>${escapeHtml(entry.successPreview)}；${escapeHtml(entry.riskPreview)}</p>
+      </span>
+      <b>${escapeHtml(entry.evaluation.available ? entry.evaluation.ratingLabel : "不可用")}</b>
+    </button>
+  `;
+}
+
+function outcomeHtml() {
+  const result = session.result;
+  if (!result) return "";
+  if (result.outcome === "death") {
+    return `
+      <section class="outcome-panel death">
+        <span>${escapeHtml(OUTCOME_LABELS.death)}</span>
+        <strong>${escapeHtml(result.cause)}</strong>
+        <p>${escapeHtml(result.memory || "疼痛不会随回照消失。")}</p>
+        ${session.lives > 0
+          ? '<button type="button" data-command="rewind">循残灯回到刀客现身之前</button>'
+          : '<button type="button" data-command="restart">重整命盘，再入雨夜</button>'}
+      </section>
+    `;
+  }
+  return `
+    <section class="outcome-panel victory">
+      <span>${escapeHtml(OUTCOME_LABELS[result.outcome])}</span>
+      <strong>${escapeHtml(result.text)}</strong>
+      <p>${escapeHtml(EDGE_LABELS[result.edge] || "这一手已经改变雨夜留下的人、物与追查入口。")}</p>
+      <button type="button" data-command="restart">按当前命盘重开此局</button>
+    </section>
+  `;
+}
+
+function settingsHtml() {
   const needle = session.setup.skills.spring_rain_needles;
   const knownSleeve = session.setup.knownFacts.includes("left_sleeve_blade");
   const baseWound = session.setup.wounds[0];
   return `
-    <details class="fate-settings" ${settingsExpanded ? "open" : ""}>
-      <summary>
-        <span>命盘推演</span>
-        <strong>调整入场条件</strong>
-      </summary>
+    <details class="fate-settings">
+      <summary><span>命盘</span><strong>调整入局条件</strong></summary>
       <div class="setting-body">
         <div class="setting-grid">
           ${Object.entries(ATTRIBUTE_LABELS).map(([id, label]) => `
-            <label class="range-setting">
+            <label>
               <span>${escapeHtml(label)} <b>${Number(session.setup.attributes[id] || 0)}</b></span>
               <input type="range" min="0" max="5" step="1" value="${Number(session.setup.attributes[id] || 0)}" data-setting="attribute" data-key="${escapeHtml(id)}" />
             </label>
           `).join("")}
         </div>
         <div class="select-grid">
-          <label>
-            <span>自身境界</span>
-            <select data-setting="stage">
-              <option value="mortal" ${session.setup.playerStage === "mortal" ? "selected" : ""}>未入门</option>
-              <option value="body" ${session.setup.playerStage === "body" ? "selected" : ""}>锻体</option>
-            </select>
-          </label>
-          <label>
-            <span>春风化雨针</span>
-            <select data-setting="needles">
-              <option value="known" ${needle.stage === "known" ? "selected" : ""}>只知招名</option>
-              <option value="learned" ${needle.stage === "learned" ? "selected" : ""}>入门</option>
-              <option value="skilled" ${needle.stage === "skilled" ? "selected" : ""}>熟练</option>
-              <option value="mastered" ${needle.stage === "mastered" ? "selected" : ""}>精通</option>
-            </select>
-          </label>
-          <label>
-            <span>固定因果</span>
-            <select data-setting="seed">
-              <option value="seed-0" ${session.setup.fateSeed === "seed-0" ? "selected" : ""}>平稳</option>
-              <option value="seed-2" ${session.setup.fateSeed === "seed-2" ? "selected" : ""}>上吉</option>
-              <option value="seed-14" ${session.setup.fateSeed === "seed-14" ? "selected" : ""}>有损</option>
-              <option value="seed-3" ${session.setup.fateSeed === "seed-3" ? "selected" : ""}>凶险</option>
-            </select>
-          </label>
-          <label>
-            <span>既有伤势</span>
-            <select data-setting="wound">
-              <option value="none" ${!baseWound ? "selected" : ""}>无伤</option>
-              <option value="leg" ${baseWound?.bodyPart === "leg" ? "selected" : ""}>腿部重伤</option>
-              <option value="shoulder" ${baseWound?.bodyPart === "shoulder" ? "selected" : ""}>肩臂重伤</option>
-              <option value="torso" ${baseWound?.bodyPart === "torso" ? "selected" : ""}>肋下重伤</option>
-            </select>
-          </label>
+          <label><span>自身境界</span><select data-setting="stage">
+            <option value="mortal" ${session.setup.playerStage === "mortal" ? "selected" : ""}>未入门</option>
+            <option value="body" ${session.setup.playerStage === "body" ? "selected" : ""}>锻体</option>
+          </select></label>
+          <label><span>春风化雨针</span><select data-setting="needles">
+            <option value="known" ${needle.stage === "known" ? "selected" : ""}>只知招名</option>
+            <option value="learned" ${needle.stage === "learned" ? "selected" : ""}>入门</option>
+            <option value="skilled" ${needle.stage === "skilled" ? "selected" : ""}>熟练</option>
+            <option value="mastered" ${needle.stage === "mastered" ? "selected" : ""}>精通</option>
+          </select></label>
+          <label><span>固定因果</span><select data-setting="seed">
+            <option value="seed-0" ${session.setup.fateSeed === "seed-0" ? "selected" : ""}>平稳</option>
+            <option value="seed-2" ${session.setup.fateSeed === "seed-2" ? "selected" : ""}>上吉</option>
+            <option value="seed-14" ${session.setup.fateSeed === "seed-14" ? "selected" : ""}>有损</option>
+            <option value="seed-3" ${session.setup.fateSeed === "seed-3" ? "selected" : ""}>凶险</option>
+          </select></label>
+          <label><span>既有伤势</span><select data-setting="wound">
+            <option value="none" ${!baseWound ? "selected" : ""}>无伤</option>
+            <option value="leg" ${baseWound?.bodyPart === "leg" ? "selected" : ""}>腿部重伤</option>
+            <option value="shoulder" ${baseWound?.bodyPart === "shoulder" ? "selected" : ""}>肩臂重伤</option>
+            <option value="torso" ${baseWound?.bodyPart === "torso" ? "selected" : ""}>肋下重伤</option>
+          </select></label>
         </div>
         <label class="fact-toggle">
           <input type="checkbox" data-setting="known-sleeve" ${knownSleeve ? "checked" : ""} />
@@ -197,84 +344,18 @@ function settingHtml() {
   `;
 }
 
-function sceneHtml() {
-  const battle = session.battle;
-  const board = getCombatLabBattleBoard(session);
-  const knownSleeve = battle.knownFacts.includes("left_sleeve_blade") || battle.observedFeint;
-  const finished = session.status !== "fighting";
-  return `
-    <section class="scene-column">
-      <div class="scene-frame ${knownSleeve ? "known" : ""} ${finished ? "settled" : ""}">
-        <div class="rain rain-one"></div>
-        <div class="rain rain-two"></div>
-        <div class="eave"></div>
-        <div class="lantern ${battle.darkness ? "out" : ""}"><i></i></div>
-        <div class="fighter player"><i></i><span>陈司命</span></div>
-        <div class="fighter enemy ${battle.enemyWounded ? "wounded" : ""}"><i></i><span>蒙面刀客</span></div>
-        <div class="blade-line"></div>
-        <div class="scene-caption">
-          <span>金陵东门 · 夜雨</span>
-          <strong>${finished ? "雨声替这一战收尾" : "刀光先亮，杀意随后"}</strong>
-        </div>
-      </div>
-      <div class="battle-status">
-        <div><span>你</span><strong>${escapeHtml(STAGE_LABELS[session.setup.playerStage])}</strong></div>
-        <div><span>刀客</span><strong>锻体</strong></div>
-        <div><span>距离</span><strong>${escapeHtml(rangeLabel(battle.range))}</strong></div>
-        <div><span>命灯</span><strong>${"●".repeat(session.lives)}${"○".repeat(2 - session.lives)}</strong></div>
-      </div>
-      <div class="scene-vitality">
-        ${vitalityBarHtml("陈司命", STAGE_LABELS[session.setup.playerStage], board.vitality.player, "player")}
-        ${vitalityBarHtml("蒙面刀客", "锻体", board.vitality.enemy, "enemy")}
-      </div>
-      ${settingHtml()}
-      <div class="scene-links">
-        <a href="./index.html">返回江湖正篇</a>
-        <button type="button" data-command="reset-defaults">还原人物</button>
-      </div>
-    </section>
-  `;
-}
-
-function outcomeHtml() {
-  const result = session.result;
-  if (!result) return "";
-  if (result.outcome === "death") {
-    return `
-      <section class="death-board">
-        <span>${escapeHtml(OUTCOME_LABELS.death)}</span>
-        <strong>${escapeHtml(result.cause)}</strong>
-        <p>${escapeHtml(result.memory || "疼痛不会随回照消失。")}</p>
-        ${checkHtml(result.check)}
-        ${session.lives > 0
-          ? `<button type="button" class="primary-command" data-command="rewind">循残灯回到刀客现身之前</button>`
-          : `<button type="button" class="primary-command" data-command="restart">重整命盘，再入雨夜</button>`}
-      </section>
-    `;
-  }
-  return `
-    <section class="outcome-board">
-      <span>战局已决 · ${escapeHtml(OUTCOME_LABELS[result.outcome])}</span>
-      <strong>${escapeHtml(result.text)}</strong>
-      <p>${escapeHtml(EDGE_LABELS[result.edge] || "选择已经改变这一夜留下的人、物与追查入口。")}</p>
-      ${checkHtml(result.check)}
-      <button type="button" class="primary-command" data-command="restart">按当前命盘重开此局</button>
-    </section>
-  `;
-}
-
 function historyHtml() {
   if (!session.history.length) return "";
   return `
     <details class="battle-history">
-      <summary>回看此局行录 <span>${session.history.length}</span></summary>
+      <summary>雨夜行录 <span>${session.history.length}</span></summary>
       <ol>
         ${session.history.map((entry) => `
           <li>
-            <span>${entry.round ? `第 ${Number(entry.round)} 轮` : "回照"}</span>
+            <span>${entry.round ? `第 ${Number(entry.round)} 手` : "回照"}</span>
             <strong>${escapeHtml(entry.intent || "因果回转")}</strong>
             <p>${escapeHtml(entry.text)}</p>
-            ${entry.impact ? `<small>气血变化：你 -${Number(entry.impact.playerDamage || 0)}，刀客 -${Number(entry.impact.enemyDamage || 0)}；余 ${Number(entry.impact.playerHp || 0)} / ${Number(entry.impact.enemyHp || 0)}</small>` : ""}
+            ${entry.impact ? `<small>气血：你 −${Number(entry.impact.playerDamage || 0)}，刀客 −${Number(entry.impact.enemyDamage || 0)}</small>` : ""}
             ${entry.check ? `<small>骰面 ${Number(entry.check.roll)} ${escapeHtml(signed(entry.check.modifier))} = ${Number(entry.check.total)} · ${escapeHtml(entry.check.tierLabel)}</small>` : ""}
           </li>
         `).join("")}
@@ -283,120 +364,189 @@ function historyHtml() {
   `;
 }
 
-function battleHtml() {
-  const battle = session.battle;
-  const board = getCombatLabBattleBoard(session);
-  const actions = getCombatLabActions(session);
-  const knownSleeve = battle.knownFacts.includes("left_sleeve_blade") || battle.observedFeint;
+function commandDeckHtml(board) {
+  const previous = visualState.previousVitality;
+  const focusId = selectedEnvironment || (selectedTarget === "roof_crossbow" ? "street_lantern" : "default");
+  const recommendations = getCombatLabRecommendations(session, focusId);
+  const allActions = getCombatLabActions(session);
+  const environment = selectedEnvironment ? ENVIRONMENT_COPY[selectedEnvironment] : null;
+  const target = board.units.find((entry) => entry.id === selectedTarget) || board.units[0];
   const wounds = session.wounds.length ? session.wounds.map(woundLabel).join(" · ") : "无伤";
+  const contextTitle = environment?.panelTitle || (selectedTarget === "night_assailant" ? "应对眼前刀势" : `压制${target.name}`);
+  const contextHint = environment?.hint || (selectedTarget === "night_assailant"
+    ? "先读敌招，再决定识破、借势、强攻或脱身。"
+    : `${target.name}尚未进入贴身交锋；先改变环境或处理挡路刀客。`);
   return `
-    <section class="battle-column">
-      <header class="battle-heading">
-        <div>
-          <span>东门雨夜 · 春风针初战</span>
-          <h1>刀光逼近，左袖藏锋</h1>
-        </div>
-        <button type="button" data-command="restart">重开此局</button>
-      </header>
-      <div class="battle-objective">
-        <span>战斗目的</span>
-        <strong>${escapeHtml(board.objective)}</strong>
-      </div>
-      <div class="duel-vitality">
-        ${vitalityBarHtml("陈司命", STAGE_LABELS[session.setup.playerStage], board.vitality.player, "player")}
-        ${vitalityBarHtml("蒙面刀客", "锻体", board.vitality.enemy, "enemy")}
-      </div>
-      <div class="intent-board ${knownSleeve ? "known" : "uncertain"}">
-        <span>敌招 · 第 ${Number(battle.round)} 轮 · 威胁 ${Number(board.intent.threat)}</span>
-        <strong>${escapeHtml(battle.enemyIntent)}</strong>
-        <ol class="intent-sequence">
-          ${board.intent.sequence.map((step, index) => `<li><b>${index + 1}</b><span>${escapeHtml(step)}</span></li>`).join("")}
-        </ol>
-        <p>${knownSleeve
-          ? `目标：${escapeHtml(board.intent.target)}。左袖杀招已经看清；现在可以留活口、取命，或脱身。`
-          : battle.darkness
-            ? `目标：${escapeHtml(board.intent.target)}。灯已熄灭，他的步法慢了一瞬。`
-            : battle.enemyWounded
-              ? `目标：${escapeHtml(board.intent.target)}。右腕中针，但左袖仍可递刀。`
-              : `目标：${escapeHtml(board.intent.target)}。后手未明。观察、借势与抢攻会读取不同五维和战场条件。`}</p>
-      </div>
-      <div class="battle-state-board">
-        <div>
-          <span>战局</span>
-          <strong>${escapeHtml(rangeLabel(battle.range))} · ${battle.upperHand ? "抢得先机" : battle.playerWounded ? "带伤受压" : "互相试探"}</strong>
-        </div>
-        <div>
-          <span>环境对象</span>
-          <ul>${board.environment.map((entry) => `<li class="${escapeHtml(entry.state)}">${escapeHtml(entry.name)} · ${escapeHtml({ lit: "仍亮", out: "已灭", cover: "可遮挡", escape: "可脱身" }[entry.state] || entry.state)}</li>`).join("")}</ul>
+    <section class="command-deck">
+      <div class="player-panel">
+        ${hpBarHtml({
+          label: `陈司命 · ${STAGE_LABELS[session.setup.playerStage]}`,
+          vitality: board.vitality.player,
+          side: "player",
+          portrait: "./assets/combat/portrait-chen-siming.webp",
+          previous: previous?.player,
+        })}
+        <div class="battle-objective">
+          <span>此战所求</span>
+          <strong>${escapeHtml(board.objective)}</strong>
+          <small>目标：${escapeHtml(target.name)} · ${escapeHtml(rangeLabel(session.battle.range))} · ${escapeHtml(wounds)}</small>
         </div>
       </div>
-      <div class="condition-row">
-        <span>当前运用<strong>春风化雨针</strong></span>
-        <span>身体状况<strong>${escapeHtml(wounds)}</strong></span>
-        <span>固定因果<strong>${escapeHtml(session.setup.fateSeed)}</strong></span>
-      </div>
-      ${session.status === "fighting"
-        ? battle.lastCheck
-          ? checkHtml(battle.lastCheck, battle.lastResult)
-          : battle.lastResult
-            ? checkHtml(null, battle.lastResult)
-            : ""
-        : ""}
       ${outcomeHtml()}
       ${session.status === "fighting" ? `
-        <div class="action-heading">
-          <div><span>选择 · 预测</span><strong>数字键 1—9 亦可出手</strong></div>
-          <small>气血变化、落点与主要风险会在出手前公开。</small>
+        <div class="context-heading">
+          <span>${selectedEnvironment ? `已选：${escapeHtml(environment.name)}` : "当前交锋"}</span>
+          <strong>${escapeHtml(contextTitle)}</strong>
+          <p>${escapeHtml(contextHint)}</p>
         </div>
-        <div class="action-list">${actions.map(actionHtml).join("")}</div>
+        <div class="recommended-actions">
+          ${recommendations.map(contextActionHtml).join("")}
+        </div>
+        <button type="button" class="open-arsenal" data-command="toggle-arsenal" aria-expanded="${arsenalOpen}">
+          <span>${iconSvg("blade")}${iconSvg("stance")}${iconSvg("bag")}${iconSvg("escape")}</span>
+          <strong>全部手段 <b>${allActions.length}</b></strong>
+          <i>→</i>
+        </button>
       ` : ""}
+      ${settingsHtml()}
       ${historyHtml()}
+      <div class="life-strip"><span>命灯</span><strong>${"●".repeat(session.lives)}${"○".repeat(2 - session.lives)}</strong></div>
     </section>
+    <aside class="arsenal-sheet ${arsenalOpen ? "open" : ""}" aria-hidden="${!arsenalOpen}">
+      <button type="button" class="sheet-backdrop" data-command="toggle-arsenal" aria-label="收起全部手段"></button>
+      <section>
+        <header>
+          <div><span>全部手段</span><strong>从招式、身法、环境与退路中择一</strong></div>
+          <button type="button" data-command="toggle-arsenal" aria-label="收起">${iconSvg("close")}</button>
+        </header>
+        <div class="arsenal-list">${allActions.map(allActionHtml).join("")}</div>
+      </section>
+    </aside>
   `;
 }
 
 function render() {
+  const board = getCombatLabBattleBoard(session);
   root.innerHTML = `
-    <div class="combat-shell">
-      ${sceneHtml()}
-      ${battleHtml()}
-    </div>
+    <main class="combat-shell ${visualState.animating ? "fx-active" : ""}">
+      ${sceneHtml(board)}
+      ${commandDeckHtml(board)}
+    </main>
   `;
+  if (visualState.animating) {
+    requestAnimationFrame(() => requestAnimationFrame(() => root.classList.add("hp-settled")));
+  }
+}
+
+function resetInterface() {
+  selectedEnvironment = null;
+  selectedTarget = "night_assailant";
+  arsenalOpen = false;
+  visualState = { animating: false, previousVitality: null, effect: null };
+  if (effectTimer) clearTimeout(effectTimer);
+}
+
+function startResolvedEffect(resolved, previousVitality, knownBefore) {
+  const result = resolved.result;
+  const actionId = result.battle.history.at(-1)?.actionId || "";
+  const knownAfter = result.battle.knownFacts.includes("left_sleeve_blade") || result.battle.observedFeint;
+  const impact = result.impact || {};
+  const status = result.outcome === "death"
+    ? "死局"
+    : result.outcome === "subdued"
+      ? "制伏"
+      : result.outcome === "killed"
+        ? "取命"
+        : !knownBefore && knownAfter
+          ? "破绽"
+          : actionId === "extinguish"
+            ? "灯灭"
+            : "";
+  visualState = {
+    animating: true,
+    previousVitality,
+    effect: {
+      actionId,
+      playerDamage: Number(impact.playerDamage || 0),
+      enemyDamage: Number(impact.enemyDamage || 0),
+      outcome: result.outcome,
+      status,
+    },
+  };
+  render();
+  effectTimer = setTimeout(() => {
+    visualState = { animating: false, previousVitality: null, effect: null };
+    render();
+  }, 900);
+}
+
+function performAction(actionId) {
+  if (visualState.animating) return;
+  const before = getCombatLabBattleBoard(session);
+  const knownBefore = session.battle.knownFacts.includes("left_sleeve_blade") || session.battle.observedFeint;
+  const resolved = resolveCombatLabAction(session, actionId);
+  if (!resolved.available) return;
+  session = resolved.session;
+  arsenalOpen = false;
+  if (actionId === "extinguish") selectedEnvironment = "street_lantern";
+  startResolvedEffect(resolved, before.vitality, knownBefore);
 }
 
 function updateSetup(patch) {
   session = restartCombatLab(session, patch);
+  resetInterface();
   render();
 }
 
 root.addEventListener("click", (event) => {
+  const environmentButton = event.target.closest("[data-environment-id]");
+  if (environmentButton) {
+    const id = environmentButton.dataset.environmentId;
+    selectedEnvironment = selectedEnvironment === id ? null : id;
+    arsenalOpen = false;
+    render();
+    return;
+  }
+
+  const targetButton = event.target.closest("[data-target-id]");
+  if (targetButton) {
+    selectedTarget = targetButton.dataset.targetId;
+    selectedEnvironment = selectedTarget === "roof_crossbow" ? "street_lantern" : null;
+    arsenalOpen = false;
+    render();
+    return;
+  }
+
   const action = event.target.closest("[data-action-id]");
   if (action) {
-    const resolved = resolveCombatLabAction(session, action.dataset.actionId);
-    if (resolved.available) {
-      session = resolved.session;
-      render();
-      window.scrollTo({ top: 0 });
-    }
+    performAction(action.dataset.actionId);
     return;
   }
 
   const command = event.target.closest("[data-command]")?.dataset.command;
+  if (!command) return;
+  if (command === "toggle-arsenal") {
+    arsenalOpen = !arsenalOpen;
+    render();
+    return;
+  }
   if (command === "rewind") {
     const rewound = rewindCombatLabDeath(session);
-    if (rewound.available) session = rewound.session;
+    if (rewound.available) {
+      session = rewound.session;
+      resetInterface();
+    }
   }
-  if (command === "restart") session = restartCombatLab(session);
-  if (command === "reset-defaults") session = createCombatLabSession(COMBAT_LAB_DEFAULTS);
-  if (command) {
-    render();
-    window.scrollTo({ top: 0 });
+  if (command === "restart") {
+    session = restartCombatLab(session);
+    resetInterface();
   }
+  if (command === "reset-defaults") {
+    session = createCombatLabSession(COMBAT_LAB_DEFAULTS);
+    resetInterface();
+  }
+  render();
 });
-
-root.addEventListener("toggle", (event) => {
-  if (event.target.matches(".fate-settings")) settingsExpanded = event.target.open;
-}, true);
 
 root.addEventListener("input", (event) => {
   const setting = event.target.dataset.setting;
@@ -432,13 +582,18 @@ root.addEventListener("change", (event) => {
 
 document.addEventListener("keydown", (event) => {
   if (event.altKey || event.ctrlKey || event.metaKey || event.target.matches("input, select, textarea")) return;
+  if (event.key === "Escape" && arsenalOpen) {
+    arsenalOpen = false;
+    render();
+    return;
+  }
   const index = Number(event.key) - 1;
-  const actions = getCombatLabActions(session);
-  if (index < 0 || index >= actions.length) return;
-  const resolved = resolveCombatLabAction(session, actions[index].id);
-  if (!resolved.available) return;
-  session = resolved.session;
-  render();
+  if (index < 0) return;
+  const actions = arsenalOpen
+    ? getCombatLabActions(session)
+    : getCombatLabRecommendations(session, selectedEnvironment || "default");
+  if (index >= actions.length) return;
+  performAction(actions[index].id);
 });
 
 render();

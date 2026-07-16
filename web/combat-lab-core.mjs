@@ -4,7 +4,7 @@ import {
   getFirstBattleIntentBoard,
   getFirstBattleVitality,
   resolveFirstBattleAction,
-} from "./wudao-p0-core.mjs?v=20260716.4";
+} from "./wudao-p0-core.mjs?v=20260716.5";
 
 export const COMBAT_LAB_DEFAULTS = Object.freeze({
   fateSeed: "seed-0",
@@ -26,6 +26,29 @@ export const COMBAT_LAB_DEFAULTS = Object.freeze({
   },
   wounds: [],
   knownFacts: [],
+});
+
+const COMBAT_LAB_RECOMMENDATIONS = Object.freeze({
+  default: [
+    { actionId: "observe", icon: "eye", title: "观左袖", consequence: "看破下一招" },
+    { actionId: "extinguish", icon: "lantern", title: "银针灭灯", consequence: "遮断弩手视线" },
+    { actionId: "needle_wrist", icon: "needles", title: "银针封腕", consequence: "夺下眼前刀势" },
+  ],
+  street_lantern: [
+    { actionId: "extinguish", icon: "lantern", title: "银针灭灯", consequence: "遮断弩手视线" },
+    { actionId: "reckless", icon: "fire", title: "踢翻灯笼", consequence: "制造火势 · 可能露空门" },
+    { actionId: "observe", icon: "shadow", title: "借影观敌", consequence: "看破下一招" },
+  ],
+  eave_pillar: [
+    { actionId: "observe", icon: "eye", title: "借柱看势", consequence: "以遮挡换取识招" },
+    { actionId: "needle_wrist", icon: "needles", title: "绕柱封腕", consequence: "换角度取持刀手" },
+    { actionId: "reckless", icon: "impact", title: "诱敌撞柱", consequence: "贴身强攻 · 凶险" },
+  ],
+  pharmacy_wall: [
+    { actionId: "flee", icon: "escape", title: "翻墙脱身", consequence: "结束战斗 · 保住性命" },
+    { actionId: "observe", icon: "eye", title: "蹬墙观势", consequence: "拉开距离 · 看破后手" },
+    { actionId: "reckless", icon: "impact", title: "蹬墙反跃", consequence: "贴身强攻 · 凶险" },
+  ],
 });
 
 function clone(value) {
@@ -107,13 +130,82 @@ export function getCombatLabActions(session) {
   return getFirstBattleActions(session.battle, getCombatLabContext(session));
 }
 
+export function getCombatLabRecommendations(session, focusId = "default") {
+  const allActions = getCombatLabActions(session);
+  const actions = new Map(allActions.map((entry) => [entry.id, entry]));
+  const configured = COMBAT_LAB_RECOMMENDATIONS[focusId] || COMBAT_LAB_RECOMMENDATIONS.default;
+  const preferred = configured
+    .map((entry) => {
+      const action = actions.get(entry.actionId);
+      return action ? { ...action, display: clone(entry) } : null;
+    })
+    .filter(Boolean);
+  const used = new Set(preferred.map((entry) => entry.id));
+  const fallbackIcon = (entry) => entry.objectId === "pharmacy_wall"
+    ? "escape"
+    : entry.objectId === "street_lantern"
+      ? "lantern"
+      : entry.skillId
+        ? "needles"
+        : entry.intent === "识招"
+          ? "eye"
+          : "blade";
+  const fallback = allActions
+    .filter((entry) => !used.has(entry.id))
+    .map((entry) => ({
+      ...entry,
+      display: {
+        actionId: entry.id,
+        icon: fallbackIcon(entry),
+        title: entry.title,
+        consequence: entry.successPreview,
+      },
+    }));
+  return [...preferred, ...fallback].slice(0, 3);
+}
+
 export function getCombatLabBattleBoard(session) {
   const context = getCombatLabContext(session);
+  const vitality = getFirstBattleVitality(session.battle, context);
   return {
-    vitality: getFirstBattleVitality(session.battle, context),
+    vitality,
     intent: getFirstBattleIntentBoard(session.battle, context),
     objective: session.battle.objective,
     environment: clone(session.battle.environment || []),
+    units: [
+      {
+        id: "night_assailant",
+        name: "刀客",
+        role: "当前交锋",
+        current: vitality.enemy.current,
+        max: vitality.enemy.max,
+        intent: session.battle.knownFacts.includes("left_sleeve_blade") || session.battle.observedFeint
+          ? "左袖藏刃"
+          : "逼近试探",
+        portrait: "./assets/combat/portrait-masked-blade.webp",
+        active: true,
+      },
+      {
+        id: "roof_crossbow",
+        name: "弩手",
+        role: "远程威胁",
+        current: session.battle.darkness ? 6 : 8,
+        max: 8,
+        intent: session.battle.darkness ? "失去视线" : "瞄准",
+        portrait: "./assets/combat/portrait-roof-crossbow.webp",
+        active: false,
+      },
+      {
+        id: "black_leader",
+        name: "头目",
+        role: "后阵指挥",
+        current: 24,
+        max: 24,
+        intent: session.battle.finished ? "退入雨幕" : "蓄势",
+        portrait: "./assets/combat/portrait-black-leader.webp",
+        active: false,
+      },
+    ],
   };
 }
 

@@ -64,12 +64,20 @@ async function snapshot(label) {
     actionCount: document.querySelectorAll("[data-action-id]").length,
     disabledCount: document.querySelectorAll("[data-action-id]:disabled").length,
     settingsCount: document.querySelectorAll("[data-setting]").length,
-    vitalityCount: document.querySelectorAll(".duel-vitality .vitality-track").length,
-    vitalityValues: [...document.querySelectorAll(".duel-vitality [role='meter']")].map((item) => Number(item.getAttribute("aria-valuenow"))),
-    intentStepCount: document.querySelectorAll(".intent-sequence li").length,
+    playerVitalityCount: document.querySelectorAll(".fighter-hud .hp-track").length,
+    playerVitalityValue: Number(document.querySelector(".fighter-hud [role='meter']")?.getAttribute("aria-valuenow") || 0),
+    enemyUnitCount: document.querySelectorAll(".enemy-unit").length,
+    enemyVitalityValues: [...document.querySelectorAll(".enemy-unit [role='meter']")].map((item) => Number(item.getAttribute("aria-valuenow"))),
+    intentStepCount: document.querySelectorAll(".intent-thread li").length,
     objectiveVisible: Boolean(document.querySelector(".battle-objective")),
-    deathVisible: Boolean(document.querySelector(".death-board")),
-    outcomeVisible: Boolean(document.querySelector(".outcome-board"))
+    environmentCount: document.querySelectorAll("[data-environment-id]").length,
+    selectedEnvironment: document.querySelector("[data-environment-id].selected")?.dataset.environmentId || "",
+    selectedTarget: document.querySelector(".enemy-unit.selected")?.dataset.targetId || "",
+    arsenalVisible: document.querySelector(".arsenal-sheet")?.classList.contains("open") || false,
+    effectVisible: Boolean(document.querySelector(".combat-effects")),
+    sceneAssetLoaded: getComputedStyle(document.querySelector(".scene-art")).backgroundImage.includes("jinling-rain-ambush"),
+    deathVisible: Boolean(document.querySelector(".outcome-panel.death")),
+    outcomeVisible: Boolean(document.querySelector(".outcome-panel.victory"))
   }))()`);
 }
 
@@ -78,6 +86,24 @@ async function clickAction(actionId) {
     const button = document.querySelector(${JSON.stringify(`[data-action-id="${actionId}"]`)});
     if (!button) throw new Error(${JSON.stringify(`Missing action ${actionId}`)});
     if (button.disabled) throw new Error(${JSON.stringify(`Disabled action ${actionId}`)});
+    button.click();
+  })()`);
+  await new Promise((resolve) => setTimeout(resolve, 180));
+}
+
+async function clickEnvironment(environmentId) {
+  await evaluate(`(() => {
+    const button = document.querySelector(${JSON.stringify(`[data-environment-id="${environmentId}"]`)});
+    if (!button) throw new Error(${JSON.stringify(`Missing environment ${environmentId}`)});
+    button.click();
+  })()`);
+  await new Promise((resolve) => setTimeout(resolve, 180));
+}
+
+async function clickTarget(targetId) {
+  await evaluate(`(() => {
+    const button = document.querySelector(${JSON.stringify(`.enemy-unit[data-target-id="${targetId}"]`)});
+    if (!button) throw new Error(${JSON.stringify(`Missing target ${targetId}`)});
     button.click();
   })()`);
   await new Promise((resolve) => setTimeout(resolve, 180));
@@ -106,43 +132,75 @@ await send("Runtime.enable");
 await setViewport(1280, 720, false);
 await navigate();
 const desktop = await snapshot("desktop");
-assert.equal(desktop.title, "武道 · 东门雨夜演武");
-assert.match(desktop.heading, /左袖藏锋/);
+assert.equal(desktop.title, "武道 · 金陵雨巷");
+assert.match(desktop.heading, /东门伏杀/);
 assert.ok(desktop.scrollWidth <= 1280);
 assert.ok(desktop.actionIds.includes("observe"));
 assert.ok(desktop.actionIds.includes("reckless"));
 assert.ok(desktop.settingsCount >= 9);
-assert.equal(desktop.vitalityCount, 2);
+assert.equal(desktop.playerVitalityCount, 1);
+assert.equal(desktop.enemyUnitCount, 3);
+assert.deepEqual(desktop.enemyVitalityValues, [18, 8, 24]);
 assert.equal(desktop.intentStepCount, 2);
 assert.equal(desktop.objectiveVisible, true);
+assert.equal(desktop.environmentCount, 3);
+assert.equal(desktop.sceneAssetLoaded, true);
 const desktopShot = await screenshot("wudao-combat-lab-desktop.png");
 
 await clickAction("observe");
 const observed = await snapshot("observed");
-assert.match(observed.text, /左袖杀招已经看清/);
-assert.ok(observed.vitalityValues[0] <= desktop.vitalityValues[0]);
+assert.match(observed.text, /左袖藏刃|破绽/);
+assert.ok(observed.playerVitalityValue <= desktop.playerVitalityValue);
 assert.ok(observed.actionIds.includes("seal"));
 assert.ok(observed.actionIds.includes("kill"));
+assert.equal(observed.effectVisible, true);
+const effectShot = await screenshot("wudao-combat-lab-effect.png");
+await new Promise((resolve) => setTimeout(resolve, 820));
+await clickAction("needle_wrist");
+const needleStrike = await snapshot("needle-strike");
+assert.equal(needleStrike.effectVisible, true);
+assert.ok(needleStrike.enemyVitalityValues[0] < observed.enemyVitalityValues[0]);
+const needleShot = await screenshot("wudao-combat-lab-needle.png");
+await new Promise((resolve) => setTimeout(resolve, 820));
 await clickAction("seal");
+await new Promise((resolve) => setTimeout(resolve, 820));
 const subdued = await snapshot("subdued");
 assert.equal(subdued.outcomeVisible, true);
-assert.match(subdued.text, /留得活口/);
+assert.match(subdued.text, /留下活口/);
 
 await setViewport(390, 844, true);
 await navigate();
 const portrait = await snapshot("portrait");
 assert.ok(portrait.scrollWidth <= 390);
 assert.ok(portrait.actionCount >= 5);
-assert.equal(portrait.vitalityCount, 2);
+assert.equal(portrait.playerVitalityCount, 1);
+assert.equal(portrait.enemyUnitCount, 3);
+await clickTarget("roof_crossbow");
+const crossbowFocus = await snapshot("crossbow-focus");
+assert.equal(crossbowFocus.selectedTarget, "roof_crossbow");
+assert.equal(crossbowFocus.selectedEnvironment, "street_lantern");
+await clickEnvironment("street_lantern");
+await clickEnvironment("street_lantern");
+const lanternFocus = await snapshot("lantern-focus");
+assert.equal(lanternFocus.selectedEnvironment, "street_lantern");
+assert.match(lanternFocus.text, /利用灯笼/);
+assert.match(lanternFocus.text, /银针灭灯/);
+await clickCommand("toggle-arsenal");
+const arsenal = await snapshot("arsenal");
+assert.equal(arsenal.arsenalVisible, true);
+const arsenalShot = await screenshot("wudao-combat-lab-arsenal.png");
+await clickCommand("toggle-arsenal");
 const portraitShot = await screenshot("wudao-combat-lab-portrait.png");
 
+await navigate();
 await clickAction("reckless");
 const death = await snapshot("death");
 assert.equal(death.deathVisible, true);
 assert.match(death.text, /命灯碎裂/);
+await new Promise((resolve) => setTimeout(resolve, 820));
 await clickCommand("rewind");
 const rewound = await snapshot("rewound");
-assert.match(rewound.text, /左袖杀招已经看清|死中见闻/);
+assert.match(rewound.text, /左袖藏刃/);
 assert.equal(rewound.actionIds.includes("reckless"), false);
 const rewindShot = await screenshot("wudao-combat-lab-rewind.png");
 
@@ -151,7 +209,8 @@ await navigate();
 const landscape = await snapshot("landscape");
 assert.ok(landscape.scrollWidth <= 844);
 assert.ok(landscape.actionCount >= 5);
-assert.equal(landscape.vitalityCount, 2);
+assert.equal(landscape.playerVitalityCount, 1);
+assert.equal(landscape.enemyUnitCount, 3);
 const landscapeShot = await screenshot("wudao-combat-lab-landscape.png");
 
 assert.deepEqual(pageErrors, []);
@@ -159,6 +218,6 @@ socket.close();
 
 console.log(JSON.stringify({
   ok: true,
-  checkpoints: [desktop, observed, subdued, portrait, death, rewound, landscape],
-  screenshots: [desktopShot, portraitShot, rewindShot, landscapeShot],
+  checkpoints: [desktop, observed, needleStrike, subdued, portrait, crossbowFocus, lanternFocus, arsenal, death, rewound, landscape],
+  screenshots: [desktopShot, effectShot, needleShot, portraitShot, arsenalShot, rewindShot, landscapeShot],
 }, null, 2));
