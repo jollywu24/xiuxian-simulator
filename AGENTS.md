@@ -178,6 +178,8 @@ handler 必须检查当前条件，避免重复领取潜能、物品或关系奖
 ## 9. 交互与验证
 
 - 使用原生 HTML、CSS、ES Modules，无构建步骤和第三方运行时；
+- `web/index.html`、`web/wudao-app.mjs`与`web/wudao-p0-core.mjs`中的发布版本参数必须保持一致，修改运行时代码后同步递增，避免手机缓存混用模块；
+- 主模块未能启动时必须保留世界内恢复入口，不允许玩家只看到空白页；
 - 交互通过单一事件委托与稳定 `data-action`、`data-value` 完成；
 - 数字键 1～9 触发当前可用行动；
 - 原生 `button`、`input` 保留键盘焦点；

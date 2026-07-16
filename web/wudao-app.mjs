@@ -46,8 +46,8 @@ import {
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs";
+} from "./wudao-core.mjs?v=20260716.3";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260716.3";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -80,7 +80,7 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs";
+} from "./wudao-p0-core.mjs?v=20260716.3";
 
 const STORAGE_KEY = "wudao-high-martial-v1";
 const app = document.querySelector("#app");
