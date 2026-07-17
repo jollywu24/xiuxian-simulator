@@ -77,7 +77,26 @@ async function snapshot(label) {
     effectVisible: Boolean(document.querySelector(".combat-effects")),
     sceneAssetLoaded: getComputedStyle(document.querySelector(".scene-art")).backgroundImage.includes("jinling-rain-ambush"),
     deathVisible: Boolean(document.querySelector(".outcome-panel.death")),
-    outcomeVisible: Boolean(document.querySelector(".outcome-panel.victory"))
+    outcomeVisible: Boolean(document.querySelector(".outcome-panel.victory")),
+    mobileLayout: (() => {
+      const rect = (element) => {
+        const value = element?.getBoundingClientRect();
+        return value ? { top: value.top, right: value.right, bottom: value.bottom, left: value.left } : null;
+      };
+      const rail = document.querySelector(".enemy-rail");
+      const scene = document.querySelector(".scene-art");
+      const actions = [...document.querySelectorAll(".recommended-actions .context-action")].map(rect);
+      const targets = [...document.querySelectorAll(".target-hotspot")].map((element) => ({ id: element.dataset.targetId, rect: rect(element) }));
+      const environments = [...document.querySelectorAll(".environment-hotspot")].map((element) => ({ id: element.dataset.environmentId, rect: rect(element) }));
+      const overlaps = (a, b) => a && b && Math.min(a.right, b.right) - Math.max(a.left, b.left) > 1 && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 1;
+      return {
+        rail: rect(rail),
+        scene: rect(scene),
+        railFits: rail ? rail.scrollWidth <= rail.clientWidth : false,
+        recommendedActions: actions,
+        sceneControlOverlaps: targets.flatMap((target) => environments.filter((environment) => overlaps(target.rect, environment.rect)).map((environment) => target.id + ":" + environment.id))
+      };
+    })()
   }))()`);
 }
 
@@ -175,6 +194,11 @@ assert.ok(portrait.scrollWidth <= 390);
 assert.ok(portrait.actionCount >= 5);
 assert.equal(portrait.playerVitalityCount, 1);
 assert.equal(portrait.enemyUnitCount, 3);
+assert.ok(portrait.mobileLayout.rail.bottom <= portrait.mobileLayout.scene.top);
+assert.equal(portrait.mobileLayout.railFits, true);
+assert.deepEqual(portrait.mobileLayout.sceneControlOverlaps, []);
+assert.equal(portrait.mobileLayout.recommendedActions.length, 3);
+assert.ok(portrait.mobileLayout.recommendedActions.every((action) => action.bottom <= 780));
 await clickTarget("roof_crossbow");
 const crossbowFocus = await snapshot("crossbow-focus");
 assert.equal(crossbowFocus.selectedTarget, "roof_crossbow");
