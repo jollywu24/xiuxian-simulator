@@ -77,8 +77,10 @@ async function snapshot(label) {
     playerVitalityValue: Number(document.querySelector(".fighter-hud [role='meter']")?.getAttribute("aria-valuenow") || 0),
     enemyUnitCount: document.querySelectorAll(".enemy-unit").length,
     enemyVitalityValues: [...document.querySelectorAll(".enemy-unit [role='meter']")].map((item) => Number(item.getAttribute("aria-valuenow"))),
+    supportThreatCount: document.querySelectorAll(".enemy-unit .unit-threat-line").length,
     intentStepCount: document.querySelectorAll(".intent-thread li").length,
-    positionNodeCount: document.querySelectorAll("[data-position-id]").length,
+    positionNodeCount: document.querySelectorAll(".position-node").length,
+    selectablePositionNodeCount: document.querySelectorAll("[data-position-id]").length,
     playerPosition: document.querySelector("[data-position-id].player-position")?.dataset.positionId || "",
     turn: (() => {
       const bar = document.querySelector(".turn-bar");
@@ -89,6 +91,8 @@ async function snapshot(label) {
     selectedEnvironment: document.querySelector("[data-environment-id].selected")?.dataset.environmentId || "",
     selectedTarget: document.querySelector(".enemy-unit.selected")?.dataset.targetId || "",
     arsenalVisible: document.querySelector(".arsenal-sheet")?.classList.contains("open") || false,
+    arsenalDialog: document.querySelector(".arsenal-sheet [role='dialog']")?.getAttribute("aria-modal") || "",
+    actionForecasts: [...document.querySelectorAll(".recommended-actions .action-forecast")].map((item) => ({ text: item.textContent.trim(), visible: Boolean(item.offsetWidth || item.offsetHeight) })),
     effectVisible: Boolean(document.querySelector(".combat-effects")),
     sceneAssetLoaded: getComputedStyle(document.querySelector(".scene-art")).backgroundImage.includes("jinling-rain-ambush"),
     deathVisible: Boolean(document.querySelector(".outcome-panel.death")),
@@ -185,14 +189,18 @@ assert.ok(desktop.actionIds.includes("reckless"));
 assert.ok(desktop.settingsCount >= 9);
 assert.equal(desktop.playerVitalityCount, 1);
 assert.equal(desktop.enemyUnitCount, 3);
-assert.deepEqual(desktop.enemyVitalityValues, [18, 8, 24]);
+assert.deepEqual(desktop.enemyVitalityValues, [18]);
+assert.equal(desktop.supportThreatCount, 2);
 assert.equal(desktop.intentStepCount, 3);
 assert.equal(desktop.positionNodeCount, 6);
+assert.equal(desktop.selectablePositionNodeCount, 4);
 assert.equal(desktop.playerPosition, "alley_entrance");
 assert.deepEqual(desktop.turn, { phase: "player", round: 1, energy: 3 });
 assert.equal(desktop.objectiveVisible, true);
 assert.equal(desktop.environmentCount, 3);
 assert.equal(desktop.sceneAssetLoaded, true);
+assert.equal(desktop.actionForecasts.length, 3);
+assert.ok(desktop.actionForecasts.every((entry) => entry.visible && /若此刻收势/.test(entry.text)));
 assert.deepEqual(desktop.mobileLayout.sceneControlOverlaps, []);
 assert.deepEqual(desktop.mobileLayout.positionMapOverlaps, []);
 const desktopShot = await screenshot("wudao-combat-lab-desktop.png");
@@ -216,10 +224,11 @@ assert.deepEqual(secondRound.turn, { phase: "player", round: 2, energy: 3 });
 assert.equal(secondRound.playerPosition, "alley_entrance");
 assert.match(secondRound.text, /弩手|瞄准/);
 await clickAction("seal");
-await new Promise((resolve) => setTimeout(resolve, 820));
+await waitForExpression('Boolean(document.querySelector(".outcome-panel.victory"))');
 const subdued = await snapshot("subdued");
 assert.equal(subdued.outcomeVisible, true);
 assert.match(subdued.text, /留下活口/);
+assert.ok(subdued.playerVitalityValue < secondRound.playerVitalityValue);
 
 await setViewport(390, 844, true);
 await navigate();
@@ -229,6 +238,7 @@ assert.ok(portrait.actionCount >= 5);
 assert.equal(portrait.playerVitalityCount, 1);
 assert.equal(portrait.enemyUnitCount, 3);
 assert.equal(portrait.positionNodeCount, 6);
+assert.equal(portrait.selectablePositionNodeCount, 4);
 assert.deepEqual(portrait.turn, { phase: "player", round: 1, energy: 3 });
 assert.ok(portrait.mobileLayout.rail.bottom <= portrait.mobileLayout.scene.top);
 assert.equal(portrait.mobileLayout.railFits, true);
@@ -236,6 +246,32 @@ assert.deepEqual(portrait.mobileLayout.sceneControlOverlaps, []);
 assert.deepEqual(portrait.mobileLayout.positionMapOverlaps, []);
 assert.equal(portrait.mobileLayout.recommendedActions.length, 3);
 assert.ok(portrait.mobileLayout.recommendedActions.every((action) => action.bottom <= 780));
+assert.ok(portrait.actionForecasts.every((entry) => entry.visible));
+const sliderFocus = await evaluate(`(() => {
+  const details = document.querySelector(".fate-settings");
+  details.open = true;
+  const input = document.querySelector('[data-setting="attribute"][data-key="insight"]');
+  input.focus();
+  input.value = "4";
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+  const preservedDuringInput = document.activeElement === input && input.isConnected;
+  input.dispatchEvent(new Event("change", { bubbles: true }));
+  return new Promise((resolve) => queueMicrotask(() => {
+    const replacement = document.querySelector('[data-setting="attribute"][data-key="insight"]');
+    resolve({
+      preservedDuringInput,
+      detailsOpen: document.querySelector(".fate-settings")?.open || false,
+      focusRestored: document.activeElement === replacement,
+      value: replacement?.value || ""
+    });
+  }));
+})()`);
+assert.deepEqual(sliderFocus, { preservedDuringInput: true, detailsOpen: true, focusRestored: true, value: "4" });
+await evaluate(`(() => {
+  document.querySelector(".fate-settings").open = false;
+  window.scrollTo(0, 0);
+  return true;
+})()`);
 await clickPosition("eave_pillar");
 const positionFocus = await snapshot("position-focus");
 assert.ok(positionFocus.actionIds.includes("move_eave_pillar"));
@@ -247,8 +283,8 @@ assert.deepEqual(moved.turn, { phase: "player", round: 1, energy: 2 });
 await clickTarget("roof_crossbow");
 const crossbowFocus = await snapshot("crossbow-focus");
 assert.equal(crossbowFocus.selectedTarget, "roof_crossbow");
-assert.equal(crossbowFocus.selectedEnvironment, "street_lantern");
-await clickEnvironment("street_lantern");
+assert.equal(crossbowFocus.selectedEnvironment, "");
+assert.match(crossbowFocus.text, /应对屋脊弩手/);
 await clickEnvironment("street_lantern");
 const lanternFocus = await snapshot("lantern-focus");
 assert.equal(lanternFocus.selectedEnvironment, "street_lantern");
@@ -257,14 +293,13 @@ assert.match(lanternFocus.text, /银针灭灯/);
 await clickCommand("toggle-arsenal");
 const arsenal = await snapshot("arsenal");
 assert.equal(arsenal.arsenalVisible, true);
+assert.equal(arsenal.arsenalDialog, "true");
 const arsenalShot = await screenshot("wudao-combat-lab-arsenal.png");
 await clickCommand("toggle-arsenal");
 const portraitShot = await screenshot("wudao-combat-lab-portrait.png");
 
 await navigate();
 await clickAction("reckless");
-await new Promise((resolve) => setTimeout(resolve, 820));
-await clickCommand("end-turn");
 await waitForExpression('Boolean(document.querySelector(".outcome-panel.death"))');
 const death = await snapshot("death");
 assert.equal(death.deathVisible, true);
@@ -283,10 +318,13 @@ assert.ok(landscape.scrollWidth <= 844);
 assert.ok(landscape.actionCount >= 5);
 assert.equal(landscape.playerVitalityCount, 1);
 assert.equal(landscape.enemyUnitCount, 3);
+assert.equal(landscape.positionNodeCount, 6);
+assert.equal(landscape.selectablePositionNodeCount, 4);
 assert.deepEqual(landscape.mobileLayout.sceneControlOverlaps, []);
 assert.deepEqual(landscape.mobileLayout.positionMapOverlaps, []);
 assert.equal(landscape.mobileLayout.recommendedActions.length, 3);
 assert.ok(landscape.mobileLayout.recommendedActions.every((action) => action.bottom <= 390));
+assert.ok(landscape.actionForecasts.every((entry) => entry.visible));
 const landscapeShot = await screenshot("wudao-combat-lab-landscape.png");
 
 assert.deepEqual(pageErrors, []);

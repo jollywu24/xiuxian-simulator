@@ -86,6 +86,16 @@ const COMBAT_LAB_RECOMMENDATIONS = Object.freeze({
     { actionId: "flee", icon: "escape", title: "翻墙脱身", consequence: "必须身在矮墙" },
     { actionId: "observe", icon: "eye", title: "蹬墙观势", consequence: "借墙看破后手" },
   ],
+  "target:roof_crossbow": [
+    { actionId: "extinguish", icon: "lantern", title: "银针灭灯", consequence: "切断弩手视线" },
+    { actionId: "move_eave_pillar", icon: "stance", title: "掠至檐下", consequence: "用檐柱取得遮挡" },
+    { actionId: "move_pharmacy_wall", icon: "escape", title: "移向矮墙", consequence: "借矮墙削弱弩箭" },
+  ],
+  "target:black_leader": [
+    { actionId: "move_pharmacy_wall", icon: "escape", title: "抢占矮墙", consequence: "赶在头目封路之前" },
+    { actionId: "flee", icon: "stance", title: "翻墙脱身", consequence: "不让合围成形" },
+    { actionId: "observe", icon: "eye", title: "回看刀势", consequence: "先处理挡路刀客" },
+  ],
 });
 
 function clone(value) {
@@ -164,20 +174,23 @@ function initialEnemyState() {
 
 export function createCombatLabSession(options = {}) {
   const setup = normalizeSetup(options);
-  return {
+  const session = {
     setup,
     lives: setup.lives,
     battle: createFirstBattle({ knownFacts: setup.knownFacts, context: setup }),
     turn: initialTurn(),
     positions: initialPositions(),
     enemyState: initialEnemyState(),
-    pendingRisk: null,
+    pendingConsequences: [],
+    pendingOutcome: null,
     wounds: clone(setup.wounds),
     deathMemory: [],
     history: [],
     status: "fighting",
     result: null,
   };
+  syncBattleSpatialState(session);
+  return session;
 }
 
 export function getCombatLabContext(session) {
@@ -235,6 +248,20 @@ function positionName(nodeId) {
   return NODE_BY_ID.get(nodeId)?.shortName || "未知身位";
 }
 
+function spatialRange(session) {
+  const distance = distanceBetween(session.positions.player, session.positions.night_assailant);
+  if (distance <= 0) return "close";
+  if (distance <= 2) return "mid";
+  return "far";
+}
+
+function syncBattleSpatialState(session) {
+  if (!session?.battle) return session;
+  session.battle.round = session.turn.round;
+  session.battle.range = spatialRange(session);
+  return session;
+}
+
 function movementCost(session, destination) {
   const from = session.positions.player;
   const path = findPath(from, destination);
@@ -278,6 +305,58 @@ function disabledEvaluation(evaluation, reason) {
   return { ...evaluation, available: false, reason };
 }
 
+function projectActionPosition(session, action) {
+  const projected = clone(session);
+  if (action.id.startsWith("move_")) projected.positions.player = action.objectId;
+  if (action.id === "reckless") projected.positions.player = projected.positions.night_assailant;
+  if (action.id === "extinguish" && projected.positions.player === "alley_entrance") {
+    projected.positions.player = "eave_pillar";
+    projected.battle.darkness = true;
+  }
+  syncBattleSpatialState(projected);
+  return projected;
+}
+
+function projectedOutcome(session, action) {
+  if (!action.evaluation?.available) return null;
+  const tier = action.evaluation.tier;
+  if (action.id === "seal" && tier !== "failure") return "subdued";
+  if (action.id === "kill" && tier !== "failure") return "killed";
+  if (action.id === "flee" && (tier !== "failure" || session.turn.round >= 3)) return "escaped";
+  return null;
+}
+
+function addEnemyPhaseForecast(session, action) {
+  const projected = projectActionPosition(session, action);
+  const outcome = projectedOutcome(session, action);
+  if (outcome) projected.pendingOutcome = { outcome };
+  const intents = getCombatLabEnemyIntents(projected);
+  const threat = intents.reduce((total, intent) => total + Number(intent.damage || 0), 0);
+  const enemyPhasePreview = threat > 0
+    ? `若此刻收势：预计承受${threat}点气血`
+    : "若此刻收势：敌人只会移动或蓄势";
+  let evaluation = action.evaluation;
+  if (action.intent === "身位" && evaluation.available) {
+    const currentHp = getFirstBattleVitality(session.battle, getCombatLabContext(session)).player.current;
+    const rating = threat >= currentHp ? "fatal" : threat >= 3 ? "dangerous" : threat > 0 ? "viable" : "safe";
+    evaluation = {
+      ...evaluation,
+      rating,
+      ratingLabel: { safe: "稳妥", viable: "可行", dangerous: "凶险", fatal: "必死" }[rating],
+      reasons: [...(evaluation.reasons || []), enemyPhasePreview],
+    };
+  }
+  return {
+    ...action,
+    evaluation,
+    enemyPhasePreview,
+    impactPreview: {
+      ...(action.impactPreview || {}),
+      enemyPhase: enemyPhasePreview,
+    },
+  };
+}
+
 function movementActions(session) {
   return COMBAT_LAB_POSITION_NODES
     .filter((node) => PLAYER_DESTINATIONS.has(node.id) && node.id !== session.positions.player)
@@ -294,7 +373,7 @@ function movementActions(session) {
             : null;
       const from = session.positions.player;
       const knifeDistance = distanceBetween(node.id, session.positions.night_assailant);
-      return {
+      const action = {
         id: `move_${node.id}`,
         verb: "换位",
         objectId: node.id,
@@ -316,6 +395,7 @@ function movementActions(session) {
           reasons: [node.type === "cover" ? "此处可以遮挡远程视线" : "改变当前身位"],
         },
       };
+      return addEnemyPhaseForecast(session, action);
     });
 }
 
@@ -326,17 +406,17 @@ function enrichAction(session, action) {
   if (session.turn.phase !== "player") evaluation = disabledEvaluation(evaluation, "敌方正在行动。");
   else if (!spatial.available) evaluation = disabledEvaluation(evaluation, spatial.reason);
   else if (session.turn.energy < energyCost) evaluation = disabledEvaluation(evaluation, `气机不足：需要${energyCost}点。`);
-  return {
+  return addEnemyPhaseForecast(session, {
     ...action,
     energyCost,
     positionPreview: actionPositionPreview(session, action.id),
     evaluation,
-  };
+  });
 }
 
 export function getCombatLabActions(session) {
-  if (session.status !== "fighting") return [];
-  const battle = { ...session.battle, round: session.turn.round };
+  if (session.status !== "fighting" || session.pendingOutcome || session.battle.finished) return [];
+  const battle = { ...session.battle, round: session.turn.round, range: spatialRange(session) };
   const martialActions = getFirstBattleActions(battle, getCombatLabContext(session)).map((action) => enrichAction(session, action));
   return [...martialActions, ...movementActions(session)];
 }
@@ -351,10 +431,13 @@ export function getCombatLabRecommendations(session, focusId = "default") {
       ...COMBAT_LAB_RECOMMENDATIONS.default,
     ]
     : COMBAT_LAB_RECOMMENDATIONS[focusId] || COMBAT_LAB_RECOMMENDATIONS.default;
+  const seen = new Set();
   const preferred = configured
     .map((entry) => {
       const action = actions.get(entry.actionId);
-      return action ? { ...action, display: clone(entry) } : null;
+      if (!action || seen.has(action.id)) return null;
+      seen.add(action.id);
+      return { ...action, display: clone(entry) };
     })
     .filter(Boolean);
   const used = new Set(preferred.map((entry) => entry.id));
@@ -389,11 +472,30 @@ function knifeIntent(session) {
   const path = findPath(from, target);
   const to = path.length > 1 ? path[1] : from;
   const reachesPlayer = to === target;
+  const pending = session.pendingConsequences.filter((entry) => entry.sourceId === "night_assailant");
+  if (pending.length) {
+    const lethal = pending.find((entry) => entry.lethal) || null;
+    const damage = pending.reduce((total, entry) => total + Number(entry.damage || 0), 0);
+    return {
+      id: `enemy_${session.turn.round}_knife_reaction`,
+      unitId: "night_assailant",
+      order: 1,
+      kind: "reaction",
+      label: lethal ? "左袖反刺" : "乘隙追刀",
+      detail: `${positionName(from)}→${positionName(to)}｜预计气血−${damage}`,
+      from,
+      to,
+      damage,
+      consequences: clone(pending),
+      causeId: lethal?.causeId || null,
+      cause: lethal?.cause || null,
+      memory: lethal?.memory || null,
+    };
+  }
   const knownSleeve = session.battle.observedFeint || session.battle.knownFacts.includes("left_sleeve_blade");
   const empowered = session.enemyState.knifeEmpowered;
   let damage = reachesPlayer ? (session.battle.enemyWounded ? 2 : 4) + (empowered ? 2 : 0) : 0;
   if (knownSleeve && damage) damage = Math.max(1, damage - 1);
-  if (session.pendingRisk?.lethal && !knownSleeve && reachesPlayer) damage = session.battle.vitality.player.current;
   return {
     id: `enemy_${session.turn.round}_knife`,
     unitId: "night_assailant",
@@ -429,8 +531,33 @@ function leaderIntent(session) {
   return { id: `enemy_${session.turn.round}_leader`, unitId: "black_leader", order: 3, kind: "command", label: "催刀合围", detail: "巷尾下令｜刀客下一击增强", from: "alley_end", to: "alley_end", damage: 0 };
 }
 
+function supportOutcomeIntents(session) {
+  let crossbow;
+  if (session.battle.darkness && session.enemyState.crossbowAimed) {
+    crossbow = { id: `enemy_${session.turn.round}_crossbow_exit`, unitId: "roof_crossbow", order: 2, kind: "miss", label: "盲射落空", detail: "灯火已灭｜最后一箭没入雨幕", from: "rooftop", to: "rooftop", damage: 0 };
+  } else if (session.enemyState.crossbowAimed) {
+    crossbow = crossbowIntent(session);
+  } else {
+    crossbow = { id: `enemy_${session.turn.round}_crossbow_exit`, unitId: "roof_crossbow", order: 2, kind: "withdraw", label: "收弩撤离", detail: "屋脊后撤｜没有形成射击窗口", from: "rooftop", to: "rooftop", damage: 0 };
+  }
+  const leader = {
+    id: `enemy_${session.turn.round}_leader_exit`,
+    unitId: "black_leader",
+    order: 3,
+    kind: "withdraw",
+    label: session.pendingOutcome?.outcome === "subdued" ? "弃卒断尾" : "喝令撤走",
+    detail: session.pendingOutcome?.outcome === "subdued" ? "活口已失｜头目不再冒险抢回" : "刀客已倒｜头目带人退入巷尾",
+    from: "alley_end",
+    to: "alley_end",
+    damage: 0,
+  };
+  return [crossbow, leader];
+}
+
 export function getCombatLabEnemyIntents(session) {
-  if (session.status !== "fighting" || session.battle.finished) return [];
+  if (session.status !== "fighting") return [];
+  if (session.pendingOutcome) return supportOutcomeIntents(session);
+  if (session.battle.finished) return [];
   return [knifeIntent(session), crossbowIntent(session), leaderIntent(session)];
 }
 
@@ -439,12 +566,13 @@ export function getCombatLabBattleBoard(session) {
   const vitality = getFirstBattleVitality(session.battle, context);
   const intents = getCombatLabEnemyIntents(session);
   const intentByUnit = new Map(intents.map((entry) => [entry.unitId, entry]));
-  const unit = (id, name, role, current, max, portrait) => ({
+  const unit = (id, name, role, vitality, portrait) => ({
     id,
     name,
     role,
-    current,
-    max,
+    vitality: vitality ? clone(vitality) : null,
+    current: vitality?.current ?? null,
+    max: vitality?.max ?? null,
     intent: intentByUnit.get(id)?.label || "已失去行动",
     intentDetail: intentByUnit.get(id)?.detail || "",
     intentOrder: intentByUnit.get(id)?.order || 0,
@@ -466,13 +594,16 @@ export function getCombatLabBattleBoard(session) {
     },
     objective: session.battle.objective,
     environment: clone(session.battle.environment || []),
-    nodes: clone(COMBAT_LAB_POSITION_NODES),
+    nodes: COMBAT_LAB_POSITION_NODES.map((node) => ({
+      ...clone(node),
+      playerSelectable: PLAYER_DESTINATIONS.has(node.id),
+    })),
     positions: clone(session.positions),
     playerNode: NODE_BY_ID.get(session.positions.player),
     units: [
-      unit("night_assailant", "刀客", "当前交锋", vitality.enemy.current, vitality.enemy.max, "./assets/combat/portrait-masked-blade.webp"),
-      unit("roof_crossbow", "弩手", "远程威胁", session.battle.darkness ? 6 : 8, 8, "./assets/combat/portrait-roof-crossbow.webp"),
-      unit("black_leader", "头目", "后阵指挥", 24, 24, "./assets/combat/portrait-black-leader.webp"),
+      unit("night_assailant", "刀客", "当前交锋", vitality.enemy, "./assets/combat/portrait-masked-blade.webp"),
+      unit("roof_crossbow", "弩手", "远程威胁", null, "./assets/combat/portrait-roof-crossbow.webp"),
+      unit("black_leader", "头目", "后阵指挥", null, "./assets/combat/portrait-black-leader.webp"),
     ],
   };
 }
@@ -480,9 +611,9 @@ export function getCombatLabBattleBoard(session) {
 function playerActionText(actionId, rawResult) {
   const tier = rawResult.evaluation?.tier;
   const texts = {
-    observe: tier === "failure" ? "你看慢半步，只确认右手刀光仍是诱饵。" : "你压住抢攻念头，看清真正杀招藏在左袖。",
-    extinguish: tier === "failure" ? "银针擦过灯罩，灯焰仍在雨里摇晃。" : "针尾扫灭灯焰，弩手的视线随之断开。",
-    needle_wrist: tier === "failure" ? "银针被刀背磕偏，你把身前空门暴露出来。" : "银针没入持刀右腕，刀势明显一滞。",
+    observe: tier === "failure" ? "你看慢半步，刀客已经抓住空门。" : tier === "costly" ? "你看清左袖藏刃，刀锋也已经追到肋下。" : "你压住抢攻念头，看清真正杀招藏在左袖。",
+    extinguish: tier === "failure" ? "银针擦过灯罩，刀客趁势逼近。" : tier === "costly" ? "灯焰虽灭，刀客也借转身空隙追来。" : "针尾扫灭灯焰，弩手的视线随之断开。",
+    needle_wrist: tier === "failure" ? "银针被刀背磕偏，左袖反击已经递出。" : tier === "costly" ? "银针封住明刀，左袖仍擦向肋下。" : "银针没入持刀右腕，刀势明显一滞。",
     reckless: tier === "failure" ? "你撞进刀路，却把自己送进左袖短刃的距离。" : "你迎刀抢进，强行撞乱刀客下盘。",
     seal: rawResult.battle.lastResult,
     kill: rawResult.battle.lastResult,
@@ -494,16 +625,31 @@ function playerActionText(actionId, rawResult) {
 function normalizePlayerActionResult(session, actionId, rawResult, startingVitality) {
   const battle = rawResult.battle;
   const rawPlayerDamage = Math.max(0, startingVitality.player - battle.vitality.player.current);
-  battle.vitality.player.current = startingVitality.player;
-  battle.vitality.player.max = startingVitality.playerMax;
-  battle.round = session.turn.round;
   const finished = ["subdued", "killed", "escaped"].includes(rawResult.outcome);
+  const pendingConsequence = !finished && (rawPlayerDamage > 0 || rawResult.wound || rawResult.outcome === "death")
+    ? {
+      id: `reaction_${session.turn.round}_${session.history.length}_${actionId}`,
+      sourceId: "night_assailant",
+      actionId,
+      damage: rawPlayerDamage,
+      wound: rawResult.wound ? clone(rawResult.wound) : null,
+      lethal: rawResult.outcome === "death",
+      causeId: rawResult.causeId || null,
+      cause: rawResult.cause || null,
+      memory: rawResult.memory || null,
+    }
+    : null;
+  if (!finished) {
+    battle.vitality.player.current = startingVitality.player;
+    battle.vitality.player.max = startingVitality.playerMax;
+  }
+  battle.round = session.turn.round;
   if (!finished) battle.finished = false;
   battle.lastResult = playerActionText(actionId, rawResult);
   const impact = {
     ...(rawResult.impact || {}),
-    playerDamage: 0,
-    playerHp: startingVitality.player,
+    playerDamage: finished ? rawPlayerDamage : 0,
+    playerHp: finished ? battle.vitality.player.current : startingVitality.player,
     playerMaxHp: startingVitality.playerMax,
     enemyDamage: Math.max(0, startingVitality.enemy - battle.vitality.enemy.current),
     enemyHp: battle.vitality.enemy.current,
@@ -514,6 +660,7 @@ function normalizePlayerActionResult(session, actionId, rawResult, startingVital
     outcome: finished ? rawResult.outcome : "player_action",
     wound: finished ? rawResult.wound || null : null,
     deferredPlayerDamage: rawPlayerDamage,
+    pendingConsequence,
     impact,
     battle,
   };
@@ -525,6 +672,7 @@ function resolveMovementAction(session, action) {
   const from = next.positions.player;
   next.positions.player = destination;
   next.turn.energy = Math.max(0, next.turn.energy - Number(action.energyCost || 0));
+  syncBattleSpatialState(next);
   const text = `你从${positionName(from)}掠至${positionName(destination)}，与刀客变为${distanceLabel(distanceBetween(destination, next.positions.night_assailant))}。`;
   const result = {
     available: true,
@@ -565,7 +713,8 @@ export function resolveCombatLabAction(session, actionId) {
     enemy: beforeVitality.enemy.current,
   };
   const battleInput = clone(next.battle);
-  battleInput.round = actionId === "reckless" && next.turn.round === 1 ? 2 : next.turn.round;
+  battleInput.round = next.turn.round;
+  battleInput.range = spatialRange(next);
   const raw = resolveFirstBattleAction(actionId, battleInput, getCombatLabContext(next));
   if (!raw?.available) return raw || { available: false, reason: "这一手没有落下。" };
   const result = normalizePlayerActionResult(next, actionId, raw, startingVitality);
@@ -573,18 +722,9 @@ export function resolveCombatLabAction(session, actionId) {
   next.turn.energy = Math.max(0, next.turn.energy - Number(listed.energyCost || 0));
   if (actionId === "reckless") next.positions.player = next.positions.night_assailant;
   if (actionId === "extinguish" && next.positions.player === "alley_entrance" && result.evaluation?.tier !== "failure") next.positions.player = "eave_pillar";
-  const knownSleeve = next.battle.knownFacts.includes("left_sleeve_blade") || next.battle.observedFeint;
-  if (!result.battle.finished && (
-    (actionId === "reckless" && !knownSleeve)
-    || result.deferredPlayerDamage > 0
-    || ["failure", "costly"].includes(result.evaluation?.tier)
-  )) {
-    next.pendingRisk = {
-      actionId,
-      lethal: actionId === "reckless" && !knownSleeve,
-      exposed: true,
-    };
-  }
+  syncBattleSpatialState(next);
+  if (result.pendingConsequence) next.pendingConsequences.push(clone(result.pendingConsequence));
+  if (result.pendingConsequence?.lethal) next.turn.energy = 0;
   if (result.outcome === "death") result.outcome = "player_action";
   next.history.push({
     round: next.turn.round,
@@ -602,13 +742,13 @@ export function resolveCombatLabAction(session, actionId) {
 
   if (["subdued", "killed", "escaped"].includes(result.outcome)) {
     next.wounds = mergeWound(next.wounds, result.wound);
-    next.status = "finished";
-    next.result = {
+    next.pendingOutcome = {
       outcome: result.outcome,
       edge: result.edge || null,
       check: result.check || null,
       text: result.battle.lastResult,
     };
+    next.turn.energy = 0;
   }
   return { available: true, result, session: next };
 }
@@ -625,6 +765,17 @@ export function endCombatLabPlayerTurn(session) {
 }
 
 function completeEnemyTurn(next) {
+  if (next.pendingOutcome) {
+    next.status = "finished";
+    next.result = clone(next.pendingOutcome);
+    next.pendingOutcome = null;
+    next.turn.phase = "player";
+    next.turn.energy = 0;
+    next.turn.enemyQueue = [];
+    next.turn.enemyCursor = 0;
+    next.turn.actedEnemyIds = [];
+    return syncBattleSpatialState(next);
+  }
   next.turn.round += 1;
   next.turn.phase = "player";
   next.turn.energy = next.turn.maxEnergy;
@@ -632,19 +783,22 @@ function completeEnemyTurn(next) {
   next.turn.enemyCursor = 0;
   next.turn.actedEnemyIds = [];
   next.battle.round = next.turn.round;
-  return next;
+  return syncBattleSpatialState(next);
 }
 
 function enemyActionText(action, damage) {
   if (action.unitId === "night_assailant") {
     if (action.kind === "move") return `刀客踏过积水，从${positionName(action.from)}逼到${positionName(action.to)}。`;
+    if (action.kind === "reaction") return damage > 0 ? `刀客乘你出手的空隙追来，这一记${action.label}令气血下降${damage}。` : "刀客试图乘隙反击，却没能把刀锋递到实处。";
     return damage > 0 ? `刀客在${positionName(action.to)}递出${action.label}，你的气血下降${damage}。` : "刀客的刀锋没有够到你的身位。";
   }
   if (action.unitId === "roof_crossbow") {
+    if (action.kind === "withdraw") return "弩手没有等到射击窗口，收弩退下屋脊。";
     if (action.kind === "aim") return `弩手伏低肩背，锁定你在${positionName(action.targetNode)}的身影。`;
     if (action.kind === "miss") return "弩机轻响，箭矢没入黑暗；灯灭让弩手失去了你的身位。";
     return damage > 1 ? `弩箭穿雨而来，你的气血下降${damage}。` : "弩箭撞上遮挡，只擦去一点气血。";
   }
+  if (action.kind === "withdraw") return "头目见刀客已倒，喝令余人断尾撤走。";
   if (action.kind === "charge") return "头目没有抢进，只在巷尾看清你的退路。";
   if (action.kind === "block") return "头目一声短喝，两道人影封住药铺矮墙。";
   return "头目催刀合围，刀客下一击将更重。";
@@ -678,14 +832,18 @@ export function resolveCombatLabEnemyAction(session) {
   let damage = 0;
   if (action.unitId === "night_assailant") {
     next.positions.night_assailant = action.to;
-    damage = applyEnemyDamage(next, action.damage + (next.pendingRisk?.exposed && !next.pendingRisk?.lethal ? 1 : 0), action.unitId);
+    damage = applyEnemyDamage(next, action.damage, action.unitId);
+    for (const consequence of action.consequences || []) {
+      if (consequence.wound) next.wounds = mergeWound(next.wounds, consequence.wound);
+    }
+    if ((action.consequences || []).some((entry) => entry.wound)) next.battle.playerWounded = true;
     next.enemyState.knifeEmpowered = false;
-    next.pendingRisk = null;
+    next.pendingConsequences = next.pendingConsequences.filter((entry) => entry.sourceId !== action.unitId);
   }
   if (action.unitId === "roof_crossbow") {
     action.targetNode = next.positions.player;
     if (action.kind === "aim") next.enemyState.crossbowAimed = true;
-    if (["shoot", "miss"].includes(action.kind)) next.enemyState.crossbowAimed = false;
+    if (["shoot", "miss", "withdraw"].includes(action.kind)) next.enemyState.crossbowAimed = false;
     if (action.kind === "shoot") damage = applyEnemyDamage(next, action.damage, action.unitId);
   }
   if (action.unitId === "black_leader") {
@@ -697,6 +855,7 @@ export function resolveCombatLabEnemyAction(session) {
     }
     if (action.kind === "command") next.enemyState.knifeEmpowered = true;
   }
+  syncBattleSpatialState(next);
   next.turn.actedEnemyIds.push(action.unitId);
   next.turn.enemyCursor += 1;
   const text = enemyActionText(action, damage);
@@ -724,12 +883,13 @@ export function resolveCombatLabEnemyAction(session) {
     const knifeDeath = action.unitId === "night_assailant";
     next.lives = Math.max(0, next.lives - 1);
     next.status = "death";
-    const memory = knifeDeath ? "刀客右肩是诱饵，真正杀招藏在左袖；贴身时必须先留应对。" : "屋脊弩手完成瞄准后，下一轮必须取得遮挡或灭灯。";
+    next.pendingOutcome = null;
+    const memory = action.memory || (knifeDeath ? "刀客右肩是诱饵，真正杀招藏在左袖；贴身时必须先留应对。" : "屋脊弩手完成瞄准后，下一轮必须取得遮挡或灭灯。");
     if (!next.deathMemory.includes(memory)) next.deathMemory.push(memory);
     next.result = {
       outcome: "death",
-      causeId: knifeDeath ? "left_sleeve_blade" : "roof_crossbow_bolt",
-      cause: knifeDeath ? "左袖短刃在敌方行动阶段贯入肋下，气血顷刻归零。" : "弩箭从屋脊穿雨而下，气血在落地前断绝。",
+      causeId: action.causeId || (knifeDeath ? "left_sleeve_blade" : "roof_crossbow_bolt"),
+      cause: action.cause || (knifeDeath ? "左袖短刃在敌方行动阶段贯入肋下，气血顷刻归零。" : "弩箭从屋脊穿雨而下，气血在落地前断绝。"),
       memory,
     };
   }

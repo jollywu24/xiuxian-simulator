@@ -76,6 +76,17 @@ svg {
   stroke-linejoin: round;
 }
 
+.sr-only {
+  position: fixed;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .combat-shell {
   display: grid;
   width: min(1480px, 100%);
@@ -320,6 +331,20 @@ svg {
   margin: 0 2px;
   color: var(--faint);
   font-style: normal;
+}
+
+.unit-role {
+  flex: 0 0 auto;
+  color: var(--gold);
+  font-family: var(--story);
+  font-size: 8px;
+  font-style: normal;
+}
+
+.unit-threat-line {
+  height: 4px;
+  margin-top: 5px;
+  background: linear-gradient(90deg, rgba(173, 52, 44, 0.78), rgba(173, 52, 44, 0.12));
 }
 
 .unit-hp {
@@ -713,6 +738,11 @@ svg {
   color: var(--gold-bright);
   background: rgba(34, 25, 14, 0.76);
   box-shadow: 0 0 0 1px var(--gold);
+}
+
+.position-node.fixed-position {
+  cursor: default;
+  pointer-events: none;
 }
 
 .position-node.player-position {
@@ -1297,8 +1327,10 @@ svg {
   font-size: 10px;
 }
 
-.action-copy .position-preview {
+.action-copy .action-forecast {
   color: var(--gold);
+  font-family: var(--number);
+  font-size: 8px;
 }
 
 .energy-cost {
@@ -1744,6 +1776,10 @@ select {
   box-shadow: -25px 0 80px rgba(0, 0, 0, 0.68);
   transform: translateX(102%);
   transition: transform 240ms ease;
+}
+
+.arsenal-sheet > section:focus {
+  outline: none;
 }
 
 .arsenal-sheet.open > section {
@@ -2241,8 +2277,16 @@ select {
     font-size: 9px;
   }
 
-  .action-copy .position-preview {
+  .action-copy > small:not(.action-forecast) {
     display: none;
+  }
+
+  .action-copy .action-forecast {
+    display: block;
+    overflow: hidden;
+    font-size: 8px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .action-risk {
@@ -2450,9 +2494,19 @@ select {
     font-size: 16px;
   }
 
-  .action-copy small,
+  .action-copy small:not(.action-forecast),
   .action-risk small {
     display: none;
+  }
+
+  .action-copy .action-forecast {
+    display: block;
+    margin-top: 2px;
+    overflow: hidden;
+    color: var(--gold);
+    font-size: 7px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .enemy-phase-panel {

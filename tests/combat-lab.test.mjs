@@ -19,7 +19,7 @@ import {
 function finishEnemyTurn(session) {
   let current = session;
   const actions = [];
-  while (current.turn.phase === "enemy") {
+  while (current.status === "fighting" && current.turn.phase === "enemy") {
     const resolved = resolveCombatLabEnemyAction(current);
     assert.equal(resolved.available, true);
     if (resolved.action) actions.push(resolved.action);
@@ -27,6 +27,39 @@ function finishEnemyTurn(session) {
   }
   return { session: current, actions };
 }
+
+test("失败与得手有损会在敌方反击中精确兑现", () => {
+  const fatalSetup = createCombatLabSession({
+    fateSeed: "seed-3",
+    attributes: { insight: 0 },
+  });
+  const fatalAttempt = resolveCombatLabAction(fatalSetup, "needle_wrist");
+  assert.equal(fatalAttempt.result.evaluation.tier, "failure");
+  assert.equal(fatalAttempt.session.battle.vitality.player.current, 12);
+  assert.equal(fatalAttempt.session.pendingConsequences.length, 1);
+  assert.equal(fatalAttempt.session.pendingConsequences[0].damage, 12);
+  assert.equal(fatalAttempt.session.pendingConsequences[0].causeId, "left_sleeve_blade");
+
+  const fatalEnemyTurn = endCombatLabPlayerTurn(fatalAttempt.session).session;
+  const fatalReaction = resolveCombatLabEnemyAction(fatalEnemyTurn);
+  assert.equal(fatalReaction.action.kind, "reaction");
+  assert.equal(fatalReaction.impact.playerDamage, 12);
+  assert.equal(fatalReaction.session.status, "death");
+  assert.equal(fatalReaction.session.result.causeId, "left_sleeve_blade");
+
+  const costlySetup = createCombatLabSession({
+    fateSeed: "seed-14",
+    attributes: { insight: 5 },
+  });
+  const costlyAttempt = resolveCombatLabAction(costlySetup, "observe");
+  assert.equal(costlyAttempt.result.evaluation.tier, "costly");
+  const costlyEnemyTurn = endCombatLabPlayerTurn(costlyAttempt.session).session;
+  const costlyReaction = resolveCombatLabEnemyAction(costlyEnemyTurn);
+  assert.equal(costlyReaction.impact.playerDamage, 2);
+  assert.equal(costlyReaction.session.battle.vitality.player.current, 10);
+  assert.equal(costlyReaction.session.wounds[0].severity, 1);
+  assert.equal(costlyReaction.session.wounds[0].bodyPart, "torso");
+});
 
 test("我方回合拥有三点气机，连续行动后才交给敌方", () => {
   const session = createCombatLabSession();
@@ -72,6 +105,23 @@ test("六个身位节点真实改变距离、路径、气机与脱身条件", ()
   assert.equal(getCombatLabRecommendations(session, "position:eave_pillar")[0].id, "move_eave_pillar");
 });
 
+test("移动风险读取敌方预告，推荐动作不重复且敌方节点不可误选", () => {
+  const session = createCombatLabSession();
+  const move = getCombatLabActions(session).find((action) => action.id === "move_eave_pillar");
+  assert.notEqual(move.evaluation.rating, "safe");
+  assert.match(move.enemyPhasePreview, /4点气血/);
+
+  const recommendations = getCombatLabRecommendations(session, "position:eave_pillar");
+  assert.equal(new Set(recommendations.map((action) => action.id)).size, recommendations.length);
+  assert.equal(recommendations[0].id, "move_eave_pillar");
+
+  const board = getCombatLabBattleBoard(session);
+  assert.equal(board.nodes.find((node) => node.id === "eave_pillar").playerSelectable, true);
+  assert.equal(board.nodes.find((node) => node.id === "rooftop").playerSelectable, false);
+  assert.equal(board.units.find((unit) => unit.id === "roof_crossbow").vitality, null);
+  assert.equal(board.units.find((unit) => unit.id === "black_leader").vitality, null);
+});
+
 test("敌方行动阶段按刀客、弩手、头目顺序真正结算", () => {
   let session = createCombatLabSession();
   session = resolveCombatLabAction(session, "observe").session;
@@ -90,6 +140,29 @@ test("敌方行动阶段按刀客、弩手、头目顺序真正结算", () => {
   assert.equal(resolved.session.enemyState.crossbowAimed, true);
   assert.equal(resolved.session.enemyState.leaderCharge, 1);
   assert.equal(resolved.session.history.filter((entry) => entry.phase === "enemy").length, 3);
+});
+
+test("解决刀客后仍结算已经形成的远程威胁", () => {
+  let session = createCombatLabSession();
+  session = resolveCombatLabAction(session, "observe").session;
+  session = resolveCombatLabAction(session, "needle_wrist").session;
+  session = finishEnemyTurn(endCombatLabPlayerTurn(session).session).session;
+
+  const sealPreview = getCombatLabActions(session).find((action) => action.id === "seal");
+  assert.match(sealPreview.enemyPhasePreview, /4点气血/);
+  assert.doesNotMatch(sealPreview.enemyPhasePreview, /5点气血/);
+
+  const sealed = resolveCombatLabAction(session, "seal");
+  assert.equal(sealed.session.status, "fighting");
+  assert.equal(sealed.session.pendingOutcome.outcome, "subdued");
+  const supportTurn = endCombatLabPlayerTurn(sealed.session).session;
+  assert.deepEqual(supportTurn.turn.enemyQueue.map((entry) => entry.unitId), ["roof_crossbow", "black_leader"]);
+
+  const resolved = finishEnemyTurn(supportTurn);
+  assert.equal(resolved.session.status, "finished");
+  assert.equal(resolved.session.result.outcome, "subdued");
+  assert.equal(resolved.session.battle.vitality.player.current, 8);
+  assert.deepEqual(resolved.actions.map((entry) => entry.unitId), ["roof_crossbow", "black_leader"]);
 });
 
 test("灭灯和遮挡会让远程预告在敌方阶段落空", () => {
@@ -145,6 +218,8 @@ test("手机演武页面具备视口、独立样式与模块入口", () => {
   assert.match(html, /combat-lab\.mjs/);
   assert.match(html, /jinling-rain-ambush\.webp/);
   assert.doesNotMatch(html, /wudao-app\.mjs/);
+  assert.doesNotMatch(html, /id="combat-lab" aria-live/);
+  assert.match(html, /id="combat-status"/);
   for (const asset of [
     "jinling-rain-ambush.webp",
     "portrait-chen-siming.webp",

@@ -9,9 +9,11 @@ import {
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
   rewindCombatLabDeath,
-} from "./combat-lab-core.mjs?v=20260717.2";
+} from "./combat-lab-core.mjs?v=20260718.1";
 
 const root = document.querySelector("#combat-lab");
+const liveRegion = document.querySelector("#combat-status");
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
 const ATTRIBUTE_LABELS = {
   constitution: "根骨",
@@ -63,6 +65,7 @@ let selectedEnvironment = null;
 let selectedTarget = "night_assailant";
 let selectedPosition = null;
 let arsenalOpen = false;
+let settingsOpen = false;
 let visualState = {
   animating: false,
   previousVitality: null,
@@ -70,6 +73,18 @@ let visualState = {
   enemyUnitId: null,
 };
 let effectTimer = null;
+
+function announce(message) {
+  if (!liveRegion || !message) return;
+  liveRegion.textContent = "";
+  requestAnimationFrame(() => {
+    liveRegion.textContent = String(message);
+  });
+}
+
+function motionDuration(milliseconds) {
+  return reducedMotion.matches ? 0 : milliseconds;
+}
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -148,20 +163,21 @@ function unitRailHtml(board) {
   return `
     <div class="enemy-rail" aria-label="敌方单位">
       ${board.units.map((unit) => {
-        const percent = clampPercent(unit.current, unit.max);
-        const previousEnemy = unit.id === "night_assailant" ? visualState.previousVitality?.enemy : null;
-        const lagPercent = clampPercent(previousEnemy?.current ?? unit.current, previousEnemy?.max ?? unit.max);
+        const hasVitality = Boolean(unit.vitality);
+        const percent = hasVitality ? clampPercent(unit.current, unit.max) : 0;
+        const previousEnemy = hasVitality && unit.id === "night_assailant" ? visualState.previousVitality?.enemy : null;
+        const lagPercent = hasVitality ? clampPercent(previousEnemy?.current ?? unit.current, previousEnemy?.max ?? unit.max) : 0;
         const selected = selectedTarget === unit.id;
         const icon = unit.id === "roof_crossbow" ? "bow" : unit.id === "black_leader" ? "command" : "blade";
         return `
           <button type="button" class="enemy-unit ${selected ? "selected" : ""} ${unit.id === "night_assailant" ? "active" : "support"} ${visualState.enemyUnitId === unit.id ? "acting" : ""} ${unit.acted ? "acted" : ""}" data-target-id="${escapeHtml(unit.id)}" aria-pressed="${selected}">
             <span class="unit-portrait"><img src="${escapeHtml(unit.portrait)}" alt="" />${iconSvg(icon)}</span>
             <span class="unit-copy">
-              <span><strong>${escapeHtml(unit.name)}</strong><b>${Number(unit.current)}<i>/</i>${Number(unit.max)}</b></span>
-              <span class="unit-hp" style="--unit-hp-current:${percent}%;--unit-hp-lag:${Math.max(percent, lagPercent)}%" role="meter" aria-label="${escapeHtml(`${unit.name}气血`)}" aria-valuemin="0" aria-valuemax="${Number(unit.max)}" aria-valuenow="${Number(unit.current)}">
+              <span><strong>${escapeHtml(unit.name)}</strong>${hasVitality ? `<b>${Number(unit.current)}<i>/</i>${Number(unit.max)}</b>` : `<em class="unit-role">${escapeHtml(unit.role)}</em>`}</span>
+              ${hasVitality ? `<span class="unit-hp" style="--unit-hp-current:${percent}%;--unit-hp-lag:${Math.max(percent, lagPercent)}%" role="meter" aria-label="${escapeHtml(`${unit.name}气血`)}" aria-valuemin="0" aria-valuemax="${Number(unit.max)}" aria-valuenow="${Number(unit.current)}">
                 <i class="unit-hp-lag"></i>
                 <i class="unit-hp-current"></i>
-              </span>
+              </span>` : '<span class="unit-threat-line" aria-hidden="true"></span>'}
               <small><b>${unit.intentOrder ? `${Number(unit.intentOrder)}·` : ""}</b>${escapeHtml(unit.intent)}<em>${escapeHtml(`${unit.nodeName}·${unit.distance}`)}</em></small>
             </span>
           </button>
@@ -211,11 +227,11 @@ function positionMapHtml(board) {
         const isPlayer = board.positions.player === node.id;
         const enemy = occupied.get(node.id);
         const selected = selectedPosition === node.id;
-        return `
-          <button type="button" class="position-node ${isPlayer ? "player-position" : ""} ${enemy ? "enemy-position" : ""} ${selected ? "selected" : ""}" style="--node-x:${Number(node.x)}%;--node-y:${Number(node.y)}%" data-position-id="${escapeHtml(node.id)}" aria-pressed="${selected}" aria-label="${escapeHtml(`${node.name}${isPlayer ? "，你在此处" : enemy ? `，${enemy}在此处` : ""}`)}">
-            <i></i><span>${escapeHtml(node.shortName)}</span>${isPlayer ? "<b>你</b>" : enemy ? `<b>${escapeHtml(enemy)}</b>` : ""}
-          </button>
-        `;
+        const content = `<i></i><span>${escapeHtml(node.shortName)}</span>${isPlayer ? "<b>你</b>" : enemy ? `<b>${escapeHtml(enemy)}</b>` : ""}`;
+        const label = escapeHtml(`${node.name}${isPlayer ? "，你在此处" : enemy ? `，${enemy}在此处` : ""}`);
+        return node.playerSelectable
+          ? `<button type="button" class="position-node ${isPlayer ? "player-position" : ""} ${enemy ? "enemy-position" : ""} ${selected ? "selected" : ""}" style="--node-x:${Number(node.x)}%;--node-y:${Number(node.y)}%" data-position-id="${escapeHtml(node.id)}" aria-pressed="${selected}" aria-label="${label}">${content}</button>`
+          : `<span class="position-node fixed-position ${enemy ? "enemy-position" : ""}" style="--node-x:${Number(node.x)}%;--node-y:${Number(node.y)}%" aria-label="${label}">${content}</span>`;
       }).join("")}
     </div>
   `;
@@ -278,13 +294,14 @@ function contextActionHtml(entry, index) {
   const unavailable = !entry.evaluation.available;
   const impact = entry.impactPreview;
   const damage = impact.success;
+  const forecast = [entry.positionPreview, entry.enemyPhasePreview].filter(Boolean).join(" · ");
   return `
     <button type="button" class="context-action ${riskClass(entry)} ${index === 0 ? "primary" : ""}" data-action-id="${escapeHtml(entry.id)}" ${unavailable || visualState.animating ? "disabled" : ""}>
       <span class="action-icon">${iconSvg(entry.display.icon)}</span>
       <span class="action-copy">
         <strong>${escapeHtml(entry.display.title)} <i class="energy-cost">${"◆".repeat(Number(entry.energyCost || 0))}</i></strong>
         <small>${escapeHtml(entry.display.consequence)}</small>
-        <small class="position-preview">${escapeHtml(entry.positionPreview || "")}</small>
+        <small class="action-forecast">${escapeHtml(forecast)}</small>
       </span>
       <span class="action-risk">
         <b>${escapeHtml(entry.evaluation.ratingLabel)}</b>
@@ -303,7 +320,7 @@ function allActionHtml(entry) {
       <span>
         <small>${escapeHtml(entry.intent)} · ${escapeHtml(entry.objectName)} · ${"◆".repeat(Number(entry.energyCost || 0))}</small>
         <strong>${escapeHtml(entry.title)}</strong>
-        <p>${escapeHtml(entry.positionPreview || entry.successPreview)}；${escapeHtml(entry.riskPreview)}</p>
+        <p>${escapeHtml(entry.positionPreview || entry.successPreview)}；${escapeHtml(entry.riskPreview)}；${escapeHtml(entry.enemyPhasePreview || "")}</p>
       </span>
       <b>${escapeHtml(entry.evaluation.available ? entry.evaluation.ratingLabel : "不可用")}</b>
     </button>
@@ -340,7 +357,7 @@ function settingsHtml() {
   const knownSleeve = session.setup.knownFacts.includes("left_sleeve_blade");
   const baseWound = session.setup.wounds[0];
   return `
-    <details class="fate-settings">
+    <details class="fate-settings" ${settingsOpen ? "open" : ""}>
       <summary><span>命盘</span><strong>调整入局条件</strong></summary>
       <div class="setting-body">
         <div class="setting-grid">
@@ -417,7 +434,7 @@ function turnBarHtml(board) {
         ${Array.from({ length: session.turn.maxEnergy }, (_, index) => `<i class="${index < session.turn.energy ? "filled" : ""}">◆</i>`).join("")}
       </div>
       ${playerPhase
-        ? `<button type="button" data-command="end-turn" ${visualState.animating ? "disabled" : ""}>收势迎敌</button>`
+        ? `<button type="button" data-command="end-turn" ${visualState.animating ? "disabled" : ""}>收势迎敌${board.intent.threat ? ` · 预计−${Number(board.intent.threat)}` : ""}</button>`
         : `<span class="enemy-now">${currentUnit ? `${escapeHtml(currentUnit.name)} · ${escapeHtml(currentEnemy.label)}` : "敌招结算"}</span>`}
     </div>
   `;
@@ -442,7 +459,9 @@ function enemyPhaseHtml(board) {
 
 function commandDeckHtml(board) {
   const previous = visualState.previousVitality;
-  const focusId = selectedPosition ? `position:${selectedPosition}` : selectedEnvironment || (selectedTarget === "roof_crossbow" ? "street_lantern" : "default");
+  const focusId = selectedPosition
+    ? `position:${selectedPosition}`
+    : selectedEnvironment || (selectedTarget === "night_assailant" ? "default" : `target:${selectedTarget}`);
   const recommendations = getCombatLabRecommendations(session, focusId);
   const allActions = getCombatLabActions(session);
   const environment = selectedEnvironment ? ENVIRONMENT_COPY[selectedEnvironment] : null;
@@ -450,7 +469,7 @@ function commandDeckHtml(board) {
   const wounds = session.wounds.length ? session.wounds.map(woundLabel).join(" · ") : "无伤";
   const knownSleeve = session.battle.knownFacts.includes("left_sleeve_blade") || session.battle.observedFeint;
   const position = selectedPosition ? board.nodes.find((node) => node.id === selectedPosition) : null;
-  const contextTitle = position ? `移向${position.shortName}` : environment?.panelTitle || (selectedTarget === "night_assailant" ? "应对眼前刀势" : `压制${target.name}`);
+  const contextTitle = position ? `移向${position.shortName}` : environment?.panelTitle || (selectedTarget === "night_assailant" ? "应对眼前刀势" : selectedTarget === "roof_crossbow" ? "应对屋脊弩手" : "应对头目封路");
   const contextHint = environment?.hint || (selectedTarget === "night_assailant"
     ? "先读敌招，再决定识破、借势、强攻或脱身。"
     : `${target.name}尚未进入贴身交锋；先改变环境或处理挡路刀客。`);
@@ -467,7 +486,7 @@ function commandDeckHtml(board) {
         <div class="battle-objective">
           <span>此战所求</span>
           <strong>${escapeHtml(board.objective)}</strong>
-          <small>你在${escapeHtml(board.playerNode.shortName)} · 目标${escapeHtml(target.name)}在${escapeHtml(target.nodeName)} · ${escapeHtml(target.distance)} · ${escapeHtml(wounds)}</small>
+          <small>你在${escapeHtml(board.playerNode.shortName)} · 关注${escapeHtml(target.name)}在${escapeHtml(target.nodeName)} · ${escapeHtml(target.distance)} · ${escapeHtml(wounds)}</small>
         </div>
         ${knownSleeve ? '<div class="battle-memory"><span>死中见闻</span><strong>左袖藏刃</strong><small>贴身前已知真正杀招，刀客伤害降低。</small></div>' : ""}
         ${turnBarHtml(board)}
@@ -493,8 +512,8 @@ function commandDeckHtml(board) {
       <div class="life-strip"><span>命灯</span><strong>${"●".repeat(session.lives)}${"○".repeat(2 - session.lives)}</strong></div>
     </section>
     <aside class="arsenal-sheet ${arsenalOpen ? "open" : ""}" aria-hidden="${!arsenalOpen}">
-      <button type="button" class="sheet-backdrop" data-command="toggle-arsenal" aria-label="收起全部手段"></button>
-      <section>
+      <button type="button" class="sheet-backdrop" data-command="toggle-arsenal" aria-label="收起全部手段" tabindex="-1"></button>
+      <section role="dialog" aria-modal="true" aria-label="全部手段" tabindex="-1">
         <header>
           <div><span>全部手段</span><strong>从招式、身法、环境与退路中择一</strong></div>
           <button type="button" data-command="toggle-arsenal" aria-label="收起">${iconSvg("close")}</button>
@@ -507,6 +526,7 @@ function commandDeckHtml(board) {
 
 function render() {
   const board = getCombatLabBattleBoard(session);
+  root.classList.remove("hp-settled");
   root.innerHTML = `
     <main class="combat-shell ${visualState.animating ? "fx-active" : ""} ${session.turn.phase === "enemy" ? "resolving-enemy-turn" : "resolving-player-turn"}">
       ${sceneHtml(board)}
@@ -525,6 +545,15 @@ function resetInterface() {
   arsenalOpen = false;
   visualState = { animating: false, previousVitality: null, effect: null, enemyUnitId: null };
   if (effectTimer) clearTimeout(effectTimer);
+}
+
+function setArsenalOpen(open) {
+  arsenalOpen = open;
+  render();
+  queueMicrotask(() => {
+    const target = open ? root.querySelector(".arsenal-sheet > section") : root.querySelector(".open-arsenal");
+    target?.focus();
+  });
 }
 
 function startResolvedEffect(resolved, previousVitality, knownBefore, actionId, onDone = null) {
@@ -554,12 +583,13 @@ function startResolvedEffect(resolved, previousVitality, knownBefore, actionId, 
       status,
     },
   };
+  announce(result.text || result.battle.lastResult);
   render();
   effectTimer = setTimeout(() => {
     visualState = { animating: false, previousVitality: null, effect: null, enemyUnitId: null };
     render();
     if (onDone) onDone();
-  }, 760);
+  }, motionDuration(760));
 }
 
 function resolveNextEnemyAction() {
@@ -575,6 +605,7 @@ function resolveNextEnemyAction() {
   if (resolved.completed) {
     visualState = { animating: false, previousVitality: null, effect: null, enemyUnitId: null };
     render();
+    announce(session.result?.text || "敌方行动已经结束。");
     return;
   }
   visualState = {
@@ -590,12 +621,13 @@ function resolveNextEnemyAction() {
       status: resolved.action.label,
     },
   };
+  announce(resolved.text);
   render();
   effectTimer = setTimeout(() => {
     visualState = { animating: false, previousVitality: null, effect: null, enemyUnitId: null };
     if (session.status === "death") render();
     else resolveNextEnemyAction();
-  }, 720);
+  }, motionDuration(720));
 }
 
 function startEnemyTurn() {
@@ -607,7 +639,7 @@ function startEnemyTurn() {
   selectedPosition = null;
   visualState = { animating: false, previousVitality: null, effect: null, enemyUnitId: null };
   render();
-  effectTimer = setTimeout(resolveNextEnemyAction, 360);
+  effectTimer = setTimeout(resolveNextEnemyAction, motionDuration(360));
 }
 
 function performAction(actionId) {
@@ -625,11 +657,17 @@ function performAction(actionId) {
   });
 }
 
-function updateSetup(patch) {
+function updateSetup(patch, focusSelector = null) {
+  settingsOpen = root.querySelector(".fate-settings")?.open ?? settingsOpen;
   session = restartCombatLab(session, patch);
   resetInterface();
   render();
+  if (focusSelector) queueMicrotask(() => root.querySelector(focusSelector)?.focus());
 }
+
+root.addEventListener("toggle", (event) => {
+  if (event.target.matches(".fate-settings")) settingsOpen = event.target.open;
+}, true);
 
 root.addEventListener("click", (event) => {
   const positionButton = event.target.closest("[data-position-id]");
@@ -654,7 +692,7 @@ root.addEventListener("click", (event) => {
   const targetButton = event.target.closest("[data-target-id]");
   if (targetButton) {
     selectedTarget = targetButton.dataset.targetId;
-    selectedEnvironment = selectedTarget === "roof_crossbow" ? "street_lantern" : null;
+    selectedEnvironment = null;
     selectedPosition = null;
     arsenalOpen = false;
     render();
@@ -670,8 +708,7 @@ root.addEventListener("click", (event) => {
   const command = event.target.closest("[data-command]")?.dataset.command;
   if (!command) return;
   if (command === "toggle-arsenal") {
-    arsenalOpen = !arsenalOpen;
-    render();
+    setArsenalOpen(!arsenalOpen);
     return;
   }
   if (command === "end-turn") {
@@ -683,6 +720,7 @@ root.addEventListener("click", (event) => {
     if (rewound.available) {
       session = rewound.session;
       resetInterface();
+      announce("命灯回照完成，左袖藏刃的见闻仍在。");
     }
   }
   if (command === "restart") {
@@ -699,21 +737,22 @@ root.addEventListener("click", (event) => {
 root.addEventListener("input", (event) => {
   const setting = event.target.dataset.setting;
   if (setting !== "attribute") return;
-  updateSetup({
-    attributes: {
-      [event.target.dataset.key]: Number(event.target.value),
-    },
-  });
+  const value = event.target.closest("label")?.querySelector("span b");
+  if (value) value.textContent = event.target.value;
 });
 
 root.addEventListener("change", (event) => {
   const setting = event.target.dataset.setting;
-  if (setting === "stage") updateSetup({ playerStage: event.target.value });
-  if (setting === "seed") updateSetup({ fateSeed: event.target.value });
+  const focusSelector = setting === "attribute"
+    ? `[data-setting="attribute"][data-key="${event.target.dataset.key}"]`
+    : `[data-setting="${setting}"]`;
+  if (setting === "attribute") updateSetup({ attributes: { [event.target.dataset.key]: Number(event.target.value) } }, focusSelector);
+  if (setting === "stage") updateSetup({ playerStage: event.target.value }, focusSelector);
+  if (setting === "seed") updateSetup({ fateSeed: event.target.value }, focusSelector);
   if (setting === "needles") {
     const stage = event.target.value;
     const progress = { known: 0, learned: 20, skilled: 60, mastered: 100 }[stage];
-    updateSetup({ skills: { spring_rain_needles: { stage, progress } } });
+    updateSetup({ skills: { spring_rain_needles: { stage, progress } } }, focusSelector);
   }
   if (setting === "wound") {
     const bodyPart = event.target.value;
@@ -721,18 +760,28 @@ root.addEventListener("change", (event) => {
       wounds: bodyPart === "none"
         ? []
         : [{ id: `existing_${bodyPart}_wound`, type: "cut", bodyPart, severity: 2, tags: ["existing"] }],
-    });
+    }, focusSelector);
   }
   if (setting === "known-sleeve") {
-    updateSetup({ knownFacts: event.target.checked ? ["left_sleeve_blade"] : [] });
+    updateSetup({ knownFacts: event.target.checked ? ["left_sleeve_blade"] : [] }, focusSelector);
   }
 });
 
 document.addEventListener("keydown", (event) => {
   if (event.altKey || event.ctrlKey || event.metaKey || event.target.matches("input, select, textarea")) return;
+  if (event.key === "Tab" && arsenalOpen) {
+    const focusable = [root.querySelector(".arsenal-sheet.open > section"), ...root.querySelectorAll(".arsenal-sheet.open > section button:not(:disabled)")].filter(Boolean);
+    if (!focusable.length) return;
+    const current = focusable.indexOf(document.activeElement);
+    const next = event.shiftKey
+      ? current <= 0 ? focusable.length - 1 : current - 1
+      : current === focusable.length - 1 ? 0 : current + 1;
+    event.preventDefault();
+    focusable[next].focus();
+    return;
+  }
   if (event.key === "Escape" && arsenalOpen) {
-    arsenalOpen = false;
-    render();
+    setArsenalOpen(false);
     return;
   }
   if (session.turn.phase !== "player" || visualState.animating) return;
