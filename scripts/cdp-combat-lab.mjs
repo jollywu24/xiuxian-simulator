@@ -70,6 +70,7 @@ async function snapshot(label) {
     viewport: [innerWidth, innerHeight],
     scrollWidth: document.documentElement.scrollWidth,
     actionIds: [...document.querySelectorAll("[data-action-id]")].map((item) => item.dataset.actionId),
+    recommendedActionIds: [...document.querySelectorAll(".recommended-actions [data-action-id]")].map((item) => item.dataset.actionId),
     actionCount: document.querySelectorAll("[data-action-id]").length,
     disabledCount: document.querySelectorAll("[data-action-id]:disabled").length,
     settingsCount: document.querySelectorAll("[data-setting]").length,
@@ -87,6 +88,13 @@ async function snapshot(label) {
       return bar ? { phase: bar.dataset.phase, round: Number(bar.dataset.round), energy: Number(bar.dataset.energy) } : null;
     })(),
     objectiveVisible: Boolean(document.querySelector(".battle-objective")),
+    encounterId: document.querySelector(".command-deck")?.dataset.encounter || "",
+    encounterCount: document.querySelectorAll("[data-encounter-id]").length,
+    currentEncounter: document.querySelector("[data-encounter-id].current")?.dataset.encounterId || "",
+    allyCount: document.querySelectorAll(".ally-card").length,
+    stateCount: document.querySelectorAll(".state-chip").length,
+    stateLabels: [...document.querySelectorAll(".state-chip strong")].map((item) => item.textContent.trim()),
+    consequenceCount: document.querySelectorAll(".consequence-grid > div").length,
     environmentCount: document.querySelectorAll("[data-environment-id]").length,
     selectedEnvironment: document.querySelector("[data-environment-id].selected")?.dataset.environmentId || "",
     selectedTarget: document.querySelector(".enemy-unit.selected")?.dataset.targetId || "",
@@ -94,7 +102,7 @@ async function snapshot(label) {
     arsenalDialog: document.querySelector(".arsenal-sheet [role='dialog']")?.getAttribute("aria-modal") || "",
     actionForecasts: [...document.querySelectorAll(".recommended-actions .action-forecast")].map((item) => ({ text: item.textContent.trim(), visible: Boolean(item.offsetWidth || item.offsetHeight) })),
     effectVisible: Boolean(document.querySelector(".combat-effects")),
-    sceneAssetLoaded: getComputedStyle(document.querySelector(".scene-art")).backgroundImage.includes("jinling-rain-ambush"),
+    sceneAssetLoaded: /jinling-rain-ambush|purple-gold-river-dawn/.test(getComputedStyle(document.querySelector(".scene-art")).backgroundImage),
     deathVisible: Boolean(document.querySelector(".outcome-panel.death")),
     outcomeVisible: Boolean(document.querySelector(".outcome-panel.victory")),
     mobileLayout: (() => {
@@ -149,6 +157,24 @@ async function clickTarget(targetId) {
   await new Promise((resolve) => setTimeout(resolve, 180));
 }
 
+async function clickEncounter(encounterId) {
+  await evaluate(`(() => {
+    const button = document.querySelector(${JSON.stringify(`[data-encounter-id="${encounterId}"]`)});
+    if (!button) throw new Error(${JSON.stringify(`Missing encounter ${encounterId}`)});
+    button.click();
+  })()`);
+  await new Promise((resolve) => setTimeout(resolve, 220));
+}
+
+async function clickFocus(focusId) {
+  await evaluate(`(() => {
+    const button = document.querySelector(${JSON.stringify(`[data-focus-id="${focusId}"]`)});
+    if (!button) throw new Error(${JSON.stringify(`Missing focus ${focusId}`)});
+    button.click();
+  })()`);
+  await new Promise((resolve) => setTimeout(resolve, 180));
+}
+
 async function clickPosition(positionId) {
   await evaluate(`(() => {
     const button = document.querySelector(${JSON.stringify(`[data-position-id="${positionId}"]`)});
@@ -181,8 +207,11 @@ await send("Runtime.enable");
 await setViewport(1280, 720, false);
 await navigate();
 const desktop = await snapshot("desktop");
-assert.equal(desktop.title, "武道 · 金陵雨巷");
-assert.match(desktop.heading, /东门伏杀/);
+assert.equal(desktop.title, "武道 · 战局");
+assert.match(desktop.heading, /雨巷伏杀/);
+assert.equal(desktop.encounterId, "rain_ambush");
+assert.equal(desktop.encounterCount, 2);
+assert.equal(desktop.currentEncounter, "rain_ambush");
 assert.ok(desktop.scrollWidth <= 1280);
 assert.ok(desktop.actionIds.includes("observe"));
 assert.ok(desktop.actionIds.includes("reckless"));
@@ -245,7 +274,7 @@ assert.equal(portrait.mobileLayout.railFits, true);
 assert.deepEqual(portrait.mobileLayout.sceneControlOverlaps, []);
 assert.deepEqual(portrait.mobileLayout.positionMapOverlaps, []);
 assert.equal(portrait.mobileLayout.recommendedActions.length, 3);
-assert.ok(portrait.mobileLayout.recommendedActions.every((action) => action.bottom <= 780));
+assert.ok(portrait.mobileLayout.recommendedActions.every((action) => action.top < portrait.viewport[1]));
 assert.ok(portrait.actionForecasts.every((entry) => entry.visible));
 const sliderFocus = await evaluate(`(() => {
   const details = document.querySelector(".fate-settings");
@@ -284,7 +313,7 @@ await clickTarget("roof_crossbow");
 const crossbowFocus = await snapshot("crossbow-focus");
 assert.equal(crossbowFocus.selectedTarget, "roof_crossbow");
 assert.equal(crossbowFocus.selectedEnvironment, "");
-assert.match(crossbowFocus.text, /应对屋脊弩手/);
+assert.match(crossbowFocus.text, /应对弩手/);
 await clickEnvironment("street_lantern");
 const lanternFocus = await snapshot("lantern-focus");
 assert.equal(lanternFocus.selectedEnvironment, "street_lantern");
@@ -327,11 +356,86 @@ assert.ok(landscape.mobileLayout.recommendedActions.every((action) => action.bot
 assert.ok(landscape.actionForecasts.every((entry) => entry.visible));
 const landscapeShot = await screenshot("wudao-combat-lab-landscape.png");
 
+await setViewport(1280, 720, false);
+await navigate();
+await clickEncounter("wang_zhuo_east_lake");
+const bossTail = await snapshot("boss-tail");
+assert.equal(bossTail.encounterId, "wang_zhuo_east_lake");
+assert.equal(bossTail.currentEncounter, "wang_zhuo_east_lake");
+assert.match(bossTail.heading, /柳巷尾随/);
+assert.equal(bossTail.enemyUnitCount, 1);
+assert.equal(bossTail.allyCount, 1);
+assert.equal(bossTail.environmentCount, 3);
+assert.equal(bossTail.positionNodeCount, 6);
+assert.ok(bossTail.actionIds.includes("observe_tail"));
+assert.ok(bossTail.actionIds.includes("send_yan_ahead"));
+await clickFocus("ally:yan_jinghong");
+const companionFocus = await snapshot("boss-companion-focus");
+assert.ok(companionFocus.recommendedActionIds.includes("send_yan_ahead"));
+await clickAction("observe_tail");
+await new Promise((resolve) => setTimeout(resolve, 820));
+await clickAction("send_yan_ahead");
+await new Promise((resolve) => setTimeout(resolve, 820));
+await clickAction("observe_tail");
+await waitForExpression('/河岸截命/.test(document.querySelector("h1")?.textContent || "")');
+await new Promise((resolve) => setTimeout(resolve, 820));
+const riverbank = await snapshot("boss-riverbank");
+assert.match(riverbank.heading, /河岸截命/);
+assert.equal(riverbank.enemyUnitCount, 2);
+assert.equal(riverbank.enemyVitalityValues.length, 2);
+assert.equal(riverbank.allyCount, 1);
+assert.equal(riverbank.environmentCount, 4);
+assert.ok(riverbank.actionIds.includes("needle_wang"));
+assert.ok(riverbank.actionIds.includes("companion_pin"));
+assert.ok(riverbank.actionIds.includes("arm_boat_rope"));
+await clickFocus("ally:yan_jinghong");
+const riverCompanionFocus = await snapshot("river-companion-focus");
+assert.ok(riverCompanionFocus.recommendedActionIds.some((id) => ["companion_pin", "protect_yan"].includes(id)));
+await clickAction("companion_pin");
+await new Promise((resolve) => setTimeout(resolve, 820));
+await clickCommand("end-turn");
+await waitForExpression('document.querySelector(".turn-bar")?.dataset.phase === "player" && document.querySelector(".turn-bar")?.dataset.round === "2"');
+const riverSecondRound = await snapshot("river-second-round");
+assert.ok(riverSecondRound.enemyVitalityValues[1] < riverbank.enemyVitalityValues[1]);
+await clickCommand("end-turn");
+await waitForExpression('document.querySelector(".turn-bar")?.dataset.phase === "player" && document.querySelector(".turn-bar")?.dataset.round === "3"');
+const reinforcement = await snapshot("river-reinforcement");
+assert.equal(reinforcement.enemyUnitCount, 3);
+assert.match(reinforcement.text, /援弩/);
+assert.ok(reinforcement.stateLabels.some((label) => /致命伤/.test(label)));
+assert.ok(reinforcement.actionIds.includes("bind_fatal_wound"));
+await clickFocus("status:fatal_wound");
+const fatalFocus = await snapshot("fatal-focus");
+assert.ok(fatalFocus.recommendedActionIds.includes("bind_fatal_wound"));
+await clickAction("bind_fatal_wound");
+await new Promise((resolve) => setTimeout(resolve, 820));
+const stabilized = await snapshot("fatal-stabilized");
+assert.match(stabilized.text, /已稳定|不再继续倒数/);
+
+await setViewport(390, 844, true);
+const bossMobile = await snapshot("boss-mobile");
+assert.ok(bossMobile.scrollWidth <= 390);
+assert.equal(bossMobile.enemyUnitCount, 3);
+assert.equal(bossMobile.mobileLayout.railFits, true);
+assert.deepEqual(bossMobile.mobileLayout.sceneControlOverlaps, []);
+assert.deepEqual(bossMobile.mobileLayout.positionMapOverlaps, []);
+const bossShot = await screenshot("wudao-combat-lab-boss.png");
+
 assert.deepEqual(pageErrors, []);
 socket.close();
 
 console.log(JSON.stringify({
   ok: true,
-  checkpoints: [desktop, observed, needleStrike, secondRound, subdued, portrait, positionFocus, moved, crossbowFocus, lanternFocus, arsenal, death, rewound, landscape],
-  screenshots: [desktopShot, effectShot, needleShot, portraitShot, arsenalShot, rewindShot, landscapeShot],
+  checkpoints: [desktop, observed, needleStrike, secondRound, subdued, portrait, positionFocus, moved, crossbowFocus, lanternFocus, arsenal, death, rewound, landscape, bossTail, companionFocus, riverbank, riverCompanionFocus, riverSecondRound, reinforcement, fatalFocus, stabilized, bossMobile]
+    .map((entry) => ({
+      label: entry.label,
+      encounterId: entry.encounterId,
+      round: entry.round,
+      phase: entry.phase,
+      playerVitality: entry.playerVitality,
+      enemyVitalityValues: entry.enemyVitalityValues,
+      enemyUnitCount: entry.enemyUnitCount,
+      result: entry.result,
+    })),
+  screenshots: [desktopShot, effectShot, needleShot, portraitShot, arsenalShot, rewindShot, landscapeShot, bossShot],
 }, null, 2));

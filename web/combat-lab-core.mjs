@@ -4,8 +4,28 @@ import {
   getFirstBattleVitality,
   resolveFirstBattleAction,
 } from "./wudao-p0-core.mjs?v=20260717.2";
+import {
+  createBattle as createEngineBattle,
+  getAvailableCombatActions as getEngineActions,
+  getBattleDistance as getEngineDistance,
+  getBattleView as getEngineBattleView,
+  getEnemyIntents as getEngineEnemyIntents,
+  getRecommendedCombatActions as getEngineRecommendations,
+  resolveCombatAction as resolveEngineAction,
+  resolveEnemyAction as resolveEngineEnemyAction,
+  restartBattle as restartEngineBattle,
+  rewindBattle as rewindEngineBattle,
+  startEnemyPhase as startEngineEnemyPhase,
+} from "./combat-engine.mjs?v=20260718.2";
+import {
+  COMBAT_ENCOUNTER_CATALOG,
+  WANG_ZHUO_DEFAULTS,
+  WANG_ZHUO_ENCOUNTER,
+} from "./combat-encounters.mjs?v=20260718.2";
 
 export const COMBAT_LAB_MAX_ENERGY = 3;
+
+export const COMBAT_LAB_ENCOUNTERS = COMBAT_ENCOUNTER_CATALOG;
 
 export const COMBAT_LAB_DEFAULTS = Object.freeze({
   fateSeed: "seed-0",
@@ -102,6 +122,10 @@ function clone(value) {
   return structuredClone(value);
 }
 
+function isEngineSession(session) {
+  return session?.engine === "dayao-combat-v1";
+}
+
 function unique(values) {
   return [...new Set(values.filter(Boolean))];
 }
@@ -173,6 +197,9 @@ function initialEnemyState() {
 }
 
 export function createCombatLabSession(options = {}) {
+  if ([WANG_ZHUO_ENCOUNTER.id, "wang_zhuo"].includes(options.encounterId)) {
+    return createEngineBattle(WANG_ZHUO_ENCOUNTER, options);
+  }
   const setup = normalizeSetup(options);
   const session = {
     setup,
@@ -194,6 +221,13 @@ export function createCombatLabSession(options = {}) {
 }
 
 export function getCombatLabContext(session) {
+  if (isEngineSession(session)) {
+    return {
+      ...clone(session.setup),
+      wounds: clone(session.wounds),
+      knownFacts: unique([...(session.setup.knownFacts || []), ...(session.battle.knownFacts || [])]),
+    };
+  }
   return {
     fateSeed: session.setup.fateSeed,
     hasNeedles: session.setup.hasNeedles,
@@ -415,6 +449,7 @@ function enrichAction(session, action) {
 }
 
 export function getCombatLabActions(session) {
+  if (isEngineSession(session)) return getEngineActions(session, WANG_ZHUO_ENCOUNTER);
   if (session.status !== "fighting" || session.pendingOutcome || session.battle.finished) return [];
   const battle = { ...session.battle, round: session.turn.round, range: spatialRange(session) };
   const martialActions = getFirstBattleActions(battle, getCombatLabContext(session)).map((action) => enrichAction(session, action));
@@ -422,6 +457,17 @@ export function getCombatLabActions(session) {
 }
 
 export function getCombatLabRecommendations(session, focusId = "default") {
+  if (isEngineSession(session)) {
+    return getEngineRecommendations(session, WANG_ZHUO_ENCOUNTER, focusId).map((action) => ({
+      ...action,
+      display: {
+        actionId: action.id,
+        icon: action.icon || (action.intent === "身位" ? "stance" : "blade"),
+        title: action.title,
+        consequence: action.successPreview || action.impactPreview?.success || "改变当前战局",
+      },
+    }));
+  }
   const allActions = getCombatLabActions(session);
   const actions = new Map(allActions.map((entry) => [entry.id, entry]));
   const positionFocus = String(focusId).startsWith("position:") ? String(focusId).slice(9) : null;
@@ -555,13 +601,83 @@ function supportOutcomeIntents(session) {
 }
 
 export function getCombatLabEnemyIntents(session) {
+  if (isEngineSession(session)) return getEngineEnemyIntents(session, WANG_ZHUO_ENCOUNTER);
   if (session.status !== "fighting") return [];
   if (session.pendingOutcome) return supportOutcomeIntents(session);
   if (session.battle.finished) return [];
   return [knifeIntent(session), crossbowIntent(session), leaderIntent(session)];
 }
 
+function getEngineCombatBoard(session) {
+  const view = getEngineBattleView(session, WANG_ZHUO_ENCOUNTER);
+  const nodeById = new Map(view.nodes.map((node) => [node.id, node]));
+  const intentByUnit = new Map(view.intents.map((intent) => [intent.unitId, intent]));
+  const primary = view.enemies.find((entry) => entry.primary) || view.enemies[0] || null;
+  const unit = (entry) => {
+    const intent = intentByUnit.get(entry.id);
+    const distance = getEngineDistance(session, WANG_ZHUO_ENCOUNTER, session.positions.player, session.positions[entry.id]);
+    return {
+      id: entry.id,
+      name: entry.name,
+      role: entry.role,
+      stageId: entry.stageId,
+      vitality: { current: entry.current, max: entry.max },
+      current: entry.current,
+      max: entry.max,
+      intent: intent?.label || (entry.defeated ? "已经倒下" : entry.active ? "等待时机" : "已经撤走"),
+      intentDetail: intent?.detail || "",
+      intentOrder: intent?.order || 0,
+      portrait: entry.portrait || "",
+      icon: entry.icon || "blade",
+      nodeId: session.positions[entry.id],
+      nodeName: nodeById.get(session.positions[entry.id])?.shortName || "战场外",
+      distance: distanceLabel(distance),
+      acting: session.turn.phase === "enemy" && session.turn.enemyQueue[session.turn.enemyCursor]?.unitId === entry.id,
+      acted: session.turn.actedEnemyIds.includes(entry.id),
+      primary: Boolean(entry.primary),
+      active: Boolean(entry.active),
+      defeated: Boolean(entry.defeated),
+      statuses: clone(entry.statuses || []),
+    };
+  };
+  return {
+    meta: {
+      ...view.meta,
+      playerName: view.player.name,
+      playerStageId: view.player.stageId,
+      encounterCatalog: clone(COMBAT_LAB_ENCOUNTERS),
+    },
+    vitality: {
+      player: { current: view.player.current, max: view.player.max },
+      enemy: primary ? { current: primary.current, max: primary.max } : { current: 0, max: 1 },
+      enemies: Object.fromEntries(view.enemies.map((entry) => [entry.id, { current: entry.current, max: entry.max }])),
+    },
+    turn: clone(session.turn),
+    intents: clone(view.intents),
+    intent: {
+      target: view.intents[0]?.detail || "敌人正在重新寻找出手机会",
+      threat: view.threat,
+      sequence: view.intents.map((entry) => `${entry.order} · ${entry.label}｜${entry.detail}`),
+    },
+    objective: view.objective,
+    environment: clone(view.environment),
+    nodes: clone(view.nodes),
+    links: clone(view.links),
+    positions: clone(view.positions),
+    playerNode: nodeById.get(session.positions.player),
+    units: view.enemies.map(unit),
+    allies: clone(view.allies),
+    statuses: clone(view.statuses),
+    wounds: clone(view.wounds),
+    knownFacts: clone(view.knownFacts),
+    conditions: clone(view.conditions),
+    ledger: clone(view.ledger),
+    stage: clone(view.stage),
+  };
+}
+
 export function getCombatLabBattleBoard(session) {
+  if (isEngineSession(session)) return getEngineCombatBoard(session);
   const context = getCombatLabContext(session);
   const vitality = getFirstBattleVitality(session.battle, context);
   const intents = getCombatLabEnemyIntents(session);
@@ -584,6 +700,20 @@ export function getCombatLabBattleBoard(session) {
     acted: session.turn.actedEnemyIds.includes(id),
   });
   return {
+    meta: {
+      encounterId: "rain_ambush",
+      location: "金陵 · 雨巷",
+      title: "东门伏杀",
+      stageLabel: "雨巷伏杀",
+      sceneClass: "rain-ambush",
+      sceneImage: "./assets/combat/jinling-rain-ambush.webp",
+      mapLabel: "雨巷身位图",
+      historyLabel: "雨夜行录",
+      primaryEnemyId: "night_assailant",
+      playerName: "陈司命",
+      playerStageId: session.setup.playerStage,
+      encounterCatalog: clone(COMBAT_LAB_ENCOUNTERS),
+    },
     vitality,
     turn: clone(session.turn),
     intents,
@@ -594,6 +724,16 @@ export function getCombatLabBattleBoard(session) {
     },
     objective: session.battle.objective,
     environment: clone(session.battle.environment || []),
+    links: [
+      ["alley_entrance", "eave_pillar"],
+      ["eave_pillar", "street_center"],
+      ["eave_pillar", "pharmacy_wall"],
+      ["street_center", "pharmacy_wall"],
+      ["street_center", "alley_end"],
+      ["pharmacy_wall", "alley_end"],
+      ["street_center", "rooftop"],
+      ["alley_end", "rooftop"],
+    ],
     nodes: COMBAT_LAB_POSITION_NODES.map((node) => ({
       ...clone(node),
       playerSelectable: PLAYER_DESTINATIONS.has(node.id),
@@ -605,6 +745,12 @@ export function getCombatLabBattleBoard(session) {
       unit("roof_crossbow", "弩手", "远程威胁", null, "./assets/combat/portrait-roof-crossbow.webp"),
       unit("black_leader", "头目", "后阵指挥", null, "./assets/combat/portrait-black-leader.webp"),
     ],
+    allies: [],
+    statuses: [],
+    wounds: clone(session.wounds),
+    knownFacts: clone(session.battle.knownFacts || []),
+    conditions: {},
+    ledger: null,
   };
 }
 
@@ -698,6 +844,7 @@ function resolveMovementAction(session, action) {
 }
 
 export function resolveCombatLabAction(session, actionId) {
+  if (isEngineSession(session)) return resolveEngineAction(session, actionId, WANG_ZHUO_ENCOUNTER);
   if (session.status !== "fighting") return { available: false, reason: "这场推演已经落定。" };
   if (session.turn.phase !== "player") return { available: false, reason: "敌方正在行动。" };
   const listed = getCombatLabActions(session).find((entry) => entry.id === actionId);
@@ -754,6 +901,7 @@ export function resolveCombatLabAction(session, actionId) {
 }
 
 export function endCombatLabPlayerTurn(session) {
+  if (isEngineSession(session)) return startEngineEnemyPhase(session, WANG_ZHUO_ENCOUNTER);
   if (session.status !== "fighting" || session.turn.phase !== "player") return { available: false, reason: "眼下不能收势。" };
   const next = clone(session);
   next.turn.phase = "enemy";
@@ -823,6 +971,7 @@ function applyEnemyDamage(next, amount, sourceId) {
 }
 
 export function resolveCombatLabEnemyAction(session) {
+  if (isEngineSession(session)) return resolveEngineEnemyAction(session, WANG_ZHUO_ENCOUNTER);
   if (session.status !== "fighting" || session.turn.phase !== "enemy") return { available: false, reason: "敌方尚未行动。" };
   const next = clone(session);
   if (next.turn.enemyCursor >= next.turn.enemyQueue.length) {
@@ -897,6 +1046,7 @@ export function resolveCombatLabEnemyAction(session) {
 }
 
 export function rewindCombatLabDeath(session) {
+  if (isEngineSession(session)) return rewindEngineBattle(session, WANG_ZHUO_ENCOUNTER);
   if (session.status !== "death" || session.lives <= 0) return { available: false, reason: "命灯已经无法把这一战拉回原处。" };
   const learnedFacts = unique([
     ...session.setup.knownFacts,
@@ -919,6 +1069,7 @@ export function rewindCombatLabDeath(session) {
 }
 
 export function restartCombatLab(session, patch = {}) {
+  if (isEngineSession(session)) return restartEngineBattle(session, WANG_ZHUO_ENCOUNTER, patch);
   const setup = normalizeSetup({
     ...clone(session?.setup || {}),
     ...clone(patch),
@@ -936,4 +1087,64 @@ export function restartCombatLab(session, patch = {}) {
     },
   });
   return createCombatLabSession(setup);
+}
+
+export function advanceCombatLabCampaign(session) {
+  if (isEngineSession(session) || session?.status !== "finished") {
+    return { available: false, reason: "当前没有可以承接的下一场战斗。" };
+  }
+  const outcome = session.result?.outcome || "escaped";
+  const relationshipDelta = outcome === "subdued" ? 4 : outcome === "killed" ? -2 : 1;
+  const evidence = outcome === "subdued"
+    ? ["rain_ambush_captive"]
+    : outcome === "killed"
+      ? ["fish_scale_token"]
+      : ["rain_escape_trace"];
+  const alert = outcome === "killed" ? 2 : outcome === "escaped" ? 1 : 0;
+  const defaults = clone(WANG_ZHUO_DEFAULTS);
+  const next = createEngineBattle(WANG_ZHUO_ENCOUNTER, {
+    ...defaults,
+    fateSeed: `${session.setup.fateSeed || "seed-0"}:east-lake`,
+    lives: session.lives,
+    attributes: {
+      ...defaults.attributes,
+      ...clone(session.setup.attributes || {}),
+    },
+    playerStage: "body",
+    skills: {
+      ...defaults.skills,
+      ...clone(session.setup.skills || {}),
+    },
+    wounds: clone(session.wounds),
+    knownFacts: unique([
+      ...defaults.knownFacts,
+      ...(session.setup.knownFacts || []),
+      ...(session.battle.knownFacts || []),
+    ]),
+    deathMemory: clone(session.deathMemory || []),
+    campaign: {
+      relationships: {
+        yan_jinghong: {
+          ...defaults.relationships.yan_jinghong,
+          trust: Number(defaults.relationships.yan_jinghong.trust || 0) + relationshipDelta,
+        },
+      },
+      evidence,
+      alert,
+      outcomes: [{ encounterId: "rain_ambush", outcome }],
+      contacts: [],
+    },
+  });
+  next.history.unshift({
+    round: 0,
+    stageRound: 0,
+    stageId: next.battle.stageId,
+    phase: "campaign",
+    actionId: "carry_from_rain_ambush",
+    intent: "连续战役",
+    text: session.wounds.length
+      ? "你带着雨巷留下的伤势赶到柳巷，旧伤将继续影响这场尾随。"
+      : "雨巷结果已经传入柳巷，活口、尸证或逃踪改变了燕惊鸿对你的判断。",
+  });
+  return { available: true, session: next };
 }

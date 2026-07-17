@@ -3,7 +3,9 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 
 import {
+  COMBAT_LAB_ENCOUNTERS,
   COMBAT_LAB_MAX_ENERGY,
+  advanceCombatLabCampaign,
   createCombatLabSession,
   endCombatLabPlayerTurn,
   getCombatLabActions,
@@ -211,15 +213,66 @@ test("调整命盘会重建战局且继续使用固定因果", () => {
   assert.ok(changed.battle.vitality.player.current < changed.battle.vitality.player.max);
 });
 
+test("独立入口通过统一适配层创建王卓双阶段战", () => {
+  const session = createCombatLabSession({ encounterId: "wang_zhuo_east_lake" });
+  const board = getCombatLabBattleBoard(session);
+  assert.equal(session.engine, "dayao-combat-v1");
+  assert.equal(session.battle.stageId, "willow_tail");
+  assert.equal(board.meta.encounterId, "wang_zhuo_east_lake");
+  assert.equal(board.meta.primaryEnemyId, "wang_zhuo");
+  assert.equal(board.allies[0].id, "yan_jinghong");
+  assert.equal(board.units.length, 1);
+  assert.equal(COMBAT_LAB_ENCOUNTERS.length, 2);
+  assert.ok(getCombatLabActions(session).some((action) => action.id === "observe_tail"));
+
+  const observed = resolveCombatLabAction(session, "observe_tail");
+  assert.equal(observed.available, true);
+  assert.equal(observed.session.turn.energy, 2);
+  assert.equal(restartCombatLab(observed.session).battle.stageId, "willow_tail");
+});
+
+test("雨巷战果携带命灯伤势证据关系与警戒进入柳巷", () => {
+  let session = createCombatLabSession();
+  session = resolveCombatLabAction(session, "observe").session;
+  session = resolveCombatLabAction(session, "needle_wrist").session;
+  session = finishEnemyTurn(endCombatLabPlayerTurn(session).session).session;
+  session = resolveCombatLabAction(session, "seal").session;
+  session = finishEnemyTurn(endCombatLabPlayerTurn(session).session).session;
+  assert.equal(session.status, "finished");
+  assert.equal(session.result.outcome, "subdued");
+  assert.ok(session.wounds.length > 0);
+
+  const advanced = advanceCombatLabCampaign(session);
+  assert.equal(advanced.available, true);
+  assert.equal(advanced.session.engine, "dayao-combat-v1");
+  assert.equal(advanced.session.lives, session.lives);
+  assert.deepEqual(advanced.session.wounds, session.wounds);
+  assert.ok(advanced.session.battle.ledger.evidence.includes("rain_ambush_captive"));
+  assert.equal(advanced.session.battle.ledger.alert, 0);
+  assert.equal(advanced.session.battle.ledger.outcomes[0].encounterId, "rain_ambush");
+  assert.ok(advanced.session.battle.ledger.relationships.yan_jinghong.trust > 58);
+  assert.equal(advanced.session.history[0].phase, "campaign");
+  assert.match(advanced.session.history[0].text, /伤势|雨巷/);
+
+  const adjusted = restartCombatLab(advanced.session, {
+    relationships: { yan_jinghong: { trust: 35 } },
+  });
+  assert.equal(adjusted.battle.ledger.relationships.yan_jinghong.trust, 35);
+  assert.ok(adjusted.battle.ledger.evidence.includes("rain_ambush_captive"));
+});
+
 test("手机演武页面具备视口、独立样式与模块入口", () => {
   const html = fs.readFileSync(new URL("../web/combat.html", import.meta.url), "utf8");
   assert.match(html, /width=device-width/);
   assert.match(html, /combat-lab\.css/);
   assert.match(html, /combat-lab\.mjs/);
   assert.match(html, /jinling-rain-ambush\.webp/);
+  assert.match(html, /purple-gold-river-dawn\.webp/);
   assert.doesNotMatch(html, /wudao-app\.mjs/);
   assert.doesNotMatch(html, /id="combat-lab" aria-live/);
   assert.match(html, /id="combat-status"/);
+  assert.match(html, /class="boot-fallback"/);
+  assert.match(html, /返回江湖/);
   for (const asset of [
     "jinling-rain-ambush.webp",
     "portrait-chen-siming.webp",

@@ -41,6 +41,51 @@ body {
   font-family: var(--ui);
 }
 
+.boot-fallback {
+  min-height: 100dvh;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.75rem;
+  padding: 2rem;
+  color: var(--paper-bright);
+  text-align: center;
+  background:
+    radial-gradient(circle at 50% 38%, rgb(173 128 44 / 12%), transparent 28rem),
+    linear-gradient(160deg, #080d10, #030505);
+}
+
+.boot-fallback span {
+  color: var(--gold);
+  letter-spacing: 0.24em;
+}
+
+.boot-fallback strong {
+  font-family: var(--story);
+  font-size: clamp(2rem, 7vw, 4.5rem);
+  font-weight: 500;
+}
+
+.boot-fallback p {
+  max-width: 32rem;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.8;
+}
+
+.boot-fallback nav {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.boot-fallback a {
+  padding: 0.7rem 1rem;
+  color: var(--paper);
+  border: 1px solid var(--line-strong);
+  text-decoration: none;
+}
+
 button,
 input,
 select {
@@ -119,7 +164,7 @@ svg {
   opacity: 0.34;
   background:
     linear-gradient(rgba(4, 7, 9, 0.32), rgba(3, 5, 6, 0.82)),
-    url("./assets/combat/jinling-rain-ambush.webp") center 43% / cover no-repeat;
+    var(--scene-image, url("./assets/combat/jinling-rain-ambush.webp")) center 43% / cover no-repeat;
   filter: blur(16px) saturate(0.7);
   transform: scale(1.08);
 }
@@ -199,7 +244,7 @@ svg {
 .enemy-rail {
   position: absolute;
   z-index: 22;
-  top: 68px;
+  top: 116px;
   right: clamp(12px, 2.4vw, 28px);
   left: clamp(12px, 2.4vw, 28px);
   display: flex;
@@ -282,6 +327,22 @@ svg {
   height: 100%;
   object-fit: cover;
   border-radius: inherit;
+}
+
+.portrait-fallback {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  color: var(--gold-bright);
+  font-family: var(--story);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.enemy-unit.defeated {
+  opacity: 0.34;
+  filter: grayscale(1);
 }
 
 .unit-portrait svg {
@@ -417,7 +478,7 @@ svg {
   height: 100%;
   margin: 0 auto;
   overflow: hidden;
-  background: url("./assets/combat/jinling-rain-ambush.webp") center 43% / cover no-repeat;
+  background: var(--scene-image, url("./assets/combat/jinling-rain-ambush.webp")) center 43% / cover no-repeat;
   box-shadow: 0 0 55px rgba(0, 0, 0, 0.72);
 }
 
@@ -1913,6 +1974,343 @@ select {
   color: var(--blood-bright);
 }
 
+.encounter-switch {
+  position: absolute;
+  z-index: 24;
+  top: 67px;
+  left: clamp(14px, 2.7vw, 31px);
+  display: flex;
+  gap: 5px;
+}
+
+.encounter-switch button {
+  display: grid;
+  min-width: 116px;
+  padding: 6px 10px;
+  color: var(--muted);
+  text-align: left;
+  border: 1px solid rgba(210, 170, 99, 0.2);
+  background: rgba(5, 8, 9, 0.72);
+  backdrop-filter: blur(7px);
+  cursor: pointer;
+}
+
+.encounter-switch button:hover,
+.encounter-switch button.current {
+  color: var(--paper-bright);
+  border-color: var(--line-strong);
+  background: rgba(31, 23, 13, 0.84);
+}
+
+.encounter-switch button.current {
+  box-shadow: inset 3px 0 var(--gold);
+}
+
+.encounter-switch span,
+.encounter-switch strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.encounter-switch span {
+  color: var(--gold);
+  font-size: 7px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+}
+
+.encounter-switch strong {
+  margin-top: 1px;
+  font-family: var(--story);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.dynamic-target {
+  top: var(--hotspot-y);
+  left: var(--hotspot-x);
+  width: clamp(110px, 24%, 190px);
+  height: clamp(80px, 21%, 170px);
+  transform: translate(calc(-50% + var(--hotspot-shift, 0px)), -50%);
+}
+
+.dynamic-target.support-target {
+  width: clamp(86px, 19%, 145px);
+  height: clamp(66px, 17%, 125px);
+}
+
+.dynamic-target.support-target span {
+  color: var(--paper);
+  border-left-color: var(--gold);
+  background: rgba(7, 10, 11, 0.76);
+  font-size: clamp(9px, 1.3vh, 12px);
+}
+
+.dynamic-environment {
+  top: var(--environment-y);
+  left: var(--environment-x);
+  transform: translate(-50%, -50%);
+}
+
+.dynamic-environment:hover,
+.dynamic-environment.selected {
+  transform: translate(-50%, calc(-50% - 2px));
+}
+
+.mist-layer {
+  position: absolute;
+  z-index: 2;
+  right: -20%;
+  bottom: -4%;
+  left: -20%;
+  height: 42%;
+  opacity: 0.46;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 22% 75%, rgba(205, 218, 211, 0.22), transparent 38%),
+    radial-gradient(ellipse at 69% 58%, rgba(192, 207, 203, 0.2), transparent 42%);
+  filter: blur(13px);
+  animation: lake-mist 8s ease-in-out infinite alternate;
+}
+
+@keyframes lake-mist {
+  from { transform: translate3d(-3%, 0, 0) scale(1); }
+  to { transform: translate3d(4%, -6%, 0) scale(1.08); }
+}
+
+.east-lake .scene-vignette {
+  background:
+    radial-gradient(circle at 48% 52%, transparent 12%, rgba(3, 10, 10, 0.2) 58%, rgba(1, 5, 6, 0.78) 100%),
+    linear-gradient(180deg, rgba(4, 7, 9, 0.15), transparent 36%, rgba(1, 7, 8, 0.74));
+}
+
+.east-lake .position-map {
+  background:
+    linear-gradient(90deg, rgba(4, 12, 13, 0.94), rgba(8, 17, 17, 0.72)),
+    repeating-linear-gradient(165deg, transparent 0 10px, rgba(114, 169, 158, 0.035) 11px 12px);
+}
+
+.position-node.ally-position:not(.enemy-position) {
+  color: #8ec7b3;
+}
+
+.position-node.ally-position:not(.enemy-position) i {
+  border-color: #8ec7b3;
+  background: #315b4d;
+  box-shadow: 0 0 0 3px rgba(49, 91, 77, 0.28);
+}
+
+.intent-thread li > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ally-rail {
+  display: grid;
+  margin-top: 10px;
+  gap: 6px;
+}
+
+.ally-card {
+  display: grid;
+  min-height: 52px;
+  padding: 7px 9px;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  color: var(--paper);
+  text-align: left;
+  border: 1px solid rgba(112, 177, 155, 0.28);
+  background: linear-gradient(100deg, rgba(22, 52, 44, 0.48), rgba(7, 12, 12, 0.72));
+  cursor: pointer;
+}
+
+.ally-card:hover,
+.ally-card.selected {
+  border-color: #8ec7b3;
+  box-shadow: inset 3px 0 #8ec7b3;
+}
+
+.ally-mark {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  color: #a9ddca;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+}
+
+.ally-mark svg {
+  width: 18px;
+  height: 18px;
+}
+
+.ally-card > span:nth-child(2) {
+  display: block;
+  min-width: 0;
+}
+
+.ally-card small,
+.ally-card strong,
+.ally-card em {
+  display: block;
+}
+
+.ally-card small {
+  color: #79ac9a;
+  font-size: 7px;
+  letter-spacing: 0.08em;
+}
+
+.ally-card strong {
+  margin-top: 1px;
+  font-family: var(--story);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.ally-card em {
+  margin-top: 1px;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 8px;
+  font-style: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ally-card > b {
+  color: #a9ddca;
+  font-family: var(--number);
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.ally-card > b i {
+  margin: 0 2px;
+  color: var(--faint);
+  font-style: normal;
+}
+
+.battle-state-strip {
+  display: flex;
+  margin-top: 8px;
+  gap: 5px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.battle-state-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.state-chip {
+  display: flex;
+  min-width: max-content;
+  min-height: 34px;
+  padding: 5px 7px;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  background: rgba(5, 7, 8, 0.72);
+}
+
+button.state-chip {
+  cursor: pointer;
+}
+
+button.state-chip:hover,
+.state-chip.selected {
+  color: var(--paper-bright);
+  border-color: var(--gold);
+}
+
+.state-chip.danger {
+  color: #ef8579;
+  border-color: rgba(236, 87, 72, 0.48);
+  background: rgba(66, 11, 9, 0.42);
+}
+
+.state-chip svg {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+}
+
+.state-chip strong,
+.state-chip small {
+  display: block;
+  text-align: left;
+}
+
+.state-chip strong {
+  font-family: var(--story);
+  font-size: 9px;
+  font-weight: 500;
+}
+
+.state-chip small {
+  margin-top: 1px;
+  color: var(--faint);
+  font-size: 7px;
+}
+
+.consequence-grid {
+  display: grid;
+  margin: 12px 0 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.consequence-grid > div {
+  min-width: 0;
+  padding: 8px;
+  border-left: 2px solid var(--gold);
+  background: rgba(4, 6, 7, 0.58);
+}
+
+.consequence-grid dt {
+  color: var(--gold);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+}
+
+.consequence-grid dd {
+  margin: 3px 0 0;
+  color: var(--paper);
+  font-family: var(--story);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.outcome-panel > button + button {
+  margin-top: 7px;
+  color: var(--paper);
+  border: 1px solid var(--line-strong);
+  background: transparent;
+}
+
+.reset-fate {
+  width: 100%;
+  min-height: 36px;
+  margin-top: 12px;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  background: transparent;
+  font-family: var(--story);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.reset-fate:hover {
+  color: var(--paper-bright);
+  border-color: var(--line-strong);
+}
+
 @media (max-width: 900px) {
   .combat-shell {
     display: block;
@@ -1945,13 +2343,18 @@ select {
   }
 
   .enemy-rail {
-    top: 58px;
+    top: 104px;
     right: 8px;
     left: 8px;
   }
 
   .enemy-unit {
     min-width: 134px;
+  }
+
+  .encounter-switch {
+    top: 56px;
+    left: 12px;
   }
 
   .position-map {
@@ -1976,13 +2379,13 @@ select {
 
 @media (max-width: 540px) {
   .battle-stage {
-    height: clamp(330px, 40svh, 350px);
-    min-height: 330px;
+    height: clamp(410px, 52svh, 470px);
+    min-height: 410px;
   }
 
   .scene-art {
     position: absolute;
-    top: 108px;
+    top: 154px;
     bottom: 0;
     width: 100%;
     height: auto;
@@ -2010,7 +2413,7 @@ select {
   }
 
   .enemy-rail {
-    top: 50px;
+    top: 94px;
     right: 8px;
     left: 8px;
     display: grid;
@@ -2027,6 +2430,29 @@ select {
     padding: 4px 5px 4px 3px;
     grid-template-columns: 31px minmax(0, 1fr);
     gap: 5px;
+  }
+
+  .encounter-switch {
+    top: 49px;
+    right: 8px;
+    left: 8px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .encounter-switch button {
+    min-width: 0;
+    min-height: 40px;
+    padding: 4px 7px;
+  }
+
+  .encounter-switch span {
+    font-size: 6px;
+  }
+
+  .encounter-switch strong {
+    font-size: 10px;
   }
 
   .unit-portrait {
@@ -2097,11 +2523,31 @@ select {
     font-size: 10px;
   }
 
+  .dynamic-target {
+    width: 98px;
+    height: 74px;
+  }
+
+  .dynamic-target.support-target {
+    width: 76px;
+    height: 58px;
+  }
+
+  .dynamic-target.support-target span {
+    display: none;
+  }
+
   .environment-hotspot {
     min-width: 48px;
     min-height: 44px;
     padding: 5px 7px;
     font-size: 10px;
+  }
+
+  .dynamic-environment {
+    min-width: 42px;
+    min-height: 36px;
+    padding: 4px 6px;
   }
 
   .environment-hotspot svg {
@@ -2209,6 +2655,39 @@ select {
     min-height: 25px;
     margin-top: 6px;
     padding: 3px 6px;
+  }
+
+  .ally-rail {
+    margin-top: 6px;
+  }
+
+  .ally-card {
+    min-height: 44px;
+    padding: 5px 7px;
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    gap: 7px;
+  }
+
+  .ally-mark {
+    width: 27px;
+    height: 27px;
+  }
+
+  .ally-card em {
+    font-size: 7px;
+  }
+
+  .battle-state-strip {
+    margin-top: 5px;
+  }
+
+  .state-chip {
+    min-height: 30px;
+    padding: 3px 6px;
+  }
+
+  .consequence-grid {
+    grid-template-columns: 1fr;
   }
 
   .turn-bar {
@@ -2370,6 +2849,10 @@ select {
 
   .enemy-rail {
     top: 43px;
+  }
+
+  .encounter-switch {
+    display: none;
   }
 
   .enemy-unit {

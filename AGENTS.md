@@ -106,6 +106,10 @@
 | `web/index.html` | 页面入口与元信息 |
 | `web/wudao-core.mjs` | 世界、人物、五维、命灯、奇遇、关系、心法与道路纯规则 |
 | `web/wudao-p0-core.mjs` | 条件与效果、病例、物品、关系、战斗、伤势、桩功、突破、时间和灵猴规则 |
+| `web/combat-engine.mjs` | 通用多阶段战斗、因果判定、敌方阶段、伤势、死亡与战果纯规则 |
+| `web/combat-encounters.mjs` | 独立战斗遭遇定义，含王卓双阶段首领战 |
+| `web/combat-lab-core.mjs` | 独立战斗入口的遭遇适配、战役承接与视图模型 |
+| `web/combat-lab.mjs` | 独立战斗入口的渲染、输入和动效 |
 | `web/content/p0/` | 第三十至五十四章的目录与事件节点 |
 | `web/wudao-app.mjs` | 状态机、渲染、事件委托与本地存档 |
 | `web/wudao-scenes.mjs` | 2D场景物件、人物站位和已知路线视图 |
@@ -113,8 +117,11 @@
 | `web/styles.css` | 江湖、死亡、场景热点、路线与手机响应式 |
 | `tests/wudao.test.mjs` | 当前纯高武路线规则测试 |
 | `tests/p0-systems.test.mjs` | 三个新篇章与通用系统规则测试 |
+| `tests/combat-engine.test.mjs` | 通用战斗引擎与王卓首领战规则测试 |
+| `tests/combat-lab.test.mjs` | 独立战斗入口适配与战役承接测试 |
 | `tests/wudao-scenes.test.mjs` | 场景揭示、物件状态与路线开放测试 |
 | `scripts/cdp-smoke.mjs` | 桌面和手机完整浏览器流程 |
+| `scripts/cdp-combat-lab.mjs` | 独立战斗入口桌面、手机与双遭遇浏览器流程 |
 | `scripts/validate-p0-content.mjs` | 内容目录、坏跳转与首次兑现校验 |
 | `docs/GAME_DESIGN.md` | 世界结构、系统边界与后续内容 |
 | `docs/STORY_BIBLE.md` | 完整剧情线、人物弧光、分支后果与连续性 |
