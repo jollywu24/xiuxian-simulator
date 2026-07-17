@@ -52,6 +52,15 @@ async function setViewport(width, height, mobile) {
   await new Promise((resolve) => setTimeout(resolve, 180));
 }
 
+async function waitForExpression(expression, timeout = 7000) {
+  const started = Date.now();
+  while (Date.now() - started < timeout) {
+    if (await evaluate(`Boolean(${expression})`)) return;
+    await new Promise((resolve) => setTimeout(resolve, 120));
+  }
+  throw new Error(`Timed out waiting for: ${expression}`);
+}
+
 async function snapshot(label) {
   return evaluate(`(() => ({
     label: ${JSON.stringify(label)},
@@ -69,6 +78,12 @@ async function snapshot(label) {
     enemyUnitCount: document.querySelectorAll(".enemy-unit").length,
     enemyVitalityValues: [...document.querySelectorAll(".enemy-unit [role='meter']")].map((item) => Number(item.getAttribute("aria-valuenow"))),
     intentStepCount: document.querySelectorAll(".intent-thread li").length,
+    positionNodeCount: document.querySelectorAll("[data-position-id]").length,
+    playerPosition: document.querySelector("[data-position-id].player-position")?.dataset.positionId || "",
+    turn: (() => {
+      const bar = document.querySelector(".turn-bar");
+      return bar ? { phase: bar.dataset.phase, round: Number(bar.dataset.round), energy: Number(bar.dataset.energy) } : null;
+    })(),
     objectiveVisible: Boolean(document.querySelector(".battle-objective")),
     environmentCount: document.querySelectorAll("[data-environment-id]").length,
     selectedEnvironment: document.querySelector("[data-environment-id].selected")?.dataset.environmentId || "",
@@ -85,6 +100,7 @@ async function snapshot(label) {
       };
       const rail = document.querySelector(".enemy-rail");
       const scene = document.querySelector(".scene-art");
+      const positionMap = rect(document.querySelector(".position-map"));
       const actions = [...document.querySelectorAll(".recommended-actions .context-action")].map(rect);
       const targets = [...document.querySelectorAll(".target-hotspot")].map((element) => ({ id: element.dataset.targetId, rect: rect(element) }));
       const environments = [...document.querySelectorAll(".environment-hotspot")].map((element) => ({ id: element.dataset.environmentId, rect: rect(element) }));
@@ -94,7 +110,8 @@ async function snapshot(label) {
         scene: rect(scene),
         railFits: rail ? rail.scrollWidth <= rail.clientWidth : false,
         recommendedActions: actions,
-        sceneControlOverlaps: targets.flatMap((target) => environments.filter((environment) => overlaps(target.rect, environment.rect)).map((environment) => target.id + ":" + environment.id))
+        sceneControlOverlaps: targets.flatMap((target) => environments.filter((environment) => overlaps(target.rect, environment.rect)).map((environment) => target.id + ":" + environment.id)),
+        positionMapOverlaps: [...targets, ...environments].filter((control) => overlaps(control.rect, positionMap)).map((control) => control.id)
       };
     })()
   }))()`);
@@ -123,6 +140,15 @@ async function clickTarget(targetId) {
   await evaluate(`(() => {
     const button = document.querySelector(${JSON.stringify(`.enemy-unit[data-target-id="${targetId}"]`)});
     if (!button) throw new Error(${JSON.stringify(`Missing target ${targetId}`)});
+    button.click();
+  })()`);
+  await new Promise((resolve) => setTimeout(resolve, 180));
+}
+
+async function clickPosition(positionId) {
+  await evaluate(`(() => {
+    const button = document.querySelector(${JSON.stringify(`[data-position-id="${positionId}"]`)});
+    if (!button) throw new Error(${JSON.stringify(`Missing position ${positionId}`)});
     button.click();
   })()`);
   await new Promise((resolve) => setTimeout(resolve, 180));
@@ -160,18 +186,22 @@ assert.ok(desktop.settingsCount >= 9);
 assert.equal(desktop.playerVitalityCount, 1);
 assert.equal(desktop.enemyUnitCount, 3);
 assert.deepEqual(desktop.enemyVitalityValues, [18, 8, 24]);
-assert.equal(desktop.intentStepCount, 2);
+assert.equal(desktop.intentStepCount, 3);
+assert.equal(desktop.positionNodeCount, 6);
+assert.equal(desktop.playerPosition, "alley_entrance");
+assert.deepEqual(desktop.turn, { phase: "player", round: 1, energy: 3 });
 assert.equal(desktop.objectiveVisible, true);
 assert.equal(desktop.environmentCount, 3);
 assert.equal(desktop.sceneAssetLoaded, true);
+assert.deepEqual(desktop.mobileLayout.sceneControlOverlaps, []);
+assert.deepEqual(desktop.mobileLayout.positionMapOverlaps, []);
 const desktopShot = await screenshot("wudao-combat-lab-desktop.png");
 
 await clickAction("observe");
 const observed = await snapshot("observed");
 assert.match(observed.text, /左袖藏刃|破绽/);
-assert.ok(observed.playerVitalityValue <= desktop.playerVitalityValue);
-assert.ok(observed.actionIds.includes("seal"));
-assert.ok(observed.actionIds.includes("kill"));
+assert.equal(observed.playerVitalityValue, desktop.playerVitalityValue);
+assert.deepEqual(observed.turn, { phase: "player", round: 1, energy: 2 });
 assert.equal(observed.effectVisible, true);
 const effectShot = await screenshot("wudao-combat-lab-effect.png");
 await new Promise((resolve) => setTimeout(resolve, 820));
@@ -180,7 +210,11 @@ const needleStrike = await snapshot("needle-strike");
 assert.equal(needleStrike.effectVisible, true);
 assert.ok(needleStrike.enemyVitalityValues[0] < observed.enemyVitalityValues[0]);
 const needleShot = await screenshot("wudao-combat-lab-needle.png");
-await new Promise((resolve) => setTimeout(resolve, 820));
+await waitForExpression('document.querySelector(".turn-bar")?.dataset.phase === "player" && document.querySelector(".turn-bar")?.dataset.round === "2"');
+const secondRound = await snapshot("second-round");
+assert.deepEqual(secondRound.turn, { phase: "player", round: 2, energy: 3 });
+assert.equal(secondRound.playerPosition, "alley_entrance");
+assert.match(secondRound.text, /弩手|瞄准/);
 await clickAction("seal");
 await new Promise((resolve) => setTimeout(resolve, 820));
 const subdued = await snapshot("subdued");
@@ -194,11 +228,22 @@ assert.ok(portrait.scrollWidth <= 390);
 assert.ok(portrait.actionCount >= 5);
 assert.equal(portrait.playerVitalityCount, 1);
 assert.equal(portrait.enemyUnitCount, 3);
+assert.equal(portrait.positionNodeCount, 6);
+assert.deepEqual(portrait.turn, { phase: "player", round: 1, energy: 3 });
 assert.ok(portrait.mobileLayout.rail.bottom <= portrait.mobileLayout.scene.top);
 assert.equal(portrait.mobileLayout.railFits, true);
 assert.deepEqual(portrait.mobileLayout.sceneControlOverlaps, []);
+assert.deepEqual(portrait.mobileLayout.positionMapOverlaps, []);
 assert.equal(portrait.mobileLayout.recommendedActions.length, 3);
 assert.ok(portrait.mobileLayout.recommendedActions.every((action) => action.bottom <= 780));
+await clickPosition("eave_pillar");
+const positionFocus = await snapshot("position-focus");
+assert.ok(positionFocus.actionIds.includes("move_eave_pillar"));
+await clickAction("move_eave_pillar");
+await new Promise((resolve) => setTimeout(resolve, 820));
+const moved = await snapshot("moved");
+assert.equal(moved.playerPosition, "eave_pillar");
+assert.deepEqual(moved.turn, { phase: "player", round: 1, energy: 2 });
 await clickTarget("roof_crossbow");
 const crossbowFocus = await snapshot("crossbow-focus");
 assert.equal(crossbowFocus.selectedTarget, "roof_crossbow");
@@ -218,6 +263,9 @@ const portraitShot = await screenshot("wudao-combat-lab-portrait.png");
 
 await navigate();
 await clickAction("reckless");
+await new Promise((resolve) => setTimeout(resolve, 820));
+await clickCommand("end-turn");
+await waitForExpression('Boolean(document.querySelector(".outcome-panel.death"))');
 const death = await snapshot("death");
 assert.equal(death.deathVisible, true);
 assert.match(death.text, /命灯碎裂/);
@@ -235,6 +283,10 @@ assert.ok(landscape.scrollWidth <= 844);
 assert.ok(landscape.actionCount >= 5);
 assert.equal(landscape.playerVitalityCount, 1);
 assert.equal(landscape.enemyUnitCount, 3);
+assert.deepEqual(landscape.mobileLayout.sceneControlOverlaps, []);
+assert.deepEqual(landscape.mobileLayout.positionMapOverlaps, []);
+assert.equal(landscape.mobileLayout.recommendedActions.length, 3);
+assert.ok(landscape.mobileLayout.recommendedActions.every((action) => action.bottom <= 390));
 const landscapeShot = await screenshot("wudao-combat-lab-landscape.png");
 
 assert.deepEqual(pageErrors, []);
@@ -242,6 +294,6 @@ socket.close();
 
 console.log(JSON.stringify({
   ok: true,
-  checkpoints: [desktop, observed, needleStrike, subdued, portrait, crossbowFocus, lanternFocus, arsenal, death, rewound, landscape],
+  checkpoints: [desktop, observed, needleStrike, secondRound, subdued, portrait, positionFocus, moved, crossbowFocus, lanternFocus, arsenal, death, rewound, landscape],
   screenshots: [desktopShot, effectShot, needleShot, portraitShot, arsenalShot, rewindShot, landscapeShot],
 }, null, 2));
