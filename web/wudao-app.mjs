@@ -46,20 +46,16 @@ import {
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs?v=20260716.3";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260716.3";
+} from "./wudao-core.mjs?v=20260718.3";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260718.3";
 import {
   P0_STAKES,
   createDeathRecord,
-  createFirstBattle,
   createP0State,
   evaluateCombatAction,
   getAssailantPlotBoard,
   getBodyBreakthroughBoard,
   getDiagnosisBoard,
-  getFirstBattleActions,
-  getFirstBattleIntentBoard,
-  getFirstBattleVitality,
   getP0Item,
   getP0Skill,
   getSceneActions,
@@ -69,7 +65,6 @@ import {
   resolveApeLegacy,
   resolveBodyBreakthrough,
   resolveDiagnosisAction,
-  resolveFirstBattleAction,
   resolveAssailantCounterAction,
   resolveAssailantTrace,
   resolveIngredientSource,
@@ -82,7 +77,16 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260716.4";
+} from "./wudao-p0-core.mjs?v=20260718.3";
+import {
+  createCombatLabSession,
+  endCombatLabPlayerTurn,
+  getCombatLabActions,
+  getCombatLabBattleBoard,
+  getCombatLabRecommendations,
+  resolveCombatLabAction,
+  resolveCombatLabEnemyAction,
+} from "./combat-lab-core.mjs?v=20260718.3";
 
 const STORAGE_KEY = "wudao-high-martial-v1";
 const app = document.querySelector("#app");
@@ -288,6 +292,41 @@ function p0CombatContext() {
     battleEdge: state.p0.battleEdge,
     fateSeed: state.fateSeed,
   };
+}
+
+function createP0CombatSession(knownFacts = p0CombatContext().knownFacts) {
+  return createCombatLabSession({
+    ...p0CombatContext(),
+    knownFacts,
+    lives: state.lives,
+  });
+}
+
+function isP0CombatSession(battle) {
+  return Boolean(battle?.setup && battle?.turn && battle?.positions && Array.isArray(battle?.history));
+}
+
+function ensureP0CombatSession() {
+  if (!isP0CombatSession(state.p0.battle)) state.p0.battle = createP0CombatSession();
+  return state.p0.battle;
+}
+
+function syncP0CombatSession(session) {
+  state.p0.battle = session;
+  state.p0.wounds = structuredClone(session.wounds || []);
+  state.p0.battleHistory = (session.history || []).map((entry) => ({
+    battleId: session.battle?.id || "first_needle_ambush",
+    round: entry.round,
+    phase: entry.phase,
+    action: entry.actionId,
+    unitId: entry.unitId || null,
+    intent: entry.intent,
+    result: entry.outcome,
+    rating: entry.rating || null,
+    check: entry.check || null,
+    impact: entry.impact || null,
+    position: entry.position || null,
+  }));
 }
 
 function reallocateShenAttributes(focus) {
@@ -1623,62 +1662,101 @@ function renderP0Death() {
   `);
 }
 
-function renderFirstNeedleAmbush() {
-  const context = p0CombatContext();
-  const battle = state.p0.battle || createFirstBattle({ knownFacts: context.knownFacts, context });
-  const actions = getFirstBattleActions(battle, context);
-  const vitality = getFirstBattleVitality(battle, context);
-  const intent = getFirstBattleIntentBoard(battle, context);
-  const technique = getP0Skill(state.p0.activeMartial?.technique);
-  const knownSleeve = battle.knownFacts?.includes("left_sleeve_blade");
-  const range = battle.range === "close" ? "贴身" : battle.range === "far" ? "远离" : "适中";
-  const environment = (battle.environment || []).map((entry) => `<li class="${escapeHtml(entry.state)}">${escapeHtml(entry.name)} · ${escapeHtml({ lit: "仍亮", out: "已灭", cover: "可遮挡", escape: "可脱身" }[entry.state] || entry.state)}</li>`).join("");
-  return gameShell(`
-    ${sceneHeader("东门长街 · 夜雨", "蒙面刀客从药铺檐影里压低右肩", "他挡住回路，不问姓名。雨水在右手刀锋上发亮，可你已经知道：能看见的未必是真正杀招。")}
-    <div class="battle-layout">
-      <div class="combat-objective"><span>战斗目的</span><strong>${escapeHtml(battle.objective || "活过伏击，并决定留下活口、取命或脱身。")}</strong></div>
-      <div class="combat-vitality-grid">
-        ${combatVitalityBarHtml("陈司命", COMBAT_STAGE_NAMES[state.martialStage] || state.martialStage, vitality.player, "player")}
-        ${combatVitalityBarHtml("蒙面刀客", COMBAT_STAGE_NAMES[battle.enemyStage] || battle.enemyStage, vitality.enemy, "enemy")}
-      </div>
-      <div class="battle-status">
-        <div><span>你</span><strong>${escapeHtml(COMBAT_STAGE_NAMES[state.martialStage] || state.martialStage)}</strong></div>
-        <div><span>刀客</span><strong>${escapeHtml(COMBAT_STAGE_NAMES[battle.enemyStage] || battle.enemyStage)}</strong></div>
-        <div><span>距离</span><strong>${escapeHtml(range)}</strong></div>
-        <div><span>当前运用</span><strong>${escapeHtml(technique?.name || "徒手")}</strong></div>
-      </div>
-      <div class="battle-intent ${knownSleeve || battle.observedFeint ? "known" : "uncertain"}">
-        <span>敌招 · 第 ${battle.round} 轮 · 威胁 ${Number(intent.threat)}</span>
-        <strong>${escapeHtml(battle.enemyIntent)}</strong>
-        <ol>${intent.sequence.map((step, index) => `<li><b>${index + 1}</b><span>${escapeHtml(step)}</span></li>`).join("")}</ol>
-        <p>目标：${escapeHtml(intent.target)}。${battle.observedFeint || knownSleeve ? "左袖杀招已经看清；现在要决定留活口、取命，还是脱身。" : battle.darkness ? "灯已熄灭，他的步法慢了一瞬。" : battle.enemyWounded ? "右腕中针，但左袖仍可递刀。" : "后手未明。先观察、借势或冒险抢攻，结果会读取对应五维与武学。"}</p>
-      </div>
-      <div class="combat-state-board">
-        <div><span>战局</span><strong>${escapeHtml(range)} · ${battle.upperHand ? "抢得先机" : battle.playerWounded ? "带伤受压" : "互相试探"}</strong></div>
-        <div><span>环境对象</span><ul>${environment}</ul></div>
-      </div>
-      ${battle.lastCheck ? combatCheckResultHtml(battle.lastCheck, battle.lastResult) : battle.lastResult ? `<div class="battle-log"><p><strong>刚才：</strong>${escapeHtml(battle.lastResult)}</p></div>` : ""}
-    </div>
-    ${state.p0.wounds.length ? `<div class="death-verdict"><span>带伤应战</span><strong>肋下见血</strong><p>再失手会让之后的站桩与突破更难。</p></div>` : ""}
-    <div class="action-list">
-      ${actions.map((entry) => {
-        const evaluation = entry.evaluation;
-        const attribute = entry.attribute ? COMBAT_ATTRIBUTE_NAMES[entry.attribute] : "局势";
-        return actionCard({
-          action: "first-battle-action",
-          value: entry.id,
-          title: entry.title,
-          description: `${entry.description} 兑现：${entry.successPreview}；风险：${entry.riskPreview}。气血预估：${entry.impactPreview.success}；${entry.impactPreview.risk}；${entry.impactPreview.position}。`,
-          source: `${entry.intent} · ${entry.objectName}`,
-          meta: evaluation.available ? `${evaluation.ratingLabel} · ${attribute}` : "不可用",
-          detail: evaluation.available
-            ? `${evaluation.check ? `因果骰 ${evaluation.check.die}，行动修正 ${evaluation.check.modifier >= 0 ? `+${evaluation.check.modifier}` : evaluation.check.modifier}，目标 ${evaluation.check.target}；` : ""}依据：${evaluation.reasons.join("；")}`
-            : evaluation.reason,
-          kind: evaluation.rating === "fatal" || evaluation.rating === "dangerous" ? "danger" : entry.skillId || evaluation.rating === "safe" ? "special" : "",
-          disabled: !evaluation.available,
-        });
+function p0CombatActionHtml(entry) {
+  const evaluation = entry.evaluation || {};
+  const attribute = entry.attribute ? COMBAT_ATTRIBUTE_NAMES[entry.attribute] : entry.intent === "身位" ? "身位" : "局势";
+  const check = evaluation.check;
+  const die = check?.die ?? check?.roll;
+  const detail = evaluation.available
+    ? `${check ? `因果骰 ${die}，行动修正 ${check.modifier >= 0 ? `+${check.modifier}` : check.modifier}，目标 ${check.target}；` : ""}依据：${(evaluation.reasons || []).join("；")}`
+    : evaluation.reason;
+  return actionCard({
+    action: "first-battle-action",
+    value: entry.id,
+    title: entry.title,
+    description: `${entry.description} 兑现：${entry.successPreview}；风险：${entry.riskPreview}。${entry.enemyPhasePreview || entry.impactPreview?.enemyPhase || "敌方将按预告行动"}。`,
+    source: `${entry.intent} · ${entry.objectName || "战场"} · 气机 ${Number(entry.energyCost || 0)}`,
+    meta: evaluation.available ? `${evaluation.ratingLabel} · ${attribute}` : "不可用",
+    detail,
+    kind: ["fatal", "dangerous"].includes(evaluation.rating) ? "danger" : entry.skillId || evaluation.rating === "safe" ? "special" : "",
+    disabled: !evaluation.available,
+  });
+}
+
+function p0CombatPositionMapHtml(board) {
+  return `
+    <div class="p0-combat-map" aria-label="雨巷身位图">
+      ${board.nodes.map((node) => {
+        const playerHere = board.positions.player === node.id;
+        const enemies = board.units.filter((unit) => board.positions[unit.id] === node.id);
+        return `<div class="p0-combat-node ${escapeHtml(node.type || "ground")} ${playerHere ? "player-here" : ""}" style="left:${Number(node.x)}%;top:${Number(node.y)}%">
+          <strong>${escapeHtml(node.shortName || node.name)}</strong>
+          <span>${playerHere ? "你" : ""}${playerHere && enemies.length ? " · " : ""}${enemies.map((unit) => escapeHtml(unit.name)).join(" · ")}</span>
+        </div>`;
       }).join("")}
     </div>
+  `;
+}
+
+function renderFirstNeedleAmbush() {
+  const session = ensureP0CombatSession();
+  const board = getCombatLabBattleBoard(session);
+  const actions = getCombatLabActions(session);
+  const recommended = getCombatLabRecommendations(session);
+  const recommendedIds = new Set(recommended.map((entry) => entry.id));
+  const moreActions = actions.filter((entry) => !recommendedIds.has(entry.id));
+  const technique = getP0Skill(state.p0.activeMartial?.technique);
+  const turn = board.turn;
+  const energy = Array.from({ length: turn.maxEnergy }, (_, index) => `<i class="${index < turn.energy ? "ready" : "spent"}"></i>`).join("");
+  const lastEntry = session.history.at(-1);
+  const currentEnemyAction = turn.phase === "enemy" ? turn.enemyQueue[turn.enemyCursor] : null;
+  const currentEnemy = currentEnemyAction ? board.units.find((unit) => unit.id === currentEnemyAction.unitId) : null;
+  const environment = board.environment.map((entry) => `<li class="${escapeHtml(entry.state)}">${escapeHtml(entry.name)} · ${escapeHtml({ lit: "仍亮", out: "已灭", cover: "可遮挡", escape: "可脱身", blocked: "已封锁" }[entry.state] || entry.state)}</li>`).join("");
+  const knownSleeve = board.knownFacts.includes("left_sleeve_blade") || session.battle.observedFeint;
+  return gameShell(`
+    ${sceneHeader("东门长街 · 夜雨", "蒙面刀客不是独自来杀你", "刀客从檐影逼近，弩手伏在屋脊，巷尾还有一人封路。你能先连走三步；收势之后，他们会照预告逐个出手。")}
+    <div class="battle-layout p0-combat-layout">
+      <div class="combat-objective"><span>战斗目的</span><strong>${escapeHtml(board.objective || "活过伏击，并决定留下活口、取命或脱身。")}</strong></div>
+      <div class="p0-turn-strip ${escapeHtml(turn.phase)}">
+        <div><span>第 ${Number(turn.round)} 轮</span><strong>${turn.phase === "player" ? "你的回合" : "敌方回合"}</strong></div>
+        <div class="p0-energy" role="meter" aria-label="本轮气机" aria-valuemin="0" aria-valuemax="${Number(turn.maxEnergy)}" aria-valuenow="${Number(turn.energy)}"><span>气机 ${Number(turn.energy)} / ${Number(turn.maxEnergy)}</span><b>${energy}</b></div>
+        <div><span>当前运用</span><strong>${escapeHtml(technique?.name || "徒手")}</strong></div>
+      </div>
+      <div class="combat-vitality-grid">
+        ${combatVitalityBarHtml(state.name || "陈司命", COMBAT_STAGE_NAMES[state.martialStage] || state.martialStage, board.vitality.player, "player")}
+        ${combatVitalityBarHtml("蒙面刀客", COMBAT_STAGE_NAMES[session.battle.enemyStage] || session.battle.enemyStage, board.vitality.enemy, "enemy")}
+      </div>
+      <div class="p0-enemy-intents ${knownSleeve ? "known" : "uncertain"}">
+        ${board.units.map((unit) => `<div class="p0-enemy-card ${unit.acting ? "acting" : ""} ${unit.acted ? "acted" : ""}">
+          <span>${Number(unit.intentOrder || 0) ? `次序 ${Number(unit.intentOrder)}` : "暂不出手"} · ${escapeHtml(unit.role)}</span>
+          <strong>${escapeHtml(unit.name)} · ${escapeHtml(unit.intent)}</strong>
+          <p>${escapeHtml(unit.intentDetail || "正在等待战机")}</p>
+          <small>${escapeHtml(unit.nodeName)} · ${escapeHtml(unit.distance)}</small>
+        </div>`).join("")}
+      </div>
+      <div class="p0-spatial-board">
+        ${p0CombatPositionMapHtml(board)}
+        <div class="combat-state-board">
+          <div><span>当前身位</span><strong>${escapeHtml(board.playerNode?.name || "雨巷入口")}</strong></div>
+          <div><span>场景可用</span><ul>${environment}</ul></div>
+        </div>
+      </div>
+      ${lastEntry?.check ? combatCheckResultHtml(lastEntry.check, lastEntry.text) : lastEntry?.text ? `<div class="battle-log"><p><strong>${lastEntry.phase === "enemy" ? "敌方落招：" : "刚才："}</strong>${escapeHtml(lastEntry.text)}</p></div>` : ""}
+    </div>
+    ${state.p0.wounds.length ? `<div class="death-verdict"><span>带伤应战</span><strong>${state.p0.wounds.length} 处伤势仍在</strong><p>伤处会改变相关身法、力道与后续站桩突破。</p></div>` : ""}
+    ${turn.phase === "player" ? `
+      <div class="p0-action-heading"><span>眼下可取 · 至多连走三步</span><strong>先看敌招，再组合身位、环境与武学</strong></div>
+      <div class="action-list">${recommended.map(p0CombatActionHtml).join("")}</div>
+      ${moreActions.length ? `<details class="p0-more-actions"><summary>展开其余 ${moreActions.length} 条招路</summary><div class="action-list">${moreActions.map(p0CombatActionHtml).join("")}</div></details>` : ""}
+      <div class="button-row"><button class="primary-button ${turn.energy === 0 ? "danger-button" : ""}" data-action="end-first-battle-turn">${turn.energy === 0 ? "气机已尽，迎接敌方行动" : `收势，保留 ${Number(turn.energy)} 点未用气机`}</button></div>
+    ` : `
+      <div class="p0-enemy-resolution">
+        <span>敌方行动 · ${Number(turn.enemyCursor) + 1} / ${Number(turn.enemyQueue.length)}</span>
+        <strong>${escapeHtml(currentEnemy?.name || "伏兵")}将使出「${escapeHtml(currentEnemyAction?.label || "收拢阵势")}」</strong>
+        <p>${escapeHtml(currentEnemyAction?.detail || "这一轮敌招即将落定。")}</p>
+        <button class="primary-button danger-button" data-action="resolve-first-battle-enemy">看清这一招落下</button>
+      </div>
+    `}
   `);
 }
 
@@ -2147,12 +2225,24 @@ function handleP0Death(reason, memory, node, causeId = "unknown_death", check = 
     cause: reason,
     insight: memory,
     returnedTo: node === "firstNeedleAmbush" ? "刀客现身之前" : "突破之前",
-    round: node === "firstNeedleAmbush" ? state.p0.battle?.round || null : null,
+    round: node === "firstNeedleAmbush" ? state.p0.battle?.turn?.round || state.p0.battle?.round || null : null,
     check,
   }));
   state.lastDeathChoice = reason;
   track("p0_death", { node, causeId, lives: state.lives });
   moveTo("p0Death");
+}
+
+function finishFirstNeedleBattle(session) {
+  syncP0CombatSession(session);
+  const result = session.result || {};
+  state.p0.battleOutcome = result.outcome;
+  state.p0.battleOutcomeGrade = result.check?.tier || null;
+  state.p0.battleEdge = result.edge || (result.check?.tier === "costly" ? "bloodied_finish" : null);
+  state.p0.firstKill = result.outcome === "killed";
+  state.p0.firstKillChoice = result.outcome;
+  track("first_battle_resolved", { outcome: result.outcome, rounds: session.turn.round });
+  moveP0("firstKillAftermath", "first_kill_aftermath");
 }
 
 const handlers = {
@@ -2853,7 +2943,7 @@ const handlers = {
     state.p0 = grantSpringRainNeedles(state.p0).state;
     state.p0.activeMartial.foundation = state.mindArt || null;
     if (!state.skills.includes("spring_rain_needles")) state.skills.push("spring_rain_needles");
-    state.p0.battle = createFirstBattle({ knownFacts: p0CombatContext().knownFacts, context: p0CombatContext() });
+    state.p0.battle = createP0CombatSession();
     state.p0.checkpoint = null;
     state.p0.checkpoint = structuredClone(state.p0);
     track("spring_rain_needles_received");
@@ -2861,41 +2951,46 @@ const handlers = {
   },
   "first-battle-action": (value) => {
     if (state.screen !== "firstNeedleAmbush") return;
-    const result = resolveFirstBattleAction(value, state.p0.battle, p0CombatContext());
+    const session = ensureP0CombatSession();
+    const result = resolveCombatLabAction(session, value);
     if (!result?.available) return;
-    state.p0.battle = result.battle;
-    if (result.wound) {
-      const existing = state.p0.wounds.find((wound) => wound.id === result.wound.id);
-      if (existing) existing.severity = Math.max(Number(existing.severity || 0), Number(result.wound.severity || 0));
-      else state.p0.wounds.push(result.wound);
+    let next = result.session;
+    appendNarrativeOutcome(combatOutcomeText(result.result));
+    if (next.turn.energy === 0 && next.turn.phase === "player") {
+      const enemyPhase = endCombatLabPlayerTurn(next);
+      if (enemyPhase?.available) next = enemyPhase.session;
     }
-    state.p0.battleHistory = [...state.p0.battleHistory, {
-      battleId: result.battle.id,
-      round: result.battle.round,
-      action: value,
-      intent: result.intent,
-      result: result.outcome,
-      rating: result.evaluation?.rating || null,
-      check: result.check || null,
-      impact: result.impact || null,
-    }];
-    appendNarrativeOutcome(combatOutcomeText(result));
-    if (result.outcome === "death") return handleP0Death(result.cause, result.memory, "firstNeedleAmbush", result.causeId, result.check);
-    if (result.outcome === "round") {
-      track("first_battle_round", { action: value, round: result.battle.round });
-      return refresh();
+    syncP0CombatSession(next);
+    track("first_battle_action", { action: value, round: next.turn.round, energy: next.turn.energy });
+    refresh();
+  },
+  "end-first-battle-turn": () => {
+    if (state.screen !== "firstNeedleAmbush") return;
+    const result = endCombatLabPlayerTurn(ensureP0CombatSession());
+    if (!result?.available) return;
+    syncP0CombatSession(result.session);
+    track("first_battle_enemy_phase", { round: result.session.turn.round });
+    refresh();
+  },
+  "resolve-first-battle-enemy": () => {
+    if (state.screen !== "firstNeedleAmbush") return;
+    const result = resolveCombatLabEnemyAction(ensureP0CombatSession());
+    if (!result?.available) return;
+    let next = result.session;
+    if (result.text) appendNarrativeOutcome(result.text);
+    if (next.status === "fighting" && next.turn.phase === "enemy" && next.turn.enemyCursor >= next.turn.enemyQueue.length) {
+      const completed = resolveCombatLabEnemyAction(next);
+      if (completed?.available) next = completed.session;
     }
-    if (result.outcome === "wounded") {
-      track("first_battle_wound", { wound: result.wound.id });
-      return refresh();
+    syncP0CombatSession(next);
+    if (next.status === "death") {
+      const death = next.result || {};
+      const check = [...next.history].reverse().find((entry) => entry.check)?.check || null;
+      return handleP0Death(death.cause, death.memory, "firstNeedleAmbush", death.causeId, check);
     }
-    state.p0.battleOutcome = result.outcome;
-    state.p0.battleOutcomeGrade = result.check?.tier || null;
-    state.p0.battleEdge = result.edge || (result.check?.tier === "costly" ? "bloodied_finish" : null);
-    state.p0.firstKill = result.outcome === "killed";
-    state.p0.firstKillChoice = result.outcome;
-    track("first_battle_resolved", { outcome: result.outcome });
-    moveP0("firstKillAftermath", "first_kill_aftermath");
+    if (next.status === "finished") return finishFirstNeedleBattle(next);
+    track("first_battle_enemy_action", { unitId: result.action?.unitId, round: next.turn.round });
+    refresh();
   },
   "return-p0-death": () => {
     if (state.screen !== "p0Death" || !state.p0.checkpoint || state.lives <= 0) return;
@@ -2909,7 +3004,7 @@ const handlers = {
     state.p0.deathReason = null;
     if (node === "firstNeedleAmbush") {
       const knownFacts = deathRecords.some((record) => record.id === "left_sleeve_blade") ? ["left_sleeve_blade"] : [];
-      state.p0.battle = createFirstBattle({ knownFacts, context: { ...p0CombatContext(), knownFacts } });
+      state.p0.battle = createP0CombatSession(knownFacts);
     }
     track("p0_death_return", { node });
     moveP0(node, node === "firstNeedleAmbush" ? "first_needle_ambush" : "body_breakthrough");

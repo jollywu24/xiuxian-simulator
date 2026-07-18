@@ -3,7 +3,7 @@ import {
   getFirstBattleActions,
   getFirstBattleVitality,
   resolveFirstBattleAction,
-} from "./wudao-p0-core.mjs?v=20260717.2";
+} from "./wudao-p0-core.mjs?v=20260718.3";
 import {
   createBattle as createEngineBattle,
   getAvailableCombatActions as getEngineActions,
@@ -16,12 +16,12 @@ import {
   restartBattle as restartEngineBattle,
   rewindBattle as rewindEngineBattle,
   startEnemyPhase as startEngineEnemyPhase,
-} from "./combat-engine.mjs?v=20260718.2";
+} from "./combat-engine.mjs?v=20260718.3";
 import {
   COMBAT_ENCOUNTER_CATALOG,
   WANG_ZHUO_DEFAULTS,
   WANG_ZHUO_ENCOUNTER,
-} from "./combat-encounters.mjs?v=20260718.2";
+} from "./combat-encounters.mjs?v=20260718.3";
 
 export const COMBAT_LAB_MAX_ENERGY = 3;
 
