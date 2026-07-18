@@ -111,5 +111,6 @@ npm run validate:content
 - `docs/JIANYIN_XIAZONGLU_DESIGN_REFERENCE.md`：《剑隐侠踪录》的车卡、武学组合、五人战斗、奇遇、世界与百业拆解，以及测试阶段风险和本项目适配建议。
 - `docs/PKUXKX_DESIGN_REFERENCE.md`：《北大侠客行》的房间与动词、武学激发、门派师承、情节谜题、死亡和长期MUD生态拆解，以及单人文字冒险适配建议。
 - `docs/YANYU_JIANGHU_DESIGN_REFERENCE.md`：《烟雨江湖》的地域探索、任务条件网、门派师承、武学三件套、四人阵型、伙伴、生活技艺和长线运营拆解，以及本项目的采用／改造／舍弃建议。
+- `docs/HEROES_ADVENTURE_DESIGN_REFERENCE.md`：《大侠立志传》的条件江湖、人物权限、门派身份、非战斗动词、武学成长、时间、家园和多周目拆解，以及当前项目的采用／改造／舍弃建议。
 
 `web/app.mjs`、`web/game-core.mjs` 与 `tests/core.test.mjs` 保留上一版规则作为迁移参考，不再由网页入口加载。
