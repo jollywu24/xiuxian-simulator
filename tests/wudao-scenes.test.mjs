@@ -18,14 +18,14 @@ function state(overrides = {}) {
   };
 }
 
-test("four compressed environment assets anchor the first visual locations", () => {
-  assert.equal(SCENE_ASSET_PATHS.length, 4);
-  assert.equal(new Set(SCENE_ASSET_PATHS).size, 4);
-  assert.ok(SCENE_ASSET_PATHS.every((asset) => asset.startsWith("./assets/scenes/") && asset.endsWith(".webp")));
+test("five compressed environment assets anchor the first visual locations and combat bridge", () => {
+  assert.equal(SCENE_ASSET_PATHS.length, 5);
+  assert.equal(new Set(SCENE_ASSET_PATHS).size, 5);
+  assert.ok(SCENE_ASSET_PATHS.every((asset) => asset.startsWith("./assets/") && asset.endsWith(".webp")));
 });
 
 test("every visual scene exposes serializable, bounded and uniquely identified markers", () => {
-  for (const screen of ["templeTasks", "roadTrial", "shenArrival", "danObservation"]) {
+  for (const screen of ["templeTasks", "roadTrial", "shenArrival", "danObservation", "yanJinghongArrival", "wangBattle"]) {
     const scene = getScenePresentation(screen, state({ destinyRevealed: true, mindArt: "fish_leap_dragon_gate" }));
     assert.ok(scene?.image);
     assert.ok(scene.alt.length > 10);
@@ -37,6 +37,15 @@ test("every visual scene exposes serializable, bounded and uniquely identified m
       assert.ok(marker.y >= 0 && marker.y <= 100, `${screen}:${marker.id || "player"} y`);
     }
   }
+});
+
+test("柳巷尾随不会提前暴露王卓，进入河岸后才揭示身份", () => {
+  const hidden = getScenePresentation("yanJinghongArrival", state({ p0: { started: true } }));
+  assert.equal(hidden.id, "willow_lane");
+  assert.equal(hidden.actors.find((actor) => actor.id === "wang_zhuo").label, "尾随人影");
+  const revealed = getScenePresentation("wangBattle", state({ p0: { started: true, wangBattle: { battle: { stageId: "riverbank", knownFacts: ["wang_identity"], conditions: {} } } } }));
+  assert.equal(revealed.id, "east_lake");
+  assert.equal(revealed.actors.find((actor) => actor.id === "wang_zhuo").label, "王卓");
 });
 
 test("character identity on the ruined-temple stage follows the story reveal", () => {
