@@ -64,7 +64,7 @@ npm run serve
 
 界面默认只显示三项去重后的情境行动，同时预告身位和若此刻收势将承受的后果；更多手段收进抽屉或折叠区。同伴、毒伤、致命伤、证据与警戒直接显示为可聚焦状态，桌面、手机竖屏和横屏使用同一规则状态。正篇夜战结束后仍进入原有搜尸／盘问／追踪与后续成长，旧夜战存档会在继续时自动迁入新会话。
 
-[手机打开战斗演武](https://jollywu24.github.io/xiuxian-simulator/combat.html)
+[手机打开战斗演武](https://jollywu24.github.io/xiuxian-simulator/combat-lab/combat.html)
 
 已有调试浏览器运行在 `9225` 端口时，可执行 `npm run smoke:combat` 检查桌面、手机竖屏、手机横屏、雨巷完整流程、柳巷转场、同伴协作、河岸多敌、援弩、致命伤处理、环境热点、死亡和回照流程。
 
