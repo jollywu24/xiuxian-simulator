@@ -46,8 +46,8 @@ import {
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs?v=20260718.3";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260718.3";
+} from "./wudao-core.mjs?v=20260718.5";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260718.5";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -77,16 +77,18 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260718.3";
+} from "./wudao-p0-core.mjs?v=20260718.5";
 import {
+  advanceCombatLabCampaign,
   createCombatLabSession,
   endCombatLabPlayerTurn,
   getCombatLabActions,
   getCombatLabBattleBoard,
   getCombatLabRecommendations,
+  restartCombatLab,
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
-} from "./combat-lab-core.mjs?v=20260718.3";
+} from "./combat-lab-core.mjs?v=20260718.5";
 
 const STORAGE_KEY = "wudao-high-martial-v1";
 const app = document.querySelector("#app");
@@ -327,6 +329,57 @@ function syncP0CombatSession(session) {
     impact: entry.impact || null,
     position: entry.position || null,
   }));
+}
+
+function wangKnownFacts() {
+  return state.p0.deathRecords
+    .map((record) => record.id)
+    .filter((id) => ["wang_chain_blade", "poison_ticks_after_enemy_phase", "fatal_wound_deadline", "dock_poison_bolt"].includes(id));
+}
+
+function createWangCombatSession() {
+  const carried = advanceCombatLabCampaign(state.p0.battle);
+  const base = carried.available
+    ? carried.session
+    : createCombatLabSession({ encounterId: "wang_zhuo_east_lake" });
+  return restartCombatLab(base, {
+    fateSeed: `${state.fateSeed}:east-lake`,
+    lives: state.lives,
+    attributes: state.attributes,
+    playerStage: state.martialStage,
+    skills: state.p0.skills,
+    wounds: state.p0.wounds,
+    knownFacts: [...new Set([...(base.setup?.knownFacts || []), ...wangKnownFacts()])],
+    relationships: { yan_jinghong: state.p0.relationships.yan_jinghong },
+  });
+}
+
+function ensureWangCombatSession() {
+  if (!isP0CombatSession(state.p0.wangBattle)) state.p0.wangBattle = createWangCombatSession();
+  return state.p0.wangBattle;
+}
+
+function syncWangCombatSession(session) {
+  state.p0.wangBattle = session;
+  state.p0.wounds = structuredClone(session.wounds || []);
+}
+
+function resolveFullEnemyPhase(session) {
+  let next = session;
+  const texts = [];
+  if (next.status === "fighting" && next.turn.phase === "player") {
+    const started = endCombatLabPlayerTurn(next);
+    if (!started?.available) return { available: false, session: next, texts };
+    next = started.session;
+  }
+  for (let guard = 0; guard < 20 && next.status === "fighting" && next.turn.phase === "enemy"; guard += 1) {
+    const resolved = resolveCombatLabEnemyAction(next);
+    if (!resolved?.available) break;
+    next = resolved.session;
+    if (resolved.text) texts.push(resolved.text);
+    if (resolved.completed) break;
+  }
+  return { available: true, session: next, texts };
 }
 
 function reallocateShenAttributes(focus) {
@@ -658,6 +711,9 @@ function modeLabel() {
     stakeChoice: "医武同源 · 两门桩功",
     stakeTraining: "东门后院 · 一夜站桩",
     bodyBreakthrough: "未入门尽头 · 锻体第一关",
+    yanJinghongArrival: "柳巷晚市 · 官面暗差",
+    wangBattle: "柳巷至东湖 · 尾随截命",
+    wangAftermath: "东湖夜色 · 战果已定",
     midAutumnWarning: "八月十四 · 月将圆",
     midAutumnDeparture: "八月十四 · 重返破庙",
     templeOfferingSource: "金陵东郊 · 贡品有主",
@@ -1654,15 +1710,16 @@ function combatVitalityBarHtml(label, stage, vitality, side) {
 function renderP0Death() {
   const memory = state.p0.deathMemory.at(-1);
   const record = state.p0.deathRecords.at(-1);
+  const canReturn = state.lives > 0;
   return gameShell(`
-    ${sceneHeader("一盏命灯碎裂", state.p0.deathReason || "这一条路走到了死处", "火光退回灯芯，疼痛却没有退。你仍记得最后一眼看见的招式、呼吸和错处。")}
+    ${sceneHeader(canReturn ? "一盏命灯碎裂" : "双灯俱灭", state.p0.deathReason || "这一条路走到了死处", canReturn ? "火光退回灯芯，疼痛却没有退。你仍记得最后一眼看见的招式、呼吸和错处。" : "最后一点灯火沉入黑暗。这一世已无路可回，但走错的路仍留在你心里。")}
     ${record?.check ? combatCheckResultHtml(record.check, record.cause) : ""}
-    <div class="death-verdict"><span>${record ? escapeHtml(`${record.location} · 死劫履历`) : "带回的死中见闻"}</span><strong>${escapeHtml(memory || "强行前进并不能替代看清条件")}</strong><p>${record ? `死因：${escapeHtml(record.cause)}` : ""}剩余命灯 ${state.lives}。回到最近因果节点后，这段记忆不会消失，也会直接改变可见胜算。</p></div>
-    <div class="button-row"><button class="primary-button" data-action="return-p0-death">循着残灯回到死前</button></div>
+    <div class="death-verdict"><span>${record ? escapeHtml(`${record.location} · 死劫履历`) : "带回的死中见闻"}</span><strong>${escapeHtml(memory || "强行前进并不能替代看清条件")}</strong><p>${record ? `死因：${escapeHtml(record.cause)}` : ""}剩余命灯 ${state.lives}。${canReturn ? "回到最近因果节点后，这段记忆不会消失，也会直接改变可见胜算。" : "命灯已经耗尽，这一世无法再回照。"}</p></div>
+    <div class="button-row">${canReturn ? `<button class="primary-button" data-action="return-p0-death">循着残灯回到死前</button>` : `<button class="primary-button" data-action="restart">另起一世</button>`}</div>
   `);
 }
 
-function p0CombatActionHtml(entry) {
+function p0CombatActionHtml(entry, actionName = "first-battle-action") {
   const evaluation = entry.evaluation || {};
   const attribute = entry.attribute ? COMBAT_ATTRIBUTE_NAMES[entry.attribute] : entry.intent === "身位" ? "身位" : "局势";
   const check = evaluation.check;
@@ -1671,7 +1728,7 @@ function p0CombatActionHtml(entry) {
     ? `${check ? `因果骰 ${die}，行动修正 ${check.modifier >= 0 ? `+${check.modifier}` : check.modifier}，目标 ${check.target}；` : ""}依据：${(evaluation.reasons || []).join("；")}`
     : evaluation.reason;
   return actionCard({
-    action: "first-battle-action",
+    action: actionName,
     value: entry.id,
     title: entry.title,
     description: `${entry.description} 兑现：${entry.successPreview}；风险：${entry.riskPreview}。${entry.enemyPhasePreview || entry.impactPreview?.enemyPhase || "敌方将按预告行动"}。`,
@@ -1685,7 +1742,7 @@ function p0CombatActionHtml(entry) {
 
 function p0CombatPositionMapHtml(board) {
   return `
-    <div class="p0-combat-map" aria-label="雨巷身位图">
+    <div class="p0-combat-map" style="--p0-combat-image:url('${escapeHtml(board.meta.sceneImage || "./assets/combat/jinling-rain-ambush.webp")}')" aria-label="${escapeHtml(board.meta.mapLabel || "战场身位图")}">
       ${board.nodes.map((node) => {
         const playerHere = board.positions.player === node.id;
         const enemies = board.units.filter((unit) => board.positions[unit.id] === node.id);
@@ -1712,7 +1769,8 @@ function renderFirstNeedleAmbush() {
   const currentEnemyAction = turn.phase === "enemy" ? turn.enemyQueue[turn.enemyCursor] : null;
   const currentEnemy = currentEnemyAction ? board.units.find((unit) => unit.id === currentEnemyAction.unitId) : null;
   const environment = board.environment.map((entry) => `<li class="${escapeHtml(entry.state)}">${escapeHtml(entry.name)} · ${escapeHtml({ lit: "仍亮", out: "已灭", cover: "可遮挡", escape: "可脱身", blocked: "已封锁" }[entry.state] || entry.state)}</li>`).join("");
-  const knownSleeve = board.knownFacts.includes("left_sleeve_blade") || session.battle.observedFeint;
+  const knownSleeve = board.knownFacts.includes("left_sleeve_blade") || board.conditions.observedFeint;
+  const primaryEnemy = board.units.find((unit) => unit.primary) || board.units[0];
   return gameShell(`
     ${sceneHeader("东门长街 · 夜雨", "蒙面刀客不是独自来杀你", "刀客从檐影逼近，弩手伏在屋脊，巷尾还有一人封路。你能先连走三步；收势之后，他们会照预告逐个出手。")}
     <div class="battle-layout p0-combat-layout">
@@ -1724,7 +1782,7 @@ function renderFirstNeedleAmbush() {
       </div>
       <div class="combat-vitality-grid">
         ${combatVitalityBarHtml(state.name || "陈司命", COMBAT_STAGE_NAMES[state.martialStage] || state.martialStage, board.vitality.player, "player")}
-        ${combatVitalityBarHtml("蒙面刀客", COMBAT_STAGE_NAMES[session.battle.enemyStage] || session.battle.enemyStage, board.vitality.enemy, "enemy")}
+        ${combatVitalityBarHtml("蒙面刀客", COMBAT_STAGE_NAMES[primaryEnemy?.stageId] || primaryEnemy?.stageId, board.vitality.enemy, "enemy")}
       </div>
       <div class="p0-enemy-intents ${knownSleeve ? "known" : "uncertain"}">
         ${board.units.map((unit) => `<div class="p0-enemy-card ${unit.acting ? "acting" : ""} ${unit.acted ? "acted" : ""}">
@@ -1746,8 +1804,8 @@ function renderFirstNeedleAmbush() {
     ${state.p0.wounds.length ? `<div class="death-verdict"><span>带伤应战</span><strong>${state.p0.wounds.length} 处伤势仍在</strong><p>伤处会改变相关身法、力道与后续站桩突破。</p></div>` : ""}
     ${turn.phase === "player" ? `
       <div class="p0-action-heading"><span>眼下可取 · 至多连走三步</span><strong>先看敌招，再组合身位、环境与武学</strong></div>
-      <div class="action-list">${recommended.map(p0CombatActionHtml).join("")}</div>
-      ${moreActions.length ? `<details class="p0-more-actions"><summary>展开其余 ${moreActions.length} 条招路</summary><div class="action-list">${moreActions.map(p0CombatActionHtml).join("")}</div></details>` : ""}
+      <div class="action-list">${recommended.map((entry) => p0CombatActionHtml(entry)).join("")}</div>
+      ${moreActions.length ? `<details class="p0-more-actions"><summary>展开其余 ${moreActions.length} 条招路</summary><div class="action-list">${moreActions.map((entry) => p0CombatActionHtml(entry)).join("")}</div></details>` : ""}
       <div class="button-row"><button class="primary-button ${turn.energy === 0 ? "danger-button" : ""}" data-action="end-first-battle-turn">${turn.energy === 0 ? "气机已尽，迎接敌方行动" : `收势，保留 ${Number(turn.energy)} 点未用气机`}</button></div>
     ` : `
       <div class="p0-enemy-resolution">
@@ -1892,6 +1950,60 @@ function renderBodyBreakthrough() {
       ${actionCard({ action: "body-breakthrough", value: "steady", title: "让桩功领着气血，一寸寸推过四肢", description: "按曹青所教稳步撞关，不抢快，不绕过旧伤。", source: "稳破", meta: "潜能 -200 · 踏入锻体", kind: "special", disabled: !board.available })}
       ${state.lives > 1 ? actionCard({ action: "body-breakthrough", value: "force", title: "趁血热强催全身，抢在一息内破关", description: "不让桩功领路，直接让气血冲撞旧伤和心脉。", source: "死局", meta: "必死 · 可带回见闻", kind: "danger", disabled: !board.available }) : ""}
     </div>
+  `);
+}
+
+function renderYanJinghongArrival() {
+  return gameShell(`
+    ${sceneHeader("八月十四 · 柳巷晚市", "燕惊鸿把一枚蛇纹铜牌按在药包下面", "她替金陵巡检房查一条失踪药船，认出你从雨巷刀客身上留下的痕迹。她没有请你杀人，只请你陪她把证物送过临河门洞。说话间，橱窗倒影里始终有一道人影隔着两处摊位跟随。")}
+    <div class="encounter-ledger"><div><span>眼前之人</span><strong>燕惊鸿 · 巡检房暗差</strong><p>她掌握官面的失踪药船卷宗，需要一个认得江湖回报暗线的人。</p></div><div><span>眼下目的</span><strong>确认尾随者，让她先带证物离开</strong><p>这还是尾随，不是擂台；过早拔针只会惊动晚市百姓。</p></div><div><span>你的新境界</span><strong>锻体一重</strong><p>桩功、鱼跃龙门诀和雨夜留下的伤都会在这条巷子里兑现。</p></div></div>
+    <div class="action-list">${actionCard({ action: "enter-wang-encounter", title: "接过药包，不回头走进柳巷", description: "先从倒影、摊棚和人流确认来者，再决定要不要把这一场尾随带到东湖。", source: "柳巷尾随", meta: "两幕遭遇", kind: "special" })}</div>
+  `);
+}
+
+function renderWangBattle() {
+  const session = ensureWangCombatSession();
+  const board = getCombatLabBattleBoard(session);
+  const actions = getCombatLabActions(session);
+  const recommended = getCombatLabRecommendations(session);
+  const recommendedIds = new Set(recommended.map((entry) => entry.id));
+  const moreActions = actions.filter((entry) => !recommendedIds.has(entry.id));
+  const pursuit = board.meta.presentation === "pursuit";
+  const primaryEnemy = board.units.find((unit) => unit.primary) || board.units[0];
+  const energy = Array.from({ length: board.turn.maxEnergy }, (_, index) => `<i class="${index < board.turn.energy ? "ready" : "spent"}"></i>`).join("");
+  const lastEntry = session.history.at(-1);
+  const identityProgress = Math.min(Number(board.pursuit?.identityProgress || 0), Number(board.pursuit?.identityGoal || 2));
+  return gameShell(`
+    ${sceneHeader(board.meta.location, pursuit ? "先看清尾随者，再让燕惊鸿脱开视线" : "王卓在东湖岸边抖开锁链刀", pursuit ? "这不是一场比谁先清空气血的搏杀。身份线索与同伴去向齐备之前，任何强攻都会把晚市变成他的掩护。" : "聚气境压住河岸，柳根后还有毒刃包抄。你要决定留下活口、当场取命、放线追踪，还是先护人撤走。")}
+    <div class="battle-layout p0-combat-layout">
+      <div class="combat-objective"><span>${pursuit ? "尾随目的" : "战斗目的"}</span><strong>${escapeHtml(board.objective)}</strong></div>
+      <div class="p0-turn-strip ${escapeHtml(board.turn.phase)}"><div><span>第 ${Number(board.turn.round)} 轮</span><strong>${board.turn.phase === "player" ? "你的回合" : "敌招连落"}</strong></div><div class="p0-energy" role="meter" aria-label="本轮气机" aria-valuemin="0" aria-valuemax="${Number(board.turn.maxEnergy)}" aria-valuenow="${Number(board.turn.energy)}"><span>气机 ${Number(board.turn.energy)} / ${Number(board.turn.maxEnergy)}</span><b>${energy}</b></div><div><span>当前身位</span><strong>${escapeHtml(board.playerNode?.shortName || "柳巷")}</strong></div></div>
+      <div class="combat-vitality-grid ${pursuit ? "pursuit-vitality" : ""}">
+        ${combatVitalityBarHtml(state.name || "陈司命", COMBAT_STAGE_NAMES[state.martialStage] || state.martialStage, board.vitality.player, "player")}
+        ${pursuit ? `<div class="p0-pursuit-board"><div><span>身份线索</span><strong>${identityProgress} / ${Number(board.pursuit?.identityGoal || 2)}</strong></div><div><span>燕惊鸿</span><strong>${board.pursuit?.allySafe ? "已脱身" : "仍在视线"}</strong></div><div><span>对方警觉</span><strong>${Number(board.pursuit?.alert || 0)}</strong></div></div>` : combatVitalityBarHtml(primaryEnemy?.name || "王卓", COMBAT_STAGE_NAMES[primaryEnemy?.stageId] || primaryEnemy?.stageId, board.vitality.enemy, "enemy")}
+      </div>
+      <div class="p0-enemy-intents ${board.knownFacts.includes("wang_chain_blade") ? "known" : "uncertain"}">${board.units.filter((unit) => unit.active && !unit.defeated).map((unit) => `<div class="p0-enemy-card"><span>${pursuit ? "尾随动向" : `次序 ${Number(unit.intentOrder || 0)}`} · ${escapeHtml(unit.role)}</span><strong>${escapeHtml(unit.name)} · ${escapeHtml(unit.intent)}</strong><p>${escapeHtml(unit.intentDetail || "正在等待战机")}</p><small>${escapeHtml(unit.nodeName)} · ${escapeHtml(unit.distance)}</small></div>`).join("")}</div>
+      <div class="p0-spatial-board">${p0CombatPositionMapHtml(board)}<div class="combat-state-board"><div><span>同行之人</span><strong>燕惊鸿 · ${board.conditions.allySafe ? "已经安全" : board.conditions.allyGuard ? "已有掩护" : "仍受威胁"}</strong></div><div><span>当前代价</span><strong>${state.p0.wounds.length ? `${state.p0.wounds.length} 处伤势` : "尚未受伤"}</strong></div></div></div>
+      ${lastEntry?.check ? combatCheckResultHtml(lastEntry.check, lastEntry.text) : lastEntry?.text ? `<div class="battle-log"><p><strong>${lastEntry.phase === "enemy" ? "敌方落招：" : "刚才："}</strong>${escapeHtml(lastEntry.text)}</p></div>` : ""}
+    </div>
+    ${board.turn.phase === "player" ? `<div class="p0-action-heading"><span>${pursuit ? "眼下可取 · 不必拔针" : "眼下可取 · 先拆威胁再收束"}</span><strong>${pursuit ? "身份与同伴去向都比气血重要" : "环境、同伴和武学共用三点气机"}</strong></div><div class="action-list">${recommended.map((entry) => p0CombatActionHtml(entry, "wang-battle-action")).join("")}</div>${moreActions.length ? `<details class="p0-more-actions"><summary>展开其余 ${moreActions.length} 条路</summary><div class="action-list">${moreActions.map((entry) => p0CombatActionHtml(entry, "wang-battle-action")).join("")}</div></details>` : ""}<div class="button-row"><button class="primary-button" data-action="end-wang-battle-turn">收势，让敌方意图依次落下</button></div>` : `<div class="p0-enemy-resolution"><span>敌招正在结算</span><strong>无需逐招确认</strong><p>刀、弩、毒伤与失血会按已公开的顺序连续落定。</p><button class="primary-button danger-button" data-action="resolve-wang-enemy">继续结算</button></div>`}
+  `);
+}
+
+function renderWangAftermath() {
+  const result = state.p0.wangOutcome || "escaped";
+  const consequences = state.p0.wangConsequences || {};
+  const outcome = {
+    subdued: ["王卓穴道受制，蛇纹铜牌与口供都留了下来", "生擒首领"],
+    killed: ["王卓倒在东湖浅水，毒蛇帮立刻会知道首领失手", "针下取命"],
+    released: ["王卓带着你故意留下的破口逃走，去向死信箱", "放线追踪"],
+    protected_escape: ["燕惊鸿带着卷宗离开，你放弃了当场处置王卓", "护人撤离"],
+    escaped: ["你从东湖保住性命，敌人的暗线仍在运转", "独自脱身"],
+  }[result] || ["东湖这一局已经落定", "战局已决"];
+  return gameShell(`
+    ${sceneHeader("东湖 · 夜色将合", outcome[0], "柳巷里的判断已经变成活口、尸证、逃踪或一段保住同伴的退路。燕惊鸿把这份结果记进巡检房暗卷，也重新判断你究竟是怎样的人。")}
+    <div class="encounter-ledger"><div><span>处置</span><strong>${escapeHtml(outcome[1])}</strong><p>不同结果会留下不同的官面证据与江湖警戒。</p></div><div><span>燕惊鸿</span><strong>信任 ${Number(consequences.relationships?.yan_jinghong?.trust ?? state.p0.relationships.yan_jinghong.trust)}</strong><p>${consequences.yanJinghong === "safe" ? "她与证物都已安全" : "她仍记得你在河岸上的取舍"}</p></div><div><span>余波</span><strong>证据 ${Number(consequences.evidence?.length || 0)} · 警戒 ${Number(consequences.alert || 0)}</strong><p>${Number(consequences.wounds?.length || 0)} 处伤势会带入明日赶路。</p></div></div>
+    <div class="action-list">${actionCard({ action: "continue-after-wang", title: "带着东湖结果回药铺", description: "沈字铜钱正在袖中发烫；八月十五的破庙奇缘只剩最后一夜可赶。", source: "旧奇遇回响", meta: "继续赶路", kind: "special" })}</div>
   `);
 }
 
@@ -2088,6 +2200,9 @@ const renderers = {
   stakeChoice: renderStakeChoice,
   stakeTraining: renderStakeTraining,
   bodyBreakthrough: renderBodyBreakthrough,
+  yanJinghongArrival: renderYanJinghongArrival,
+  wangBattle: renderWangBattle,
+  wangAftermath: renderWangAftermath,
   midAutumnWarning: renderMidAutumnWarning,
   midAutumnDeparture: renderMidAutumnDeparture,
   templeOfferingSource: renderTempleOfferingSource,
@@ -2101,7 +2216,7 @@ const renderers = {
 
 function screenMode() {
   if (["gameDeath", "shenDeath", "p0Death"].includes(state.screen)) return "death";
-  if (["encounterReward", "mindArt", "roadResult", "ending", "quietDeparture", "qingQingReward", "fiveAnimalReward", "shenPharmacy", "alchemyFailure", "shenChapterEnding", "needleInheritance", "firstKillAftermath", "assailantPlotResult", "midAutumnWarning", "p0Missed", "p0JourneyEnd"].includes(state.screen)) return "settlement";
+  if (["encounterReward", "mindArt", "roadResult", "ending", "quietDeparture", "qingQingReward", "fiveAnimalReward", "shenPharmacy", "alchemyFailure", "shenChapterEnding", "needleInheritance", "firstKillAftermath", "assailantPlotResult", "wangAftermath", "midAutumnWarning", "p0Missed", "p0JourneyEnd"].includes(state.screen)) return "settlement";
   if (["landing", "worldIntro", "characterDraft", "vow", "destiny", "characterSheet"].includes(state.screen)) return "neutral";
   return "simulation";
 }
@@ -2183,7 +2298,7 @@ function combatOutcomeText(result) {
   const impact = result.impact
     ? `气血变化：你失去 ${Number(result.impact.playerDamage || 0)}，刀客失去 ${Number(result.impact.enemyDamage || 0)}。`
     : "";
-  return `${checkText}${impact}${result.battle?.lastResult || result.cause || ""}`;
+  return `${checkText}${impact}${result.text || result.battle?.lastResult || result.cause || ""}`;
 }
 
 function handleDeath(choice) {
@@ -2214,18 +2329,18 @@ function moveP0(screen, node, previousStatus = "complete", currentStatus = "acti
 }
 
 function handleP0Death(reason, memory, node, causeId = "unknown_death", check = null) {
-  if (state.lives <= 1) return;
+  if (state.lives <= 0) return;
   state.lives -= 1;
   state.p0.deathReason = reason;
   state.p0.deathNode = node;
-  const locations = { firstNeedleAmbush: "东门长街", bodyBreakthrough: "东门药铺后院" };
+  const locations = { firstNeedleAmbush: "东门长街", bodyBreakthrough: "东门药铺后院", wangBattle: "柳巷至东湖" };
   state.p0 = recordDeath(state.p0, createDeathRecord({
     id: causeId,
     location: locations[node] || "未知死局",
     cause: reason,
     insight: memory,
-    returnedTo: node === "firstNeedleAmbush" ? "刀客现身之前" : "突破之前",
-    round: node === "firstNeedleAmbush" ? state.p0.battle?.turn?.round || state.p0.battle?.round || null : null,
+    returnedTo: node === "firstNeedleAmbush" ? "刀客现身之前" : node === "wangBattle" ? "接过燕惊鸿药包之前" : "突破之前",
+    round: node === "firstNeedleAmbush" ? state.p0.battle?.turn?.round || state.p0.battle?.round || null : node === "wangBattle" ? state.p0.wangBattle?.turn?.round || null : null,
     check,
   }));
   state.lastDeathChoice = reason;
@@ -2243,6 +2358,30 @@ function finishFirstNeedleBattle(session) {
   state.p0.firstKillChoice = result.outcome;
   track("first_battle_resolved", { outcome: result.outcome, rounds: session.turn.round });
   moveP0("firstKillAftermath", "first_kill_aftermath");
+}
+
+function finishWangBattle(session) {
+  syncWangCombatSession(session);
+  const result = session.result || {};
+  state.p0.wangOutcome = result.outcome;
+  state.p0.wangConsequences = structuredClone(result.consequences || {});
+  if (result.consequences?.relationships?.yan_jinghong) {
+    state.p0.relationships.yan_jinghong = structuredClone(result.consequences.relationships.yan_jinghong);
+  }
+  track("wang_battle_resolved", { outcome: result.outcome, rounds: session.turn.round });
+  moveP0("wangAftermath", "wang_aftermath");
+}
+
+function settleMainCombat(session, kind) {
+  if (kind === "wang") syncWangCombatSession(session);
+  else syncP0CombatSession(session);
+  if (session.status === "death") {
+    const death = session.result || {};
+    const check = [...session.history].reverse().find((entry) => entry.check)?.check || null;
+    return handleP0Death(death.cause, death.memory, kind === "wang" ? "wangBattle" : "firstNeedleAmbush", death.causeId, check);
+  }
+  if (session.status === "finished") return kind === "wang" ? finishWangBattle(session) : finishFirstNeedleBattle(session);
+  refresh();
 }
 
 const handlers = {
@@ -2957,40 +3096,27 @@ const handlers = {
     let next = result.session;
     appendNarrativeOutcome(combatOutcomeText(result.result));
     if (next.turn.energy === 0 && next.turn.phase === "player") {
-      const enemyPhase = endCombatLabPlayerTurn(next);
-      if (enemyPhase?.available) next = enemyPhase.session;
+      const enemyPhase = resolveFullEnemyPhase(next);
+      next = enemyPhase.session;
+      enemyPhase.texts.forEach(appendNarrativeOutcome);
     }
-    syncP0CombatSession(next);
     track("first_battle_action", { action: value, round: next.turn.round, energy: next.turn.energy });
-    refresh();
+    settleMainCombat(next, "rain");
   },
   "end-first-battle-turn": () => {
     if (state.screen !== "firstNeedleAmbush") return;
-    const result = endCombatLabPlayerTurn(ensureP0CombatSession());
+    const result = resolveFullEnemyPhase(ensureP0CombatSession());
     if (!result?.available) return;
-    syncP0CombatSession(result.session);
+    result.texts.forEach(appendNarrativeOutcome);
     track("first_battle_enemy_phase", { round: result.session.turn.round });
-    refresh();
+    settleMainCombat(result.session, "rain");
   },
   "resolve-first-battle-enemy": () => {
     if (state.screen !== "firstNeedleAmbush") return;
-    const result = resolveCombatLabEnemyAction(ensureP0CombatSession());
+    const result = resolveFullEnemyPhase(ensureP0CombatSession());
     if (!result?.available) return;
-    let next = result.session;
-    if (result.text) appendNarrativeOutcome(result.text);
-    if (next.status === "fighting" && next.turn.phase === "enemy" && next.turn.enemyCursor >= next.turn.enemyQueue.length) {
-      const completed = resolveCombatLabEnemyAction(next);
-      if (completed?.available) next = completed.session;
-    }
-    syncP0CombatSession(next);
-    if (next.status === "death") {
-      const death = next.result || {};
-      const check = [...next.history].reverse().find((entry) => entry.check)?.check || null;
-      return handleP0Death(death.cause, death.memory, "firstNeedleAmbush", death.causeId, check);
-    }
-    if (next.status === "finished") return finishFirstNeedleBattle(next);
-    track("first_battle_enemy_action", { unitId: result.action?.unitId, round: next.turn.round });
-    refresh();
+    result.texts.forEach(appendNarrativeOutcome);
+    settleMainCombat(result.session, "rain");
   },
   "return-p0-death": () => {
     if (state.screen !== "p0Death" || !state.p0.checkpoint || state.lives <= 0) return;
@@ -3006,8 +3132,9 @@ const handlers = {
       const knownFacts = deathRecords.some((record) => record.id === "left_sleeve_blade") ? ["left_sleeve_blade"] : [];
       state.p0.battle = createP0CombatSession(knownFacts);
     }
+    if (node === "wangBattle") state.p0.wangBattle = createWangCombatSession();
     track("p0_death_return", { node });
-    moveP0(node, node === "firstNeedleAmbush" ? "first_needle_ambush" : "body_breakthrough");
+    moveP0(node, node === "firstNeedleAmbush" ? "first_needle_ambush" : node === "wangBattle" ? "wang_battle" : "body_breakthrough");
   },
   "read-night-trace": () => {
     if (state.screen !== "firstKillAftermath" || !state.p0.battleOutcome) return;
@@ -3081,7 +3208,47 @@ const handlers = {
     state.p0 = result.state;
     state.potential -= result.potentialCost;
     state.martialStage = "body";
+    state.p0.checkpoint = null;
+    state.p0.checkpoint = structuredClone(state.p0);
     track("body_breakthrough", { stake: state.p0.stakeId, cost: result.potentialCost });
+    moveP0("yanJinghongArrival", "yan_jinghong_arrival");
+  },
+  "enter-wang-encounter": () => {
+    if (state.screen !== "yanJinghongArrival") return;
+    state.p0.wangBattle = createWangCombatSession();
+    track("wang_battle_started", { carriedOutcome: state.p0.battleOutcome });
+    moveP0("wangBattle", "wang_battle");
+  },
+  "wang-battle-action": (value) => {
+    if (state.screen !== "wangBattle") return;
+    const result = resolveCombatLabAction(ensureWangCombatSession(), value);
+    if (!result?.available) return;
+    let next = result.session;
+    appendNarrativeOutcome(combatOutcomeText(result.result));
+    if (next.turn.energy === 0 && next.turn.phase === "player") {
+      const enemyPhase = resolveFullEnemyPhase(next);
+      next = enemyPhase.session;
+      enemyPhase.texts.forEach(appendNarrativeOutcome);
+    }
+    track("wang_battle_action", { action: value, stage: next.battle.stageId, round: next.turn.round });
+    settleMainCombat(next, "wang");
+  },
+  "end-wang-battle-turn": () => {
+    if (state.screen !== "wangBattle") return;
+    const result = resolveFullEnemyPhase(ensureWangCombatSession());
+    if (!result?.available) return;
+    result.texts.forEach(appendNarrativeOutcome);
+    settleMainCombat(result.session, "wang");
+  },
+  "resolve-wang-enemy": () => {
+    if (state.screen !== "wangBattle") return;
+    const result = resolveFullEnemyPhase(ensureWangCombatSession());
+    if (!result?.available) return;
+    result.texts.forEach(appendNarrativeOutcome);
+    settleMainCombat(result.session, "wang");
+  },
+  "continue-after-wang": () => {
+    if (state.screen !== "wangAftermath" || !state.p0.wangOutcome) return;
     moveP0("midAutumnWarning", "mid_autumn_warning");
   },
   "prepare-mid-autumn": () => {

@@ -1,5 +1,5 @@
-import { P0_ITEMS, P0_LOCATIONS, P0_NPCS, P0_SKILLS, getP0Item, getP0Location, getP0Npc, getP0Skill } from "./content/p0/catalogs.mjs?v=20260718.3";
-import { P0_ARCS, P0_CONTENT_NODES, getP0Arc, getP0Node } from "./content/p0/arcs.mjs?v=20260718.3";
+import { P0_ITEMS, P0_LOCATIONS, P0_NPCS, P0_SKILLS, getP0Item, getP0Location, getP0Npc, getP0Skill } from "./content/p0/catalogs.mjs?v=20260718.5";
+import { P0_ARCS, P0_CONTENT_NODES, getP0Arc, getP0Node } from "./content/p0/arcs.mjs?v=20260718.5";
 
 export { P0_ITEMS, P0_LOCATIONS, P0_NPCS, P0_SKILLS, P0_ARCS, P0_CONTENT_NODES, getP0Item, getP0Location, getP0Npc, getP0Skill, getP0Arc, getP0Node };
 
@@ -21,6 +21,7 @@ export function createP0State() {
     relationships: {
       bai_zhiyun: relation(0, 0, 0, 5),
       cao_qing: relation(49, 45, 0, 0),
+      yan_jinghong: relation(0, 58, 0, 0),
       temple_monkeys: relation(0, 0, 0, 10),
     },
     diagnosisActions: [],
@@ -33,6 +34,9 @@ export function createP0State() {
     battleOutcome: null,
     battleOutcomeGrade: null,
     battleEdge: null,
+    wangBattle: null,
+    wangOutcome: null,
+    wangConsequences: null,
     firstKill: false,
     firstKillChoice: null,
     activeMartial: { foundation: null, technique: null, stance: null },
@@ -96,6 +100,7 @@ export function migrateP0State(savedP0) {
       ...(source.relationships || {}),
       bai_zhiyun: { ...defaults.relationships.bai_zhiyun, ...(source.relationships?.bai_zhiyun || {}) },
       cao_qing: { ...defaults.relationships.cao_qing, ...(source.relationships?.cao_qing || {}) },
+      yan_jinghong: { ...defaults.relationships.yan_jinghong, ...(source.relationships?.yan_jinghong || {}) },
       temple_monkeys: { ...defaults.relationships.temple_monkeys, ...(source.relationships?.temple_monkeys || {}) },
     },
     clock: { ...defaults.clock, ...(source.clock || {}) },

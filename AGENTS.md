@@ -66,7 +66,7 @@
 
 ## 5. 当前流程
 
-`landing → worldIntro → characterDraft → vow → destiny → characterSheet → templeWake → fateSight → allocation → templeTasks → ladyArrival → ladyPressure → ladyTest → nightTalk → encounterReward → mindArt → roadTrial → roadResult → ending → shenArrival → shenJobs → caoArrival → caoFate → bloodDemand → danObservation → caoExamFire → caoExamIngredients → caoExamMotive → qingQingReward → qingQingStudy → fiveAnimalReward → shenDaily → fiveAnimalChoice → shenMeeting → shenFuChoice → shenPharmacy → shenDaily → shenErrand → fishingPrep → riverFishing → treasureFish → wangTeaching → caoReturn → caoGuidance → alchemyLesson → firstAlchemy → shenChapterEnding → thirdLadySummons → thirdLadyDiagnosis → purpleDragonFormula → purpleDragonAlchemy → thirdLadyTreatment → needleInheritance → firstNeedleAmbush → firstKillAftermath → assailantTrace → assailantCounterplan → assailantPlotResult → apprenticeshipOffer → stakeChoice → stakeTraining → bodyBreakthrough → midAutumnWarning → midAutumnDeparture → templeOfferingSource → monkeyTest → monkeyWineChoice → apeWaterCave → p0JourneyEnd`
+`landing → worldIntro → characterDraft → vow → destiny → characterSheet → templeWake → fateSight → allocation → templeTasks → ladyArrival → ladyPressure → ladyTest → nightTalk → encounterReward → mindArt → roadTrial → roadResult → ending → shenArrival → shenJobs → caoArrival → caoFate → bloodDemand → danObservation → caoExamFire → caoExamIngredients → caoExamMotive → qingQingReward → qingQingStudy → fiveAnimalReward → shenDaily → fiveAnimalChoice → shenMeeting → shenFuChoice → shenPharmacy → shenDaily → shenErrand → fishingPrep → riverFishing → treasureFish → wangTeaching → caoReturn → caoGuidance → alchemyLesson → firstAlchemy → shenChapterEnding → thirdLadySummons → thirdLadyDiagnosis → purpleDragonFormula → purpleDragonAlchemy → thirdLadyTreatment → needleInheritance → firstNeedleAmbush → firstKillAftermath → assailantTrace → assailantCounterplan → assailantPlotResult → apprenticeshipOffer → stakeChoice → stakeTraining → bodyBreakthrough → yanJinghongArrival → wangBattle → wangAftermath → midAutumnWarning → midAutumnDeparture → templeOfferingSource → monkeyTest → monkeyWineChoice → apeWaterCave → p0JourneyEnd`
 
 支路：
 
@@ -81,9 +81,11 @@
 - 沈家日常透支进入 `shenDeath`，回照时恢复到当日开始；
 - 首炉炼丹失败进入 `alchemyFailure`，不消耗命灯，次日可重试。
 - 三夫人病局可失败或主动退出并进入 `p0Missed`；
-- 春风针夜战与强行锻体死亡进入 `p0Death`，保留死因见闻并回到各自最近节点；
+- 春风针夜战、王卓战与强行锻体死亡进入 `p0Death`，保留死因见闻并回到各自最近节点；
 - 夜战可杀死、制伏或逃离，拜师可拒绝，桩功必须二选一；
-- 夜战行动读取对应五维、境界差、春风针熟练、已知破绽和相关伤势，并使用固定因果骰产生大成、得手、得手有损或失手；同一状态与行动不可通过读档刷新点数；
+- 两场战斗行动读取对应五维、境界差、武学熟练、已知破绽和相关伤势，并使用固定因果骰产生大成、得手、得手有损或失手；同一状态与行动不可通过读档刷新点数；
+- 雨巷刀客必须先看破杀招并从十八点气血压到九点以下，才可制伏或取命；柳巷尾随只显示身份、同伴去向和警觉，进入东湖后才显示王卓气血；
+- 正篇收势后敌方队列自动连续结算，不要求逐个点击敌招；
 - 大成制伏、击杀或脱身会保住完整活口、凭证或退路并改变后续追查；普通失手继续战斗，严重失手才可能触发命灯；
 - 杀死、制伏与逃离分别开放搜尸、盘问和追踪入口；
 - 回报秘密链需补齐目标、暗语、鱼鳞铜签和交接时辰，可伪报接管、改写交接、优先护人或毁签藏锋；

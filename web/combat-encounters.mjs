@@ -25,6 +25,26 @@ export const WANG_ZHUO_DEFAULTS = Object.freeze({
   knownFacts: [],
 });
 
+export const RAIN_AMBUSH_DEFAULTS = Object.freeze({
+  fateSeed: "seed-0",
+  lives: 2,
+  attributes: {
+    constitution: 0,
+    insight: 5,
+    agility: 2,
+    strength: 2,
+    fortune: 0,
+  },
+  playerStage: "mortal",
+  skills: {
+    spring_rain_needles: { stage: "skilled", progress: 60 },
+  },
+  relationships: {},
+  items: {},
+  wounds: [],
+  knownFacts: [],
+});
+
 function hasFact(state, factId) {
   return state.battle.knownFacts.includes(factId);
 }
@@ -577,6 +597,7 @@ export const WANG_ZHUO_ENCOUNTER = Object.freeze({
       positions: { player: "lane_mouth", wang_zhuo: "gate", poison_blade: "river_turn", dock_crossbow: "river_turn", yan_jinghong: "crowd" },
       conditions: { identityProgress: 0, allySafe: false, tailPressure: 0, playerMarked: false, provoked: false, companionUsedRound: 0 },
       entryText: "柳巷里总有一道人影隔着两处摊位跟随，临河门洞已经被他提前占住。",
+      presentation: "pursuit",
     },
     {
       id: "riverbank",
@@ -595,6 +616,7 @@ export const WANG_ZHUO_ENCOUNTER = Object.freeze({
       positions: { player: "bank_entry", wang_zhuo: "mooring_post", poison_blade: "willow_root", dock_crossbow: "skiff", yan_jinghong: "bank_entry" },
       conditions: { weakPoint: false, steadyFooting: false, ropeArmed: false, escapeRoute: false, allyGuard: false, allyEngaged: false, companionUsedRound: 0, reinforcementArrived: false, provoked: false, chokePoint: false },
       entryText: "尾随者在河岸抖开锁链刀，王卓的身份与聚气境气机一同显露；柳根后还有毒刃帮众包抄。",
+      presentation: "battle",
     },
   ],
   actions: [
@@ -1204,9 +1226,444 @@ export const WANG_ZHUO_ENCOUNTER = Object.freeze({
   }),
 });
 
+function rainOpening(state) {
+  return Boolean(
+    state.battle.conditions.observedFeint
+    || state.battle.conditions.darkness
+    || state.battle.conditions.knifeWounded
+    || hasFact(state, "left_sleeve_blade"),
+  );
+}
+
+function rainCovered(state) {
+  return ["eave_pillar", "pharmacy_wall"].includes(state.positions.player)
+    || Boolean(state.battle.conditions.chokePoint);
+}
+
+function rainDirectAdvantages(state) {
+  const reasons = [];
+  if (rainOpening(state)) reasons.push("已经看破或迟滞左袖杀招");
+  if (state.battle.conditions.chokePoint) reasons.push("檐柱切开了三人合围");
+  return reasons;
+}
+
+function rainDirectDisadvantages(state) {
+  const reasons = [];
+  if (!rainOpening(state)) reasons.push("左袖仍有未知后手");
+  return reasons;
+}
+
+function rainFatalStrike(state) {
+  return Number(state.turn.stageRound || 1) === 1 && !rainOpening(state);
+}
+
+function rainNeedleOutcome(state, tier) {
+  if (tier === "failure" && rainFatalStrike(state)) {
+    return {
+      text: "银针封住右腕，左袖短刃却已从肋下穿入。",
+      effects: [
+        { type: "damage", targetId: "player", amount: 99 },
+        { type: "fact", factId: "left_sleeve_blade" },
+      ],
+      death: {
+        causeId: "left_sleeve_blade",
+        cause: "左袖短刃避开封腕银针，从肋下贯入，气血顷刻断绝。",
+        memory: "刀客右腕只是诱饵，真正杀招藏在左袖。",
+        factId: "left_sleeve_blade",
+      },
+    };
+  }
+  if (tier === "failure") {
+    return {
+      text: "银针被刀背磕飞，左袖回锋仍在肋下留下深痕。",
+      effects: [
+        { type: "damage", targetId: "player", amount: 4 },
+        { type: "wound", targetId: "player", wound: { id: "rain_needle_rib", type: "cut", bodyPart: "torso", severity: 2, tags: ["limits_training"] } },
+        { type: "condition", key: "provoked", value: true },
+      ],
+    };
+  }
+  const enemyDamage = tier === "great" ? 6 : tier === "success" ? 5 : 3;
+  return {
+    text: tier === "great"
+      ? "银针先封腕脉再钉住袖底暗刃，刀客的两路杀招同时一滞。"
+      : tier === "costly"
+        ? "银针封住右腕，袖底回锋也在你肋下带出一道血线。"
+        : "银针没入腕脉，明刀与暗刃都慢了一拍。",
+    effects: [
+      { type: "damage", targetId: "night_assailant", amount: enemyDamage, floor: 1 },
+      { type: "condition", key: "knifeWounded", value: true },
+      ...(tier === "great" ? [{ type: "status", targetId: "night_assailant", status: { id: "sealed_wrist", label: "腕脉受制", duration: 1 } }] : []),
+      ...(tier === "costly" ? [
+        { type: "damage", targetId: "player", amount: 2 },
+        { type: "wound", targetId: "player", wound: { id: "rain_needle_rib", type: "cut", bodyPart: "torso", severity: 1, tags: ["limits_training"] } },
+      ] : []),
+    ],
+  };
+}
+
+function rainRecklessOutcome(state, tier) {
+  if (tier === "failure" && rainFatalStrike(state)) {
+    return {
+      text: "你撞开的只是右手刀路，左袖短刃已经送进肋下。",
+      effects: [
+        { type: "damage", targetId: "player", amount: 99 },
+        { type: "fact", factId: "left_sleeve_blade" },
+      ],
+      death: {
+        causeId: "left_sleeve_blade",
+        cause: "你只盯着右手刀光，左袖短刃从肋下贯入，气血顷刻断绝。",
+        memory: "刀客右肩是诱饵，抢攻前必须先处理左袖。",
+        factId: "left_sleeve_blade",
+      },
+    };
+  }
+  if (tier === "failure") {
+    return {
+      text: "肩撞没能破开刀架，回锋把你逼回雨巷入口。",
+      effects: [
+        { type: "damage", targetId: "player", amount: 4 },
+        { type: "move", targetId: "player", to: "alley_entrance" },
+      ],
+    };
+  }
+  const enemyDamage = tier === "great" ? 7 : tier === "success" ? 5 : 4;
+  return {
+    text: tier === "great"
+      ? "你贴住肩线撞散刀架，刀客连退两步才稳住左袖。"
+      : tier === "costly"
+        ? "你撞开刀架逼他退步，自己肩口也被刀背砸伤。"
+        : "你以肩背挤开刀路，把刀客逼离原位。",
+    effects: [
+      { type: "damage", targetId: "night_assailant", amount: enemyDamage, floor: 1 },
+      { type: "move", targetId: "player", to: "street_center" },
+      { type: "move", targetId: "night_assailant", to: "alley_end" },
+      { type: "condition", key: "knifeWounded", value: true },
+      ...(tier === "costly" ? [
+        { type: "damage", targetId: "player", amount: 2 },
+        { type: "wound", targetId: "player", wound: { id: "rain_shoulder_bruise", type: "bruise", bodyPart: "shoulder", severity: 1, tags: ["limits_training"] } },
+      ] : []),
+    ],
+  };
+}
+
+function rainSubdueOutcome(state, tier) {
+  if (tier === "failure") {
+    return {
+      text: "封穴一针慢了半息，刀客以左袖回锋护住肩井。",
+      effects: [
+        { type: "damage", targetId: "player", amount: 4 },
+        { type: "condition", key: "provoked", value: true },
+      ],
+    };
+  }
+  const current = enemy(state, "night_assailant").current;
+  const costly = tier === "costly";
+  return {
+    text: tier === "great"
+      ? "银针先锁毒囊再封肩肘，刀客完整跪进雨水，仍能开口。"
+      : costly
+        ? "银针封住肩肘两穴，最后一道回锋也擦开你的肋下。"
+        : "银针截住肩井与曲池，刀客四肢僵住跪进积水。",
+    effects: [
+      { type: "damage", targetId: "night_assailant", amount: Math.max(0, current - 1), floor: 1 },
+      { type: "evidence", evidenceId: "rain_ambush_captive" },
+      ...(costly ? [
+        { type: "damage", targetId: "player", amount: 2 },
+        { type: "wound", targetId: "player", wound: { id: "rain_finish_rib", type: "cut", bodyPart: "torso", severity: 1, tags: ["limits_training"] } },
+      ] : []),
+    ],
+    pendingOutcome: {
+      outcome: "subdued",
+      label: "封穴留命",
+      text: "刀客穴道受制，口供、毒囊与回报凭证都保留下来。",
+      edge: tier === "great" ? "intact_captive" : costly ? "bloodied_finish" : null,
+    },
+  };
+}
+
+function rainKillOutcome(state, tier) {
+  if (tier === "failure") {
+    return {
+      text: "杀针擦过咽侧，左袖短刃沿旧伤逼近。",
+      effects: [
+        { type: "damage", targetId: "player", amount: 4 },
+        { type: "condition", key: "provoked", value: true },
+      ],
+    };
+  }
+  const current = enemy(state, "night_assailant").current;
+  const costly = tier === "costly";
+  return {
+    text: tier === "great"
+      ? "一针穿喉，刀客倒下时左袖夹层与鱼鳞铜签都没有受损。"
+      : costly
+        ? "银针穿喉，刀客临死回锋也在你肩口留下血线。"
+        : "最后一针没入咽喉，刀客仰面倒进雨水。",
+    effects: [
+      { type: "damage", targetId: "night_assailant", amount: current },
+      { type: "evidence", evidenceId: "fish_scale_token" },
+      { type: "alert", amount: 2 },
+      ...(costly ? [
+        { type: "damage", targetId: "player", amount: 2 },
+        { type: "wound", targetId: "player", wound: { id: "rain_finish_shoulder", type: "cut", bodyPart: "shoulder", severity: 1, tags: ["limits_training"] } },
+      ] : []),
+    ],
+    pendingOutcome: {
+      outcome: "killed",
+      label: "穿喉取命",
+      text: "刀客死在雨巷，尸身留下凭证，也让幕后者更快察觉失手。",
+      edge: tier === "great" ? "intact_token" : costly ? "bloodied_finish" : null,
+    },
+  };
+}
+
+function rainEscapeOutcome(state, tier) {
+  if (tier === "failure") {
+    return {
+      text: "湿墙让你慢了一步，追刀在腿侧划开一道口子。",
+      effects: [
+        { type: "damage", targetId: "player", amount: 4 },
+        { type: "wound", targetId: "player", wound: { id: "rain_wall_leg", type: "cut", bodyPart: "leg", severity: 2, tags: ["limits_travel"] } },
+      ],
+    };
+  }
+  const costly = tier === "costly";
+  return {
+    text: costly ? "你翻过矮墙脱身，落地时腿侧仍被刀锋带出血线。" : "你借矮墙脱离刀路，雨幕很快吞没身后的追声。",
+    effects: [
+      ...(costly ? [
+        { type: "damage", targetId: "player", amount: 2 },
+        { type: "wound", targetId: "player", wound: { id: "rain_wall_leg", type: "cut", bodyPart: "leg", severity: 1, tags: ["limits_travel"] } },
+      ] : []),
+      { type: "alert", amount: 1 },
+    ],
+    pendingOutcome: {
+      outcome: "escaped",
+      label: "翻墙脱身",
+      text: "你保住性命和针匣，刀客背后的回报渠道仍会继续运转。",
+      edge: tier === "great" ? "unseen_exit" : costly ? "bloodied_finish" : null,
+    },
+  };
+}
+
+function rainAmbushIntents(state, helpers) {
+  const intents = [];
+  const knife = enemy(state, "night_assailant");
+  const crossbow = enemy(state, "roof_crossbow");
+  const leader = enemy(state, "black_leader");
+  if (state.pendingOutcome) {
+    if (knife.active) {
+      intents.push({
+        id: `rain_${state.turn.round}_knife_settled`, unitId: "night_assailant", order: 1,
+        label: state.pendingOutcome.outcome === "subdued" ? "穴道受制" : state.pendingOutcome.outcome === "killed" ? "倒地无声" : "追击落空",
+        detail: "主要目标已经无法继续追击", from: state.positions.night_assailant, to: state.positions.night_assailant,
+        effects: [{ type: "deactivate", targetId: "night_assailant" }],
+        text: state.pendingOutcome.outcome === "subdued" ? "刀客穴道受制，只能跪在雨水里喘息。" : state.pendingOutcome.outcome === "killed" ? "刀客仰面倒进雨水，再没有抬起左袖。" : "刀客追到矮墙下，已经失去你的踪影。",
+      });
+    }
+    if (crossbow.active && !crossbow.defeated) {
+      const shot = Boolean(state.battle.conditions.crossbowAimed) && !state.battle.conditions.darkness;
+      intents.push({
+        id: `rain_${state.turn.round}_crossbow_exit`, unitId: "roof_crossbow", order: 2,
+        label: shot ? "临别一箭" : "收弩撤离", detail: shot ? "屋脊→当前身位｜预计气血−3" : "视线已断｜没有形成射击窗口",
+        from: state.positions.roof_crossbow, to: state.positions.roof_crossbow,
+        effects: [...(shot ? [{ type: "damage", targetId: "player", amount: rainCovered(state) ? 1 : 3 }] : []), { type: "deactivate", targetId: "roof_crossbow" }],
+        text: shot ? "刀客已经倒下，屋脊上先前瞄定的弩箭仍穿雨落下。" : "弩手没有等到新的出手机会，收弩退入屋脊后方。",
+      });
+    }
+    if (leader.active && !leader.defeated) {
+      intents.push({
+        id: `rain_${state.turn.round}_leader_exit`, unitId: "black_leader", order: 3,
+        label: "喝令撤走", detail: "巷尾后撤｜放弃抢回刀客", from: state.positions.black_leader, to: state.positions.black_leader,
+        effects: [{ type: "deactivate", targetId: "black_leader" }], text: "巷尾头目没有冒险抢人，只喝令余众撤入雨幕。",
+      });
+    }
+    return intents;
+  }
+
+  if (knife.active && !knife.defeated) {
+    const from = state.positions.night_assailant;
+    const path = helpers.path(from, state.positions.player);
+    const to = path.length > 1 ? path[1] : from;
+    const reaches = to === state.positions.player;
+    const known = rainOpening(state);
+    const sealed = enemyHasStatus(state, "night_assailant", "sealed_wrist");
+    const empowered = Boolean(state.battle.conditions.knifeEmpowered);
+    const damage = reaches ? Math.max(1, 4 + (empowered ? 2 : 0) - (known ? 1 : 0) - (sealed ? 2 : 0) - (state.battle.conditions.darkness ? 1 : 0)) : 0;
+    intents.push({
+      id: `rain_${state.turn.round}_knife`, unitId: "night_assailant", order: 1,
+      label: reaches ? (known ? "左袖回刺" : "贴身抢杀") : "逼近压位",
+      detail: reaches ? `${helpers.nodeName(from)}→${helpers.nodeName(to)}｜预计气血−${damage}` : `${helpers.nodeName(from)}→${helpers.nodeName(to)}｜向你逼近`,
+      from, to,
+      effects: [
+        { type: "move", targetId: "night_assailant", to },
+        ...(damage ? [{ type: "damage", targetId: "player", amount: damage }] : []),
+      ],
+      text: reaches ? `刀客贴进身前，左袖回锋令你气血下降${damage}。` : "刀客借雨逼近一处身位，没有立刻出刀。",
+      death: {
+        causeId: "rain_knife_exhaustion",
+        cause: "连续追刀耗尽最后一口气血，命灯在雨中熄灭。",
+        memory: "刀客贴身后会在敌方阶段连续追刀，必须改变身位、遮挡或尽快收束。",
+        factId: "rain_knife_pursuit",
+      },
+    });
+  }
+
+  if (crossbow.active && !crossbow.defeated) {
+    if (state.battle.conditions.darkness) {
+      intents.push({ id: `rain_${state.turn.round}_crossbow`, unitId: "roof_crossbow", order: 2, label: "失去视线", detail: "灯火已灭｜弩箭无法锁定", from: "rooftop", to: "rooftop", effects: [], text: "灯火熄灭，弩手只能在雨幕里重新寻找影子。" });
+    } else if (!state.battle.conditions.crossbowAimed) {
+      intents.push({ id: `rain_${state.turn.round}_crossbow`, unitId: "roof_crossbow", order: 2, label: "瞄准", detail: `屋脊→${helpers.nodeName(state.positions.player)}｜下轮放箭`, from: "rooftop", to: "rooftop", effects: [{ type: "condition", key: "crossbowAimed", value: true }], text: "屋脊弩手抬起弩臂，雨线已经被准星切开。" });
+    } else {
+      const damage = rainCovered(state) ? 1 : 4;
+      intents.push({ id: `rain_${state.turn.round}_crossbow`, unitId: "roof_crossbow", order: 2, label: "弩箭破雨", detail: `屋脊→${helpers.nodeName(state.positions.player)}｜预计气血−${damage}`, from: "rooftop", to: "rooftop", effects: [{ type: "damage", targetId: "player", amount: damage }, { type: "condition", key: "crossbowAimed", value: false }], text: `弩箭穿雨落下，令你气血下降${damage}。` });
+    }
+  }
+
+  if (leader.active && !leader.defeated) {
+    if (Number(state.battle.conditions.leaderCharge || 0) === 0) {
+      intents.push({ id: `rain_${state.turn.round}_leader`, unitId: "black_leader", order: 3, label: "蓄势观局", detail: "巷尾固守｜看清你的退路", from: "alley_end", to: "alley_end", effects: [{ type: "increment", key: "leaderCharge", amount: 1 }], text: "头目没有抢进，只在巷尾看清你的退路。" });
+    } else if (!state.battle.conditions.wallBlocked) {
+      intents.push({ id: `rain_${state.turn.round}_leader`, unitId: "black_leader", order: 3, label: "封锁矮墙", detail: "巷尾下令｜翻墙退路即将关闭", from: "alley_end", to: "alley_end", effects: [{ type: "condition", key: "wallBlocked", value: true }, { type: "environment", environmentId: "pharmacy_wall", state: "blocked" }], text: "头目一声短喝，两名伏兵从巷外封住药铺矮墙。" });
+    } else {
+      intents.push({ id: `rain_${state.turn.round}_leader`, unitId: "black_leader", order: 3, label: "催刀合围", detail: "巷尾下令｜刀客下一击增强", from: "alley_end", to: "alley_end", effects: [{ type: "condition", key: "knifeEmpowered", value: true }], text: "头目催刀合围，刀客的下一次贴身追击会更重。" });
+    }
+  }
+  return intents;
+}
+
+export const RAIN_AMBUSH_ENCOUNTER = Object.freeze({
+  id: "rain_ambush",
+  title: "东门伏杀",
+  location: "金陵 · 雨巷",
+  objective: "活过伏击，并决定留下活口、取命或脱身。",
+  sceneClass: "rain-ambush",
+  sceneImage: "./assets/combat/jinling-rain-ambush.webp",
+  historyLabel: "雨夜行录",
+  maxEnergy: 3,
+  defaults: RAIN_AMBUSH_DEFAULTS,
+  player: { name: "陈司命" },
+  defaultDeath: {
+    causeId: "rain_ambush_blood_exhausted",
+    cause: "三路敌招接连落下，气血在雨中断绝。",
+    memory: "刀客、弩手与巷尾头目会按公开顺序出手，必须在收势前改变至少一条威胁。",
+    factId: "rain_enemy_order",
+  },
+  participants: [
+    { id: "night_assailant", name: "刀客", role: "当前交锋", side: "enemy", stageId: "body", max: 18, primary: true, icon: "blade", portrait: "./assets/combat/portrait-masked-blade.webp" },
+    { id: "roof_crossbow", name: "弩手", role: "远程威胁", side: "enemy", stageId: "body", max: 8, icon: "bow", portrait: "./assets/combat/portrait-roof-crossbow.webp" },
+    { id: "black_leader", name: "头目", role: "后阵指挥", side: "enemy", stageId: "body", max: 12, icon: "command", portrait: "./assets/combat/portrait-black-leader.webp" },
+  ],
+  nodes: [
+    { id: "alley_entrance", name: "雨巷入口", shortName: "巷口", type: "ground", x: 16, y: 73, playerSelectable: true },
+    { id: "eave_pillar", name: "药铺檐下", shortName: "檐下", type: "cover", x: 35, y: 58, playerSelectable: true },
+    { id: "street_center", name: "长街中央", shortName: "街心", type: "ground", x: 56, y: 50, playerSelectable: true },
+    { id: "pharmacy_wall", name: "药铺矮墙", shortName: "矮墙", type: "cover", recommendationWeight: 18, x: 76, y: 68, playerSelectable: true },
+    { id: "alley_end", name: "雨巷深处", shortName: "巷尾", type: "ground", x: 87, y: 42, playerSelectable: false },
+    { id: "rooftop", name: "临街屋脊", shortName: "屋脊", type: "high", x: 68, y: 20, playerSelectable: false },
+  ],
+  edges: {
+    alley_entrance: ["eave_pillar"],
+    eave_pillar: ["alley_entrance", "street_center", "pharmacy_wall"],
+    street_center: ["eave_pillar", "pharmacy_wall", "alley_end", "rooftop"],
+    pharmacy_wall: ["eave_pillar", "street_center", "alley_end"],
+    alley_end: ["street_center", "pharmacy_wall", "rooftop"],
+    rooftop: ["street_center", "alley_end"],
+  },
+  environment: [
+    { id: "street_lantern", name: "街边灯笼", state: "lit", icon: "lantern", panelTitle: "银针灭灯", hint: "灯火熄灭后，屋脊弩手会失去锁定。", nodeId: "eave_pillar", x: 16, y: 30 },
+    { id: "eave_pillar", name: "药铺檐柱", state: "cover", icon: "post", panelTitle: "借柱断势", hint: "檐柱能切开刀客与弩手的交叉视线。", nodeId: "eave_pillar", x: 37, y: 54 },
+    { id: "pharmacy_wall", name: "药铺矮墙", state: "escape", icon: "gate", panelTitle: "翻墙脱身", hint: "抵达矮墙后可以放弃追查，保住性命离开。", nodeId: "pharmacy_wall", x: 79, y: 57 },
+  ],
+  stages: [{
+    id: "rain_ambush",
+    label: "雨巷伏杀",
+    title: "东门伏杀",
+    location: "金陵 · 雨巷",
+    objective: "活过伏击，并决定留下活口、取命或脱身。",
+    sceneClass: "rain-ambush",
+    sceneImage: "./assets/combat/jinling-rain-ambush.webp",
+    mapLabel: "雨巷身位图",
+    presentation: "battle",
+    nodeIds: ["alley_entrance", "eave_pillar", "street_center", "pharmacy_wall", "alley_end", "rooftop"],
+    links: [["alley_entrance", "eave_pillar"], ["eave_pillar", "street_center"], ["eave_pillar", "pharmacy_wall"], ["street_center", "pharmacy_wall"], ["street_center", "alley_end"], ["street_center", "rooftop"], ["pharmacy_wall", "alley_end"], ["alley_end", "rooftop"]],
+    environmentIds: ["street_lantern", "eave_pillar", "pharmacy_wall"],
+    activeEnemyIds: ["night_assailant", "roof_crossbow", "black_leader"],
+    positions: { player: "alley_entrance", night_assailant: "street_center", roof_crossbow: "rooftop", black_leader: "alley_end" },
+    conditions: { observedFeint: false, darkness: false, knifeWounded: false, chokePoint: false, crossbowAimed: false, leaderCharge: 0, wallBlocked: false, knifeEmpowered: false, provoked: false, companionUsedRound: 0 },
+    entryText: "刀客从街心逼近，弩手伏在屋脊，巷尾还有一人封住退路。",
+  }],
+  actions: [
+    {
+      id: "observe", stageIds: ["rain_ambush"], icon: "eye", verb: "观察", objectId: "night_assailant", objectName: "刀客左袖", intent: "识招",
+      title: "让开半步，只看肩、胯与袖口", description: "放弃抢攻，用一息看清真正杀招。", attribute: "insight", difficulty: 3, energyCost: 1, ignoreStage: true,
+      successPreview: "看破藏在左袖的短刃", riskPreview: "失手会被刀锋擦伤", focusIds: ["default", "target:night_assailant"], recommendationWeight: 32,
+      advantages: (state) => hasFact(state, "left_sleeve_blade") ? "命灯已经照见左袖暗刃" : null,
+      outcomes: {
+        great: { text: "你没有追右手刀光，还抢在换步前看清左袖短刃。", effects: [{ type: "condition", key: "observedFeint", value: true }, { type: "fact", factId: "left_sleeve_blade" }, { type: "status", targetId: "night_assailant", status: { id: "read_feint", label: "虚招看破", duration: 1 } }] },
+        success: { text: "你让开半步，终于看见左袖短刃才是真正杀招。", effects: [{ type: "condition", key: "observedFeint", value: true }, { type: "fact", factId: "left_sleeve_blade" }] },
+        costly: { text: "你看清左袖暗刃时，肋下也被明刀擦开。", effects: [{ type: "condition", key: "observedFeint", value: true }, { type: "fact", factId: "left_sleeve_blade" }, { type: "damage", targetId: "player", amount: 2 }, { type: "wound", targetId: "player", wound: { id: "rain_observe_rib", type: "cut", bodyPart: "torso", severity: 1, tags: ["limits_training"] } }] },
+        failure: { text: "你看慢了一瞬，只来得及避开致命处。", effects: [{ type: "damage", targetId: "player", amount: 4 }, { type: "condition", key: "provoked", value: true }, { type: "wound", targetId: "player", wound: { id: "rain_observe_rib", type: "cut", bodyPart: "torso", severity: 2, tags: ["limits_training"] } }] },
+      },
+    },
+    {
+      id: "extinguish", stageIds: ["rain_ambush"], icon: "lantern", verb: "改变", objectId: "street_lantern", objectName: "街边灯笼", intent: "借势",
+      title: "借雨掠过檐下，打灭灯笼", description: "先夺走弩手看路的光，再借檐柱切开合围。", attribute: "agility", difficulty: 2, energyCost: 2, ignoreStage: true,
+      successPreview: "熄灭灯火并取得檐柱遮挡", riskPreview: "失手会在转身时挨刀", focusIds: ["default", "street_lantern", "eave_pillar"], recommendationWeight: 30,
+      advantages: () => "雨夜灯焰不稳",
+      outcomes: {
+        great: { text: "针尾扫灭灯焰，你已先一步退到檐柱之后。", effects: [{ type: "move", targetId: "player", to: "eave_pillar" }, { type: "condition", key: "darkness", value: true }, { type: "condition", key: "chokePoint", value: true }, { type: "environment", environmentId: "street_lantern", state: "out" }] },
+        success: { text: "灯焰熄灭，檐柱也切断了弩手视线。", effects: [{ type: "move", targetId: "player", to: "eave_pillar" }, { type: "condition", key: "darkness", value: true }, { type: "condition", key: "chokePoint", value: true }, { type: "environment", environmentId: "street_lantern", state: "out" }] },
+        costly: { text: "灯火灭了，转身时刀锋也在肩口带出血线。", effects: [{ type: "move", targetId: "player", to: "eave_pillar" }, { type: "condition", key: "darkness", value: true }, { type: "condition", key: "chokePoint", value: true }, { type: "environment", environmentId: "street_lantern", state: "out" }, { type: "damage", targetId: "player", amount: 2 }, { type: "wound", targetId: "player", wound: { id: "rain_lantern_shoulder", type: "cut", bodyPart: "shoulder", severity: 1, tags: ["limits_training"] } }] },
+        failure: { text: "针尾擦过灯罩，灯仍亮着，你的脚步也被逼回巷口。", effects: [{ type: "damage", targetId: "player", amount: 2 }, { type: "status", targetId: "player", status: { id: "off_balance", label: "失衡", duration: 1 } }] },
+      },
+    },
+    {
+      id: "needle_wrist", stageIds: ["rain_ambush"], icon: "needles", verb: "出针", objectId: "weapon_wrist", objectName: "持刀手腕", intent: "夺械",
+      title: "春风针·封腕", description: "银针先取持刀手腕；未知暗招仍可能致命。", attribute: "insight", skillId: "spring_rain_needles", skillName: "春风化雨针", masteryRequired: "learned", difficulty: 4, energyCost: 2, targetId: "night_assailant", directCombat: true,
+      successPreview: "刀客气血 -3～6并迟滞刀路", riskPreview: "未看破后手时可能踏进死局", focusIds: ["default", "target:night_assailant"], recommendationWeight: 18,
+      fatalWhen: rainFatalStrike, knownFatalWhen: (state) => rainFatalStrike(state) && hasFact(state, "left_sleeve_blade"), advantages: rainDirectAdvantages, disadvantages: rainDirectDisadvantages, resolve: rainNeedleOutcome,
+    },
+    {
+      id: "reckless", stageIds: ["rain_ambush"], icon: "impact", verb: "抢攻", objectId: "night_assailant", objectName: "蒙面刀客", intent: "强攻",
+      title: "迎刀抢进，撞散刀架", description: "以力道换取最快的压血机会。", attribute: "strength", difficulty: 3, energyCost: 2, targetId: "night_assailant", directCombat: true,
+      successPreview: "刀客气血 -4～7并改变身位", riskPreview: "未知左袖可能直接碎灯", focusIds: ["target:night_assailant"], recommendationWeight: -12,
+      fatalWhen: rainFatalStrike, knownFatalWhen: (state) => rainFatalStrike(state) && hasFact(state, "left_sleeve_blade"), advantages: rainDirectAdvantages, disadvantages: rainDirectDisadvantages, resolve: rainRecklessOutcome,
+    },
+    {
+      id: "seal", stageIds: ["rain_ambush"], icon: "needles", verb: "封穴", objectId: "assailant_meridians", objectName: "肩井与曲池", intent: "制伏",
+      title: "春风针·封穴留命", description: "必须先看破暗招，并把刀客气血压到一半以下。", attribute: "insight", skillId: "spring_rain_needles", skillName: "春风化雨针", masteryRequired: "learned", difficulty: 4, energyCost: 3, targetId: "night_assailant", directCombat: true,
+      successPreview: "刀客气血压至1并留下活口", riskPreview: "失手会承受左袖回锋", focusIds: ["target:night_assailant"], recommendationWeight: 40,
+      availableWhen: (state) => !rainOpening(state) ? "必须先看破或迟滞左袖杀招。" : enemy(state, "night_assailant").current > 9 ? "刀客气血仍足，封穴窗口尚未形成。" : true,
+      advantages: rainDirectAdvantages, disadvantages: rainDirectDisadvantages, resolve: rainSubdueOutcome,
+    },
+    {
+      id: "kill", stageIds: ["rain_ambush"], icon: "needles", verb: "穿喉", objectId: "assailant_throat", objectName: "刀客咽喉", intent: "杀死",
+      title: "春风针·穿喉", description: "必须先看破暗招，并把刀客气血压到一半以下。", attribute: "insight", skillId: "spring_rain_needles", skillName: "春风化雨针", masteryRequired: "learned", difficulty: 3, energyCost: 3, targetId: "night_assailant", directCombat: true,
+      successPreview: "刀客气血归零并留下尸证", riskPreview: "永远失去口供并提高警戒", focusIds: ["target:night_assailant"], recommendationWeight: 38,
+      availableWhen: (state) => !rainOpening(state) ? "必须先看破或迟滞左袖杀招。" : enemy(state, "night_assailant").current > 9 ? "刀客气血仍足，杀针无法一击收束。" : true,
+      advantages: rainDirectAdvantages, disadvantages: rainDirectDisadvantages, resolve: rainKillOutcome,
+    },
+    {
+      id: "flee", stageIds: ["rain_ambush"], icon: "escape", verb: "脱离", objectId: "pharmacy_wall", objectName: "药铺矮墙", intent: "脱身",
+      title: "翻过药铺矮墙脱身", description: "放弃追查刀客来路，保住性命与针匣。", attribute: "agility", difficulty: 1, energyCost: 3, ignoreStage: true,
+      successPreview: "立即脱离雨巷", riskPreview: "幕后回报渠道仍会继续", focusIds: ["pharmacy_wall", "position:pharmacy_wall"], recommendationWeight: 28,
+      availableWhen: (state) => state.battle.conditions.wallBlocked ? "巷尾头目已经封住矮墙。" : state.positions.player !== "pharmacy_wall" ? "必须先抵达药铺矮墙。" : true,
+      resolve: rainEscapeOutcome,
+    },
+  ],
+  getEnemyIntents: (state, context, helpers) => rainAmbushIntents(state, helpers),
+  buildConsequences: (state, outcome, base) => ({
+    ...base,
+    assailant: outcome.outcome === "subdued" ? "captive" : outcome.outcome === "killed" ? "corpse" : "escaped",
+    reportChannel: outcome.outcome === "subdued" ? "testimony" : outcome.outcome === "killed" ? "token" : "rain_trace",
+  }),
+});
+
 export const COMBAT_ENCOUNTER_CATALOG = Object.freeze([
   {
-    id: "rain_ambush",
+    id: RAIN_AMBUSH_ENCOUNTER.id,
     title: "东门伏杀",
     location: "金陵雨巷",
     description: "三点气机、六节点空间与三名敌人的普通遭遇。",

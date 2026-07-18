@@ -1,4 +1,4 @@
-import { rollCausalDie } from "./wudao-p0-core.mjs?v=20260718.3";
+import { rollCausalDie } from "./wudao-p0-core.mjs?v=20260718.5";
 
 export const COMBAT_MAX_ENERGY = 3;
 
@@ -20,10 +20,10 @@ const MASTERY_ORDER = Object.freeze({
 });
 
 const RATING_LABELS = Object.freeze({
-  safe: "稳妥",
-  viable: "可行",
-  dangerous: "凶险",
-  fatal: "必死",
+  safe: "条件占优",
+  viable: "条件相持",
+  dangerous: "条件不利",
+  fatal: "已知死局",
   locked: "不可用",
 });
 
@@ -367,9 +367,11 @@ function movementDefinition(state, definition, actionId) {
     title: `移向${node.shortName}`,
     description: `沿${path.map((id) => nodeName(state, definition, id)).join("→")}换位。`,
     intent: "身位",
+    focusIds: [`position:${destination}`],
     attribute: "agility",
     difficulty: node.movementDifficulty ?? 1,
     energyCost: cost,
+    recommendationWeight: Number(node.recommendationWeight || 0),
     ignoreStage: true,
     bodyParts: ["leg"],
     successPreview: node.type === "cover" ? "取得遮挡并改变追击路线" : "改变与敌人的距离",
@@ -891,7 +893,11 @@ export function resolveCombatAction(state, actionId, definition, suppliedContext
   next.turn.energy = Math.max(0, next.turn.energy - Number(action.energyCost ?? 1));
   if (outcome.energy != null) next.turn.energy = Math.max(0, Number(outcome.energy));
   if (outcome.pendingOutcome) {
-    next.pendingOutcome = clone(outcome.pendingOutcome);
+    next.pendingOutcome = {
+      ...clone(outcome.pendingOutcome),
+      check: clone(resolved.check),
+      intent: action.intent,
+    };
     next.turn.energy = 0;
   }
   if (outcome.outcome) finishBattle(next, definition, { outcome: outcome.outcome, text: outcome.text, edge: outcome.edge || null });

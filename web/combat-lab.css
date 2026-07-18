@@ -2311,6 +2311,46 @@ button.state-chip:hover,
   border-color: var(--line-strong);
 }
 
+.pursuit-status {
+  display: grid;
+  margin-top: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.pursuit-status > div {
+  min-width: 0;
+  padding: 8px 9px;
+  border: 1px solid var(--line);
+  background: rgba(18, 19, 17, 0.72);
+}
+
+.pursuit-status span,
+.pursuit-status small {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.pursuit-status strong {
+  display: block;
+  margin: 3px 0;
+  color: var(--paper-bright);
+  font: 18px/1 var(--display);
+}
+
+.pursuit-status strong i {
+  color: var(--muted);
+  font-style: normal;
+}
+
+.causal-note {
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
 @media (max-width: 900px) {
   .combat-shell {
     display: block;
@@ -2379,8 +2419,8 @@ button.state-chip:hover,
 
 @media (max-width: 540px) {
   .battle-stage {
-    height: clamp(410px, 52svh, 470px);
-    min-height: 410px;
+    height: clamp(345px, 43svh, 390px);
+    min-height: 345px;
   }
 
   .scene-art {
@@ -2448,7 +2488,7 @@ button.state-chip:hover,
   }
 
   .encounter-switch span {
-    font-size: 6px;
+    font-size: 9px;
   }
 
   .encounter-switch strong {
@@ -2474,14 +2514,14 @@ button.state-chip:hover,
   }
 
   .unit-copy b {
-    font-size: 8px;
+    font-size: 10px;
   }
 
   .unit-copy small {
     display: block;
     margin-top: 2px;
-    font-size: 7px;
-    line-height: 1.1;
+    font-size: 10px;
+    line-height: 1.15;
   }
 
   .unit-copy small em {
@@ -2575,10 +2615,7 @@ button.state-chip:hover,
   }
 
   .position-map {
-    right: 4px;
-    bottom: 5px;
-    left: 4px;
-    height: 86px;
+    display: none;
   }
 
   .position-map-title {
@@ -2648,7 +2685,7 @@ button.state-chip:hover,
   }
 
   .battle-objective > small {
-    font-size: 9px;
+    font-size: 10px;
   }
 
   .battle-memory {
@@ -2674,7 +2711,7 @@ button.state-chip:hover,
   }
 
   .ally-card em {
-    font-size: 7px;
+    font-size: 10px;
   }
 
   .battle-state-strip {
@@ -2729,7 +2766,7 @@ button.state-chip:hover,
   }
 
   .context-action {
-    min-height: 56px;
+    min-height: 60px;
     padding-top: 6px;
     padding-right: 35px;
     padding-bottom: 6px;
@@ -2753,7 +2790,7 @@ button.state-chip:hover,
 
   .action-copy small {
     margin-top: 2px;
-    font-size: 9px;
+    font-size: 10px;
   }
 
   .action-copy > small:not(.action-forecast) {
@@ -2763,7 +2800,7 @@ button.state-chip:hover,
   .action-copy .action-forecast {
     display: block;
     overflow: hidden;
-    font-size: 8px;
+    font-size: 10px;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -2814,6 +2851,29 @@ button.state-chip:hover,
   .select-grid {
     grid-template-columns: 1fr;
   }
+
+  .pursuit-status {
+    margin-top: 6px;
+    gap: 4px;
+  }
+
+  .pursuit-status > div {
+    padding: 5px 6px;
+  }
+
+  .pursuit-status span,
+  .pursuit-status small,
+  .causal-note {
+    font-size: 10px;
+  }
+
+  .pursuit-status small {
+    display: none;
+  }
+
+  .pursuit-status strong {
+    font-size: 15px;
+  }
 }
 
 @media (max-width: 900px) and (orientation: landscape) and (max-height: 560px) {
@@ -2837,7 +2897,7 @@ button.state-chip:hover,
   .command-deck {
     height: 100vh;
     min-height: 0;
-    padding: 14px 14px 28px;
+    padding: 10px 12px 22px;
     overflow-y: auto;
     border-top: 0;
     border-left: 1px solid var(--line);
@@ -2866,7 +2926,7 @@ button.state-chip:hover,
   }
 
   .unit-copy small {
-    display: none;
+    font-size: 10px;
   }
 
   .blade-target {
@@ -2945,7 +3005,7 @@ button.state-chip:hover,
   }
 
   .context-heading {
-    margin-top: 7px;
+    margin-top: 4px;
   }
 
   .context-heading p {
@@ -2953,19 +3013,21 @@ button.state-chip:hover,
   }
 
   .context-heading strong {
-    font-size: 19px;
+    font-size: 18px;
   }
 
   .recommended-actions {
-    margin-top: 6px;
-    gap: 4px;
+    margin-top: 3px;
+    gap: 3px;
   }
 
   .context-action {
-    min-height: 50px;
-    padding-top: 4px;
-    padding-bottom: 4px;
+    min-height: 48px;
+    padding-top: 2px;
+    padding-right: 32px;
+    padding-bottom: 2px;
     grid-template-columns: 36px minmax(0, 1fr) auto;
+    gap: 6px;
   }
 
   .action-icon {
@@ -2974,7 +3036,8 @@ button.state-chip:hover,
   }
 
   .action-copy strong {
-    font-size: 16px;
+    font-size: 14px;
+    line-height: 1.1;
   }
 
   .action-copy small:not(.action-forecast),
@@ -2987,7 +3050,7 @@ button.state-chip:hover,
     margin-top: 2px;
     overflow: hidden;
     color: var(--gold);
-    font-size: 7px;
+    font-size: 10px;
     text-overflow: ellipsis;
     white-space: nowrap;
   }

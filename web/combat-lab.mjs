@@ -11,11 +11,12 @@ import {
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
   rewindCombatLabDeath,
-} from "./combat-lab-core.mjs?v=20260718.3";
+} from "./combat-lab-core.mjs?v=20260718.5";
 
 const root = document.querySelector("#combat-lab");
 const liveRegion = document.querySelector("#combat-status");
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+const debugToolsVisible = new URLSearchParams(window.location.search).has("debug");
 
 const ATTRIBUTE_LABELS = {
   constitution: "根骨",
@@ -151,8 +152,8 @@ function clampPercent(current, maximum) {
   return Math.max(0, Math.min(100, (Number(current || 0) / Math.max(1, Number(maximum || 1))) * 100));
 }
 
-function isEngineBattle() {
-  return session.engine === "dayao-combat-v1";
+function isWangBattle() {
+  return session.encounterId === "wang_zhuo_east_lake";
 }
 
 function defaultTarget(board = getCombatLabBattleBoard(session)) {
@@ -251,7 +252,7 @@ function unitRailHtml(board) {
   return `
     <div class="enemy-rail" aria-label="敌方单位">
       ${board.units.map((unit) => {
-        const hasVitality = Boolean(unit.vitality);
+        const hasVitality = board.meta.presentation !== "pursuit" && Boolean(unit.vitality);
         const percent = hasVitality ? clampPercent(unit.current, unit.max) : 0;
         const previousEnemy = hasVitality
           ? visualState.previousVitality?.enemies?.[unit.id] || (unit.id === board.meta.primaryEnemyId ? visualState.previousVitality?.enemy : null)
@@ -341,7 +342,7 @@ function sceneHtml(board) {
   const environments = board.environment.map(environmentDetails);
   const sceneImage = board.meta.sceneImage || "./assets/combat/jinling-rain-ambush.webp";
   return `
-    <section class="battle-stage ${escapeHtml(board.meta.sceneClass || "")} ${battle.darkness ? "darkened" : ""} ${session.status !== "fighting" ? "settled" : ""} ${session.turn.phase === "enemy" ? "enemy-phase" : "player-phase"}" style="--scene-image:url('${escapeHtml(sceneImage)}')">
+    <section class="battle-stage ${escapeHtml(board.meta.sceneClass || "")} ${board.meta.presentation === "pursuit" ? "pursuit-stage" : ""} ${battle.darkness ? "darkened" : ""} ${session.status !== "fighting" ? "settled" : ""} ${session.turn.phase === "enemy" ? "enemy-phase" : "player-phase"}" style="--scene-image:url('${escapeHtml(sceneImage)}')">
       <header class="stage-heading">
         <div>
           <span>${escapeHtml(board.meta.location)}</span>
@@ -392,7 +393,7 @@ function contextActionHtml(entry, index) {
   const unavailable = !entry.evaluation.available;
   const impact = entry.impactPreview || {};
   const damage = impact.success || entry.successPreview || entry.evaluation.reason || "改变战局";
-  const forecast = [entry.positionPreview, entry.enemyPhasePreview].filter(Boolean).join(" · ");
+  const forecast = [entry.positionPreview, entry.enemyPhasePreview ? `收势后：${entry.enemyPhasePreview}` : null].filter(Boolean).join(" · ");
   return `
     <button type="button" class="context-action ${riskClass(entry)} ${index === 0 ? "primary" : ""}" data-action-id="${escapeHtml(entry.id)}" ${unavailable || visualState.animating ? "disabled" : ""}>
       <span class="action-icon">${iconSvg(entry.display.icon)}</span>
@@ -430,6 +431,26 @@ function consequenceHtml(result) {
   const consequences = result.consequences;
   if (!consequences) return "";
   const trust = consequences.relationships?.yan_jinghong?.trust;
+  if (session.encounterId === "rain_ambush") {
+    const assailant = {
+      captive: "刀客被生擒",
+      corpse: "刀客已死",
+      escaped: "刀客脱离追查",
+    }[consequences.assailant] || "刀客后果已记录";
+    const channel = {
+      testimony: "口供与毒囊",
+      token: "尸证与鱼鳞铜签",
+      rain_trace: "雨中逃踪",
+    }[consequences.reportChannel] || "后续线索";
+    return `
+      <dl class="consequence-grid">
+        <div><dt>刀客</dt><dd>${escapeHtml(assailant)}</dd></div>
+        <div><dt>所得</dt><dd>${escapeHtml(channel)}</dd></div>
+        <div><dt>证据</dt><dd>${Number(consequences.evidence?.length || 0)} 件 · 警戒 ${Number(consequences.alert || 0)}</dd></div>
+        <div><dt>伤势</dt><dd>${Number(consequences.wounds?.length || 0)} 处</dd></div>
+      </dl>
+    `;
+  }
   const disposition = {
     captive: "王卓被生擒",
     corpse: "王卓已死",
@@ -479,15 +500,16 @@ function outcomeHtml(board) {
 }
 
 function settingsHtml() {
+  if (!debugToolsVisible) return "";
   const needle = session.setup.skills?.spring_rain_needles || { stage: "known" };
-  const dangerFact = isEngineBattle() ? "wang_chain_blade" : "left_sleeve_blade";
+  const dangerFact = isWangBattle() ? "wang_chain_blade" : "left_sleeve_blade";
   const knownDanger = session.setup.knownFacts.includes(dangerFact);
   const baseWound = session.setup.wounds[0];
   const hasDeadwoodStake = ["learned", "entered", "skilled", "mastered"]
     .includes(session.setup.skills?.deadwood_stake?.stage);
   const stake = hasDeadwoodStake ? "deadwood" : "sea";
   const trust = Number(session.setup.relationships?.yan_jinghong?.trust ?? 58);
-  const seedOptions = isEngineBattle()
+  const seedOptions = isWangBattle()
     ? [["east-lake-0", "平稳水势"], ["east-lake-7", "同伴得势"], ["east-lake-13", "毒刃逼命"], ["east-lake-19", "险中求生"]]
     : [["seed-0", "平稳"], ["seed-2", "上吉"], ["seed-14", "有损"], ["seed-3", "凶险"]];
   if (!seedOptions.some(([value]) => value === session.setup.fateSeed)) {
@@ -509,7 +531,7 @@ function settingsHtml() {
           <label><span>自身境界</span><select data-setting="stage">
             <option value="mortal" ${session.setup.playerStage === "mortal" ? "selected" : ""}>未入门</option>
             <option value="body" ${session.setup.playerStage === "body" ? "selected" : ""}>锻体</option>
-            ${isEngineBattle() ? `<option value="qi" ${session.setup.playerStage === "qi" ? "selected" : ""}>聚气</option>` : ""}
+            ${isWangBattle() ? `<option value="qi" ${session.setup.playerStage === "qi" ? "selected" : ""}>聚气</option>` : ""}
           </select></label>
           <label><span>春风化雨针</span><select data-setting="needles">
             <option value="known" ${needle.stage === "known" ? "selected" : ""}>只知招名</option>
@@ -526,7 +548,7 @@ function settingsHtml() {
             <option value="shoulder" ${baseWound?.bodyPart === "shoulder" ? "selected" : ""}>肩臂重伤</option>
             <option value="torso" ${baseWound?.bodyPart === "torso" ? "selected" : ""}>肋下重伤</option>
           </select></label>
-          ${isEngineBattle() ? `<label><span>护体桩功</span><select data-setting="stake">
+          ${isWangBattle() ? `<label><span>护体桩功</span><select data-setting="stake">
             <option value="sea" ${stake === "sea" ? "selected" : ""}>沧澜定海桩</option>
             <option value="deadwood" ${stake === "deadwood" ? "selected" : ""}>神农枯木桩</option>
           </select></label>
@@ -538,9 +560,9 @@ function settingsHtml() {
         </div>
         <label class="fact-toggle">
           <input type="checkbox" data-setting="known-danger" ${knownDanger ? "checked" : ""} />
-          <span><strong>带着死中见闻入场</strong><small>${isEngineBattle() ? "提前知道王卓正手是引线，真正杀招从袖底回链。" : "提前知道右手是诱饵，真正杀招藏在左袖。"}</small></span>
+          <span><strong>带着死中见闻入场</strong><small>${isWangBattle() ? "提前知道王卓正手是引线，真正杀招从袖底回链。" : "提前知道右手是诱饵，真正杀招藏在左袖。"}</small></span>
         </label>
-        ${isEngineBattle() ? `<label class="fact-toggle"><input type="checkbox" data-setting="antidote" ${Number(session.setup.items?.antidote || 0) > 0 ? "checked" : ""} /><span><strong>携带一份解毒散</strong><small>中毒后可耗费一点气机，移除持续蛇毒。</small></span></label>` : ""}
+        ${isWangBattle() ? `<label class="fact-toggle"><input type="checkbox" data-setting="antidote" ${Number(session.setup.items?.antidote || 0) > 0 ? "checked" : ""} /><span><strong>携带一份解毒散</strong><small>中毒后可耗费一点气机，移除持续蛇毒。</small></span></label>` : ""}
         <button type="button" class="reset-fate" data-command="reset-defaults">恢复此战默认命盘</button>
       </div>
     </details>
@@ -644,6 +666,18 @@ function battleStateHtml(board) {
   }).join("")}</div>`;
 }
 
+function pursuitStatusHtml(board) {
+  if (board.meta.presentation !== "pursuit" || !board.pursuit) return "";
+  const identity = Math.min(board.pursuit.identityGoal, board.pursuit.identityProgress);
+  return `
+    <div class="pursuit-status" aria-label="尾随进展">
+      <div><span>身份线索</span><strong>${identity}<i>/</i>${board.pursuit.identityGoal}</strong><small>${identity >= board.pursuit.identityGoal ? "已经看清来者身份" : "继续观察步法、暗号或兵刃"}</small></div>
+      <div><span>同行去向</span><strong>${board.pursuit.allySafe ? "已脱身" : "仍在视线"}</strong><small>${board.pursuit.allySafe ? "燕惊鸿已离开尾随者视野" : "必须先替燕惊鸿断开追踪"}</small></div>
+      <div><span>对方警觉</span><strong>${board.pursuit.alert}</strong><small>${board.pursuit.tailPressure > 1 ? "尾随者正在逼近" : "尚未确认你已察觉"}</small></div>
+    </div>
+  `;
+}
+
 function commandDeckHtml(board) {
   const previous = visualState.previousVitality;
   const currentFocus = focusId();
@@ -652,7 +686,7 @@ function commandDeckHtml(board) {
   const environment = selectedEnvironment ? environmentDetails(board.environment.find((entry) => entry.id === selectedEnvironment)) : null;
   const target = board.units.find((entry) => entry.id === selectedTarget) || board.units[0];
   const wounds = board.wounds?.length ? board.wounds.map(woundLabel).join(" · ") : "无伤";
-  const memory = factMemory(board) || (session.battle.observedFeint ? { title: "左袖藏刃", detail: "真正杀招已经被看破。" } : null);
+  const memory = factMemory(board) || (board.conditions.observedFeint ? { title: "左袖藏刃", detail: "真正杀招已经被看破。" } : null);
   const position = selectedPosition ? board.nodes.find((node) => node.id === selectedPosition) : null;
   const allyId = selectedContext?.startsWith("ally:") ? selectedContext.slice(5) : null;
   const ally = board.allies?.find((entry) => entry.id === allyId);
@@ -682,6 +716,7 @@ function commandDeckHtml(board) {
           <small>你在${escapeHtml(board.playerNode?.shortName || "战场")}${target ? ` · 关注${escapeHtml(target.name)}在${escapeHtml(target.nodeName)} · ${escapeHtml(target.distance)}` : ""} · ${escapeHtml(wounds)}</small>
         </div>
         ${allyPanelHtml(board)}
+        ${pursuitStatusHtml(board)}
         ${battleStateHtml(board)}
         ${memory ? `<div class="battle-memory"><span>因果见闻</span><strong>${escapeHtml(memory.title)}</strong><small>${escapeHtml(memory.detail)}</small></div>` : ""}
         ${turnBarHtml(board)}
@@ -696,6 +731,7 @@ function commandDeckHtml(board) {
         <div class="recommended-actions">
           ${recommendations.map(contextActionHtml).join("")}
         </div>
+        <p class="causal-note">相同战况下因果不变；改变身位、伤势或已知破绽，结果才会改变。</p>
         <button type="button" class="open-arsenal" data-command="toggle-arsenal" aria-expanded="${arsenalOpen}">
           <span>${iconSvg("blade")}${iconSvg("stance")}${iconSvg("bag")}${iconSvg("escape")}</span>
           <strong>全部手段 <b>${allActions.length}</b></strong>
@@ -962,9 +998,9 @@ root.addEventListener("click", (event) => {
     resetInterface();
   }
   if (command === "reset-defaults") {
-    session = isEngineBattle()
-      ? createCombatLabSession({ encounterId: session.encounterId })
-      : createCombatLabSession(COMBAT_LAB_DEFAULTS);
+    session = createCombatLabSession(session.encounterId === "rain_ambush"
+      ? COMBAT_LAB_DEFAULTS
+      : { encounterId: session.encounterId });
     resetInterface();
   }
   render();
@@ -1011,7 +1047,7 @@ root.addEventListener("change", (event) => {
     }, focusSelector);
   }
   if (setting === "known-danger") {
-    const factId = isEngineBattle() ? "wang_chain_blade" : "left_sleeve_blade";
+    const factId = isWangBattle() ? "wang_chain_blade" : "left_sleeve_blade";
     const retained = session.setup.knownFacts.filter((entry) => entry !== factId);
     updateSetup({ knownFacts: event.target.checked ? [...retained, factId] : retained }, focusSelector);
   }

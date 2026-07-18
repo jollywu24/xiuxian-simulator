@@ -1,6 +1,7 @@
 const ASSETS = {
   temple: "./assets/scenes/ruined-temple-night.webp",
   river: "./assets/scenes/purple-gold-river-dawn.webp",
+  alley: "./assets/combat/jinling-rain-ambush.webp",
   shenGate: "./assets/scenes/shen-manor-side-gate.webp",
   danroom: "./assets/scenes/shen-alchemy-room.webp",
 };
@@ -48,6 +49,8 @@ const DANROOM_SCREENS = new Set([
   "qingQingStudy",
   "fiveAnimalReward",
 ]);
+
+const WANG_SCREENS = new Set(["yanJinghongArrival", "wangBattle", "wangAftermath"]);
 
 function hasTask(state, id) {
   return (state.completedTempleTasks || []).includes(id);
@@ -379,11 +382,41 @@ function danroomPresentation(screen, state) {
   };
 }
 
+function wangPresentation(screen, state) {
+  const session = state.p0?.wangBattle;
+  const atRiver = screen === "wangAftermath" || session?.battle?.stageId === "riverbank";
+  const identityKnown = Boolean(session?.battle?.knownFacts?.includes("wang_identity")) || atRiver;
+  const allySafe = Boolean(session?.battle?.conditions?.allySafe) || screen === "wangAftermath";
+  return {
+    id: atRiver ? "east_lake" : "willow_lane",
+    title: atRiver ? "金陵 · 东湖河岸" : "金陵 · 柳巷晚市",
+    image: atRiver ? ASSETS.river : ASSETS.alley,
+    alt: atRiver ? "夜色中的东湖河岸、湿石、柳根、系舟桩与岸边小舟" : "雨后柳巷的摊棚、人流、临河门洞与远处尾随人影",
+    summary: atRiver ? "湿石、浅水、木桩与小舟都能改变锁链刀、援弩和撤离路线。" : "先利用倒影、摊棚和人流看清尾随者，再让燕惊鸿带证物脱开视线。",
+    tone: atRiver ? "dawn" : "rain",
+    hotspots: atRiver ? [
+      { id: "wet_bank", label: "湿滑石滩", detail: "普通落脚会削弱下盘；鱼跃龙门诀或定海桩可以把水势变成优势。", x: 30, y: 70, state: "danger" },
+      { id: "mooring_post", label: "系舟木桩", detail: "木桩既能遮住弩线，也能迫使锁链刀改变回收轨迹。", x: 57, y: 58, state: "special" },
+      { id: "loose_skiff", label: "船索与小舟", detail: "放松船索可以设绊，也可以换来护送燕惊鸿撤离的水路。", x: 86, y: 63, state: "available" },
+    ] : [
+      { id: "shop_reflection", label: "橱窗倒影", detail: identityKnown ? "倒影已经映出蛇纹铜牌和左腕锁扣。" : "不必回头，也许能从倒影看清尾随者藏兵的位置。", x: 23, y: 52, state: identityKnown ? "completed" : "special" },
+      { id: "market_awning", label: "旧布摊棚", detail: "垂下的湿布能切断视线，逼尾随者在换位时露出左腕。", x: 50, y: 55, state: "available" },
+      { id: "river_gate", label: "临河门洞", detail: allySafe ? "燕惊鸿已经带证物穿过门洞。" : "让燕惊鸿先过门洞，才能把同伴与尾随路线分开。", x: 82, y: 46, state: allySafe ? "completed" : "danger" },
+    ],
+    actors: [
+      { id: "yan_jinghong", label: "燕惊鸿", detail: "巡检房暗差。她带着失踪药船卷宗，也在判断你是否值得托付后背。", x: atRiver ? 23 : 38, y: atRiver ? 75 : 69, kind: "ally", state: allySafe ? "allied" : "known" },
+      { id: "wang_zhuo", label: identityKnown ? "王卓" : "尾随人影", detail: identityKnown ? "蛇纹铜牌、袖底锁链与聚气境气机已经暴露。" : "他始终隔着两处摊位，没有让你看清正脸。", x: atRiver ? 67 : 78, y: atRiver ? 59 : 61, kind: "enemy", state: "danger" },
+    ],
+    player: { label: state.name || "陈司命", x: atRiver ? 45 : 19, y: 84 },
+  };
+}
+
 export function getScenePresentation(screen, state = {}) {
   if (TEMPLE_SCREENS.has(screen)) return templePresentation(screen, state);
   if (RIVER_SCREENS.has(screen)) return riverPresentation(screen, state);
   if (SHEN_GATE_SCREENS.has(screen)) return shenGatePresentation(screen, state);
   if (DANROOM_SCREENS.has(screen) || (screen === "shenDaily" && state.shenLocation !== "pharmacy")) return danroomPresentation(screen, state);
+  if (WANG_SCREENS.has(screen)) return wangPresentation(screen, state);
   return null;
 }
 
@@ -440,7 +473,7 @@ export function getRoutePresentation(screen, state = {}) {
       detail: "沈氏药铺、长街夜杀与曹青后院都在此处交汇。",
       x: 88,
       y: 33,
-      status: state.shenLocation === "pharmacy" || state.p0?.started ? "reached" : "known",
+      status: routeStatus(scene.id, ["willow_lane", "east_lake"], state.shenLocation === "pharmacy" || state.p0?.started),
     });
   }
 
