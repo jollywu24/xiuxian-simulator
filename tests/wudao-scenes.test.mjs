@@ -14,6 +14,15 @@ function state(overrides = {}) {
     inventory: [],
     attributes: { strength: 0, constitution: 0, agility: 0, insight: 0, fortune: 0 },
     fireMinutes: 40,
+    p0: { started: false },
+    m4: {
+      started: false,
+      evidence: [],
+      tracking: {},
+      contacts: { shen_fu: { permissions: [] }, replacement: null },
+      dirtyMoney: { disposition: null },
+      locationStates: { shen_side_gate: "open", qinhuai_old_house: "hidden" },
+    },
     ...overrides,
   };
 }
@@ -87,4 +96,68 @@ test("the route board reveals locations from possessions and relationships witho
   assert.equal(known.nodes.find((node) => node.id === "river").status, "current");
   assert.ok(known.edges.some((edge) => edge.from === "river" && edge.to === "shen"));
   assert.ok(known.edges.some((edge) => edge.from === "river" && edge.to === "linan"));
+});
+
+test("M4 turns the Shen gate, Qinhuai trail and old house into persistent readable places", () => {
+  const offer = getScenePresentation("shenFuOffer", state({
+    m4: {
+      started: true,
+      evidence: [],
+      tracking: {},
+      contacts: { shen_fu: { permissions: ["side_gate"] }, replacement: null },
+      dirtyMoney: { disposition: null },
+      locationStates: { shen_side_gate: "open", qinhuai_old_house: "hidden" },
+    },
+  }));
+  assert.equal(offer.id, "shen_side_gate");
+  assert.equal(offer.actors[0].label, "沈福");
+  assert.equal(offer.hotspots.find((item) => item.id === "money_chest").state, "danger");
+
+  const oldHouse = getScenePresentation("sevenKillHouse", state({
+    m4: {
+      started: true,
+      evidence: ["hidden_ledger", "seven_kill_rubbing"],
+      sevenKillClue: true,
+      tracking: { grade: "success", alert: 0 },
+      contacts: { shen_fu: { permissions: ["side_gate"] }, replacement: null },
+      dirtyMoney: { disposition: "trap" },
+      locationStates: { shen_side_gate: "open", qinhuai_old_house: "known" },
+    },
+  }));
+  assert.equal(oldHouse.id, "qinhuai_old_house");
+  assert.equal(oldHouse.hotspots.find((item) => item.id === "blade_case").state, "completed");
+
+  const echo = getScenePresentation("m4WorldEcho", state({
+    m4: {
+      started: true,
+      outcome: "killed",
+      evidence: ["hidden_ledger"],
+      tracking: { grade: "success", alert: 0 },
+      contacts: { shen_fu: { permissions: [] }, replacement: null },
+      dirtyMoney: { disposition: "hide" },
+      locationStates: { shen_side_gate: "sealed", qinhuai_old_house: "known" },
+    },
+  }));
+  assert.equal(echo.actors.length, 0);
+  assert.match(echo.summary, /认你的人.*门后风险/);
+});
+
+test("M4 route knowledge reveals Qinhuai only after the new arc starts", () => {
+  const hidden = getRoutePresentation("shenFuOffer", state({ shenChapterStarted: true }));
+  assert.equal(hidden.nodes.some((node) => node.id === "qinhuai"), false);
+
+  const revealed = getRoutePresentation("sevenKillHouse", state({
+    shenChapterStarted: true,
+    m4: {
+      started: true,
+      evidence: ["hidden_ledger"],
+      sevenKillClue: false,
+      tracking: { grade: "success", alert: 0 },
+      contacts: { shen_fu: { permissions: ["side_gate"] }, replacement: null },
+      dirtyMoney: { disposition: "trap" },
+      locationStates: { shen_side_gate: "open", qinhuai_old_house: "known" },
+    },
+  }));
+  assert.equal(revealed.nodes.find((node) => node.id === "qinhuai").status, "current");
+  assert.ok(revealed.edges.some((edge) => edge.from === "east_gate" && edge.to === "qinhuai"));
 });

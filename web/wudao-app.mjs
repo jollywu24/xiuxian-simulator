@@ -46,8 +46,8 @@ import {
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs?v=20260718.5";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260718.5";
+} from "./wudao-core.mjs?v=20260721.1";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260721.1";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -77,7 +77,26 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260718.5";
+} from "./wudao-p0-core.mjs?v=20260721.1";
+import {
+  M4_EVIDENCE,
+  M4_METHOD,
+  canReceiveBaiInstruction,
+  completeM4,
+  createM4State,
+  getDirtyMoneyBoard,
+  getM4OutcomeBoard,
+  getM4TrackingActions,
+  migrateM4State,
+  resolveBaiInstruction,
+  resolveCaoDeparture,
+  resolveDirtyMoneyChoice,
+  resolveM4Outcome,
+  resolveM4Tracking,
+  resolveM4Training,
+  resolveMoneyInquiry,
+  resolveOldHouseChoice,
+} from "./wudao-p1-core.mjs?v=20260721.1";
 import {
   advanceCombatLabCampaign,
   createCombatLabSession,
@@ -88,7 +107,7 @@ import {
   restartCombatLab,
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
-} from "./combat-lab-core.mjs?v=20260718.5";
+} from "./combat-lab-core.mjs?v=20260721.1";
 
 const STORAGE_KEY = "wudao-high-martial-v1";
 const app = document.querySelector("#app");
@@ -196,6 +215,7 @@ function createInitialState() {
     shenChapterComplete: false,
     narrativeLog: [],
     p0: createP0State(),
+    m4: createM4State(),
     events: [],
   };
 }
@@ -204,7 +224,7 @@ function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
     if (!saved || ![2, 3, 4, 5].includes(saved.version) || !saved.screen) return null;
-    const migrated = { ...createInitialState(), ...saved, version: 5, p0: migrateP0State(saved.p0) };
+    const migrated = { ...createInitialState(), ...saved, version: 5, p0: migrateP0State(saved.p0), m4: migrateM4State(saved.m4) };
     migrated.fateSeed = saved.fateSeed || legacyFateSeed(saved);
     if (migrated.p0.started && saved.p0?.items?.return_spring_pill === undefined) migrated.p0.items.return_spring_pill = Number(saved.alchemyPills || 0);
     if (saved.version === 2 && saved.shenChapterComplete && saved.fiveAnimalBook) {
@@ -279,6 +299,54 @@ function p0SkillStageLabel(progress = {}) {
   if (progress.stage === "skilled" || Number(progress.progress || 0) >= 60) return "熟练";
   if (progress.stage === "learned") return "入门";
   return "只得残线";
+}
+
+function m4Context() {
+  const bai = state.p0?.relationships?.bai_zhiyun || {};
+  return {
+    fateSeed: state.fateSeed,
+    attributes: state.attributes,
+    baiTrust: Number(bai.trust || 0),
+    baiDebt: Number(bai.debt || 0),
+    hasWaterMindArt: state.mindArt === MIND_ART.id,
+    stakeId: state.p0?.stakeId || null,
+    fishingRodMethod: Boolean(state.fishingRodMethod || state.p0?.skills?.fishing_rod_method),
+    assailantChannelControlled: Boolean(state.p0?.evidence?.includes("assailant_channel_controlled")),
+    martialStage: state.martialStage,
+    hasKillingMethod: Boolean(state.p0?.skills?.spring_rain_needles && state.p0?.battleOutcome),
+  };
+}
+
+function m4EvidenceName(id) {
+  return M4_EVIDENCE[id]?.name || id;
+}
+
+function m4TrackingGradeLabel(grade) {
+  return { great: "大成", success: "得手", costly: "得手有损", failure: "失手但局面继续" }[grade] || "尚未落定";
+}
+
+const M4_IDENTITY_LABELS = Object.freeze({
+  cao_apprentice: "曹青门下药童",
+  dangerous_variable: "握有旧账的危险人物",
+  inner_house_witness: "受内宅约束的证人",
+  unsettled_loose_end: "沈家眼中的未结旧账",
+  suspected_killer: "受沈家怀疑的凶案涉身者",
+});
+
+const M4_PERMISSION_LABELS = Object.freeze({
+  side_gate: "侧门通行",
+  kitchen: "灶房取物",
+  boat_guard: "走船护院引见",
+  conditional_side_gate: "有条件的侧门通行",
+  risky_goods: "危险货路",
+});
+
+function m4IdentityLabel(identity) {
+  return M4_IDENTITY_LABELS[identity] || "沈家眼中的陌生人";
+}
+
+function m4KnownPersonLabel(id) {
+  return { shen_fu: "沈福", chen_siming: "你", bai_zhiyun: "白栀云" }[id] || "未知知情者";
 }
 
 function p0CombatContext() {
@@ -723,6 +791,17 @@ function modeLabel() {
     apeWaterCave: "庙后水洞 · 神猿残势",
     p0Missed: "机缘窗闭 · 此路已失",
     p0JourneyEnd: "八月十五 · 月落东郊",
+    caoDeparture: "八月十六 · 师父离城",
+    shenFuOffer: "沈家侧门 · 沉木钱匣",
+    dirtyMoneyChoice: "不义之财 · 去处未定",
+    shenFuReckoning: "沈福再至 · 竭泽而渔",
+    m4Tracking: "秦淮夜巷 · 追踪已落定",
+    sevenKillHouse: "秦淮旧宅 · 七道刀痕",
+    shenFuConfrontation: "月黑风高 · 旧路将断",
+    m4WorldEcho: "沈家门路 · 立刻回响",
+    baiReturn: "白栀云 · 夜来授武",
+    m4Training: "离城之前 · 闭门试势",
+    m4JourneyEnd: "独自行路 · 江湖留痕",
   };
   return labels[state.screen] || "大曜江湖";
 }
@@ -2126,6 +2205,178 @@ function renderP0JourneyEnd() {
       <div><span>死劫履历</span><strong>${state.p0.deathRecords.length} 次</strong><p>${state.p0.deathRecords.length ? escapeHtml(state.p0.deathRecords.at(-1).insight) : "尚未在这一程熄灭命灯"}</p></div>
     </div>
     <div class="next-hooks"><div><span>水洞石痕</span><strong>神猿挥棒只余半式</strong><p>若要补全，须先找到能承受山泉水压的兵器。</p></div><div><span>刀客来路</span><strong>${escapeHtml(plotLabels[state.p0.assailantPlot?.outcome] || "东门夜杀并非偶遇")}</strong><p>${state.p0.evidence.includes("assailant_channel_controlled") ? "下一次假回报可以继续误导幕后者。" : state.p0.evidence.includes("receiver_route_reversed") ? "沈家废渡会成为下一次反向会面。" : "敌人的下一步将由这一夜留下的痕迹决定。"}</p></div><div><span>沈家内宅</span><strong>练功残页另有来处</strong><p>白栀云为何强练此功，尚未说完。</p></div></div>
+    <div class="button-row"><button class="primary-button" data-action="begin-m4">回东门药铺，继续这一程</button><button class="secondary-button" data-action="restart">另起一世</button></div>
+  `);
+}
+
+function m4EvidenceBoardHtml() {
+  const evidence = state.m4.evidence.map((id) => M4_EVIDENCE[id]).filter(Boolean);
+  return `<div class="quest-grid compact-board">
+    ${evidence.length ? evidence.map((entry) => `<article class="quest-card completed"><span>已经看见</span><h2>${escapeHtml(entry.name)}</h2><p>${escapeHtml(entry.description)}</p><div class="quest-state">记入行录</div></article>`).join("") : `<article class="quest-card locked"><span>来路未明</span><h2>沉木钱匣</h2><p>钱是真的，沈福的话却还没有一处能与它互相印证。</p><div class="quest-state">先查疑点</div></article>`}
+  </div>`;
+}
+
+function renderCaoDeparture() {
+  return gameShell(`
+    ${sceneHeader("八月十六 · 东门药铺", "曹青把炉火压低，只说今夜便要离开金陵", "他不肯说去哪里，也不许你跟。往后药库、指点和师父的名字都不能再当作现成门路；临行前，他只准你从三样东西里拿走一样。")}
+    <div class="encounter-ledger"><div><span>仍可依靠</span><strong>你的医术、针、杆与桩功</strong><p>已经学会的本事不会随师父离开</p></div><div><span>即将关闭</span><strong>药库 · 指点 · 师父担保</strong><p>选一项临别帮助，不能把曹青留下</p></div></div>
+    <div class="action-list">
+      ${actionCard({ action: "m4-cao-aid", value: "medicine_key", title: "接过一把只可用一次的药库钥匙", description: "曹青走后仍能取一次救命药，但钥匙用过就要归还沈家。", source: "临别帮助", meta: "一次取药机会", kind: "special" })}
+      ${actionCard({ action: "m4-cao-aid", value: "sealed_letter", title: "收好写给白栀云的封口短札", description: "短札不替你说谎，只能让沈家内宅愿意先听完一份有物证的指控。", source: "临别帮助", meta: "内宅担保", kind: "special" })}
+      ${actionCard({ action: "m4-cao-aid", value: "enemy_warning", title: "记住毒蛇帮认路的三处暗记", description: "曹青不解释旧仇，只让你见到蛇纹、反结和收货牌时先看身后。", source: "临别帮助", meta: "反跟踪优势", kind: "special" })}
+    </div>
+  `);
+}
+
+function renderShenFuOffer() {
+  const board = getDirtyMoneyBoard(state.m4);
+  const seen = new Set(state.m4.evidence);
+  return gameShell(`
+    ${sceneHeader("沈家侧门 · 入夜", "沈福等到曹青的车出了城，才把一只沉木钱匣推进门缝", "他说这是沈家账外积下的私银，只求你替他藏过今夜。箱角沾着河泥，铜锁新换过，内沿却留着一线烧黑的火漆。")}
+    ${m4EvidenceBoardHtml()}
+    <div class="action-list">
+      ${actionCard({ action: "m4-inquiry", value: "inspect_seal", title: "用药针挑起箱沿烧黑的火漆", description: "针尖不会破坏暗记，可以分辨这是沈家封蜡还是帮会转运印。", source: "春风化雨针 · 悟性", meta: seen.has("snake_seal") ? "已查：蛇纹火漆" : "查钱匣来源", kind: "special", disabled: seen.has("snake_seal") })}
+      ${actionCard({ action: "m4-inquiry", value: "compare_tally", title: "把缺号货签与东湖失船暗记并在一起", description: "王卓一战留下的水路见闻未必完整，却足以确认两张货签是否出自同一批。", source: "旧见闻 · 货签", meta: seen.has("missing_tally") ? "已查：编号相邻" : "查水路", disabled: seen.has("missing_tally") })}
+      ${actionCard({ action: "m4-inquiry", value: "question_source", title: "请沈福把取钱地点再说一遍", description: "不揭穿，只把他说过的桥、仓与时辰重新排一遍，看哪一句先变。", source: "人物记忆 · 试话", meta: seen.has("shen_fu_lie") ? "已查：口供矛盾" : "会提高戒心", disabled: seen.has("shen_fu_lie") })}
+      ${actionCard({ action: "m4-finish-inquiry", title: "不再追问，当面决定钱匣去处", description: board.canDecide ? "你已经掌握至少两处能互相印证的疑点。" : "钱若还只是钱，任何选择都只是在替沈福承担未知的账。", source: "局面已知", meta: board.canDecide ? `${board.evidence.length} 项见闻` : `还缺 ${2 - board.evidence.length} 项`, kind: "special", disabled: !board.canDecide })}
+    </div>
+  `);
+}
+
+function renderDirtyMoneyChoice() {
+  const context = m4Context();
+  const entries = [
+    ["report", "把钱匣与疑点一并送进沈家内宅", "不吞钱，也不把沈福先交给外人；代价是灰色门路很快会关闭。", "上交", "证人与内宅", "special"],
+    ["share", "答应与沈福分账", "先拿到一半份额，却让沈福亲眼看见你愿意和他背同一笔黑账。", "分赃", "利益同盟", "danger"],
+    ["hide", "连人带钱一起藏过今夜", "钱匣归你保管，来源、知情者和追索不会因此消失。", "藏匿", "持有人变更", "danger"],
+    ["trap", "把原匣留在旧处，等收货人自己来取", "不急着占有，把钱匣变成一枚会暴露上游的饵。", "设局", "需要三项疑点", "special"],
+    ["refuse", "把匣子推回去，拒绝替他背账", "保持手上干净，却会让已经被你看破的沈福更加害怕。", "拒收", "门路生变", ""],
+  ];
+  return gameShell(`
+    ${sceneHeader("侧门灯影下", "钱不会自己害人，知道钱从哪里来的人会", "你已经看见毒蛇帮水路、缺号货签或沈福前后矛盾的话。现在选择的不是拿与不拿，而是谁持有、谁知情、谁会在天亮后追索。")}
+    ${m4EvidenceBoardHtml()}
+    <div class="action-list">${entries.map(([id, title, description, source, meta, kind]) => {
+      const preview = resolveDirtyMoneyChoice(id, state.m4, context);
+      return actionCard({ action: "m4-money-choice", value: id, title, description, source, meta: preview?.available ? meta : preview?.reason || meta, detail: preview?.available ? `当前钱匣持有人：沈福；已知情：${state.m4.dirtyMoney.knownBy.map(m4KnownPersonLabel).join("、")}` : preview?.reason, kind, disabled: !preview?.available });
+    }).join("")}</div>
+  `);
+}
+
+function renderShenFuReckoning() {
+  const reactions = {
+    report: "沈福发现内宅开始查账，笑意里第一次露出真正的恐惧。他要知道你究竟交出了多少。",
+    share: "分到手的银子没有让沈福收手。他认定你既肯拿一次，就会替他拿第二次。",
+    hide: "沈福在你住处外转了三圈。他不是来送钱，是来确认钱和人是否都还受他掌握。",
+    trap: "空匣在旧处放到二更，终于有人用三短一长的灯号试探门窗。沈福也在暗处看着。",
+    refuse: "沈福把钱收回去，却不相信你会忘掉箱上的蛇纹。他必须先知道你会把话卖给谁。",
+  };
+  const actions = getM4TrackingActions(state.m4, m4Context());
+  return gameShell(`
+    ${sceneHeader("三日后 · 秦淮夜巷", "沈福又来了，这次要的不是藏一箱钱", reactions[state.m4.dirtyMoney.disposition] || "他要你替自己继续把这条钱路榨干。")}
+    <div class="battle-intent known"><span>敌意已经成形</span><strong>沈福在试探你，毒蛇帮的人也在看他</strong><p>你可以追人、断踪、反查或先护住知情人。即使失手，局面也会带着警觉与残缺证据继续。</p></div>
+    <div class="action-list">${actions.map((entry) => actionCard({
+      action: "m4-tracking",
+      value: entry.id,
+      title: entry.title,
+      description: entry.id === "shadow_steps" ? "不贴近，只看他在哪个转角换鞋、换灯和换称呼。" : entry.id === "water_break" ? "把自己和知情人送过支流，再沿水面反光寻找尾灯。" : entry.id === "countermark" ? "不追沈福的背影，改追收货人认路时留下的动作。" : "先护住会被灭口的人，再从没人来取的空匣倒查去路。",
+      source: `${entry.intent} · ${entry.attributeName}`,
+      meta: `${m4TrackingGradeLabel(entry.check.grade)} · 因果骰 ${entry.check.die}`,
+      detail: `因果骰 ${entry.check.die}，行动修正 ${entry.modifier >= 0 ? `+${entry.modifier}` : entry.modifier}，合计 ${entry.check.total}；依据：${entry.reasons.join("；")}`,
+      kind: entry.check.grade === "great" || entry.check.grade === "success" ? "special" : entry.check.grade === "failure" ? "danger" : "",
+    })).join("")}</div>
+  `);
+}
+
+function renderM4Tracking() {
+  const tracking = state.m4.tracking;
+  const resultText = {
+    great: "你没有让任何一盏尾灯转向身后，完整看见收货人从沈福手中取走暗账与铜牌。",
+    success: "你跟到秦淮旧宅，拿到夹墙暗账；收货人只来得及带走一块铜牌。",
+    costly: "你翻过矮墙时撞伤肩背，却在被发现前扯下夹墙暗账。",
+    failure: "沈福用一条假巷把你带偏。等你折回，只剩半页被撕裂的账纸；旧宅已经有人守着。",
+  }[tracking.grade];
+  return gameShell(`
+    ${sceneHeader("秦淮河西 · 更鼓三响", m4TrackingGradeLabel(tracking.grade), resultText)}
+    <div class="skill-gate-board"><div><span>因果骰</span><strong>${tracking.check?.die ?? "—"}</strong></div><div><span>行动修正</span><strong>${Number(tracking.check?.modifier || 0) >= 0 ? "+" : ""}${tracking.check?.modifier ?? 0}</strong></div><div><span>警觉</span><strong>${tracking.alert ? `提高 ${tracking.alert}` : "未惊动"}</strong></div><div><span>所得</span><strong>${state.m4.evidence.slice(-2).map(m4EvidenceName).join("、") || "残缺去向"}</strong></div></div>
+    <div class="action-list">${actionCard({ action: "m4-tracking-continue", title: "沿账页墨痕进入秦淮旧宅", description: "无论拿到整本暗账还是半页残纸，墨迹都指向同一座旧宅；区别在于谁先知道你来了。", source: "追踪所得", meta: state.m4.locationStates.qinhuai_old_house === "watched" ? "旧宅有人守候" : "旧宅已经显形", kind: "special" })}</div>
+  `);
+}
+
+function renderSevenKillHouse() {
+  const canMessage = resolveOldHouseChoice("send_bai_message", state.m4, m4Context()).available;
+  return gameShell(`
+    ${sceneHeader("秦淮旧宅 · 夹墙之后", "暗账尽头不是银号，而是一只压着七道拓痕的旧刀匣", "刀已经不在。拓纸上的落势却与沈家内宅练功残页同出一脉。门外有脚步停了又走；你只来得及查一处、守一处，或把消息送给一个人。")}
+    ${m4EvidenceBoardHtml()}
+    <div class="action-list">
+      ${actionCard({ action: "m4-old-house", value: "search_drawer", title: "翻开刀匣下的暗层", description: "取得七杀刀拓痕，但翻找声会让门外的人知道屋里有人。", source: "七杀旧账 · 悟性", meta: "线索 +1 · 警觉 +1", kind: "special" })}
+      ${actionCard({ action: "m4-old-house", value: "watch_door", title: "不碰刀匣，先看谁来收尾", description: "放弃最深的家族线索，换取毒蛇帮收货人的活证和更低警觉。", source: "藏锋 · 活证", meta: "收货牌 · 警觉下降" })}
+      ${actionCard({ action: "m4-old-house", value: "send_bai_message", title: "把拓纸位置写给白栀云", description: "让内宅的人取证，你守住门外；她是否回应取决于旧日救命关系与曹青短札。", source: "救命旧债 · 白栀云", meta: canMessage ? "内宅愿意接信" : "缺少担保", kind: "special", disabled: !canMessage })}
+    </div>
+  `);
+}
+
+function renderShenFuConfrontation() {
+  const board = getM4OutcomeBoard(state.m4, m4Context());
+  const definitions = {
+    control: ["把暗账分成两份，逼沈福继续替你开门", "他活着，也仍是一条门路；代价是你们都握着能毁掉对方的东西。", "受控联系人", "special"],
+    expose: ["请白栀云的人带走钱、账和沈福", "把灰色门路换成受内宅约束的新联系人；他会活成证人或囚徒。", "揭发／交人", "special"],
+    release: ["给沈福一条无人守的水路", "不替他洗清，也不在今夜杀他；侧门与灶房人情从此永久断裂。", "放走", ""],
+    kill: ["在帮众合围前先取沈福性命", "斩草除根会关闭全部口供和旧人情，也把尸身与怀疑留给你。", "杀死", "danger"],
+  };
+  return gameShell(`
+    ${sceneHeader("旧宅后院 · 月黑风高", "沈福终于不再装作只是来办差", "他承认钱是私藏的，却说毒蛇帮一旦知道暗账被翻，自己和你都活不过下一次更鼓。门外脚步正在合围；现在决定的不是输赢，而是他以什么身份离开这里。")}
+    <div class="condition-board">${board.options.map((option) => `<div class="condition-row ${option.available ? "met" : "unmet"}"><span>${option.available ? "可达" : "缺条件"}</span><strong>${escapeHtml(definitions[option.id][2])}</strong><p>${escapeHtml(option.reason)}</p></div>`).join("")}</div>
+    <div class="action-list">${board.options.map((option) => {
+      const [title, description, source, kind] = definitions[option.id];
+      return actionCard({ action: "m4-outcome", value: option.id, title, description, source, meta: option.reason, detail: option.reason, kind, disabled: !option.available });
+    }).join("")}</div>
+  `);
+}
+
+function renderM4WorldEcho() {
+  const outcomeLabels = { controlled: "受控联系人", exposed: "证人／囚徒", released: "失踪", killed: "死亡" };
+  const route = state.m4.contacts.shen_fu.permissions.length ? state.m4.contacts.shen_fu.permissions.map((permission) => M4_PERMISSION_LABELS[permission] || "受限门路").join(" · ") : state.m4.contacts.replacement ? "白栀云内宅口信" : "永久断线";
+  return gameShell(`
+    ${sceneHeader("次日 · 沈家侧门", "旧路没有等到章末才改变", state.m4.worldEcho)}
+    <div class="encounter-ledger"><div><span>沈福</span><strong>${escapeHtml(outcomeLabels[state.m4.outcome] || "去向未明")}</strong><p>他本人掌握的灶房、护院和侧门人情已经重算</p></div><div><span>沈家如何看你</span><strong>${escapeHtml(m4IdentityLabel(state.m4.shenIdentity))}</strong><p>身份会同时改变称呼、权限和风险</p></div><div><span>现在可走的门路</span><strong>${escapeHtml(route)}</strong><p>替代联系人不会继承沈福不知道的承诺</p></div></div>
+    <div class="action-list">${actionCard({ action: "m4-continue-echo", title: "离开侧门，去见夜里来访的人", description: "沈福的结果已经写进地点与人物反应；白栀云还欠你病榻前的一段话。", source: "沈家门路", meta: state.m4.sevenKillClue ? "七杀刀拓痕仍在" : "七杀旧账只余半页", kind: "special" })}</div>
+  `);
+}
+
+function renderBaiReturn() {
+  const available = canReceiveBaiInstruction(state.m4, m4Context());
+  return gameShell(`
+    ${sceneHeader("旧住处 · 夜半拍门", "白栀云没有带侍女，只把七杀刀拓纸压在桌上", available ? "她记得病榻前欠下的命，也知道你已卷进沈家旧账。她不许你现在拔刀，只教三种卸力法：护经、沉胯、送力回桩。" : "她只问了七杀拓纸的来处，没有承诺替你担保。旧日关系与眼前物证还不足以让她把沈家武学交出来。")}
+    <div class="encounter-ledger"><div><span>共同经历</span><strong>${state.p0.treatmentOutcome === "saved" ? "救命之恩" : "病榻旧识"}</strong><p>${escapeHtml(p0RelationLabel("bai_zhiyun"))}</p></div><div><span>眼前物证</span><strong>${state.m4.sevenKillClue ? "七杀刀拓痕" : "残缺暗账"}</strong><p>关系让她愿意承担什么，物证决定她相信什么</p></div></div>
+    <div class="action-list">
+      ${actionCard({ action: "m4-bai-instruction", value: "receive", title: "请她把卸力三诀拆给你看", description: "白栀云不为它另立名目，只针对七杀刀势教你护经、沉胯与送力回桩。", source: "白栀云 · 救命旧债", meta: available ? M4_METHOD.name : "关系或物证不足", kind: "special", disabled: !available })}
+      ${actionCard({ action: "m4-bai-instruction", value: "decline", title: "只问七杀旧事，不受她的武学", description: "保留距离，带着已有证据离开；不会得到下一场闭门试势的特殊解法。", source: "保持距离", meta: "仍可安全离城" })}
+    </div>
+  `);
+}
+
+function renderM4Training() {
+  const entries = [
+    ["apply_to_stake", "把卸力三诀放进自己的桩功", "枯木桩会把旧伤变成气血刻度；定海桩会从三股水势中显出‘淼’字呼吸。", "白栀云授武 · 桩功", "当夜试势", "special"],
+    ["seal_old_blade", "隔着刀衣听七杀旧势", "不拔刀，只用卸力三诀辨认刀势最先牵动的经脉，为日后止杀留下条件。", "七杀旧账 · 医武", "安全封刀", "special"],
+    ["leave_city", "不闭关，趁追索未合先搬离旧住处", "放弃最后一次修炼，换取更低暴露和一条干净退路。", "先求生", "安全离城", ""],
+  ];
+  return gameShell(`
+    ${sceneHeader("天亮之前 · 最后一夜", "旧住处已经不能久留", state.m4.baiInstruction ? "白栀云刚教的三诀必须立刻落进身体，否则只会变成另一段看过的文字。" : "你没有接下白栀云的三诀，只能把时间用于收拾行囊、处理证据和提前离开。")}
+    <div class="action-list">${entries.map(([id, title, description, source, meta, kind]) => {
+      const preview = resolveM4Training(id, state.m4, m4Context());
+      return actionCard({ action: "m4-training", value: id, title, description, source, meta: preview?.available ? meta : preview?.reason || meta, detail: preview?.reason || `完成后立即写入身体、七杀见闻或退路。`, kind, disabled: !preview?.available });
+    }).join("")}</div>
+  `);
+}
+
+function renderM4JourneyEnd() {
+  const trace = state.m4.jianghuTrace || [];
+  return gameShell(`
+    ${sceneHeader("离开旧住处的清晨", "曹青不在身后，你仍把这条路走完了", "你没有只躲开一笔黑账，而是决定钱落到谁手里、沈福以什么身份离开、沈家以后还肯为你开哪一扇门。")}
+    <div class="panel-title">江湖留痕</div>
+    <div class="narrative-timeline">${trace.map((entry, index) => `<details class="condition-details" ${index === 0 ? "open" : ""}><summary><span>${index + 1}</span><strong>${escapeHtml(entry.text)}</strong></summary><p>依据：${escapeHtml(entry.source)}</p></details>`).join("")}</div>
+    <div class="next-hooks"><div><span>七杀旧账</span><strong>${state.m4.sevenKillClue ? "七道刀痕已经入册" : "仍缺完整拓痕"}</strong><p>沈家的秘密没有因沈福结局而消失。</p></div><div><span>金陵来路</span><strong>城门方向传来急锣</strong><p>下一次回城，盘查、宵禁和官面身份都会成为真正条件。</p></div><div><span>当前身份</span><strong>${escapeHtml(m4IdentityLabel(state.m4.shenIdentity))}</strong><p>沈家已经不再把你当作普通药童。</p></div></div>
     <div class="button-row"><button class="secondary-button" data-action="restart">另起一世</button></div>
   `);
 }
@@ -2212,11 +2463,22 @@ const renderers = {
   apeWaterCave: renderApeWaterCave,
   p0Missed: renderP0Missed,
   p0JourneyEnd: renderP0JourneyEnd,
+  caoDeparture: renderCaoDeparture,
+  shenFuOffer: renderShenFuOffer,
+  dirtyMoneyChoice: renderDirtyMoneyChoice,
+  shenFuReckoning: renderShenFuReckoning,
+  m4Tracking: renderM4Tracking,
+  sevenKillHouse: renderSevenKillHouse,
+  shenFuConfrontation: renderShenFuConfrontation,
+  m4WorldEcho: renderM4WorldEcho,
+  baiReturn: renderBaiReturn,
+  m4Training: renderM4Training,
+  m4JourneyEnd: renderM4JourneyEnd,
 };
 
 function screenMode() {
   if (["gameDeath", "shenDeath", "p0Death"].includes(state.screen)) return "death";
-  if (["encounterReward", "mindArt", "roadResult", "ending", "quietDeparture", "qingQingReward", "fiveAnimalReward", "shenPharmacy", "alchemyFailure", "shenChapterEnding", "needleInheritance", "firstKillAftermath", "assailantPlotResult", "wangAftermath", "midAutumnWarning", "p0Missed", "p0JourneyEnd"].includes(state.screen)) return "settlement";
+  if (["encounterReward", "mindArt", "roadResult", "ending", "quietDeparture", "qingQingReward", "fiveAnimalReward", "shenPharmacy", "alchemyFailure", "shenChapterEnding", "needleInheritance", "firstKillAftermath", "assailantPlotResult", "wangAftermath", "midAutumnWarning", "p0Missed", "p0JourneyEnd", "m4Tracking", "m4WorldEcho", "m4JourneyEnd"].includes(state.screen)) return "settlement";
   if (["landing", "worldIntro", "characterDraft", "vow", "destiny", "characterSheet"].includes(state.screen)) return "neutral";
   return "simulation";
 }
@@ -2325,6 +2587,15 @@ function moveP0(screen, node, previousStatus = "complete", currentStatus = "acti
   state.p0.eventStates[node] = { status: currentStatus };
   state.p0.node = node;
   state.p0.resumeScreen = screen;
+  moveTo(screen);
+}
+
+function moveM4(screen, node, previousStatus = "complete", currentStatus = "active") {
+  const previous = state.m4.node;
+  if (previous && previous !== node) state.m4.eventStates[previous] = { status: previousStatus };
+  state.m4.eventStates[node] = { status: currentStatus };
+  state.m4.node = node;
+  state.m4.resumeScreen = screen;
   moveTo(screen);
 }
 
@@ -3319,6 +3590,105 @@ const handlers = {
     if (state.screen !== "p0Missed") return;
     state.p0.journeyClosed = true;
     moveP0("p0JourneyEnd", "p0_journey_end");
+  },
+  "begin-m4": () => {
+    if (state.screen !== "p0JourneyEnd") return;
+    state.m4 = migrateM4State(state.m4);
+    track("m4_started", { previousJourneyComplete: state.p0.complete });
+    moveM4("caoDeparture", "cao_departure");
+  },
+  "m4-cao-aid": (value) => {
+    if (state.screen !== "caoDeparture") return;
+    const result = resolveCaoDeparture(value, state.m4);
+    if (!result?.available) return;
+    state.m4 = result.state;
+    track("cao_departed", { aid: value });
+    moveM4("shenFuOffer", "shen_fu_offer");
+  },
+  "m4-inquiry": (value) => {
+    if (state.screen !== "shenFuOffer") return;
+    const result = resolveMoneyInquiry(value, state.m4);
+    if (!result?.available) return;
+    state.m4 = result.state;
+    appendNarrativeOutcome(`你记下了${result.evidence.name}：${result.evidence.description}`);
+    track("m4_money_inquiry", { action: value, evidence: result.evidence.id });
+    refresh();
+  },
+  "m4-finish-inquiry": () => {
+    if (state.screen !== "shenFuOffer" || !getDirtyMoneyBoard(state.m4).canDecide) return;
+    moveM4("dirtyMoneyChoice", "dirty_money_choice");
+  },
+  "m4-money-choice": (value) => {
+    if (state.screen !== "dirtyMoneyChoice") return;
+    const result = resolveDirtyMoneyChoice(value, state.m4, m4Context());
+    if (!result?.available) return;
+    state.m4 = result.state;
+    track("m4_money_disposition", { choice: value, holder: state.m4.dirtyMoney.holder });
+    moveM4("shenFuReckoning", "shen_fu_reckoning");
+  },
+  "m4-tracking": (value) => {
+    if (state.screen !== "shenFuReckoning") return;
+    const result = resolveM4Tracking(value, state.m4, m4Context());
+    if (!result?.available) return;
+    state.m4 = result.state;
+    if (state.m4.tracking.wound && !state.p0.wounds.some((wound) => wound.id === state.m4.tracking.wound)) {
+      state.p0.wounds.push({ id: state.m4.tracking.wound, type: "bruise", bodyPart: "shoulder", severity: 1, tags: ["tracking", "temporary"] });
+    }
+    appendNarrativeOutcome(`追踪判定为${m4TrackingGradeLabel(result.outcome)}；警觉提高${state.m4.tracking.alert}。`);
+    track("m4_tracking", { action: value, grade: result.outcome, check: result.action.check });
+    moveM4("m4Tracking", "m4_tracking", result.outcome === "failure" ? "failed" : "complete");
+  },
+  "m4-tracking-continue": () => {
+    if (state.screen !== "m4Tracking") return;
+    moveM4("sevenKillHouse", "seven_kill_house");
+  },
+  "m4-old-house": (value) => {
+    if (state.screen !== "sevenKillHouse") return;
+    const result = resolveOldHouseChoice(value, state.m4, m4Context());
+    if (!result?.available) return;
+    state.m4 = result.state;
+    track("m4_old_house", { choice: value, sevenKillClue: state.m4.sevenKillClue });
+    moveM4("shenFuConfrontation", "shen_fu_confrontation");
+  },
+  "m4-outcome": (value) => {
+    if (state.screen !== "shenFuConfrontation") return;
+    const result = resolveM4Outcome(value, state.m4, m4Context());
+    if (!result?.available) return;
+    state.m4 = result.state;
+    state.shenFuContact = state.m4.contacts.shen_fu.permissions.length > 0;
+    track("m4_shen_fu_outcome", { choice: value, outcome: result.outcome, identity: state.m4.shenIdentity });
+    moveM4("m4WorldEcho", "m4_world_echo");
+  },
+  "m4-continue-echo": () => {
+    if (state.screen !== "m4WorldEcho") return;
+    moveM4("baiReturn", "bai_return");
+  },
+  "m4-bai-instruction": (value) => {
+    if (state.screen !== "baiReturn") return;
+    const result = resolveBaiInstruction(value, state.m4, m4Context());
+    if (!result?.available) return;
+    state.m4 = result.state;
+    if (result.method && !state.p0.skills[result.method.id]) state.p0.skills[result.method.id] = { stage: "learned", progress: 30 };
+    track("m4_bai_instruction", { choice: value, learned: Boolean(result.method) });
+    moveM4("m4Training", "m4_training");
+  },
+  "m4-training": (value) => {
+    if (state.screen !== "m4Training") return;
+    const result = resolveM4Training(value, state.m4, m4Context());
+    if (!result?.available) return;
+    state.m4 = result.state;
+    if (["water_formula", "wound_cycle"].includes(result.outcome) && state.p0.stakeId && state.p0.skills[state.p0.stakeId]) {
+      const skill = state.p0.skills[state.p0.stakeId];
+      skill.progress = Math.min(100, Number(skill.progress || 0) + 30);
+      if (skill.progress >= 60) skill.stage = "skilled";
+      if (!state.p0.evidence.includes(result.outcome)) state.p0.evidence.push(result.outcome);
+    }
+    if (result.outcome === "seven_kill_guarded" && !state.p0.evidence.includes("seven_kill_guarded")) state.p0.evidence.push("seven_kill_guarded");
+    const completed = completeM4(state.m4);
+    if (!completed.available) return;
+    state.m4 = completed.state;
+    track("m4_complete", { outcome: state.m4.outcome, training: result.outcome, traceCount: state.m4.jianghuTrace.length });
+    moveM4("m4JourneyEnd", "m4_journey_end");
   },
   restart: () => {
     clearState();

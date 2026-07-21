@@ -249,7 +249,7 @@ NPC、门派、世家、帮会和朝廷机构属于世界本身，不属于“�
 
 ## 7. 当前完整流程
 
-`landing → worldIntro → characterDraft → vow → destiny → characterSheet → templeWake → fateSight → allocation → templeTasks → ladyArrival → ladyPressure → ladyTest → nightTalk → encounterReward → mindArt → roadTrial → roadResult → ending → shenArrival → shenJobs → caoArrival → caoFate → bloodDemand → danObservation → caoExamFire → caoExamIngredients → caoExamMotive → qingQingReward → qingQingStudy → fiveAnimalReward → shenDaily → fiveAnimalChoice → shenDaily → shenMeeting → shenFuChoice → shenPharmacy → shenDaily → shenErrand → fishingPrep → riverFishing → riverCatch → wangEncounter → riverFishing → treasureFish → treasureShare → wangTeaching → caoReturn → caoGuidance → alchemyLesson → firstAlchemy → shenChapterEnding → thirdLadySummons → thirdLadyDiagnosis → purpleDragonFormula → purpleDragonAlchemy → thirdLadyTreatment → needleInheritance → firstNeedleAmbush → firstKillAftermath → apprenticeshipOffer → stakeChoice → stakeTraining → bodyBreakthrough → midAutumnWarning → midAutumnDeparture → templeOfferingSource → monkeyTest → monkeyWineChoice → apeWaterCave → p0JourneyEnd`
+`landing → worldIntro → characterDraft → vow → destiny → characterSheet → templeWake → fateSight → allocation → templeTasks → ladyArrival → ladyPressure → ladyTest → nightTalk → encounterReward → mindArt → roadTrial → roadResult → ending → shenArrival → shenJobs → caoArrival → caoFate → bloodDemand → danObservation → caoExamFire → caoExamIngredients → caoExamMotive → qingQingReward → qingQingStudy → fiveAnimalReward → shenDaily → fiveAnimalChoice → shenMeeting → shenFuChoice → shenPharmacy → shenDaily → shenErrand → fishingPrep → riverFishing → treasureFish → wangTeaching → caoReturn → caoGuidance → alchemyLesson → firstAlchemy → shenChapterEnding → thirdLadySummons → thirdLadyDiagnosis → purpleDragonFormula → purpleDragonAlchemy → thirdLadyTreatment → needleInheritance → firstNeedleAmbush → firstKillAftermath → assailantTrace → assailantCounterplan → assailantPlotResult → apprenticeshipOffer → stakeChoice → stakeTraining → bodyBreakthrough → yanJinghongArrival → wangBattle → wangAftermath → midAutumnWarning → midAutumnDeparture → templeOfferingSource → monkeyTest → monkeyWineChoice → apeWaterCave → p0JourneyEnd → caoDeparture → shenFuOffer → dirtyMoneyChoice → shenFuReckoning → m4Tracking → sevenKillHouse → shenFuConfrontation → m4WorldEcho → baiReturn → m4Training → m4JourneyEnd`
 
 支路：
 
@@ -268,6 +268,13 @@ NPC、门派、世家、帮会和朝廷机构属于世界本身，不属于“�
 - 春风针夜战和强行锻体可进入 `p0Death`；仍有命灯时保留死因见闻并回到各自最近节点；
 - 夜战可杀死、制伏或逃离，拜师也可拒绝；这些结果会留在后续状态而不是只替换文本；
 - 八月十五走官道或延误会错过灵猴，强取青果会令猴群敌对；水路和山路按已选桩功产生不同结果。
+- 曹青离场时只能保留一项临别帮助，药库、日常指点和师父担保不能同时继续；
+- 钱匣至少查清两处疑点才能处置，设局需要三处；上交需要白栀云关系或曹青短札；
+- 追踪选择读取对应五维和既有心法、桩功、杆法、回报渠道或人物信任；失手不会退回选择页，而会带着残页、警觉或轻伤抵达旧宅；
+- 旧宅只能优先取得七杀刀痕、收货活证或白栀云支援之一；
+- 沈福可被控制、揭发交人、放走或杀死，四条路线都会真实关闭、收紧或替换至少一条沈家门路；
+- 白栀云授武需要救命关系与七杀物证，取得后三条卸力法会在下一场闭门试势立刻作用于现有桩功或封刀判断；
+- 章末江湖留痕只汇总已经发生的事实，每句保留来源，不另造结果。
 
 ## 8. 首章收束与后续入口
 
@@ -276,7 +283,7 @@ NPC、门派、世家、帮会和朝廷机构属于世界本身，不属于“�
 1. 丹医立足：医术二级、曹青好感四十九、回春丹六枚、《百丹注解》和武功承诺；
 2. 水陆求道：黄金钱鳘、王五六十好感、五百潜能、一点力道与《打鱼杆法》。
 
-结算根据日常研习行动的医道、武道次数突出其中一种倾向，但已经取得的另一组能力不被抹去。第三十至五十四章继续形成三组成果：白栀云救命关系与春风化雨针、曹青师徒与一门桩功、锻体一重与灵猴水洞入口。下一段从已核对的第五十五章起继续处理曹青离场、沈福利益冲突与七杀秘密；未经核对的内容明确作为原创扩展，不冒充原作情节。
+结算根据日常研习行动的医道、武道次数突出其中一种倾向，但已经取得的另一组能力不被抹去。第三十至五十四章继续形成三组成果：白栀云救命关系与春风化雨针、曹青师徒与一门桩功、锻体一重与灵猴水洞入口。第五十五至六十八章第一条可玩闭环再形成三组成果：失去师父现场保护后的独立判断、不义之财与沈福的永久人物结局、七杀刀痕与白栀云卸力法。官方目录用于校准主事件顺序；钱匣证据链、秦淮旧宅和控制／揭发／放走分支是为玩法闭环加入的原创扩写。紫兰蛇胆、千年人参与完整闭关资源线在取得可核对正文后再补，不凭标题补写细节。
 
 ## 9. 界面与叙事规则
 

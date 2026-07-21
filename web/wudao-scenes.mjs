@@ -34,7 +34,8 @@ const RIVER_SCREENS = new Set([
   "wangTeaching",
 ]);
 
-const SHEN_GATE_SCREENS = new Set(["shenArrival", "shenJobs"]);
+const M4_SHEN_GATE_SCREENS = new Set(["shenFuOffer", "dirtyMoneyChoice", "m4WorldEcho"]);
+const SHEN_GATE_SCREENS = new Set(["shenArrival", "shenJobs", ...M4_SHEN_GATE_SCREENS]);
 
 const DANROOM_SCREENS = new Set([
   "caoArrival",
@@ -48,9 +49,11 @@ const DANROOM_SCREENS = new Set([
   "qingQingReward",
   "qingQingStudy",
   "fiveAnimalReward",
+  "caoDeparture",
 ]);
 
 const WANG_SCREENS = new Set(["yanJinghongArrival", "wangBattle", "wangAftermath"]);
+const M4_ALLEY_SCREENS = new Set(["shenFuReckoning", "m4Tracking", "sevenKillHouse", "shenFuConfrontation"]);
 
 function hasTask(state, id) {
   return (state.completedTempleTasks || []).includes(id);
@@ -213,6 +216,28 @@ function riverPresentation(screen, state) {
 }
 
 function shenGatePresentation(screen, state) {
+  if (M4_SHEN_GATE_SCREENS.has(screen)) {
+    const outcome = state.m4?.outcome;
+    const gateState = state.m4?.locationStates?.shen_side_gate || "open";
+    const dispositionLabel = { report: "送交内宅", share: "与沈福分账", hide: "由你藏匿", trap: "留作诱饵", refuse: "退回沈福" }[state.m4?.dirtyMoney?.disposition] || "尚未决定";
+    const shenFuVisible = screen !== "m4WorldEcho" || outcome === "controlled";
+    const actorLabels = { controlled: "受制的沈福", exposed: "内宅账房", released: "空着的位置", killed: "闭口的家丁" };
+    return {
+      id: "shen_side_gate",
+      title: "东湖沈家 · 侧门",
+      image: ASSETS.shenGate,
+      alt: "东湖雾气中的沈家朱漆侧门、石狮、药箱和外院",
+      summary: screen === "m4WorldEcho" ? "同一扇门没有搬动，认你的人、开门的条件和门后风险却已经变了。" : "曹青已经离城。沈福挑在侧门交出钱匣，是因为这里既属于沈家，又避开内宅账房。",
+      tone: outcome === "killed" ? "death" : "overcast",
+      hotspots: [
+        { id: "vermilion_gate", label: gateState === "open" ? "仍会开启的侧门" : gateState === "watched_but_open" ? "有人盯着的侧门" : "已经变更规矩的侧门", detail: outcome === "controlled" ? "沈福还会开门，但每一次都附带交易与暴露。" : outcome === "exposed" ? "门房只认白栀云内宅发出的一次性口信。" : outcome ? "灶房、护院和侧门不再承认沈福留下的人情。" : "这扇门曾靠沈福的人情开启；今夜之后未必仍然如此。", x: 36, y: 45, state: outcome ? "danger" : "special" },
+        { id: "money_chest", label: state.m4?.dirtyMoney?.disposition ? "已经有去处的钱匣" : "沉木钱匣", detail: state.m4?.dirtyMoney?.disposition ? `钱匣已经${dispositionLabel}，但来源、知情者和证据仍在。` : "箱角有河泥，锁是新的，内沿残着烧黑火漆。", x: 68, y: 72, state: state.m4?.dirtyMoney?.disposition ? "completed" : "danger" },
+        { id: "inner_courtyard", label: "沈家内宅", detail: state.m4?.contacts?.replacement === "bai_steward" ? "白栀云的人已经接替一部分联络，却不会继承沈福全部灰色门路。" : "没有证据或人物担保，内宅不会只凭一句话处理沈福。", x: 52, y: 57, state: state.m4?.contacts?.replacement ? "special" : "locked" },
+      ],
+      actors: shenFuVisible ? [{ id: "shen_fu", label: screen === "m4WorldEcho" ? actorLabels[outcome] || "沈福" : "沈福", detail: outcome === "controlled" ? "他仍在笑，侧门钥匙却已经变成彼此的把柄。" : "从最初十两银子到今夜钱匣，他始终把人情当作能反复榨取的本钱。", x: 48, y: 64, kind: "steward", state: outcome === "controlled" ? "danger" : "known" }] : [],
+      player: { label: state.name || "陈司命", x: 25, y: 84 },
+    };
+  }
   const inside = screen === "shenJobs";
   return {
     id: "shen_side_gate",
@@ -276,7 +301,36 @@ function shenGatePresentation(screen, state) {
   };
 }
 
+function m4AlleyPresentation(screen, state) {
+  const atHouse = ["sevenKillHouse", "shenFuConfrontation"].includes(screen);
+  const tracking = state.m4?.tracking || {};
+  const outcome = state.m4?.outcome;
+  const trackingLabel = { great: "大成", success: "得手", costly: "得手有损", failure: "失手但仍追到旧宅" }[tracking.grade] || "尚未落定";
+  return {
+    id: atHouse ? "qinhuai_old_house" : "qinhuai_night_lane",
+    title: atHouse ? "秦淮河西 · 无名旧宅" : "秦淮河西 · 夜巷",
+    image: ASSETS.alley,
+    alt: "雨后秦淮夜巷、旧宅门窗、河道出口与远处尾灯",
+    summary: atHouse ? "夹墙、刀匣、后门和门外脚步把旧宅分成证据、退路与冲突。" : "尾灯、河巷和摊棚让追踪不只是追上一个背影。",
+    tone: outcome === "killed" ? "death" : "rain",
+    hotspots: atHouse ? [
+      { id: "hidden_wall", label: "夹墙暗账", detail: state.m4?.evidence?.includes("hidden_ledger") ? "账页写着沈福、收货日与一条不属于沈家的水路。" : "夹墙已被抢先撕走大半，只余墨痕和半页数字。", x: 23, y: 51, state: state.m4?.evidence?.includes("hidden_ledger") ? "completed" : "danger" },
+      { id: "blade_case", label: "七道拓痕的刀匣", detail: state.m4?.sevenKillClue ? "拓纸已经取出。刀不在，七杀旧账却第一次与沈家练功残页相连。" : "暗层里可能还压着东西，翻找会惊动门外。", x: 53, y: 58, state: state.m4?.sevenKillClue ? "completed" : "special" },
+      { id: "back_door", label: "临河后门", detail: "放沈福走、引内宅来人或在合围前取命，都要经过这扇门。", x: 83, y: 47, state: "danger" },
+    ] : [
+      { id: "tail_lamp", label: tracking.grade ? "已经看破的尾灯" : "隔巷尾灯", detail: tracking.grade ? `追踪${trackingLabel}，警觉提高${Number(tracking.alert || 0)}。` : "沈福在前，另有一盏灯始终与他隔着固定距离。", x: 76, y: 44, state: tracking.grade ? "completed" : "danger" },
+      { id: "water_exit", label: "秦淮支流", detail: "鱼跃龙门诀与定海桩可以用水断踪，也可能把追逐带向更空旷的河面。", x: 18, y: 73, state: state.mindArt ? "special" : "available" },
+      { id: "market_awning", label: "收摊后的旧布棚", detail: "遮挡能切断视线，也能让反跟踪者换掉灯与衣裳。", x: 48, y: 55, state: "available" },
+    ],
+    actors: [
+      { id: "shen_fu", label: "沈福", detail: "他的脚步比平日快，却仍会在每个能看见身后的铜镜前稍停。", x: atHouse ? 62 : 71, y: atHouse ? 68 : 59, kind: "steward", state: "danger" },
+    ],
+    player: { label: state.name || "陈司命", x: 22, y: 84 },
+  };
+}
+
 function danroomPresentation(screen, state) {
+  const atPharmacy = screen === "caoDeparture";
   const identityKnown = Boolean(state.caoIdentitySeen) || screen !== "caoArrival";
   const bloodScreens = new Set(["bloodDemand", "danObservation", "caoExamFire", "caoExamIngredients", "caoExamMotive", "shenDeath", "qingQingReward"]);
   const bookOwned = hasInventory(state, "qingqing_book");
@@ -371,10 +425,10 @@ function danroomPresentation(screen, state) {
 
   return {
     id: "shen_danroom",
-    title: "沈家后院 · 炼药房",
+    title: atPharmacy ? "金陵东门 · 沈氏药铺" : "沈家后院 · 炼药房",
     image: ASSETS.danroom,
     alt: "沈家炼药房内有丹炉、水炼盆、百格药柜、药案与侧门",
-    summary: "丹炉、水盆、药柜与侧门都看得见。能否从材料变成有用的人，要看你如何观察和回答。",
+    summary: atPharmacy ? "炉火还在，人却要走。曹青离开以后，这间药铺不会再替你自动提供指点、药材和担保。" : "丹炉、水盆、药柜与侧门都看得见。能否从材料变成有用的人，要看你如何观察和回答。",
     tone: screen === "shenDeath" ? "death" : "ember",
     hotspots,
     actors,
@@ -417,6 +471,7 @@ export function getScenePresentation(screen, state = {}) {
   if (SHEN_GATE_SCREENS.has(screen)) return shenGatePresentation(screen, state);
   if (DANROOM_SCREENS.has(screen) || (screen === "shenDaily" && state.shenLocation !== "pharmacy")) return danroomPresentation(screen, state);
   if (WANG_SCREENS.has(screen)) return wangPresentation(screen, state);
+  if (M4_ALLEY_SCREENS.has(screen)) return m4AlleyPresentation(screen, state);
   return null;
 }
 
@@ -465,7 +520,7 @@ export function getRoutePresentation(screen, state = {}) {
     });
   }
 
-  const eastKnown = Boolean(state.shenMeetingSeen || state.shenLocation === "pharmacy" || state.p0?.started);
+  const eastKnown = Boolean(state.shenMeetingSeen || state.shenLocation === "pharmacy" || state.p0?.started || state.m4?.started);
   if (eastKnown) {
     nodes.push({
       id: "east_gate",
@@ -474,6 +529,17 @@ export function getRoutePresentation(screen, state = {}) {
       x: 88,
       y: 33,
       status: routeStatus(scene.id, ["willow_lane", "east_lake"], state.shenLocation === "pharmacy" || state.p0?.started),
+    });
+  }
+
+  if (state.m4?.started) {
+    nodes.push({
+      id: "qinhuai",
+      label: "秦淮旧宅",
+      detail: state.m4.locationStates?.qinhuai_old_house === "hidden" ? "钱匣来路尚未把这处旧宅显出来。" : state.m4.sevenKillClue ? "夹墙暗账与七杀刀拓痕都从这里进入行录。" : "追踪已经把沈福的私账牵到河西旧宅。",
+      x: 89,
+      y: 74,
+      status: routeStatus(scene.id, ["qinhuai_old_house", "qinhuai_night_lane"], state.m4.locationStates?.qinhuai_old_house !== "hidden", state.m4.locationStates?.qinhuai_old_house !== "hidden"),
     });
   }
 
@@ -489,7 +555,7 @@ export function getRoutePresentation(screen, state = {}) {
   }
 
   const byId = Object.fromEntries(nodes.map((node) => [node.id, node]));
-  const pairs = [["temple", riverKnown ? "river" : "beyond_rain"], ["river", "shen"], ["shen", "east_gate"], ["river", "linan"]];
+  const pairs = [["temple", riverKnown ? "river" : "beyond_rain"], ["river", "shen"], ["shen", "east_gate"], ["east_gate", "qinhuai"], ["river", "linan"]];
   const edges = pairs
     .filter(([from, to]) => byId[from] && byId[to])
     .map(([from, to]) => ({ from, to }));

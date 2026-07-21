@@ -50,6 +50,11 @@
 - 沈家密会揭示金龙会四堂和百舸争流，沈福银子如实交代后曹青好感达到三十九；
 - 医术二级开启取药差事与紫金河钓鱼窗口，完整条件可取得黄金钱鳘与王五的打鱼杆法；
 - 曹青好感越过四十后正式传授回春丹，首次成功炼出六枚下品回春丹并得到《百丹注解》。
+- 八月十五灵猴遗迹之后，曹青离开金陵；药库、指点与师父担保同时关闭，只留一项临别帮助；
+- 沈福私藏的钱匣带有毒蛇帮水路痕迹，处置前至少查明两项疑点；上交、分赃、藏匿、设局和拒收会改变持有人、知情者、暴露与后续追踪；
+- 追踪使用固定因果骰和已有五维、心法、桩功、杆法、回报渠道或人物信任；失手仍带残页、警觉或轻伤进入秦淮旧宅；
+- 沈福可被控制、揭发交人、放走或杀死，四种结果分别改变沈家身份、侧门、灰色货路、替代联系人和警觉；
+- 七杀刀痕与救命关系可换来白栀云的三条卸力法，并在下一幕作用于已有桩功或封刀判断；章末生成五至八条带来源的江湖留痕。
 
 沈家丹房至首次炼丹段已按合法公开来源核对原作第十二至二十九章的人物、事件、数值门槛和因果顺序。改编使用原创转述，不复制小说正文长段落。扩展未经核对的后续章节时，应使用用户提供文本或合法公开来源核对人物、事件和规则；无法核对时必须明确作为原创扩展。
 
@@ -66,7 +71,7 @@
 
 ## 5. 当前流程
 
-`landing → worldIntro → characterDraft → vow → destiny → characterSheet → templeWake → fateSight → allocation → templeTasks → ladyArrival → ladyPressure → ladyTest → nightTalk → encounterReward → mindArt → roadTrial → roadResult → ending → shenArrival → shenJobs → caoArrival → caoFate → bloodDemand → danObservation → caoExamFire → caoExamIngredients → caoExamMotive → qingQingReward → qingQingStudy → fiveAnimalReward → shenDaily → fiveAnimalChoice → shenMeeting → shenFuChoice → shenPharmacy → shenDaily → shenErrand → fishingPrep → riverFishing → treasureFish → wangTeaching → caoReturn → caoGuidance → alchemyLesson → firstAlchemy → shenChapterEnding → thirdLadySummons → thirdLadyDiagnosis → purpleDragonFormula → purpleDragonAlchemy → thirdLadyTreatment → needleInheritance → firstNeedleAmbush → firstKillAftermath → assailantTrace → assailantCounterplan → assailantPlotResult → apprenticeshipOffer → stakeChoice → stakeTraining → bodyBreakthrough → yanJinghongArrival → wangBattle → wangAftermath → midAutumnWarning → midAutumnDeparture → templeOfferingSource → monkeyTest → monkeyWineChoice → apeWaterCave → p0JourneyEnd`
+`landing → worldIntro → characterDraft → vow → destiny → characterSheet → templeWake → fateSight → allocation → templeTasks → ladyArrival → ladyPressure → ladyTest → nightTalk → encounterReward → mindArt → roadTrial → roadResult → ending → shenArrival → shenJobs → caoArrival → caoFate → bloodDemand → danObservation → caoExamFire → caoExamIngredients → caoExamMotive → qingQingReward → qingQingStudy → fiveAnimalReward → shenDaily → fiveAnimalChoice → shenMeeting → shenFuChoice → shenPharmacy → shenDaily → shenErrand → fishingPrep → riverFishing → treasureFish → wangTeaching → caoReturn → caoGuidance → alchemyLesson → firstAlchemy → shenChapterEnding → thirdLadySummons → thirdLadyDiagnosis → purpleDragonFormula → purpleDragonAlchemy → thirdLadyTreatment → needleInheritance → firstNeedleAmbush → firstKillAftermath → assailantTrace → assailantCounterplan → assailantPlotResult → apprenticeshipOffer → stakeChoice → stakeTraining → bodyBreakthrough → yanJinghongArrival → wangBattle → wangAftermath → midAutumnWarning → midAutumnDeparture → templeOfferingSource → monkeyTest → monkeyWineChoice → apeWaterCave → p0JourneyEnd → caoDeparture → shenFuOffer → dirtyMoneyChoice → shenFuReckoning → m4Tracking → sevenKillHouse → shenFuConfrontation → m4WorldEcho → baiReturn → m4Training → m4JourneyEnd`
 
 支路：
 
@@ -90,6 +95,11 @@
 - 杀死、制伏与逃离分别开放搜尸、盘问和追踪入口；
 - 回报秘密链需补齐目标、暗语、鱼鳞铜签和交接时辰，可伪报接管、改写交接、优先护人或毁签藏锋；
 - 八月十五官道或延误会错过灵猴，强取会令猴群敌对。
+- 钱匣需至少两项疑点才能处置，设局需三项；上交需要白栀云关系或曹青短札；
+- 追踪大成、得手、得手有损和失手都进入旧宅，区别写入证据、警觉、伤势和地点状态；
+- 旧宅只能优先取七杀刀痕、收货活证或白栀云支援之一；
+- 沈福控制、揭发、放走和死亡会立即改变人物权限与地点，不允许只在结算改文案；
+- 白栀云授武可拒绝；没有卸力法仍可选择提前离城；章末从实际状态生成江湖留痕。
 
 新增场景时必须同步：
 
@@ -113,12 +123,15 @@
 | `web/combat-lab-core.mjs` | 独立战斗入口的遭遇适配、战役承接与视图模型 |
 | `web/combat-lab.mjs` | 独立战斗入口的渲染、输入和动效 |
 | `web/content/p0/` | 第三十至五十四章的目录与事件节点 |
+| `web/wudao-p1-core.mjs` | 曹青离场、钱匣、追踪、沈福结局、白栀云授武与江湖留痕纯规则 |
+| `web/content/p1/` | 第五十五至六十八章第一条闭环的局面盒、解法矩阵、节点与证据目录 |
 | `web/wudao-app.mjs` | 状态机、渲染、事件委托与本地存档 |
 | `web/wudao-scenes.mjs` | 2D场景物件、人物站位和已知路线视图 |
 | `web/assets/scenes/` | 破庙、紫金河、沈家侧门和丹房背景图 |
 | `web/styles.css` | 江湖、死亡、场景热点、路线与手机响应式 |
 | `tests/wudao.test.mjs` | 当前纯高武路线规则测试 |
 | `tests/p0-systems.test.mjs` | 三个新篇章与通用系统规则测试 |
+| `tests/p1-systems.test.mjs` | M4钱匣、追踪、人物权限、四种结局和江湖留痕测试 |
 | `tests/combat-engine.test.mjs` | 通用战斗引擎与王卓首领战规则测试 |
 | `tests/combat-lab.test.mjs` | 独立战斗入口适配与战役承接测试 |
 | `tests/wudao-scenes.test.mjs` | 场景揭示、物件状态与路线开放测试 |
@@ -160,6 +173,8 @@
 
 第三十至五十四章的新规则优先写入 `web/wudao-p0-core.mjs`，静态目录和内容节点位于 `web/content/p0/`。通用效果必须带稳定ID并保持幂等；内容目录必须通过 `npm run validate:content`。
 
+第五十五至六十八章第一条闭环规则写入 `web/wudao-p1-core.mjs`，静态局面盒、解法矩阵、节点和证据目录位于 `web/content/p1/`。钱匣、联系人、地点和江湖留痕必须保持来源可追溯，内部状态键不得直接显示给玩家。
+
 ## 8. 状态与存档
 
 存档键为 `wudao-high-martial-v1`，当前状态 `version` 为 `5`。旧版 `version: 2`、`version: 3`、`version: 4` 存档会迁移；已取得五禽秘籍的版本2存档会回到秘籍结算页继续新流程。
@@ -181,6 +196,7 @@
 - `p0.battleOutcomeGrade`和`p0.battleEdge`记录夜战完成质量及其留给追查的优势或伤势代价。
 - `p0`嵌套状态：统一物品、武学、见闻、假设、多维关系、病例时钟、战斗、伤势、桩功、连续日期、地点状态、灵猴关系、死因记忆与回照节点。
 - `p0.activeMartial`记录当前根基、招式和桩功；`battleHistory`记录行动意图与结果；`deathRecords`记录地点、死因、见闻和回照；`assailantPlot`记录回报秘密链条件与反制结果。
+- `m4`嵌套状态记录曹青权限、临别帮助、沈家身份、联系人、钱匣来源／持有人／知情者／证据／暴露、追踪判定、旧宅选择、沈福结局、地点状态、白栀云授武、闭门试势和江湖留痕。
 
 handler 必须检查当前条件，避免重复领取潜能、物品或关系奖励。状态只能存放 JSON 可序列化值。
 
@@ -236,6 +252,13 @@ node scripts/cdp-smoke.mjs 9225
 - 死劫履历回照后改变敌人意图和可见行动风险；
 - 拜师、两门桩功、潜能消耗和锻体突破；
 - 八月十五四条路线、桩功旅行差异、灵猴关系、猴儿酒和神猿遗迹；
+- 曹青离场后权限关闭与三选一临别帮助；
+- 钱匣三项调查、五种处置、来源／持有人／知情者和渠道风险；
+- M4追踪读取已有能力，固定因果骰四档结果都能失败推进到旧宅；
+- 七杀旧宅取舍、沈福控制／揭发／放走／杀死四种长期结果；
+- 结局下一场景改变沈家身份、联系人、门路、地点和警觉；
+- 白栀云关系与物证门槛、卸力法立即兑现、带来源江湖留痕；
+- 玩家界面不暴露M4内部英文状态键；
 - 版本2／3／4迁移到版本5，以及完整终章存档恢复；
 - 桌面、手机竖屏和手机横屏无横向溢出；
 - 页面运行异常为空。

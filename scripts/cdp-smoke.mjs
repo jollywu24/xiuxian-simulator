@@ -119,8 +119,8 @@ const checkpoints = [];
 checkpoints.push(await snapshot("landing"));
 assert.equal(checkpoints.at(-1).title, "武道");
 assert.ok(checkpoints.at(-1).scrollWidth <= 1280);
-assert.match(await evaluate(`document.querySelector('script[type="module"]')?.src || ""`), /wudao-app\.mjs\?v=20260718\.5/);
-assert.match(await evaluate(`document.querySelector('link[rel="stylesheet"]')?.href || ""`), /styles\.css\?v=20260718\.5/);
+assert.match(await evaluate(`document.querySelector('script[type="module"]')?.src || ""`), /wudao-app\.mjs\?v=20260721\.1/);
+assert.match(await evaluate(`document.querySelector('link[rel="stylesheet"]')?.href || ""`), /styles\.css\?v=20260721\.1/);
 assert.match(checkpoints.at(-1).text, /大曜四百二十七年/);
 assert.doesNotMatch(checkpoints.at(-1).text, /现实|论坛|武道局|其他玩家|其它玩家|太虚命盘|归尘门|黑日|Demo|P0|P1|P2|测试|原型/);
 
@@ -520,6 +520,65 @@ const mobileP0Ending = await snapshot("p0-ending-mobile");
 assert.ok(mobileP0Ending.scrollWidth <= 390);
 await screenshot("wudao-p0-ending-mobile.png");
 
+await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
+await click("begin-m4");
+assert.match(await text(), /曹青把炉火压低|今夜便要离开金陵/);
+assert.match(await text(), /药库 · 指点 · 师父担保/);
+await click("m4-cao-aid", "sealed_letter");
+assert.match(await text(), /沉木钱匣/);
+assert.match(await text(), /沈福/);
+await click("m4-inquiry", "inspect_seal");
+await click("m4-inquiry", "compare_tally");
+await click("m4-inquiry", "question_source");
+assert.match(await text(), /蛇纹火漆/);
+assert.match(await text(), /口供矛盾/);
+await click("m4-finish-inquiry");
+assert.match(await text(), /上交|分赃|藏匿|设局|拒绝/);
+await click("m4-money-choice", "trap");
+assert.match(await text(), /沈福在试探你|毒蛇帮的人也在看他/);
+
+await send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
+const mobileM4TrackingChoice = await snapshot("m4-tracking-choice-mobile");
+assert.ok(mobileM4TrackingChoice.scrollWidth <= 390);
+assert.equal(mobileM4TrackingChoice.sceneId, "qinhuai_night_lane");
+await screenshot("wudao-m4-tracking-choice-mobile.png");
+await send("Emulation.setDeviceMetricsOverride", { width: 844, height: 390, deviceScaleFactor: 1, mobile: true });
+const landscapeM4TrackingChoice = await snapshot("m4-tracking-choice-landscape");
+assert.ok(landscapeM4TrackingChoice.scrollWidth <= 844);
+assert.equal(landscapeM4TrackingChoice.splitView, true);
+assert.ok(landscapeM4TrackingChoice.choiceConditionCount >= 4);
+await screenshot("wudao-m4-tracking-choice-landscape.png");
+await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
+
+await click("m4-tracking", "countermark");
+assert.match(await text(), /因果骰/);
+assert.match(await text(), /沿账页墨痕进入秦淮旧宅/);
+await click("m4-tracking-continue");
+assert.match(await text(), /七道拓痕的旧刀匣/);
+assert.equal((await snapshot("m4-old-house-desktop")).sceneId, "qinhuai_old_house");
+await click("m4-old-house", "search_drawer");
+assert.match(await text(), /受控联系人|揭发／交人|放走|杀死/);
+await click("m4-outcome", "expose");
+assert.match(await text(), /侧门不再认沈福的笑脸/);
+assert.match(await text(), /白栀云内宅口信/);
+assert.doesNotMatch(await text(), /inner_house_witness|bai_steward|conditional_side_gate|risky_goods/);
+await click("m4-continue-echo");
+assert.match(await text(), /白栀云没有带侍女/);
+await click("m4-bai-instruction", "receive");
+assert.match(await text(), /三诀必须立刻落进身体/);
+await click("m4-training", "apply_to_stake");
+assert.match(await text(), /江湖留痕/);
+assert.match(await text(), /曹青离开金陵以后/);
+assert.match(await text(), /七道刀痕已经入册/);
+assert.match(await text(), /受内宅约束的证人/);
+assert.doesNotMatch(await text(), /inner_house_witness|bai_steward|conditional_side_gate|risky_goods/);
+assert.doesNotMatch(await text(), /原著|失败推进|人物权限|一幕内兑现|后续回响|凭空出现/);
+await screenshot("wudao-m4-ending-desktop.png");
+await send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
+const mobileM4Ending = await snapshot("m4-ending-mobile");
+assert.ok(mobileM4Ending.scrollWidth <= 390);
+await screenshot("wudao-m4-ending-mobile.png");
+
 const storedItems = await send("DOMStorage.getDOMStorageItems", { storageId: { securityOrigin: pageOrigin, isLocalStorage: true } });
 const savedEntry = storedItems.entries.find(([key]) => key === "wudao-high-martial-v1");
 if (!savedEntry) throw new Error("Missing local save after complete flow");
@@ -575,9 +634,23 @@ assert.equal(saved.p0.travelOutcome, "on_time_fresh");
 assert.equal(saved.p0.monkeyOutcome, "friend");
 assert.equal(saved.p0.legacyOutcome, "observed");
 assert.equal(saved.p0.items.monkey_wine, 1);
+assert.equal(saved.m4.complete, true);
+assert.equal(saved.m4.cao.status, "away");
+assert.equal(saved.m4.cao.partingAid, "sealed_letter");
+assert.equal(saved.m4.dirtyMoney.disposition, "trap");
+assert.equal(saved.m4.outcome, "exposed");
+assert.equal(saved.m4.contacts.shen_fu.status, "closed");
+assert.equal(saved.m4.contacts.replacement, "bai_steward");
+assert.equal(saved.m4.shenIdentity, "inner_house_witness");
+assert.equal(saved.m4.sevenKillClue, true);
+assert.equal(saved.m4.baiInstruction, true);
+assert.equal(saved.m4.trainingOutcome, "water_formula");
+assert.ok(saved.m4.jianghuTrace.length >= 5 && saved.m4.jianghuTrace.length <= 8);
+assert.ok(saved.m4.jianghuTrace.every((entry) => entry.text && entry.source));
 
 const versionFourSave = structuredClone(saved);
 versionFourSave.version = 4;
+versionFourSave.screen = "p0JourneyEnd";
 delete versionFourSave.p0.activeMartial;
 delete versionFourSave.p0.battleHistory;
 delete versionFourSave.p0.deathRecords;
@@ -643,7 +716,7 @@ await reloadWithSave(failedCheckSave);
 await click("first-battle-action", "observe");
 assert.match(await text(), /因果骰 · 失手/);
 await click("end-first-battle-turn");
-assert.match(await text(), /乘隙追刀|气血下降/);
+assert.match(await text(), /第 2 轮|敌方落招/);
 const failedCheckState = JSON.parse(await evaluate(`localStorage.getItem("wudao-high-martial-v1")`));
 assert.equal(failedCheckState.screen, "firstNeedleAmbush");
 assert.equal(failedCheckState.p0.battle.turn.round, 2);
@@ -697,9 +770,9 @@ await reloadWithSave(saved);
 
 await send("Page.reload", { ignoreCache: false });
 await new Promise((resolve) => setTimeout(resolve, 250));
-assert.match(await text(), /白栀云脱险/);
-assert.match(await text(), /神猿残势/);
-assert.match(await text(), /锻体一重/);
+assert.match(await text(), /江湖留痕/);
+assert.match(await text(), /七道刀痕已经入册/);
+assert.match(await text(), /白栀云的卸力三诀/);
 assert.deepEqual(pageErrors, []);
 
 process.stdout.write(`${JSON.stringify({ ok: true, checkpoints, saved: {
@@ -714,6 +787,8 @@ process.stdout.write(`${JSON.stringify({ ok: true, checkpoints, saved: {
   shenOutcome: saved.shenOutcome,
   caoFavor: saved.caoFavor,
   martialStage: saved.martialStage,
+  m4Outcome: saved.m4.outcome,
+  m4Training: saved.m4.trainingOutcome,
 } }, null, 2)}\n`);
 
 socket.close();
