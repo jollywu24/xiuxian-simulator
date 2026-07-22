@@ -50,8 +50,8 @@ import {
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs?v=20260722.1";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260722.1";
+} from "./wudao-core.mjs?v=20260722.2";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260722.2";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -81,7 +81,7 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260722.1";
+} from "./wudao-p0-core.mjs?v=20260722.2";
 import {
   M4_EVIDENCE,
   M4_METHOD,
@@ -100,7 +100,7 @@ import {
   resolveM4Training,
   resolveMoneyInquiry,
   resolveOldHouseChoice,
-} from "./wudao-p1-core.mjs?v=20260722.1";
+} from "./wudao-p1-core.mjs?v=20260722.2";
 import {
   advanceCombatLabCampaign,
   createCombatLabSession,
@@ -111,7 +111,7 @@ import {
   restartCombatLab,
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
-} from "./combat-lab-core.mjs?v=20260722.1";
+} from "./combat-lab-core.mjs?v=20260722.2";
 
 const STORAGE_KEY = "wudao-high-martial-v1";
 const app = document.querySelector("#app");
@@ -696,7 +696,7 @@ function gameShell(content) {
   const visual = sceneVisualHtml();
   const templeHud = TEMPLE_HUD_SCREENS.has(state.screen);
   return `
-    <main class="game-shell ${visual ? "world-stage-shell" : "story-stage-shell"}">
+    <main class="game-shell ${visual ? "world-stage-shell" : "story-stage-shell"} screen-${escapeHtml(state.screen)}">
       <header class="topbar">
         ${templeHud ? `<div class="weather-clock" aria-label="夜雨，${templeClockLabel()}"><span class="weather-mark" aria-hidden="true"><i></i></span><span><strong>夜雨</strong><small>${templeClockLabel()}</small></span></div>` : `<div class="brand-mini"><span class="brand-seal">武</span><span>大曜江湖</span></div>`}
         <div class="mode-badge">${escapeHtml(modeLabel())}</div>
@@ -919,14 +919,9 @@ function renderTempleWake() {
   const remaining = TEMPLE_OPENING_ACTIONS.filter((item) => !opening.actions.includes(item.id));
   return gameShell(`
     ${sceneHeader("破瓦漏雨 · 余火将熄", "你是被冷醒的", stable ? "手脚恢复知觉后，庙里的不对劲终于连成了一条线。" : "破瓦漏下月光。炭火只剩一点红，庙外有狼，腹中正一阵阵绞痛。")}
-    <div class="story-copy opening-copy"><p>你叫陈司命，十六岁。至于为何倒在金陵城外，要先看看自己还能保住什么。</p></div>
-    <div class="opening-state-strip" aria-label="雨夜处境">
-      <span class="${opening.fireTended ? "settled" : "urgent"}"><small>余火</small><strong>${opening.fireTended ? "已经拢住" : "正在熄灭"}</strong></span>
-      <span class="${opening.peachEaten ? "settled" : "urgent"}"><small>腹中</small><strong>${opening.peachEaten ? "绞痛暂缓" : "饥饿难耐"}</strong></span>
-      <span class="${opening.belongingsChecked ? "settled" : "unknown"}"><small>随身</small><strong>${opening.belongingsChecked ? "玉佩与血书" : "尚未摸清"}</strong></span>
-    </div>
+    <div class="story-copy opening-copy"><p>你叫陈司命，十六岁。先让自己熬过这场夜雨。</p></div>
     <div class="insight-whisper"><span>悟性</span><strong>东北角的砖缝是新的。</strong></div>
-    <div class="action-list">
+    <div class="action-list opening-action-list">
       ${remaining.map((item) => actionCard({ action: "temple-opening", value: item.id, title: item.title, description: item.description, source: item.source, meta: item.meta, kind: item.id === "tend_fire" ? "special" : "" })).join("")}
       ${stable ? actionCard({ action: "inspect-temple-wall", title: "借着火光，走到东北角", description: "新砖后的回声很空；真正的问题不是有没有东西，而是你来不来得及取出来。", source: "悟性 · 所见", meta: "发现暗墙", kind: "special" }) : ""}
     </div>

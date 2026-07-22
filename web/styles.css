@@ -1249,49 +1249,6 @@ h1 {
   margin-bottom: 16px;
 }
 
-.opening-state-strip {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
-  margin: 14px 0;
-}
-
-.opening-state-strip > span {
-  display: grid;
-  min-width: 0;
-  gap: 4px;
-  padding: 9px 10px;
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.018);
-}
-
-.opening-state-strip small {
-  color: var(--faint);
-  font-size: 9px;
-  letter-spacing: 0.12em;
-}
-
-.opening-state-strip strong {
-  overflow: hidden;
-  font-family: var(--font-story);
-  font-size: 12px;
-  font-weight: 500;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.opening-state-strip .urgent {
-  border-color: color-mix(in srgb, var(--danger) 52%, transparent);
-}
-
-.opening-state-strip .urgent strong {
-  color: #d97970;
-}
-
-.opening-state-strip .settled {
-  border-color: color-mix(in srgb, var(--gold) 45%, transparent);
-}
-
 .insight-whisper,
 .destiny-awakening,
 .fate-clue-card {
@@ -1920,6 +1877,27 @@ h1 {
   padding: 12px 14px 78px;
 }
 
+.world-stage-shell {
+  display: grid;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  padding: 8px 10px;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.world-stage-shell .topbar {
+  position: relative;
+  top: 0;
+}
+
+.world-stage-shell .game-grid {
+  height: 100%;
+  min-height: 0;
+  margin-top: 8px;
+}
+
 .topbar {
   position: sticky;
   top: 8px;
@@ -2235,6 +2213,14 @@ h1 {
 
 .world-stage-shell .scene-ruined_temple {
   grid-template-rows: minmax(0, 1fr);
+  place-items: center;
+}
+
+.world-stage-shell .scene-ruined_temple .scene-canvas {
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+  aspect-ratio: 1672 / 941;
 }
 
 .world-stage-shell .scene-ruined_temple .scene-inspection {
@@ -2277,8 +2263,66 @@ h1 {
 }
 
 .world-stage-shell .scene-panel.has-visual-scene {
-  height: calc(100vh - 102px);
-  min-height: 600px;
+  height: 100%;
+  min-height: 0;
+}
+
+.screen-templeWake .narrative-deck {
+  padding: clamp(18px, 2.1vw, 30px) clamp(18px, 2vw, 28px) 62px;
+}
+
+.screen-templeWake .narrative-deck .scene-head {
+  margin-bottom: 12px;
+}
+
+.screen-templeWake .narrative-deck .scene-title {
+  margin-bottom: 8px;
+  font-size: clamp(27px, 2.7vw, 34px);
+}
+
+.screen-templeWake .narrative-deck :is(.scene-subtitle, .story-copy) {
+  font-size: 13px;
+  line-height: 1.68;
+}
+
+.screen-templeWake .opening-copy {
+  margin-bottom: 8px;
+}
+
+.screen-templeWake .insight-whisper {
+  margin: 8px 0 0;
+  padding: 9px 12px;
+}
+
+.screen-templeWake .opening-action-list {
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.screen-templeWake .opening-action-list .action-card {
+  min-height: 43px;
+  padding-top: 9px;
+  padding-bottom: 9px;
+  gap: 0;
+}
+
+.screen-templeWake .opening-action-list .action-card:not(:disabled)::before {
+  top: 9px;
+}
+
+.screen-templeWake .opening-action-list :is(.action-description, .action-meta) {
+  display: none;
+}
+
+.screen-templeWake .opening-action-list .choice-condition summary {
+  min-height: 28px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+.screen-templeWake .opening-action-list .condition-status {
+  min-height: 18px;
+  padding: 2px 6px;
 }
 
 .narrative-history {
@@ -4430,6 +4474,20 @@ h1 {
 }
 
 @media (max-width: 780px) {
+  .world-stage-shell {
+    display: block;
+    height: auto;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: 12px 14px 78px;
+    overflow: visible;
+  }
+
+  .world-stage-shell .game-grid {
+    height: auto;
+    margin-top: 10px;
+  }
+
   .setup-shell {
     padding: 12px;
   }
@@ -4724,8 +4782,17 @@ h1 {
   }
 }
 
-@media (max-width: 920px) and (orientation: landscape) and (max-height: 600px) {
-  .game-shell {
+@media (max-width: 1300px) and (orientation: landscape) and (max-height: 680px) {
+  .world-stage-shell {
+    display: grid;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    padding: 6px 8px;
+    overflow: hidden;
+  }
+
+  .story-stage-shell {
     padding: 6px 8px 58px;
   }
 
@@ -4770,7 +4837,7 @@ h1 {
   .scene-panel.has-visual-scene {
     display: grid;
     grid-template-columns: minmax(0, 1.28fr) minmax(310px, 0.92fr);
-    height: calc(100vh - 70px);
+    height: 100%;
     min-height: 0;
   }
 
@@ -4787,6 +4854,11 @@ h1 {
     height: 100%;
     min-height: 0;
     aspect-ratio: auto;
+  }
+
+  .world-stage-shell .scene-ruined_temple .scene-canvas {
+    height: auto;
+    aspect-ratio: 1672 / 941;
   }
 
   .scene-inspection {
@@ -4881,6 +4953,80 @@ h1 {
   .martial-panel .dock-sheet {
     width: min(300px, calc(100vw - 16px));
     max-height: calc(100vh - 64px);
+  }
+}
+
+@media (orientation: landscape) and (max-height: 540px) {
+  .screen-templeWake .opening-copy {
+    display: none;
+  }
+
+  .screen-templeWake .narrative-deck .scene-head {
+    margin-bottom: 8px;
+  }
+
+  .screen-templeWake .insight-whisper {
+    margin-top: 6px;
+    padding-block: 7px;
+  }
+
+  .screen-templeWake .opening-action-list {
+    margin-top: 7px;
+  }
+
+  .screen-templeWake .opening-action-list .action-card {
+    min-height: 40px;
+    padding-top: 7px;
+    padding-bottom: 7px;
+  }
+
+  .screen-templeWake .opening-action-list .action-card:not(:disabled)::before {
+    top: 7px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 430px) {
+  .screen-templeWake .narrative-deck {
+    padding: 10px 12px 54px;
+  }
+
+  .screen-templeWake .narrative-deck .scene-head {
+    margin-bottom: 4px;
+  }
+
+  .screen-templeWake .narrative-deck .scene-title {
+    margin-bottom: 0;
+    font-size: 25px;
+  }
+
+  .screen-templeWake .narrative-deck .scene-subtitle {
+    display: none;
+  }
+
+  .screen-templeWake .insight-whisper {
+    margin-top: 4px;
+    padding-block: 5px;
+  }
+
+  .screen-templeWake .opening-action-list {
+    gap: 4px;
+    margin-top: 5px;
+  }
+
+  .screen-templeWake .opening-action-list .action-card {
+    min-height: 36px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+
+  .screen-templeWake .opening-action-list .action-card:not(:disabled)::before {
+    top: 5px;
+  }
+
+  .screen-templeWake .opening-action-list .choice-condition summary {
+    min-height: 24px;
+    padding-top: 3px;
+    padding-bottom: 3px;
   }
 }
 

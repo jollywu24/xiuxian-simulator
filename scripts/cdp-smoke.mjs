@@ -79,6 +79,7 @@ async function snapshot(label) {
     title: document.querySelector("h1")?.textContent?.trim() || "",
     viewport: [innerWidth, innerHeight],
     scrollWidth: document.documentElement.scrollWidth,
+    scrollHeight: document.documentElement.scrollHeight,
     sceneId: document.querySelector("[data-scene-id]")?.dataset.sceneId || "",
     hotspotCount: document.querySelectorAll(".scene-hotspot").length,
     actorLabels: [...document.querySelectorAll(".scene-actor .scene-marker-label")].map((item) => item.textContent.trim()),
@@ -94,6 +95,18 @@ async function snapshot(label) {
       const stage = document.querySelector(".scene-experience")?.getBoundingClientRect();
       const narrative = document.querySelector(".narrative-deck")?.getBoundingClientRect();
       return Boolean(stage && narrative && Math.abs(stage.top - narrative.top) < 8 && narrative.left >= stage.right - 2);
+    })(),
+    sceneRatio: (() => {
+      const scene = document.querySelector(".scene-canvas")?.getBoundingClientRect();
+      return scene?.height ? scene.width / scene.height : 0;
+    })(),
+    currentChoicesVisible: (() => {
+      const narrative = document.querySelector(".narrative-deck")?.getBoundingClientRect();
+      const choices = [...document.querySelectorAll("[data-narrative-current] .choice-entry")];
+      return Boolean(narrative && choices.length && choices.every((item) => {
+        const rect = item.getBoundingClientRect();
+        return rect.top >= narrative.top - 1 && rect.bottom <= narrative.bottom + 1;
+      }));
     })(),
     actions: [...document.querySelectorAll("[data-action]")].map((item) => [item.dataset.action, item.dataset.value]),
     currentText: document.querySelector("[data-narrative-current]")?.innerText?.slice(0, 1200) || "",
@@ -119,8 +132,8 @@ const checkpoints = [];
 checkpoints.push(await snapshot("landing"));
 assert.equal(checkpoints.at(-1).title, "武道");
 assert.ok(checkpoints.at(-1).scrollWidth <= 1280);
-assert.match(await evaluate(`document.querySelector('script[type="module"]')?.src || ""`), /wudao-app\.mjs\?v=20260722\.1/);
-assert.match(await evaluate(`document.querySelector('link[rel="stylesheet"]')?.href || ""`), /styles\.css\?v=20260722\.1/);
+assert.match(await evaluate(`document.querySelector('script[type="module"]')?.src || ""`), /wudao-app\.mjs\?v=20260722\.2/);
+assert.match(await evaluate(`document.querySelector('link[rel="stylesheet"]')?.href || ""`), /styles\.css\?v=20260722\.2/);
 assert.match(checkpoints.at(-1).text, /大曜四百二十七年/);
 assert.doesNotMatch(checkpoints.at(-1).text, /现实|论坛|武道局|其他玩家|其它玩家|太虚命盘|归尘门|黑日|Demo|P0|P1|P2|测试|原型/);
 
@@ -134,6 +147,29 @@ assert.match(await text(), /爬向供桌，拿那枚山桃/);
 assert.doesNotMatch(await text(), /行录/);
 assert.doesNotMatch(await text(), /现实|论坛|武道局|其他玩家|其它玩家/);
 await screenshot("wudao-temple-opening-desktop.png");
+await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 622, deviceScaleFactor: 1, mobile: false });
+const shortDesktopOpening = await snapshot("opening-short-desktop");
+assert.ok(shortDesktopOpening.scrollWidth <= 1280);
+assert.ok(shortDesktopOpening.scrollHeight <= 622);
+assert.equal(shortDesktopOpening.splitView, true);
+assert.ok(shortDesktopOpening.sceneRatio > 1.74 && shortDesktopOpening.sceneRatio < 1.81);
+assert.equal(shortDesktopOpening.currentChoicesVisible, true);
+await screenshot("wudao-temple-opening-short-desktop.png");
+await send("Emulation.setDeviceMetricsOverride", { width: 1024, height: 498, deviceScaleFactor: 1, mobile: false });
+const scaledDesktopOpening = await snapshot("opening-scaled-desktop");
+assert.ok(scaledDesktopOpening.scrollWidth <= 1024);
+assert.ok(scaledDesktopOpening.scrollHeight <= 498);
+assert.equal(scaledDesktopOpening.splitView, true);
+assert.equal(scaledDesktopOpening.currentChoicesVisible, true);
+await screenshot("wudao-temple-opening-scaled-desktop.png");
+await send("Emulation.setDeviceMetricsOverride", { width: 844, height: 390, deviceScaleFactor: 1, mobile: true });
+const phoneLandscapeOpening = await snapshot("opening-phone-landscape");
+assert.ok(phoneLandscapeOpening.scrollWidth <= 844);
+assert.ok(phoneLandscapeOpening.scrollHeight <= 390);
+assert.equal(phoneLandscapeOpening.splitView, true);
+assert.ok(phoneLandscapeOpening.sceneRatio > 1.74 && phoneLandscapeOpening.sceneRatio < 1.81);
+assert.equal(phoneLandscapeOpening.currentChoicesVisible, true);
+await screenshot("wudao-temple-opening-phone-landscape.png");
 await send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
 const mobileOpening = await snapshot("opening-mobile");
 assert.ok(mobileOpening.scrollWidth <= 390);
@@ -143,11 +179,11 @@ await screenshot("wudao-temple-opening-mobile.png");
 await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
 
 await click("temple-opening", "tend_fire");
-assert.match(await text(), /已经拢住/);
+assert.match(await text(), /红炭拢到一起/);
 await click("temple-opening", "check_belongings");
-assert.match(await text(), /玉佩与血书/);
+assert.match(await text(), /一封染暗的血书/);
 await click("temple-opening", "eat_peach");
-assert.match(await text(), /绞痛暂缓/);
+assert.match(await text(), /压住了腹中绞痛/);
 await click("inspect-temple-wall");
 assert.match(await text(), /你看见了东西，却拿不到/);
 assert.match(await text(), /火势不足/);
