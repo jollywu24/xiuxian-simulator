@@ -22,11 +22,14 @@ import {
   SHEN_DAILY_RULES,
   SHEN_JOBS,
   TEMPLE_ENCOUNTERS,
+  TEMPLE_OPENING_ACTIONS,
   VOWS,
   WORLD_FACTS,
   allocateJadeBonus,
+  canInspectTempleWall,
   canStudyQingQing,
   canLearnFishingRod,
+  createTempleOpeningState,
   getCaoEncounter,
   getFiveAnimalAspect,
   resolveLadyChoice,
@@ -42,6 +45,7 @@ import {
   resolveShenJob,
   resolveShenDailyAction,
   resolveTreasureFishChoice,
+  resolveTempleOpeningAction,
   reallocateExistingAttributes,
   templeTaskCost,
 } from "../web/wudao-core.mjs";
@@ -68,6 +72,20 @@ test("two in-world fate lamps explain death and return without another world", (
   assert.equal(LIFE_RULE.lives, 2);
   assert.match(LIFE_RULE.effect, /因果节点/);
   assert.match(LIFE_RULE.effect, /此生终结/);
+});
+
+test("the ruined-temple opening turns three concrete survival actions into the first discovery", () => {
+  assert.deepEqual(TEMPLE_OPENING_ACTIONS.map((item) => item.id), ["tend_fire", "check_belongings", "eat_peach"]);
+  let opening = createTempleOpeningState();
+  assert.equal(canInspectTempleWall(opening), false);
+  for (const id of TEMPLE_OPENING_ACTIONS.map((item) => item.id)) {
+    const result = resolveTempleOpeningAction(opening, id);
+    assert.equal(result.available, true);
+    assert.match(result.outcome, /你/);
+    opening = result.state;
+  }
+  assert.equal(canInspectTempleWall(opening), true);
+  assert.equal(resolveTempleOpeningAction(opening, "eat_peach").available, false);
 });
 
 test("jade bonuses can be reallocated to solve the wall encounter faster", () => {

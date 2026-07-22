@@ -1,6 +1,6 @@
-import { rollCausalDie } from "./wudao-p0-core.mjs?v=20260721.1";
-import { P1_ARCS, P1_CONTENT_NODES, getP1Arc, getP1Node } from "./content/p1/arcs.mjs?v=20260721.1";
-import { M4_EVIDENCE, M4_LOCATIONS, M4_METHOD } from "./content/p1/catalogs.mjs?v=20260721.1";
+import { rollCausalDie } from "./wudao-p0-core.mjs?v=20260722.1";
+import { P1_ARCS, P1_CONTENT_NODES, getP1Arc, getP1Node } from "./content/p1/arcs.mjs?v=20260722.1";
+import { M4_EVIDENCE, M4_LOCATIONS, M4_METHOD } from "./content/p1/catalogs.mjs?v=20260722.1";
 
 export { P1_ARCS, P1_CONTENT_NODES, M4_EVIDENCE, M4_LOCATIONS, M4_METHOD, getP1Arc, getP1Node };
 
@@ -378,7 +378,7 @@ export function buildM4JianghuTrace(m4) {
     { text: `你从一只沉木钱匣里认出了${m4.evidence.some((id) => id === "snake_seal" || id === "collector_token") ? "毒蛇帮水路" : "无法洗净的私账"}，钱从此不再只是钱。`, source: "不义之财·来源" },
     outcomeLines[m4.outcome],
     { text: m4.worldEcho || "沈家旧门路已经改变，没有人还能装作一切照旧。", source: "沈家·门路" },
-    m4.sevenKillClue ? { text: "七道拓痕把沈福私账牵回沈家旧宅，七杀刀第一次进入你的行录。", source: "秦淮旧宅·刀痕" } : { text: "你错过了旧宅最深处的刀痕，七杀旧账仍只露出半角。", source: "秦淮旧宅·缺页" },
+    m4.sevenKillClue ? { text: "七道拓痕把沈福私账牵回沈家旧宅，七杀刀第一次成为你的见闻。", source: "秦淮旧宅·刀痕" } : { text: "你错过了旧宅最深处的刀痕，七杀旧账仍只露出半角。", source: "秦淮旧宅·缺页" },
     trainingLines[m4.trainingOutcome],
   ].filter(Boolean);
   return lines.slice(0, 8);

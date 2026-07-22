@@ -27,10 +27,12 @@ function state(overrides = {}) {
   };
 }
 
-test("five compressed environment assets anchor the first visual locations and combat bridge", () => {
-  assert.equal(SCENE_ASSET_PATHS.length, 5);
-  assert.equal(new Set(SCENE_ASSET_PATHS).size, 5);
+test("six compressed environment assets anchor the first visual locations and combat bridge", () => {
+  assert.equal(SCENE_ASSET_PATHS.length, 6);
+  assert.equal(new Set(SCENE_ASSET_PATHS).size, 6);
   assert.ok(SCENE_ASSET_PATHS.every((asset) => asset.startsWith("./assets/") && asset.endsWith(".webp")));
+  assert.ok(SCENE_ASSET_PATHS.some((asset) => asset.endsWith("ruined-temple-rain-v2.webp")));
+  assert.ok(SCENE_ASSET_PATHS.some((asset) => asset.endsWith("ruined-temple-lady-v2.webp")));
 });
 
 test("every visual scene exposes serializable, bounded and uniquely identified markers", () => {
@@ -58,8 +60,12 @@ test("柳巷尾随不会提前暴露王卓，进入河岸后才揭示身份", ()
 });
 
 test("character identity on the ruined-temple stage follows the story reveal", () => {
-  assert.equal(getScenePresentation("templeWake", state()).actors.length, 0);
-  assert.equal(getScenePresentation("ladyArrival", state()).actors[0].label, "青衣妇人");
+  const opening = getScenePresentation("templeWake", state());
+  assert.equal(opening.actors.length, 0);
+  assert.equal(opening.player.visible, false);
+  const arrival = getScenePresentation("ladyArrival", state());
+  assert.equal(arrival.actors[0].label, "青衣妇人");
+  assert.match(arrival.image, /ruined-temple-lady-v2/);
   assert.equal(getScenePresentation("encounterReward", state()).actors[0].label, "龙青鱼");
 });
 
@@ -84,8 +90,9 @@ test("visual object descriptions react to existing game progress", () => {
 });
 
 test("the route board reveals locations from possessions and relationships without spoiling unknown places", () => {
-  const unknown = getRoutePresentation("templeTasks", state({ destinyRevealed: true }));
-  assert.deepEqual(unknown.nodes.map((node) => node.id), ["temple", "beyond_rain"]);
+  assert.equal(getRoutePresentation("templeTasks", state({ destinyRevealed: true })), null);
+  const unknown = getRoutePresentation("roadTrial", state({ destinyRevealed: true }));
+  assert.deepEqual(unknown.nodes.map((node) => node.id), ["temple", "river"]);
 
   const known = getRoutePresentation("roadTrial", state({
     mindArt: "fish_leap_dragon_gate",

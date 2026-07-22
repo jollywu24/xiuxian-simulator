@@ -85,6 +85,74 @@ export const LIFE_RULE = {
   effect: "命灯熄灭一盏，可带着死前记忆回到最近的因果节点；两灯皆灭，此生终结。",
 };
 
+export const TEMPLE_OPENING_ACTIONS = [
+  {
+    id: "tend_fire",
+    title: "扒开炭灰，寻找火种",
+    description: "手指会被烫伤，但不先救活这点火，湿衣很快会夺走体温。",
+    source: "根骨",
+    meta: "火势回升",
+  },
+  {
+    id: "check_belongings",
+    title: "摸索自己身上的东西",
+    description: "确认姓名、来处，以及这场雨夜里真正属于你的东西。",
+    source: "身世",
+    meta: "查明行囊",
+  },
+  {
+    id: "eat_peach",
+    title: "爬向供桌，拿那枚山桃",
+    description: "桃子新鲜得不像荒庙里的东西；眼下先让胃里的绞痛停下来。",
+    source: "饥饿",
+    meta: "山桃 -1",
+  },
+];
+
+export function createTempleOpeningState() {
+  return {
+    fireTended: false,
+    belongingsChecked: false,
+    peachEaten: false,
+    wallSeen: false,
+    actions: [],
+  };
+}
+
+export function resolveTempleOpeningAction(opening = {}, actionId) {
+  const action = TEMPLE_OPENING_ACTIONS.find((item) => item.id === actionId);
+  const current = {
+    ...createTempleOpeningState(),
+    ...opening,
+    actions: Array.isArray(opening.actions) ? [...opening.actions] : [],
+  };
+  if (!action || current.actions.includes(actionId)) return { available: false, state: current };
+
+  const state = {
+    ...current,
+    fireTended: current.fireTended || actionId === "tend_fire",
+    belongingsChecked: current.belongingsChecked || actionId === "check_belongings",
+    peachEaten: current.peachEaten || actionId === "eat_peach",
+    actions: [...current.actions, actionId],
+  };
+  const outcomes = {
+    tend_fire: "你吹开白灰，把藏在底下的红炭拢到一起。火没有旺，只够你把手脚从麻木里抢回来。",
+    check_belongings: "半块温热玉佩、一封染暗的血书。你想起自己的名字：陈司命，也想起有人正沿着血书找你。",
+    eat_peach: "桃肉冰凉，却压住了腹中绞痛。你把剩下的山桃收进行囊，也记住了这份反常的新鲜。",
+  };
+  return {
+    available: true,
+    state,
+    outcome: outcomes[actionId],
+    stable: state.fireTended && state.belongingsChecked && state.peachEaten,
+  };
+}
+
+export function canInspectTempleWall(opening = {}) {
+  const current = { ...createTempleOpeningState(), ...opening };
+  return current.fireTended && current.belongingsChecked && current.peachEaten;
+}
+
 export const TEMPLE_ENCOUNTERS = [
   {
     id: "traveler_relic",

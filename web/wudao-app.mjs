@@ -21,10 +21,13 @@ import {
   SHEN_JOBS,
   TREASURE_FISH_CHOICES,
   TEMPLE_ENCOUNTERS,
+  TEMPLE_OPENING_ACTIONS,
   VOWS,
   WORLD_FACTS,
   allocateJadeBonus,
+  canInspectTempleWall,
   canStudyQingQing,
+  createTempleOpeningState,
   getBackground,
   getCaoEncounter,
   getFiveAnimalAspect,
@@ -43,11 +46,12 @@ import {
   resolveShenDailyAction,
   resolveShenJob,
   resolveTreasureFishChoice,
+  resolveTempleOpeningAction,
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs?v=20260721.1";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260721.1";
+} from "./wudao-core.mjs?v=20260722.1";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260722.1";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -77,7 +81,7 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260721.1";
+} from "./wudao-p0-core.mjs?v=20260722.1";
 import {
   M4_EVIDENCE,
   M4_METHOD,
@@ -96,7 +100,7 @@ import {
   resolveM4Training,
   resolveMoneyInquiry,
   resolveOldHouseChoice,
-} from "./wudao-p1-core.mjs?v=20260721.1";
+} from "./wudao-p1-core.mjs?v=20260722.1";
 import {
   advanceCombatLabCampaign,
   createCombatLabSession,
@@ -107,7 +111,7 @@ import {
   restartCombatLab,
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
-} from "./combat-lab-core.mjs?v=20260721.1";
+} from "./combat-lab-core.mjs?v=20260722.1";
 
 const STORAGE_KEY = "wudao-high-martial-v1";
 const app = document.querySelector("#app");
@@ -150,7 +154,10 @@ function createInitialState() {
     potential: 0,
     peaches: 3,
     fireMinutes: 120,
+    firePower: 12,
+    hungerLevel: 2,
     inventory: [],
+    templeOpening: createTempleOpeningState(),
     completedTempleTasks: [],
     templeLog: [],
     ladyChoiceLog: [],
@@ -557,7 +564,7 @@ function sceneVisualHtml() {
   }).join("");
 
   return `
-    <section class="scene-experience" aria-label="${escapeHtml(scene.title)}">
+    <section class="scene-experience scene-${escapeHtml(scene.id)}" aria-label="${escapeHtml(scene.title)}">
       <div class="scene-canvas tone-${escapeHtml(scene.tone)}" data-scene-id="${escapeHtml(scene.id)}" role="img" aria-label="${escapeHtml(scene.alt)}" style="--scene-image:url('${escapeHtml(scene.image)}')">
         <div class="scene-vignette" aria-hidden="true"></div>
         ${scene.hotspots.map((hotspot) => `
@@ -570,7 +577,7 @@ function sceneVisualHtml() {
             <span class="actor-silhouette" aria-hidden="true"></span><span class="scene-marker-label">${escapeHtml(actor.label)}</span>
           </button>
         `).join("")}
-        <div class="scene-player" style="--marker-x:${scene.player.x}%;--marker-y:${scene.player.y}%" aria-label="${escapeHtml(scene.player.label)}在此"><span aria-hidden="true">命</span><b>${escapeHtml(scene.player.label)}</b></div>
+        ${scene.player?.visible === false ? "" : `<div class="scene-player" style="--marker-x:${scene.player.x}%;--marker-y:${scene.player.y}%" aria-label="${escapeHtml(scene.player.label)}在此"><span aria-hidden="true">命</span><b>${escapeHtml(scene.player.label)}</b></div>`}
       </div>
       <div class="scene-inspection" data-scene-inspection aria-live="polite"><span>眼前</span><strong>${escapeHtml(scene.title)}</strong><p>${escapeHtml(scene.summary)}</p></div>
       ${route ? `
@@ -591,58 +598,17 @@ function sceneVisualHtml() {
   `;
 }
 
-function journalHtml() {
-  const items = [
-    ["大曜 · 金陵道", state.destinyRevealed ? "命格已醒" : "无名少年初入江湖", "current"],
-    ["东郊 · 无名破庙", state.completedTempleTasks.length ? `已取奇遇 ${state.completedTempleTasks.length}/3` : "寒夜求生", state.completedTempleTasks.length ? "shifted" : ""],
-  ];
-  if (state.ladyChoiceLog.length) {
-    items.push(["寅时 · 青衣来客", state.relationship ? `龙青鱼 · ${state.relationship}` : state.departed ? "擦肩而过" : "杀机未定", state.relationship ? "shifted" : "current"]);
-  }
-  if (state.roadTrial) {
-    items.push(["天明 · 紫金河", state.roadTrial === "dive" ? "顺流抵达东湖" : "官道受阻", "shifted"]);
-  }
-  if (state.shenChapterStarted) {
-    const shenDetail = state.shenChapterComplete
-      ? state.alchemyPills ? "首炉回春丹已成" : "此路暂止"
-      : state.fishingRodMethod ? "王五传下打鱼杆法"
-        : state.treasureFishCaught ? "黄金钱鳘上岸"
-          : state.shenMeetingSeen ? "曹青迁往东门药铺"
-            : state.qingQingStudied ? "丹房求生" : state.bloodChoice ? "取血炼丹" : "无职可领";
-    items.push([state.shenLocation === "pharmacy" ? "金陵 · 东门药铺" : "金陵 · 沈家丹房", shenDetail, state.shenChapterComplete ? "shifted" : "current"]);
-  }
-  if (state.p0?.started) {
-    const p0Detail = state.p0.complete
-      ? "神猿遗迹已见"
-      : state.p0.legacyOutcome ? "水洞残势入眼"
-        : state.p0.monkeyOutcome ? "灵猴已经认路"
-          : state.p0.bodyProgress ? "锻体一重"
-            : state.p0.stakeId ? `${P0_STAKES[state.p0.stakeId]?.name || "桩功"}入门`
-              : state.p0.assailantPlot?.outcome ? "夜袭回报已经改写"
-                : state.p0.battleOutcome ? "长街夜战已决"
-                : state.p0.treatmentOutcome ? "三夫人病局已定" : "三夫人病危";
-    items.push([state.p0.location === "ruined_temple" ? "金陵东郊 · 破庙" : "金陵东门 · 医武之路", p0Detail, state.p0.complete ? "shifted" : "current"]);
-  }
-  return `
-    <div class="panel-title">江湖行录</div>
-    <div class="timeline-list">
-      ${items.map(([title, detail, status]) => `
-        <div class="timeline-item ${status}"><span class="timeline-dot" aria-hidden="true"></span><span><h4>${escapeHtml(title)}</h4><p>${escapeHtml(detail)}</p></span></div>
-      `).join("")}
-    </div>
-  `;
-}
-
 function characterPanelHtml() {
   const background = getBackground(state.backgroundId);
   const vow = getVow(state.vowId);
   const stage = MARTIAL_STAGES.find((item) => item.id === state.martialStage) || MARTIAL_STAGES[0];
+  const openingUnknown = state.screen === "templeWake" && !state.templeOpening?.belongingsChecked;
   return `
     <div class="panel-body">
       <div>
         <div class="character-head">
           <div class="wudao-avatar">命</div>
-          <div><h3>${escapeHtml(state.name)}</h3><p>${escapeHtml(background?.name)} · 十六岁</p></div>
+          <div><h3>${escapeHtml(state.name)}</h3><p>${openingUnknown ? "来处未明" : escapeHtml(background?.name)} · 十六岁</p></div>
         </div>
         <div class="panel-title">人物状态</div>
         <div class="status-grid compact-status">
@@ -659,55 +625,98 @@ function characterPanelHtml() {
         </div>
         ${state.destinyRevealed ? `<div class="destiny-mini"><span>唯一命格</span><strong>${DESTINY.name}</strong><p>${DESTINY.effect}</p></div>` : ""}
       </div>
-      <div>
-        <div class="panel-title">随身所得</div>
-        <div class="inventory-list">
-          ${state.backgroundId === "mystery" ? `<div><strong>半块家传玉佩</strong><span>可把自身所得重分五维 · 当前总点 ${shenAttributePool()}</span></div><div><strong>一封血书</strong><span>指向金龙会万鲤堂孙不离</span></div>` : ""}
-          ${state.completedTempleTasks.includes("traveler_relic") ? `<div><strong>金陵东郊残图</strong><span>标出破庙外的旧路</span></div>` : ""}
-          ${state.completedTempleTasks.includes("shen_promise") ? `<div><strong>沈字铜钱</strong><span>可作为金陵沈家信物</span></div>` : ""}
-          ${state.mindArt ? `<div><strong>${MIND_ART.name}</strong><span>${MIND_ART.rank} · 龙青鱼所授</span></div>` : ""}
-          ${state.roadTrial === "dive" ? `<div><strong>紫金河水路</strong><span>鱼跃龙门诀可缩短往返沈家的路程</span></div>` : ""}
-          ${state.inventory.includes(QINGQING_BOOK.id) ? `<div><strong>${QINGQING_BOOK.name}</strong><span>${state.qingQingStudied ? `已研习 · 医术 ${state.medicalLevel}级 ${state.medicalProgress}%` : "曹青所授 · 尚未研习"}</span></div>` : ""}
-          ${state.fiveAnimalBook ? `<div><strong>${FIVE_ANIMAL_PLAY.name}</strong><span>${state.fiveAnimalLevel ? `${state.fiveAnimalLevel}级 ${state.fiveAnimalProgress}% · ${escapeHtml(getFiveAnimalAspect(state.fiveAnimalAspect)?.name || "已入门")}` : "基础健体功 · 尚未练成"}</span></div>` : ""}
-          ${state.fishingRodMethod ? `<div><strong>《打鱼杆法》</strong><span>王五所授 · 抄水拍鱼、劈浪戳鱼</span></div>` : ""}
-          ${state.inventory.includes("return_spring_pills") && !state.p0?.started ? `<div><strong>${Number(state.alchemyPills || 0)}枚下品回春丹</strong><span>亲手炼成 · 止血补气</span></div>` : ""}
-          ${state.inventory.includes("hundred_pills_notes") ? `<div><strong>《百丹注解》</strong><span>曹青所授 · 再成三丹可换武功</span></div>` : ""}
-          ${Object.entries(state.p0?.items || {}).filter(([, quantity]) => Number(quantity) > 0).map(([id, quantity]) => {
-            const item = getP0Item(id);
-            return item ? `<div><strong>${escapeHtml(item.name)}${Number(quantity) > 1 ? ` ×${Number(quantity)}` : ""}</strong><span>${escapeHtml(item.description)}</span></div>` : "";
-          }).join("")}
-          ${Object.entries(state.p0?.skills || {}).map(([id, progress]) => {
-            const skill = getP0Skill(id);
-            return skill ? `<div><strong>${escapeHtml(skill.name)}</strong><span>${escapeHtml(p0SkillStageLabel(progress))} · ${Number(progress.progress || 0)}%</span></div>` : "";
-          }).join("")}
-          ${(state.p0?.wounds || []).map((wound) => `<div><strong>${wound.bodyPart === "leg" ? "腿伤" : wound.bodyPart === "shoulder" ? "肩伤" : "肋下刀伤"}</strong><span>伤势 ${Number(wound.severity || 0)} · 尚未痊愈</span></div>`).join("")}
-          ${(state.p0?.deathRecords || []).map((record) => `<div><strong>死劫 · ${escapeHtml(record.location)}</strong><span>${escapeHtml(record.cause)} · 已记住：${escapeHtml(record.insight)}</span></div>`).join("")}
-        </div>
+      ${(state.p0?.wounds || []).length ? `<div><div class="panel-title">伤势</div><div class="inventory-list">${state.p0.wounds.map((wound) => `<div><strong>${wound.bodyPart === "leg" ? "腿伤" : wound.bodyPart === "shoulder" ? "肩伤" : "肋下刀伤"}</strong><span>伤势 ${Number(wound.severity || 0)} · 尚未痊愈</span></div>`).join("")}</div></div>` : ""}
+    </div>
+  `;
+}
+
+function inventoryPanelHtml() {
+  const belongingsKnown = state.screen !== "templeWake" || state.templeOpening?.belongingsChecked;
+  const p0Items = Object.entries(state.p0?.items || {}).filter(([, quantity]) => Number(quantity) > 0);
+  const hasInventory = belongingsKnown || state.completedTempleTasks.length || state.inventory.length || p0Items.length;
+  return `
+    <div class="panel-body inventory-panel-body">
+      <div><div class="panel-title">行囊</div><p class="drawer-intro">只放能被带走、消耗或交给别人的东西。</p></div>
+      <div class="inventory-list">
+        ${belongingsKnown && state.backgroundId === "mystery" ? `<div><strong>半块家传玉佩</strong><span>${state.destinyRevealed ? `可重分五维 · 当前总点 ${shenAttributePool()}` : "贴着胸口，正透出不合时宜的暖意"}</span></div><div><strong>一封染暗的血书</strong><span>末尾只辨得出：金龙会万鲤堂，孙不离</span></div>` : ""}
+        ${state.templeOpening?.peachEaten && state.peaches > 0 ? `<div><strong>山桃 ×${Number(state.peaches)}</strong><span>贡桌所得 · 新鲜得不像荒庙之物</span></div>` : ""}
+        ${state.completedTempleTasks.includes("traveler_relic") ? `<div><strong>金陵东郊残图</strong><span>标出破庙外的旧路</span></div>` : ""}
+        ${state.completedTempleTasks.includes("shen_promise") ? `<div><strong>沈字铜钱</strong><span>可作为金陵沈家信物</span></div>` : ""}
+        ${state.inventory.includes(QINGQING_BOOK.id) ? `<div><strong>${QINGQING_BOOK.name}</strong><span>${state.qingQingStudied ? `已研习 · 医术 ${state.medicalLevel}级 ${state.medicalProgress}%` : "曹青所授 · 尚未研习"}</span></div>` : ""}
+        ${state.inventory.includes("return_spring_pills") && !state.p0?.started ? `<div><strong>${Number(state.alchemyPills || 0)}枚下品回春丹</strong><span>亲手炼成 · 止血补气</span></div>` : ""}
+        ${state.inventory.includes("hundred_pills_notes") ? `<div><strong>《百丹注解》</strong><span>曹青所授 · 再成三丹可换武功</span></div>` : ""}
+        ${p0Items.map(([id, quantity]) => {
+          const item = getP0Item(id);
+          return item ? `<div><strong>${escapeHtml(item.name)}${Number(quantity) > 1 ? ` ×${Number(quantity)}` : ""}</strong><span>${escapeHtml(item.description)}</span></div>` : "";
+        }).join("")}
+        ${hasInventory ? "" : `<p class="empty-state">你还没有摸清身上带着什么。</p>`}
       </div>
     </div>
   `;
 }
 
+function martialPanelHtml() {
+  const p0Skills = Object.entries(state.p0?.skills || {});
+  const hasMartial = Boolean(state.mindArt || state.fiveAnimalBook || state.fishingRodMethod || p0Skills.length);
+  return `
+    <div class="panel-body martial-panel-body">
+      <div><div class="panel-title">武学</div><p class="drawer-intro">心法、招式与桩功分别记录；学会之后仍要亲手用出来。</p></div>
+      <div class="inventory-list">
+        ${state.mindArt ? `<div><strong>${MIND_ART.name}</strong><span>${MIND_ART.rank} · 龙青鱼所授${state.roadTrial === "dive" ? " · 已在紫金河运用" : ""}</span></div>` : ""}
+        ${state.fiveAnimalBook ? `<div><strong>${FIVE_ANIMAL_PLAY.name}</strong><span>${state.fiveAnimalLevel ? `${state.fiveAnimalLevel}级 ${state.fiveAnimalProgress}% · ${escapeHtml(getFiveAnimalAspect(state.fiveAnimalAspect)?.name || "已入门")}` : "基础健体功 · 尚未练成"}</span></div>` : ""}
+        ${state.fishingRodMethod ? `<div><strong>《打鱼杆法》</strong><span>王五所授 · 抄水拍鱼、劈浪戳鱼</span></div>` : ""}
+        ${p0Skills.map(([id, progress]) => {
+          const skill = getP0Skill(id);
+          return skill ? `<div><strong>${escapeHtml(skill.name)}</strong><span>${escapeHtml(p0SkillStageLabel(progress))} · ${Number(progress.progress || 0)}%</span></div>` : "";
+        }).join("")}
+        ${hasMartial ? "" : `<p class="empty-state">还没有一门真正属于你的武学。</p>`}
+      </div>
+    </div>
+  `;
+}
+
+const TEMPLE_HUD_SCREENS = new Set([
+  "templeWake", "fateSight", "allocation", "templeTasks", "ladyArrival", "ladyPressure",
+  "ladyTest", "nightTalk", "gameDeath", "quietDeparture", "encounterReward", "mindArt",
+]);
+
+function templeClockLabel() {
+  if (["ladyArrival", "ladyPressure", "ladyTest", "nightTalk", "gameDeath"].includes(state.screen)) return "寅时";
+  if (["quietDeparture", "encounterReward", "mindArt"].includes(state.screen)) return "卯时";
+  return "亥时";
+}
+
+function hungerLabel() {
+  if (Number(state.hungerLevel || 0) <= 0) return "暂缓";
+  if (Number(state.hungerLevel || 0) === 1) return "空腹";
+  return "难耐";
+}
+
 function gameShell(content) {
   const visual = sceneVisualHtml();
+  const templeHud = TEMPLE_HUD_SCREENS.has(state.screen);
   return `
     <main class="game-shell ${visual ? "world-stage-shell" : "story-stage-shell"}">
       <header class="topbar">
-        <div class="brand-mini"><span class="brand-seal">武</span><span>大曜江湖</span></div>
+        ${templeHud ? `<div class="weather-clock" aria-label="夜雨，${templeClockLabel()}"><span class="weather-mark" aria-hidden="true"><i></i></span><span><strong>夜雨</strong><small>${templeClockLabel()}</small></span></div>` : `<div class="brand-mini"><span class="brand-seal">武</span><span>大曜江湖</span></div>`}
         <div class="mode-badge">${escapeHtml(modeLabel())}</div>
-        <div class="resource-row"><div class="resource"><span>命灯</span><strong>${state.lives}</strong></div><div class="resource"><span>潜能</span><strong>${state.potential}</strong></div></div>
+        <div class="resource-row">${templeHud ? `<div class="resource fire-resource"><span>火势</span><strong>${Number(state.firePower || 0)}</strong></div><div class="resource hunger-resource"><span>饥饿</span><strong>${hungerLabel()}</strong></div>` : `<div class="resource"><span>命灯</span><strong>${state.lives}</strong></div><div class="resource"><span>潜能</span><strong>${state.potential}</strong></div>`}</div>
       </header>
       <div class="game-grid">
         <section class="scene-panel ${visual ? "has-visual-scene" : "narrative-only"}">${visual}<div class="narrative-deck">${narrativeHistoryHtml()}<section class="narrative-current" data-narrative-current>${content}</section></div></section>
       </div>
-      <nav class="utility-dock" aria-label="随身册">
-        <details class="dock-drawer timeline-panel">
-          <summary><span class="dock-glyph" aria-hidden="true">行</span><strong>行录</strong></summary>
-          <div class="dock-sheet">${journalHtml()}</div>
-        </details>
+      <nav class="utility-dock" aria-label="人物、行囊与武学">
         <details class="dock-drawer character-panel">
-          <summary><span class="dock-glyph" aria-hidden="true">命</span><strong>人物</strong></summary>
+          <summary><span class="dock-glyph glyph-person" aria-hidden="true">人</span><strong>人物</strong></summary>
           <div class="dock-sheet">${characterPanelHtml()}</div>
+        </details>
+        <details class="dock-drawer inventory-panel">
+          <summary><span class="dock-glyph glyph-bag" aria-hidden="true">囊</span><strong>行囊</strong></summary>
+          <div class="dock-sheet">${inventoryPanelHtml()}</div>
+        </details>
+        <details class="dock-drawer martial-panel">
+          <summary><span class="dock-glyph glyph-martial" aria-hidden="true">武</span><strong>武学</strong></summary>
+          <div class="dock-sheet">${martialPanelHtml()}</div>
         </details>
       </nav>
     </main>
@@ -716,14 +725,14 @@ function gameShell(content) {
 
 function modeLabel() {
   const labels = {
-    templeWake: "大曜四百二十七年 · 子时三刻",
+    templeWake: "金陵东郊 · 无名破庙",
     fateSight: "金陵东郊 · 无名破庙",
-    allocation: "命格运转 · 五维重分",
-    templeTasks: "固定奇遇 · 破庙",
-    ladyArrival: "寅时二刻 · 夜雨将至",
-    ladyPressure: "人物奇遇 · 因爱成恨",
-    ladyTest: "人物奇遇 · 杀机未解",
-    nightTalk: "人物奇遇 · 破庙夜话",
+    allocation: "金陵东郊 · 无名破庙",
+    templeTasks: "金陵东郊 · 无名破庙",
+    ladyArrival: "金陵东郊 · 无名破庙",
+    ladyPressure: "金陵东郊 · 无名破庙",
+    ladyTest: "金陵东郊 · 无名破庙",
+    nightTalk: "金陵东郊 · 无名破庙",
     encounterReward: "奇遇结局 · 鱼跃龙门",
     mindArt: "心法灌顶 · 江鲤行波",
     roadTrial: "天明 · 紫金河",
@@ -810,11 +819,11 @@ function renderLanding() {
   return setupShell(`
     <div class="title-lockup wudao-title">
       <div class="fate-ring"><span class="fate-glyph">武</span></div>
-      <p class="eyebrow">大曜四百二十七年 · 江湖将雨</p>
+      <p class="eyebrow">大曜四百二十七年 · 金陵东郊</p>
       <h1>武道</h1>
-      <p class="subtitle">山门守一峰，世家镇一城，帮会争一江。<br />你只有两盏命灯，要从金陵城外的破庙活到天明。</p>
+      <p class="subtitle">你在一座漏雨的破庙里冷醒。<br />火快灭了，庙外有狼，供桌上却摆着新鲜山桃。</p>
       <div class="button-row">
-        <button class="primary-button" data-action="new-journey">入此江湖</button>
+        <button class="primary-button" data-action="new-journey">从雨夜醒来</button>
         ${savedState && savedState.screen !== "landing" ? `<button class="secondary-button" data-action="continue-journey">继续 · ${escapeHtml(savedState.name)}</button>` : ""}
       </div>
     </div>
@@ -905,24 +914,35 @@ function renderCharacterSheet() {
 }
 
 function renderTempleWake() {
+  const opening = { ...createTempleOpeningState(), ...state.templeOpening };
+  const stable = canInspectTempleWall(opening);
+  const remaining = TEMPLE_OPENING_ACTIONS.filter((item) => !opening.actions.includes(item.id));
   return gameShell(`
-    ${sceneHeader("金陵东郊 · 无名破庙", "你是被冷醒的", "破瓦漏下月光，篝火将熄。庙外有狼嚎，腹中像压着一块烧红的铁。")}
-    <div class="temple-scene">
-      <div class="temple-glyphs"><span>火</span><span>雨</span><span>山</span></div>
-      <div class="story-copy"><p>供桌上没有神像，只摆着几枚新鲜山桃。东北角墙体颜色略深，像被人重新砌过。</p><p>这不是传说中的高手开局。今夜最先要赢的，是寒冷和饥饿。</p></div>
+    ${sceneHeader("破瓦漏雨 · 余火将熄", "你是被冷醒的", stable ? "手脚恢复知觉后，庙里的不对劲终于连成了一条线。" : "破瓦漏下月光。炭火只剩一点红，庙外有狼，腹中正一阵阵绞痛。")}
+    <div class="story-copy opening-copy"><p>你叫陈司命，十六岁。至于为何倒在金陵城外，要先看看自己还能保住什么。</p></div>
+    <div class="opening-state-strip" aria-label="雨夜处境">
+      <span class="${opening.fireTended ? "settled" : "urgent"}"><small>余火</small><strong>${opening.fireTended ? "已经拢住" : "正在熄灭"}</strong></span>
+      <span class="${opening.peachEaten ? "settled" : "urgent"}"><small>腹中</small><strong>${opening.peachEaten ? "绞痛暂缓" : "饥饿难耐"}</strong></span>
+      <span class="${opening.belongingsChecked ? "settled" : "unknown"}"><small>随身</small><strong>${opening.belongingsChecked ? "玉佩与血书" : "尚未摸清"}</strong></span>
     </div>
-    <div class="action-list">${actionCard({ action: "search-fire", title: "拨亮余火，吃下一枚山桃", description: "先稳住体温和饥饿，再检查破庙里不合常理的地方。", source: "生存", meta: "山桃 -1 · 篝火两刻" })}</div>
+    <div class="insight-whisper"><span>悟性</span><strong>东北角的砖缝是新的。</strong></div>
+    <div class="action-list">
+      ${remaining.map((item) => actionCard({ action: "temple-opening", value: item.id, title: item.title, description: item.description, source: item.source, meta: item.meta, kind: item.id === "tend_fire" ? "special" : "" })).join("")}
+      ${stable ? actionCard({ action: "inspect-temple-wall", title: "借着火光，走到东北角", description: "新砖后的回声很空；真正的问题不是有没有东西，而是你来不来得及取出来。", source: "悟性 · 所见", meta: "发现暗墙", kind: "special" }) : ""}
+    </div>
   `);
 }
 
 function renderFateSight() {
+  const forceCost = templeTaskCost("shen_promise", state.attributes);
   return gameShell(`
-    ${sceneHeader("命格初醒", "视野里浮出三道淡金因果", "一项属于火，一项藏在墙后，还有一项要等到并不存在的时辰。")}
-    <div class="quest-grid">
-      ${TEMPLE_ENCOUNTERS.map((item) => `<article class="quest-card ${item.id === "mysterious_offering" ? "locked" : ""}"><span>${escapeHtml(item.rank)}级奇遇</span><h2>${escapeHtml(item.name)}</h2><p>${escapeHtml(item.condition)}</p><small>${escapeHtml(item.id === "mysterious_offering" ? "时日未到，只能记住条件" : item.reward)}</small></article>`).join("")}
+    ${sceneHeader("东北角 · 补砌砖墙", "你看见了东西，却拿不到", "砖后藏着一枚旧铜钱。墙灰又厚又硬，以你现在的力道，火灭之前根本砸不开。")}
+    <div class="story-copy"><p>你把手掌贴上新砖。怀里的半块玉佩忽然发烫，三股微弱气力像水一样，从筋骨间退回掌心。</p><p>这不是凭空得来的神力。你只能把已有的三点余力，重新押在今夜最需要的地方。</p></div>
+    <div class="fate-clue-card danger"><span>眼下算得出的结果</span><strong>徒手敲墙：约 ${Number(forceCost?.minutes || 240)} 分钟</strong><p>余火只够支撑片刻。继续蛮干，只会在拿到东西前失温倒下。</p></div>
+    <div class="action-list">
+      ${actionCard({ action: "force-temple-wall", title: "就这样用双手砸墙", description: "方法没有错，今夜的身体和时间却都不够。", source: `力道 ${Number(state.attributes.strength || 0)}`, meta: "火势不足", disabled: true })}
+      ${actionCard({ action: "use-destiny", title: "攥紧玉佩，改掉今夜的力道", description: "让三点余力离开原本的位置，再决定它们落进哪一项五维。", source: "半块家传玉佩", meta: "逆天改命", kind: "special" })}
     </div>
-    <div class="notice-block"><strong>玉佩余力：三点</strong><br />根骨、身法、力道各一点。逆天改命可以重新分配它们，但不能凭空增加力量。</div>
-    <div class="action-list">${actionCard({ action: "use-destiny", title: "重分玉佩余力", description: "决定用更少时间砸开墙，保持均衡，或把三点都押给福缘。", source: DESTINY.name, meta: "三点五维" })}</div>
   `);
 }
 
@@ -933,29 +953,37 @@ function renderAllocation() {
     ["fortune", "三点尽归福缘", "为后续偶发奇遇下注，眼下敲墙代价最高。"],
   ];
   return gameShell(`
-    ${sceneHeader("逆天改命 · 五维重分", "把三点玉佩余力押在今夜", "命格允许你改变已有力量的去处，却不会替你支付代价。")}
+    ${sceneHeader("玉佩灼热 · 命格初醒", "把三点余力押在今夜", "五维基础归零；命格只允许你搬动已经拥有的力量，不会替你支付时间与代价。")}
+    <div class="destiny-awakening"><span>唯一命格</span><strong>${DESTINY.name}</strong><p>看见奇遇的触发条件，并重新分配自身已有的五维。</p></div>
     <div class="attribute-sheet">${ATTRIBUTES.map((attribute) => `<div><span>${escapeHtml(attribute.name)}</span><strong>${state.attributes[attribute.id] || 0}</strong><small>${escapeHtml(attribute.description)}</small></div>`).join("")}</div>
     <div class="action-list">
       ${choices.map(([id, title, description]) => actionCard({ action: "allocate-jade", value: id, title, description, source: state.allocationId === id ? "已选" : "分配", meta: id === "strength" ? "破墙最优" : id === "balanced" ? "稳妥" : "赌奇遇", kind: state.allocationId === id ? "special" : "" })).join("")}
     </div>
-    <div class="button-row"><button class="primary-button" data-action="confirm-allocation">看清全部条件</button></div>
+    <div class="button-row"><button class="primary-button" data-action="confirm-allocation">让玉佩安静下来</button></div>
   `);
 }
 
 function renderTempleTasks() {
+  const available = TEMPLE_ENCOUNTERS.filter((item) => item.id !== "mysterious_offering" && !state.completedTempleTasks.includes(item.id));
   return gameShell(`
-    ${sceneHeader("固定奇遇 · 无名破庙", "条件已经看见，代价仍要亲手支付", "先后顺序会消耗篝火、山桃与体力。今夜只有两项能立刻完成。")}
-    <div class="quest-grid">
-      ${TEMPLE_ENCOUNTERS.map((item) => {
-        const done = state.completedTempleTasks.includes(item.id);
-        const locked = item.id === "mysterious_offering";
+    ${sceneHeader("玉佩归寂 · 雨仍未停", "现在，你知道该怎样取走它们", "命格给出的只是条件。敲哪一面墙、牺牲多少余火、是否继续等下去，仍由你亲手决定。")}
+    ${state.templeLog.length ? `<div class="temple-result-list">${state.templeLog.map((entry) => `<p>${escapeHtml(entry)}</p>`).join("")}</div>` : ""}
+    <div class="action-list">
+      ${available.map((item) => {
         const cost = templeTaskCost(item.id, state.attributes);
-        const meta = locked ? "时日未到" : done ? "已完成" : `${cost.minutes}分钟${cost.peaches ? ` · 山桃 ${cost.peaches}` : ""}`;
-        return `<article class="quest-card ${locked ? "locked" : ""} ${done ? "completed" : ""}"><span>${escapeHtml(item.rank)}级奇遇</span><h2>${escapeHtml(item.name)}</h2><p>${escapeHtml(item.condition)}</p><small>${escapeHtml(done ? item.result : item.reward)}</small>${locked || done ? `<div class="quest-state">${escapeHtml(meta)}</div>` : `<button class="inline-button" data-action="temple-task" data-value="${item.id}">${escapeHtml(meta)} · 立即行动</button>`}</article>`;
+        return actionCard({
+          action: "temple-task",
+          value: item.id,
+          title: item.id === "traveler_relic" ? "等火将弱，扯下供桌旧布" : "按空响处，一次次敲开砖墙",
+          description: item.id === "traveler_relic" ? "火势弱到一刻时，旧布夹层会因热气卷起；现在知道该等什么。" : "力道决定耗时，山桃可以让你撑过额外的寒冷。",
+          source: item.id === "traveler_relic" ? "奇遇条件 · 余火" : `奇遇条件 · 力道 ${Number(state.attributes.strength || 0)}`,
+          meta: `${Number(cost?.minutes || 0)}分钟${cost?.peaches ? ` · 山桃 ${cost.peaches}` : ""}`,
+          kind: item.id === "shen_promise" ? "special" : "",
+        });
       }).join("")}
+      ${actionCard({ action: "temple-offering-locked", title: "追查贡桌上的新鲜山桃", description: "你能看见条件，却不能把不属于今夜的时辰强行搬过来。", source: "晴日 · 初一或十五 · 辰时", meta: "根骨不高于二", disabled: true })}
+      ${actionCard({ action: "meet-lady", title: "守着余火，听雨等到寅时", description: state.completedTempleTasks.length ? "你已经从破庙取走了一些东西。接下来，门外会来一个活人。" : "放弃继续搜寻，让这场雨把另一个人的脚步送到门前。", source: "继续等候", meta: "庙外出现脚步", kind: state.completedTempleTasks.length ? "special" : "" })}
     </div>
-    ${state.templeLog.length ? `<div class="notice-block"><strong>今夜所得</strong><br />${state.templeLog.map(escapeHtml).join("；")}</div>` : ""}
-    <div class="action-list">${actionCard({ action: "meet-lady", title: "守着余火等到寅时", description: "庙外雨声渐密。有人踩着泥水，停在了门外。", source: "继续", meta: "人物奇遇将至", kind: state.completedTempleTasks.length ? "special" : "" })}</div>
   `);
 }
 
@@ -976,11 +1004,9 @@ function ladyChoices(stage, action) {
 
 function renderLadyArrival() {
   return gameShell(`
-    ${sceneHeader("寅时二刻 · 破庙门开", "一个青衣妇人走进雨里仅剩的火光", "她没有受伤，身后也没有追兵。湿透的斗篷下，气息却压得你几乎不敢呼吸。")}
-    <div class="encounter-stage">
-      <div class="encounter-weather"><span>雨</span><span>火</span><span>杀</span></div>
-      <div class="story-copy"><p>她扫过你的破衣、山桃核和墙边碎砖，冷笑一声：“年纪轻轻，便活成了个乞丐。”</p><p>命格在每一句回答旁，写出了你可能迎来的结局。</p></div>
-    </div>
+    ${sceneHeader("寅时二刻 · 破庙门开", "青衣妇人踏进破庙", "她没有受伤，身后也没有追兵。湿透的斗篷下，气息却压得你几乎不敢呼吸。")}
+    <div class="story-copy"><p>她扫过你的破衣、山桃核和墙边碎砖，冷笑一声：“年纪轻轻，便活成了个乞丐。”</p><p>她没有拔刀。真正危险的是，你每一句回答都可能让她改变主意。</p></div>
+    <div class="insight-whisper danger-whisper"><span>悟性</span><strong>门外只有她一个人的脚印。</strong></div>
     <div class="action-list">${ladyChoices("first", "lady-choice")}</div>
   `);
 }
@@ -1669,7 +1695,7 @@ function renderShenChapterEnding() {
     </div>
     <div class="button-row">
       ${success && !state.p0.started ? `<button class="primary-button" data-action="start-p0-journey">拆开沈府夜送的急帖</button>` : ""}
-      ${success && state.p0.started && !state.p0.complete ? `<button class="primary-button" data-action="continue-p0-journey">循着旧行录继续赶路</button>` : ""}
+      ${success && state.p0.started && !state.p0.complete ? `<button class="primary-button" data-action="continue-p0-journey">循着旧见闻继续赶路</button>` : ""}
       <button class="secondary-button" data-action="restart">另起一世</button>
     </div>
   `);
@@ -2176,7 +2202,7 @@ function renderP0Missed() {
   const [title, subtitle] = reasons[state.p0.missedReason] || ["这一条机缘已经合拢", "你保住了现有所得，也看清一次错过会带走什么。"];
   return gameShell(`
     ${sceneHeader("机缘已失", title, subtitle)}
-    <div class="button-row"><button class="primary-button" data-action="finish-p0-missed">把这次错过写进行录</button></div>
+    <div class="button-row"><button class="primary-button" data-action="finish-p0-missed">记下这次错过</button></div>
   `);
 }
 
@@ -2212,7 +2238,7 @@ function renderP0JourneyEnd() {
 function m4EvidenceBoardHtml() {
   const evidence = state.m4.evidence.map((id) => M4_EVIDENCE[id]).filter(Boolean);
   return `<div class="quest-grid compact-board">
-    ${evidence.length ? evidence.map((entry) => `<article class="quest-card completed"><span>已经看见</span><h2>${escapeHtml(entry.name)}</h2><p>${escapeHtml(entry.description)}</p><div class="quest-state">记入行录</div></article>`).join("") : `<article class="quest-card locked"><span>来路未明</span><h2>沉木钱匣</h2><p>钱是真的，沈福的话却还没有一处能与它互相印证。</p><div class="quest-state">先查疑点</div></article>`}
+    ${evidence.length ? evidence.map((entry) => `<article class="quest-card completed"><span>已经看见</span><h2>${escapeHtml(entry.name)}</h2><p>${escapeHtml(entry.description)}</p><div class="quest-state">已成见闻</div></article>`).join("") : `<article class="quest-card locked"><span>来路未明</span><h2>沉木钱匣</h2><p>钱是真的，沈福的话却还没有一处能与它互相印证。</p><div class="quest-state">先查疑点</div></article>`}
   </div>`;
 }
 
@@ -2497,6 +2523,7 @@ function render() {
 function updateSceneInspection(kind, title, detail, markerClass, value) {
   const panel = app.querySelector("[data-scene-inspection]");
   if (!panel) return;
+  panel.classList.add("is-visible");
   const kindNode = panel.querySelector("span");
   const titleNode = panel.querySelector("strong");
   const detailNode = panel.querySelector("p");
@@ -2677,7 +2704,7 @@ const handlers = {
   "new-journey": () => {
     clearState();
     state = createInitialState();
-    moveTo("worldIntro");
+    moveTo("templeWake");
   },
   "continue-journey": () => {
     state = savedState ? structuredClone(savedState) : createInitialState();
@@ -2704,11 +2731,35 @@ const handlers = {
   },
   "confirm-destiny": () => moveTo("characterSheet"),
   "start-journey": () => moveTo("templeWake"),
+  "temple-opening": (value) => {
+    if (state.screen !== "templeWake") return;
+    const result = resolveTempleOpeningAction(state.templeOpening, value);
+    if (!result.available) return;
+    state.templeOpening = result.state;
+    if (value === "tend_fire") state.firePower = 40;
+    if (value === "eat_peach") {
+      state.peaches = Math.max(0, Number(state.peaches || 0) - 1);
+      state.hungerLevel = 0;
+    }
+    appendNarrativeOutcome(result.outcome);
+    track("temple_opening_action", { action: value, stable: result.stable });
+    refresh();
+  },
+  "inspect-temple-wall": () => {
+    if (state.screen !== "templeWake" || !canInspectTempleWall(state.templeOpening)) return;
+    state.templeOpening = { ...state.templeOpening, wallSeen: true };
+    track("temple_wall_seen");
+    moveTo("fateSight");
+  },
   "search-fire": () => {
     if (state.peaches > 0) state.peaches -= 1;
     moveTo("fateSight");
   },
-  "use-destiny": () => moveTo("allocation"),
+  "use-destiny": () => {
+    state.destinyRevealed = true;
+    track("destiny_awakened", { location: "ruined_temple" });
+    moveTo("allocation");
+  },
   "allocate-jade": (value) => {
     if (!["strength", "balanced", "fortune"].includes(value)) return;
     state.allocationId = value;
@@ -2722,10 +2773,11 @@ const handlers = {
     const cost = templeTaskCost(value, state.attributes);
     if (!encounter || !cost || state.peaches < cost.peaches) return;
     state.fireMinutes = Math.max(0, state.fireMinutes - cost.minutes);
+    state.firePower = Math.max(8, Number(state.firePower || 0) - Math.ceil(cost.minutes / 8));
     state.peaches -= cost.peaches;
     state.potential += 50;
     state.completedTempleTasks.push(value);
-    state.templeLog.push(`${encounter.name}：${encounter.reward}`);
+    state.templeLog.push(encounter.result);
     track("temple_encounter", { id: value, cost });
     refresh();
   },

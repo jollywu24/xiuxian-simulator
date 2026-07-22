@@ -249,7 +249,7 @@ NPC、门派、世家、帮会和朝廷机构属于世界本身，不属于“�
 
 ## 7. 当前完整流程
 
-`landing → worldIntro → characterDraft → vow → destiny → characterSheet → templeWake → fateSight → allocation → templeTasks → ladyArrival → ladyPressure → ladyTest → nightTalk → encounterReward → mindArt → roadTrial → roadResult → ending → shenArrival → shenJobs → caoArrival → caoFate → bloodDemand → danObservation → caoExamFire → caoExamIngredients → caoExamMotive → qingQingReward → qingQingStudy → fiveAnimalReward → shenDaily → fiveAnimalChoice → shenMeeting → shenFuChoice → shenPharmacy → shenDaily → shenErrand → fishingPrep → riverFishing → treasureFish → wangTeaching → caoReturn → caoGuidance → alchemyLesson → firstAlchemy → shenChapterEnding → thirdLadySummons → thirdLadyDiagnosis → purpleDragonFormula → purpleDragonAlchemy → thirdLadyTreatment → needleInheritance → firstNeedleAmbush → firstKillAftermath → assailantTrace → assailantCounterplan → assailantPlotResult → apprenticeshipOffer → stakeChoice → stakeTraining → bodyBreakthrough → yanJinghongArrival → wangBattle → wangAftermath → midAutumnWarning → midAutumnDeparture → templeOfferingSource → monkeyTest → monkeyWineChoice → apeWaterCave → p0JourneyEnd → caoDeparture → shenFuOffer → dirtyMoneyChoice → shenFuReckoning → m4Tracking → sevenKillHouse → shenFuConfrontation → m4WorldEcho → baiReturn → m4Training → m4JourneyEnd`
+`landing → templeWake（取火／查身／食桃）→ fateSight → allocation → templeTasks → ladyArrival → ladyPressure → ladyTest → nightTalk → encounterReward → mindArt → roadTrial → roadResult → ending → shenArrival → shenJobs → caoArrival → caoFate → bloodDemand → danObservation → caoExamFire → caoExamIngredients → caoExamMotive → qingQingReward → qingQingStudy → fiveAnimalReward → shenDaily → fiveAnimalChoice → shenMeeting → shenFuChoice → shenPharmacy → shenDaily → shenErrand → fishingPrep → riverFishing → treasureFish → wangTeaching → caoReturn → caoGuidance → alchemyLesson → firstAlchemy → shenChapterEnding → thirdLadySummons → thirdLadyDiagnosis → purpleDragonFormula → purpleDragonAlchemy → thirdLadyTreatment → needleInheritance → firstNeedleAmbush → firstKillAftermath → assailantTrace → assailantCounterplan → assailantPlotResult → apprenticeshipOffer → stakeChoice → stakeTraining → bodyBreakthrough → yanJinghongArrival → wangBattle → wangAftermath → midAutumnWarning → midAutumnDeparture → templeOfferingSource → monkeyTest → monkeyWineChoice → apeWaterCave → p0JourneyEnd → caoDeparture → shenFuOffer → dirtyMoneyChoice → shenFuReckoning → m4Tracking → sevenKillHouse → shenFuConfrontation → m4WorldEcho → baiReturn → m4Training → m4JourneyEnd`
 
 支路：
 
@@ -291,7 +291,7 @@ NPC、门派、世家、帮会和朝廷机构属于世界本身，不属于“�
 - 右侧叙事栏是一卷连续发生的记录：已经亲历的故事旁白、人物对话和玩家选择留在上方，当前场景与可执行选项位于底部；进入新场景时自动定位到“眼下”，玩家仍可向上回看先前经过；
 - 每个属性、武学、关系、见闻或资源相关选项，都在选项内直接显示判定来源与简要条件；点击条件行可展开判定说明和当前依据，不另开脱离语境的规则面板；
 - 选择颜色承担稳定语义：普通行动使用青色，重要且会改变路线的选择使用金色，明确高风险行动使用赤色，条件不足的行动保留在原位并使用可读灰色；颜色之外同时保留“重要选择”“高风险”“条件未满足”等文字标签；
-- 行录、五维、物品和武学不再常驻左右两列，而是收进左下角“行录／人物”随身册；玩家需要时展开，展开一个会自动收起另一个；
+- 人物、行囊和武学不再常驻左右两列，而是收进左下角三个独立入口；玩家需要时展开，展开一个会自动收起另一个；叙事经过直接留在右侧卷轴，不再另设行录入口；
 - 右侧行动按数字键顺序显示编号，使阅读、触控和键盘选择指向同一组选项；
 - 手机竖屏按场景、当前所见、叙事、行动纵向排列；手机横屏在有限高度内固定双栏，右侧叙事独立滚动，左侧场景不随长文离开视野；
 - 破庙、紫金河、沈家侧门和丹房使用同一套“2D场景—可查看物件—人物站位—文字行动”结构；场景图先建立空间，文字继续承担动机、判断和后果；

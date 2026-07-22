@@ -1,5 +1,6 @@
 const ASSETS = {
-  temple: "./assets/scenes/ruined-temple-night.webp",
+  temple: "./assets/scenes/ruined-temple-rain-v2.webp",
+  templeLady: "./assets/scenes/ruined-temple-lady-v2.webp",
   river: "./assets/scenes/purple-gold-river-dawn.webp",
   alley: "./assets/combat/jinling-rain-ambush.webp",
   shenGate: "./assets/scenes/shen-manor-side-gate.webp",
@@ -64,7 +65,7 @@ function hasInventory(state, id) {
 }
 
 function templePresentation(screen, state) {
-  const fireTended = screen !== "templeWake";
+  const fireTended = Boolean(state.templeOpening?.fireTended) || screen !== "templeWake";
   const fateSeen = Boolean(state.destinyRevealed) || screen !== "templeWake";
   const ladyScreens = new Set(["ladyArrival", "ladyPressure", "ladyTest", "nightTalk", "gameDeath", "quietDeparture", "encounterReward", "mindArt"]);
   const identityKnown = new Set(["encounterReward", "mindArt"]).has(screen);
@@ -79,8 +80,8 @@ function templePresentation(screen, state) {
         : screen === "quietDeparture"
           ? "她正踏过门槛离去。这次擦肩之后，再无相遇条件。"
           : "她没有受伤，也没有追兵。真正危险的是她本人。",
-      x: screen === "quietDeparture" ? 25 : 31,
-      y: 58,
+      x: screen === "quietDeparture" ? 81 : 76,
+      y: 53,
       kind: "lady",
       state: screen === "gameDeath" ? "danger" : identityKnown ? "allied" : "unknown",
     });
@@ -89,8 +90,8 @@ function templePresentation(screen, state) {
   return {
     id: "ruined_temple",
     title: "金陵东郊 · 无名破庙",
-    image: ASSETS.temple,
-    alt: "雨夜破庙内，余火、供桌、新砌墙面和敞开的庙门分处四方",
+    image: ladyScreens.has(screen) ? ASSETS.templeLady : ASSETS.temple,
+    alt: "雨夜破庙内，少年守着余火；供桌山桃、新砌墙面和敞开的庙门分处四方",
     summary: ladyScreens.has(screen)
       ? "雨压在残瓦上，门口、火堆和青衣来客之间只隔着几步。"
       : "火堆、供桌和颜色异常的墙面都在眼前；先看清，再决定把今夜交给哪里。",
@@ -102,8 +103,8 @@ function templePresentation(screen, state) {
         detail: fireTended
           ? `火势暂时稳住，还能支撑约${Math.max(0, Number(state.fireMinutes || 0))}分钟。`
           : "炭心只剩一点红。吃下一枚山桃并拨亮余火，才能继续检查破庙。",
-        x: 48,
-        y: 79,
+        x: 51,
+        y: 82,
         state: fireTended ? "completed" : "available",
       },
       {
@@ -112,8 +113,8 @@ function templePresentation(screen, state) {
         detail: fateSeen
           ? "供桌上没有神像，山桃却很新鲜。命格所见的贡品因果，要到初一晴日辰时才能继续。"
           : "供桌上没有神像，只摆着几枚新鲜山桃。荒庙里似乎一直有人送来贡品。",
-        x: 76,
-        y: 59,
+        x: 19,
+        y: 48,
         state: "locked",
       },
       {
@@ -124,8 +125,8 @@ function templePresentation(screen, state) {
           : hasTask(state, "traveler_relic") || hasTask(state, "shen_promise")
             ? `你已经从墙后取出${[hasTask(state, "traveler_relic") ? "旅人遗物" : "", hasTask(state, "shen_promise") ? "沈字铜钱" : ""].filter(Boolean).join("与")}。`
             : "命格照见墙后的两段因果：旅人遗物与沈氏旧诺。砸墙仍要支付时间、山桃或力气。",
-        x: 87,
-        y: 42,
+        x: 54,
+        y: 35,
         state: hasTask(state, "traveler_relic") || hasTask(state, "shen_promise") ? "completed" : fateSeen ? "special" : "available",
       },
       {
@@ -134,13 +135,13 @@ function templePresentation(screen, state) {
         detail: ladyScreens.has(screen)
           ? "门外没有第二个人。雨声会遮住脚步，却遮不住聚气武者的杀机。"
           : "狼嚎在雨幕后断断续续。此刻离开破庙，比留在火边更危险。",
-        x: 24,
+        x: 78,
         y: 48,
         state: ladyScreens.has(screen) ? "danger" : "available",
       },
     ],
     actors,
-    player: { label: state.name || "陈司命", x: 57, y: 83 },
+    player: { label: state.name || "陈司命", x: 37, y: 70, visible: false },
   };
 }
 
@@ -484,6 +485,7 @@ function routeStatus(currentScene, sceneIds, reached, known = true) {
 export function getRoutePresentation(screen, state = {}) {
   const scene = getScenePresentation(screen, state);
   if (!scene) return null;
+  if (TEMPLE_SCREENS.has(screen)) return null;
 
   const nodes = [{
     id: "temple",
@@ -536,7 +538,7 @@ export function getRoutePresentation(screen, state = {}) {
     nodes.push({
       id: "qinhuai",
       label: "秦淮旧宅",
-      detail: state.m4.locationStates?.qinhuai_old_house === "hidden" ? "钱匣来路尚未把这处旧宅显出来。" : state.m4.sevenKillClue ? "夹墙暗账与七杀刀拓痕都从这里进入行录。" : "追踪已经把沈福的私账牵到河西旧宅。",
+      detail: state.m4.locationStates?.qinhuai_old_house === "hidden" ? "钱匣来路尚未把这处旧宅显出来。" : state.m4.sevenKillClue ? "夹墙暗账与七杀刀拓痕都已成为见闻。" : "追踪已经把沈福的私账牵到河西旧宅。",
       x: 89,
       y: 74,
       status: routeStatus(scene.id, ["qinhuai_old_house", "qinhuai_night_lane"], state.m4.locationStates?.qinhuai_old_house !== "hidden", state.m4.locationStates?.qinhuai_old_house !== "hidden"),

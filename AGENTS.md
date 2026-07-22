@@ -71,7 +71,7 @@
 
 ## 5. 当前流程
 
-`landing → worldIntro → characterDraft → vow → destiny → characterSheet → templeWake → fateSight → allocation → templeTasks → ladyArrival → ladyPressure → ladyTest → nightTalk → encounterReward → mindArt → roadTrial → roadResult → ending → shenArrival → shenJobs → caoArrival → caoFate → bloodDemand → danObservation → caoExamFire → caoExamIngredients → caoExamMotive → qingQingReward → qingQingStudy → fiveAnimalReward → shenDaily → fiveAnimalChoice → shenMeeting → shenFuChoice → shenPharmacy → shenDaily → shenErrand → fishingPrep → riverFishing → treasureFish → wangTeaching → caoReturn → caoGuidance → alchemyLesson → firstAlchemy → shenChapterEnding → thirdLadySummons → thirdLadyDiagnosis → purpleDragonFormula → purpleDragonAlchemy → thirdLadyTreatment → needleInheritance → firstNeedleAmbush → firstKillAftermath → assailantTrace → assailantCounterplan → assailantPlotResult → apprenticeshipOffer → stakeChoice → stakeTraining → bodyBreakthrough → yanJinghongArrival → wangBattle → wangAftermath → midAutumnWarning → midAutumnDeparture → templeOfferingSource → monkeyTest → monkeyWineChoice → apeWaterCave → p0JourneyEnd → caoDeparture → shenFuOffer → dirtyMoneyChoice → shenFuReckoning → m4Tracking → sevenKillHouse → shenFuConfrontation → m4WorldEcho → baiReturn → m4Training → m4JourneyEnd`
+`landing → templeWake（取火／查身／食桃） → fateSight → allocation → templeTasks → ladyArrival → ladyPressure → ladyTest → nightTalk → encounterReward → mindArt → roadTrial → roadResult → ending → shenArrival → shenJobs → caoArrival → caoFate → bloodDemand → danObservation → caoExamFire → caoExamIngredients → caoExamMotive → qingQingReward → qingQingStudy → fiveAnimalReward → shenDaily → fiveAnimalChoice → shenMeeting → shenFuChoice → shenPharmacy → shenDaily → shenErrand → fishingPrep → riverFishing → treasureFish → wangTeaching → caoReturn → caoGuidance → alchemyLesson → firstAlchemy → shenChapterEnding → thirdLadySummons → thirdLadyDiagnosis → purpleDragonFormula → purpleDragonAlchemy → thirdLadyTreatment → needleInheritance → firstNeedleAmbush → firstKillAftermath → assailantTrace → assailantCounterplan → assailantPlotResult → apprenticeshipOffer → stakeChoice → stakeTraining → bodyBreakthrough → yanJinghongArrival → wangBattle → wangAftermath → midAutumnWarning → midAutumnDeparture → templeOfferingSource → monkeyTest → monkeyWineChoice → apeWaterCave → p0JourneyEnd → caoDeparture → shenFuOffer → dirtyMoneyChoice → shenFuReckoning → m4Tracking → sevenKillHouse → shenFuConfrontation → m4WorldEcho → baiReturn → m4Training → m4JourneyEnd`
 
 支路：
 
@@ -191,6 +191,7 @@
 - 每日时段、体力、饱腹、当日快照与行动记录；
 - 医术、五禽戏、炼丹、钓鱼、《打鱼杆法》和王五好感；
 - 沈家密会、沈福门路、黄金钱鳘、首炉回春丹与通关倾向。
+- `templeOpening`记录取火、查身、食桃与暗墙发现；`firePower`和`hungerLevel`驱动破庙顶部处境反馈。
 - `narrativeLog`记录最近二十四条场景旁白、人物对话和玩家选择；旧存档缺失时补空数组。
 - `fateSeed`固定一条旅程的因果骰；`p0.battleHistory[].check`记录骰面、行动修正、目标、合计与四档结果。
 - `p0.battleOutcomeGrade`和`p0.battleEdge`记录夜战完成质量及其留给追查的优势或伤势代价。
@@ -226,12 +227,12 @@ node scripts/cdp-smoke.mjs 9225
 
 浏览器检查至少覆盖：
 
-- 世界入场无现实、论坛、武道局或其他玩家；
+- 新旅程从标题页直接进入雨夜破庙，无现实、论坛、武道局或其他玩家；
 - 破庙、紫金河、沈家侧门与丹房按剧情切换，手机热点和行路图无横向溢出；
-- 桌面与手机横屏为场景／叙事双栏，竖屏为顺序布局，行录与人物抽屉互斥展开；
+- 桌面与手机横屏为场景／叙事双栏，竖屏为顺序布局，人物、行囊与武学三个抽屉互斥展开；
 - 右侧叙事栏可回看旁白、人物对话和玩家选择，默认定位当前场景且无横向溢出；
 - 属性、武学、关系、见闻和资源条件直接显示在选项内，可展开查看依据；重要、危险和不可用选择分别有金、赤、灰色与文字标签；
-- 人物车卡、逆天改命、双灯照命；
+- 通过随身物逐步展开人物来处，在暗墙阻碍后揭示逆天改命；双灯照命保留；
 - 两项固定奇遇和一项锁定条件；
 - 青衣妇人身份延迟揭示；
 - 一次死亡和命灯减少；

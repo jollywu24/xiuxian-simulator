@@ -1245,6 +1245,137 @@ h1 {
   font-size: 38px;
 }
 
+.opening-copy {
+  margin-bottom: 16px;
+}
+
+.opening-state-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 14px 0;
+}
+
+.opening-state-strip > span {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.opening-state-strip small {
+  color: var(--faint);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+}
+
+.opening-state-strip strong {
+  overflow: hidden;
+  font-family: var(--font-story);
+  font-size: 12px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.opening-state-strip .urgent {
+  border-color: color-mix(in srgb, var(--danger) 52%, transparent);
+}
+
+.opening-state-strip .urgent strong {
+  color: #d97970;
+}
+
+.opening-state-strip .settled {
+  border-color: color-mix(in srgb, var(--gold) 45%, transparent);
+}
+
+.insight-whisper,
+.destiny-awakening,
+.fate-clue-card {
+  margin: 14px 0;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--gold) 65%, transparent);
+  background: rgba(189, 145, 80, 0.055);
+}
+
+.insight-whisper {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.insight-whisper span,
+.destiny-awakening span,
+.fate-clue-card span {
+  color: var(--gold);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.insight-whisper strong,
+.destiny-awakening strong,
+.fate-clue-card strong {
+  color: #e2bd74;
+  font-family: var(--font-story);
+  font-weight: 600;
+}
+
+.insight-whisper.danger-whisper {
+  border-color: color-mix(in srgb, var(--danger) 58%, transparent);
+  background: rgba(192, 84, 75, 0.045);
+}
+
+.insight-whisper.danger-whisper span,
+.insight-whisper.danger-whisper strong {
+  color: #d97970;
+}
+
+.destiny-awakening strong,
+.fate-clue-card strong {
+  display: block;
+  margin: 7px 0 5px;
+  font-size: 18px;
+}
+
+.destiny-awakening p,
+.fate-clue-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.fate-clue-card.danger {
+  border-color: color-mix(in srgb, var(--danger) 70%, transparent);
+  background: rgba(192, 84, 75, 0.055);
+}
+
+.fate-clue-card.danger span,
+.fate-clue-card.danger strong {
+  color: #d97970;
+}
+
+.temple-result-list {
+  display: grid;
+  gap: 7px;
+  margin: 0 0 18px;
+}
+
+.temple-result-list p {
+  margin: 0;
+  padding: 10px 12px;
+  color: var(--muted);
+  border-left: 2px solid var(--gold);
+  background: rgba(189, 145, 80, 0.045);
+  font-family: var(--font-story);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
 .fate-forecast {
   max-width: 820px;
   margin: 24px auto 0;
@@ -1813,6 +1944,69 @@ h1 {
   letter-spacing: 0.08em;
 }
 
+.weather-clock {
+  display: flex;
+  min-width: 132px;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-story);
+}
+
+.weather-clock > span:last-child {
+  display: grid;
+  gap: 1px;
+}
+
+.weather-clock strong {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+
+.weather-clock small {
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+}
+
+.weather-mark {
+  position: relative;
+  display: block;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--gold) 72%, transparent);
+  border-radius: 50%;
+  background: radial-gradient(circle at 36% 32%, rgba(220, 202, 158, 0.28), transparent 31%), #101a1e;
+  box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.48);
+}
+
+.weather-mark::before {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #d6c89e;
+  border-top-color: transparent;
+  border-radius: 50%;
+  content: "";
+  transform: rotate(-32deg);
+}
+
+.weather-mark::after {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 16px;
+  height: 10px;
+  content: "";
+  background: repeating-linear-gradient(112deg, transparent 0 4px, rgba(130, 174, 186, 0.92) 5px 6px);
+  transform: skewX(-12deg);
+}
+
 .brand-seal {
   display: grid;
   width: 30px;
@@ -1856,6 +2050,15 @@ h1 {
 .resource strong {
   font-family: var(--font-number);
   font-size: 16px;
+}
+
+.fire-resource strong {
+  color: #dda75d;
+}
+
+.hunger-resource strong {
+  font-family: var(--font-story);
+  font-size: 14px;
 }
 
 .game-grid {
@@ -2028,6 +2231,43 @@ h1 {
   grid-template-rows: minmax(250px, 1fr) auto auto;
   height: 100%;
   min-height: 0;
+}
+
+.world-stage-shell .scene-ruined_temple {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.world-stage-shell .scene-ruined_temple .scene-inspection {
+  position: absolute;
+  right: 14px;
+  bottom: 72px;
+  left: 14px;
+  z-index: 8;
+  min-height: 0;
+  padding: 10px 12px;
+  opacity: 0;
+  border: 1px solid rgba(214, 188, 125, 0.3);
+  background: rgba(8, 13, 15, 0.88);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.42);
+  pointer-events: none;
+  transform: translateY(7px);
+  transition: opacity var(--transition), transform var(--transition);
+}
+
+.world-stage-shell .scene-ruined_temple .scene-inspection.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.scene-ruined_temple .scene-marker-label {
+  opacity: 0;
+  transform: translate(-50%, 5px);
+  transition: opacity var(--transition), transform var(--transition);
+}
+
+.scene-ruined_temple :is(.scene-hotspot:hover, .scene-hotspot:focus-visible, .scene-hotspot.selected, .scene-actor:hover, .scene-actor:focus-visible, .scene-actor.selected) .scene-marker-label {
+  opacity: 1;
+  transform: translate(-50%, 0);
 }
 
 .world-stage-shell .scene-canvas {
@@ -2352,6 +2592,21 @@ h1 {
 
 .scene-actor.allied .actor-silhouette {
   border-color: #d3b16f;
+}
+
+.scene-ruined_temple .scene-actor.actor-lady .actor-silhouette {
+  right: 20px;
+  bottom: 8px;
+  left: 20px;
+  height: 18px;
+  border-color: #d3b16f;
+  border-radius: 50%;
+  background: rgba(17, 30, 31, 0.82);
+  box-shadow: 0 0 0 5px rgba(211, 177, 111, 0.17), 0 0 16px rgba(211, 177, 111, 0.28);
+}
+
+.scene-ruined_temple .scene-actor.actor-lady .actor-silhouette::before {
+  display: none;
 }
 
 .scene-player {
@@ -2711,6 +2966,11 @@ h1 {
   width: min(430px, calc(100vw - 28px));
 }
 
+.inventory-panel .dock-sheet,
+.martial-panel .dock-sheet {
+  width: min(390px, calc(100vw - 28px));
+}
+
 .dock-sheet .panel-title {
   margin-top: 18px;
 }
@@ -2723,6 +2983,29 @@ h1 {
 .character-panel .panel-body {
   display: grid;
   gap: 22px;
+}
+
+.inventory-panel .panel-body,
+.martial-panel .panel-body {
+  display: grid;
+  gap: 14px;
+}
+
+.drawer-intro {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.glyph-bag {
+  border-radius: 45% 45% 38% 38%;
+  transform: rotate(-3deg);
+}
+
+.glyph-martial {
+  border-radius: 3px;
+  transform: rotate(3deg);
 }
 
 .character-panel .wudao-avatar {
@@ -4337,6 +4620,13 @@ h1 {
     font-size: 12px;
   }
 
+  .world-stage-shell .scene-ruined_temple .scene-inspection {
+    position: static;
+    min-height: 84px;
+    opacity: 1;
+    transform: none;
+  }
+
   .route-map {
     min-height: 170px;
     margin: 0 8px;
@@ -4586,8 +4876,10 @@ h1 {
   }
 
   .dock-sheet,
-  .character-panel .dock-sheet {
-    width: min(420px, calc(100vw - 16px));
+  .character-panel .dock-sheet,
+  .inventory-panel .dock-sheet,
+  .martial-panel .dock-sheet {
+    width: min(300px, calc(100vw - 16px));
     max-height: calc(100vh - 64px);
   }
 }
