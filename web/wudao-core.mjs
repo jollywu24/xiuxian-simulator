@@ -89,21 +89,21 @@ export const TEMPLE_OPENING_ACTIONS = [
   {
     id: "tend_fire",
     title: "扒开炭灰，寻找火种",
-    description: "手指会被烫伤，但不先救活这点火，湿衣很快会夺走体温。",
+    description: "白灰底下或许还压着炭心。手慢一步，先熄的便不只是火。",
     source: "根骨",
     meta: "火势回升",
   },
   {
     id: "check_belongings",
     title: "摸索自己身上的东西",
-    description: "确认姓名、来处，以及这场雨夜里真正属于你的东西。",
+    description: "江湖人死也得有个名姓。先摸清怀里还剩什么，才知道是谁把你丢在这里。",
     source: "身世",
     meta: "查明行囊",
   },
   {
     id: "eat_peach",
     title: "爬向供桌，拿那枚山桃",
-    description: "桃子新鲜得不像荒庙里的东西；眼下先让胃里的绞痛停下来。",
+    description: "荒庙无神，供桌却有鲜桃。它未必干净，却能先压住腹中那把钝刀。",
     source: "饥饿",
     meta: "山桃 -1",
   },
@@ -136,9 +136,9 @@ export function resolveTempleOpeningAction(opening = {}, actionId) {
     actions: [...current.actions, actionId],
   };
   const outcomes = {
-    tend_fire: "你吹开白灰，把藏在底下的红炭拢到一起。火没有旺，只够你把手脚从麻木里抢回来。",
-    check_belongings: "半块温热玉佩、一封染暗的血书。你想起自己的名字：陈司命，也想起有人正沿着血书找你。",
-    eat_peach: "桃肉冰凉，却压住了腹中绞痛。你把剩下的山桃收进行囊，也记住了这份反常的新鲜。",
+    tend_fire: "你伏下身，一口一口吹开白灰。针尖大的火星先咬住枯草，继而映红冻僵的指节。\n火还算不得旺，却替你从阎王手里抢回几分暖意。",
+    check_belongings: "你沿着湿透的衣襟一寸寸摸过去。半块温热玉佩，一封染暗的血书，都是死人堆里留下的凭据。\n名字终于从乱梦里浮上来：陈司命。还有一件事——有人正循着这封血书找你。",
+    eat_peach: "你把山桃咬开，清甜里混着一丝庙灰。桃肉冰凉，却把腹中那阵刀绞似的痛压了下去。\n荒庙无神，鲜桃却像刚从枝头摘下。你收起余下果子，也把这桩怪事记在心里。",
   };
   return {
     available: true,

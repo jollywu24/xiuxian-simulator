@@ -98,6 +98,20 @@ async function snapshot(label) {
         heightScale: shell?.width && rect ? rect.height / shell.width : 0,
       };
     })(),
+    sceneFeedback: document.querySelector(".scene-float-feedback")?.textContent?.trim() || "",
+    fireKindled: Boolean(document.querySelector(".scene-canvas.fire-kindled")),
+    openingFeed: (() => {
+      const deck = document.querySelector(".narrative-deck")?.getBoundingClientRect();
+      const anchor = document.querySelector("[data-feed-anchor]")?.getBoundingClientRect();
+      return {
+        contextLines: document.querySelectorAll(".opening-feed-context .narration-line").length,
+        choiceRecords: document.querySelectorAll(".opening-feed .player-choice").length,
+        outcomeLines: document.querySelectorAll(".opening-feed .outcome-line").length,
+        currentChoices: document.querySelectorAll("[data-narrative-current] .choice-entry").length,
+        nextLabel: document.querySelector(".narrative-next-heading")?.textContent?.trim() || "",
+        anchorRatio: deck && anchor ? (anchor.top - deck.top) / deck.height : 0,
+      };
+    })(),
     actorLabels: [...document.querySelectorAll(".scene-actor .scene-marker-label")].map((item) => item.textContent.trim()),
     routeNodeCount: document.querySelectorAll(".route-node").length,
     dockCount: document.querySelectorAll(".dock-drawer").length,
@@ -167,8 +181,8 @@ const checkpoints = [];
 checkpoints.push(await snapshot("landing"));
 assert.equal(checkpoints.at(-1).title, "武道");
 assert.ok(checkpoints.at(-1).scrollWidth <= 1280);
-assert.match(await evaluate(`document.querySelector('script[type="module"]')?.src || ""`), /wudao-app\.mjs\?v=20260722\.5/);
-assert.match(await evaluate(`document.querySelector('link[rel="stylesheet"]')?.href || ""`), /styles\.css\?v=20260722\.5/);
+assert.match(await evaluate(`document.querySelector('script[type="module"]')?.src || ""`), /wudao-app\.mjs\?v=20260722\.6/);
+assert.match(await evaluate(`document.querySelector('link[rel="stylesheet"]')?.href || ""`), /styles\.css\?v=20260722\.6/);
 assert.match(checkpoints.at(-1).text, /大曜四百二十七年/);
 assert.doesNotMatch(checkpoints.at(-1).text, /现实|论坛|武道局|其他玩家|其它玩家|太虚命盘|归尘门|黑日|Demo|P0|P1|P2|测试|原型/);
 
@@ -247,14 +261,44 @@ assert.ok(mobileOpening.scrollWidth <= 390);
 assert.equal(mobileOpening.sceneId, "ruined_temple");
 assert.equal(mobileOpening.dockCount, 3);
 await screenshot("wudao-temple-opening-mobile.png");
-await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
-
+await send("Emulation.setDeviceMetricsOverride", { width: 1672, height: 941, deviceScaleFactor: 1, mobile: false });
 await click("temple-opening", "tend_fire");
-assert.match(await text(), /红炭拢到一起/);
+await evaluate(`new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
+const fireChoiceFlow = await snapshot("temple-fire-choice-flow");
+assert.equal(fireChoiceFlow.sceneFeedback, "火势 +28");
+assert.equal(fireChoiceFlow.fireKindled, true);
+assert.equal(fireChoiceFlow.openingFeed.contextLines, 3);
+assert.equal(fireChoiceFlow.openingFeed.choiceRecords, 1);
+assert.equal(fireChoiceFlow.openingFeed.outcomeLines, 2);
+assert.equal(fireChoiceFlow.openingFeed.currentChoices, 2);
+assert.equal(fireChoiceFlow.openingFeed.nextLabel, "接下来");
+assert.ok(fireChoiceFlow.openingFeed.anchorRatio > 0.18 && fireChoiceFlow.openingFeed.anchorRatio < 0.34);
+assert.match(await text(), /火星先咬住枯草/);
+assert.match(await text(), /阎王手里抢回几分暖意/);
+assert.doesNotMatch(await evaluate(`document.querySelector(".narrative-deck")?.innerText || ""`), /火势\s*12\s*[→-]\s*40/);
+await screenshot("wudao-temple-choice-flow-1672x941.png");
+await send("Emulation.setDeviceMetricsOverride", { width: 844, height: 390, deviceScaleFactor: 1, mobile: true });
+const phoneLandscapeChoiceFlow = await snapshot("temple-fire-choice-flow-phone-landscape");
+assert.ok(phoneLandscapeChoiceFlow.scrollWidth <= 844);
+assert.ok(phoneLandscapeChoiceFlow.scrollHeight <= 390);
+assert.equal(phoneLandscapeChoiceFlow.splitView, true);
+assert.equal(phoneLandscapeChoiceFlow.openingFeed.choiceRecords, 1);
+assert.equal(phoneLandscapeChoiceFlow.openingFeed.currentChoices, 2);
+assert.equal(phoneLandscapeChoiceFlow.currentChoicesVisible, true);
+await screenshot("wudao-temple-choice-flow-phone-landscape.png");
+await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
 await click("temple-opening", "check_belongings");
 assert.match(await text(), /一封染暗的血书/);
+const belongingsChoiceFlow = await snapshot("temple-belongings-choice-flow");
+assert.equal(belongingsChoiceFlow.openingFeed.choiceRecords, 2);
+assert.equal(belongingsChoiceFlow.openingFeed.outcomeLines, 4);
+assert.equal(belongingsChoiceFlow.openingFeed.currentChoices, 1);
 await click("temple-opening", "eat_peach");
-assert.match(await text(), /压住了腹中绞痛/);
+assert.match(await text(), /刀绞似的痛压了下去/);
+const peachChoiceFlow = await snapshot("temple-peach-choice-flow");
+assert.equal(peachChoiceFlow.openingFeed.choiceRecords, 3);
+assert.equal(peachChoiceFlow.openingFeed.outcomeLines, 6);
+assert.equal(peachChoiceFlow.openingFeed.currentChoices, 1);
 await click("inspect-temple-wall");
 assert.match(await text(), /你看见了东西，却拿不到/);
 assert.match(await text(), /火势不足/);
@@ -699,7 +743,7 @@ assert.equal(saved.vowId, "path");
 assert.equal(saved.version, 5);
 assert.equal(saved.fateSeed, "seed-2");
 assert.ok(Array.isArray(saved.narrativeLog));
-assert.ok(saved.narrativeLog.length > 0 && saved.narrativeLog.length <= 24);
+assert.ok(saved.narrativeLog.length > 0 && saved.narrativeLog.length <= 64);
 assert.ok(saved.narrativeLog.every((entry) => entry.title && entry.choice && Array.isArray(entry.lines)));
 assert.ok(saved.p0.battleHistory.some((entry) => entry.check?.die === "1D10" && entry.check?.tier === "great"));
 assert.equal(saved.lives, 1);

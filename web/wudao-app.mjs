@@ -50,8 +50,8 @@ import {
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs?v=20260722.5";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260722.5";
+} from "./wudao-core.mjs?v=20260722.6";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260722.6";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -81,7 +81,7 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260722.5";
+} from "./wudao-p0-core.mjs?v=20260722.6";
 import {
   M4_EVIDENCE,
   M4_METHOD,
@@ -100,7 +100,7 @@ import {
   resolveM4Training,
   resolveMoneyInquiry,
   resolveOldHouseChoice,
-} from "./wudao-p1-core.mjs?v=20260722.5";
+} from "./wudao-p1-core.mjs?v=20260722.6";
 import {
   advanceCombatLabCampaign,
   createCombatLabSession,
@@ -111,13 +111,14 @@ import {
   restartCombatLab,
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
-} from "./combat-lab-core.mjs?v=20260722.5";
+} from "./combat-lab-core.mjs?v=20260722.6";
 
 const STORAGE_KEY = "wudao-high-martial-v1";
 const app = document.querySelector("#app");
 const COMBAT_ATTRIBUTE_NAMES = { constitution: "根骨", insight: "悟性", agility: "身法", strength: "力道", fortune: "福缘" };
 const COMBAT_STAGE_NAMES = { mortal: "未入门", body: "锻体", qi: "聚气", meridian: "通脉", master: "宗师" };
 const COMBAT_CHECK_LABELS = { great: "大成", success: "得手", costly: "得手有损", failure: "失手" };
+let pendingSceneFeedback = null;
 
 function freshFateSeed() {
   const fixedSeed = new URLSearchParams(window.location.search).get("seed");
@@ -531,8 +532,35 @@ function sceneMarkerState(value) {
   return ["available", "completed", "danger", "special", "locked", "known", "unknown", "allied"].includes(value) ? value : "known";
 }
 
+function narrativeLineHtml(line, className = "") {
+  return line.type === "dialogue"
+    ? `<p class="dialogue-line ${className}"><strong>${escapeHtml(line.speaker || "人物")}</strong>${escapeHtml(line.text)}</p>`
+    : `<p class="narration-line ${className}">${escapeHtml(line.text)}</p>`;
+}
+
+function openingNarrativeHistoryHtml(records) {
+  const firstContext = (records[0]?.lines || []).filter((line) => line.role !== "outcome").slice(-3);
+  return `
+    <section class="narrative-history opening-feed" aria-label="雨夜破庙的当前经过">
+      <div class="opening-feed-context">${firstContext.map((line) => narrativeLineHtml(line)).join("")}</div>
+      ${records.map((record, index) => {
+        const outcomes = (record.lines || []).filter((line) => line.role === "outcome");
+        return `
+          <article class="narrative-entry ${record.choiceKind === "special" ? "important" : record.choiceKind === "danger" ? "danger" : ""}" ${index === records.length - 1 ? "data-feed-anchor" : ""}>
+            <p class="player-choice"><strong>你</strong><span>${escapeHtml(record.choice)}</span>${record.choiceSource ? `<small>${escapeHtml(record.choiceSource)}</small>` : ""}</p>
+            <div class="narrative-outcome">${outcomes.map((line) => narrativeLineHtml(line, "outcome-line")).join("")}</div>
+          </article>
+        `;
+      }).join("")}
+    </section>
+  `;
+}
+
 function narrativeHistoryHtml() {
-  const records = Array.isArray(state.narrativeLog) ? state.narrativeLog.slice(-14) : [];
+  const log = Array.isArray(state.narrativeLog) ? state.narrativeLog : [];
+  const openingRecords = state.screen === "templeWake" ? log.filter((record) => record.screen === "templeWake").slice(-8) : [];
+  if (openingRecords.length) return openingNarrativeHistoryHtml(openingRecords);
+  const records = log.slice(-14);
   if (!records.length) return "";
   return `
     <section class="narrative-history" aria-label="此前经过">
@@ -541,14 +569,18 @@ function narrativeHistoryHtml() {
         <article class="narrative-entry ${record.choiceKind === "special" ? "important" : record.choiceKind === "danger" ? "danger" : ""}">
           <span class="narrative-context">${escapeHtml(record.context)}</span>
           <h2>${escapeHtml(record.title)}</h2>
-          ${(record.lines || []).map((line) => line.type === "dialogue"
-            ? `<p class="dialogue-line"><strong>${escapeHtml(line.speaker || "人物")}</strong>${escapeHtml(line.text)}</p>`
-            : `<p class="narration-line">${escapeHtml(line.text)}</p>`).join("")}
+          ${(record.lines || []).filter((line) => line.role !== "outcome").map((line) => narrativeLineHtml(line)).join("")}
           <p class="player-choice"><strong>你</strong><span>${escapeHtml(record.choice)}</span>${record.choiceSource ? `<small>${escapeHtml(record.choiceSource)}</small>` : ""}</p>
+          ${(record.lines || []).filter((line) => line.role === "outcome").map((line) => narrativeLineHtml(line, "outcome-line")).join("")}
         </article>
       `).join("")}
     </section>
   `;
+}
+
+function sceneFeedbackHtml() {
+  if (!pendingSceneFeedback?.text) return "";
+  return `<div class="scene-float-feedback ${escapeHtml(pendingSceneFeedback.tone || "gain")}" role="status"><span>${escapeHtml(pendingSceneFeedback.text)}</span><i></i><i></i><i></i></div>`;
 }
 
 function sceneVisualHtml() {
@@ -565,8 +597,9 @@ function sceneVisualHtml() {
 
   return `
     <section class="scene-experience scene-${escapeHtml(scene.id)}" aria-label="${escapeHtml(scene.title)}">
-      <div class="scene-canvas tone-${escapeHtml(scene.tone)}" data-scene-id="${escapeHtml(scene.id)}" role="img" aria-label="${escapeHtml(scene.alt)}" style="--scene-image:url('${escapeHtml(scene.image)}')">
+      <div class="scene-canvas tone-${escapeHtml(scene.tone)} ${scene.id === "ruined_temple" && state.templeOpening?.fireTended ? "fire-kindled" : ""}" data-scene-id="${escapeHtml(scene.id)}" role="img" aria-label="${escapeHtml(scene.alt)}" style="--scene-image:url('${escapeHtml(scene.image)}')">
         <div class="scene-vignette" aria-hidden="true"></div>
+        ${sceneFeedbackHtml()}
         ${scene.hotspots.map((hotspot) => `
           <button type="button" class="scene-hotspot ${sceneMarkerState(hotspot.state)}" data-action="inspect-scene-object" data-value="${escapeHtml(hotspot.id)}" style="--marker-x:${hotspot.x}%;--marker-y:${hotspot.y}%" aria-label="查看${escapeHtml(hotspot.label)}" aria-pressed="false">
             <span class="scene-hotspot-ring" aria-hidden="true"></span><span class="scene-marker-label">${escapeHtml(hotspot.label)}</span>
@@ -701,7 +734,7 @@ function gameShell(content) {
       <header class="topbar">
         ${templeHud ? `<div class="weather-clock" aria-label="夜雨，${templeClockLabel()}"><span class="weather-mark" aria-hidden="true"><i></i></span><span><strong>夜雨</strong><small>${templeClockLabel()}</small></span></div>` : `<div class="brand-mini"><span class="brand-seal">武</span><span>大曜江湖</span></div>`}
         <div class="mode-badge">${escapeHtml(modeLabel())}</div>
-        <div class="resource-row">${templeHud ? `<div class="resource fire-resource"><span>火势</span><strong>${Number(state.firePower || 0)}</strong></div><div class="resource hunger-resource"><span>饥饿</span><strong>${hungerLabel()}</strong></div>` : `<div class="resource"><span>命灯</span><strong>${state.lives}</strong></div><div class="resource"><span>潜能</span><strong>${state.potential}</strong></div>`}</div>
+        <div class="resource-row">${templeHud ? `<div class="resource fire-resource ${pendingSceneFeedback?.resource === "fire" ? "resource-changed" : ""}" aria-live="polite"><span>火势</span><strong>${Number(state.firePower || 0)}</strong></div><div class="resource hunger-resource ${pendingSceneFeedback?.resource === "hunger" ? "resource-changed" : ""}" aria-live="polite"><span>饥饿</span><strong>${hungerLabel()}</strong></div>` : `<div class="resource"><span>命灯</span><strong>${state.lives}</strong></div><div class="resource"><span>潜能</span><strong>${state.potential}</strong></div>`}</div>
       </header>
       <div class="game-grid">
         <section class="scene-panel ${visual ? "has-visual-scene" : "narrative-only"}">${visual}<div class="narrative-deck">${narrativeHistoryHtml()}<section class="narrative-current" data-narrative-current>${content}</section></div></section>
@@ -917,20 +950,18 @@ function renderCharacterSheet() {
 function renderTempleWake() {
   const opening = { ...createTempleOpeningState(), ...state.templeOpening };
   const stable = canInspectTempleWall(opening);
+  const hasActed = opening.actions.length > 0;
   const remaining = TEMPLE_OPENING_ACTIONS.filter((item) => !opening.actions.includes(item.id));
   return gameShell(`
-    <header class="scene-head opening-scene-head">
+    ${hasActed ? "" : `<header class="scene-head opening-scene-head">
       <h1 class="scene-title">你是被冷醒的</h1>
-      <p class="scene-subtitle">
-        ${stable
-          ? "<span>余火已经拢住。</span><span>身上的旧物也已摸清，</span><span>饥饿暂时退去，</span><span>庙里的异样终于连成一线。</span>"
-          : "<span>破瓦漏下月光。</span><span>炭火只剩一点红，</span><span>庙外有狼，</span><span>供桌上滚着一枚山桃。</span>"}
-      </p>
+      <p class="scene-subtitle"><span>雨从破瓦间漏下来。</span><span>冷风挟着狼嚎，钻进骨缝。</span><span>炭堆只剩一星将灭的红，</span><span>供桌上偏有一枚鲜桃。</span></p>
     </header>
-    <div class="insight-whisper"><span>悟性</span><strong>东北角的砖缝是新的。</strong></div>
+    <div class="insight-whisper"><span>悟性</span><strong>东北角那片墙灰，比这场雨还新。</strong></div>`}
+    ${hasActed ? `<div class="narrative-next-heading"><span>接下来</span></div>` : ""}
     <div class="action-list opening-action-list">
       ${remaining.map((item) => actionCard({ action: "temple-opening", value: item.id, title: item.title, description: item.description, source: item.source, meta: item.meta, kind: item.id === "tend_fire" ? "special" : "" })).join("")}
-      ${stable ? actionCard({ action: "inspect-temple-wall", title: "借着火光，走到东北角", description: "新砖后的回声很空；真正的问题不是有没有东西，而是你来不来得及取出来。", source: "悟性 · 所见", meta: "发现暗墙", kind: "special" }) : ""}
+      ${stable ? actionCard({ action: "inspect-temple-wall", title: "借着火光，走到东北角", description: "屈指轻叩，新砖后传回一声空响。墙里确有东西，剩下只看火灭之前，你肯付出什么代价。", source: "悟性 · 所见", meta: "发现暗墙", kind: "special" }) : ""}
     </div>
   `);
 }
@@ -2514,11 +2545,19 @@ function screenMode() {
 function render() {
   document.body.dataset.mode = screenMode();
   const renderer = renderers[state.screen] || renderLanding;
+  const feedbackWasRendered = Boolean(pendingSceneFeedback?.text);
   app.innerHTML = renderer();
+  pendingSceneFeedback = null;
   requestAnimationFrame(() => {
     const deck = app.querySelector(".world-stage-shell .narrative-deck");
     const current = deck?.querySelector("[data-narrative-current]");
-    if (deck && current) deck.scrollTop = Math.max(0, current.offsetTop - 18);
+    const feedAnchor = deck?.querySelector("[data-feed-anchor]");
+    if (deck && feedAnchor) deck.scrollTop = Math.max(0, feedAnchor.offsetTop - deck.clientHeight * 0.24);
+    else if (deck && current) deck.scrollTop = Math.max(0, current.offsetTop - 18);
+    if (feedbackWasRendered) {
+      const feedback = app.querySelector(".scene-float-feedback");
+      if (feedback) window.setTimeout(() => feedback.remove(), 1450);
+    }
   });
 }
 
@@ -2581,15 +2620,20 @@ function updateSceneInspection(kind, title, detail, markerClass, value, status =
 function recordNarrativeChoice(target) {
   const current = target.closest(".narrative-deck")?.querySelector("[data-narrative-current]");
   if (!current || !target.matches(".action-card, .inline-button")) return;
-  const title = current.querySelector(".scene-title")?.textContent?.trim();
+  const title = current.querySelector(".scene-title")?.textContent?.trim()
+    || (state.screen === "templeWake" ? "雨夜破庙" : "");
   if (!title) return;
   const actor = app.querySelector(".scene-actor .scene-marker-label")?.textContent?.trim() || "人物";
+  const subtitle = current.querySelector(".scene-subtitle");
+  const subtitleChildren = subtitle ? [...subtitle.querySelectorAll(":scope > span")] : [];
   const rawLines = [
-    ...current.querySelectorAll(".scene-subtitle, .story-copy p, .battle-intent p"),
+    ...(subtitleChildren.length ? subtitleChildren : subtitle ? [subtitle] : []),
+    ...current.querySelectorAll(".story-copy p, .battle-intent p"),
   ].map((node) => node.textContent?.trim()).filter(Boolean);
-  const lines = [...new Set(rawLines)].slice(0, 3).map((text) => ({
+  const lines = [...new Set(rawLines)].slice(0, 4).map((text) => ({
     type: /[“”「」]/.test(text) ? "dialogue" : "narration",
     speaker: /[“”「」]/.test(text) ? actor : "",
+    role: "context",
     text: text.slice(0, 240),
   }));
   const choiceCard = target.closest(".quest-card");
@@ -2603,6 +2647,7 @@ function recordNarrativeChoice(target) {
     || "";
   const record = {
     id: `${Date.now()}-${state.events.length}`,
+    screen: state.screen,
     context: modeLabel(),
     title: title.slice(0, 80),
     lines,
@@ -2611,14 +2656,18 @@ function recordNarrativeChoice(target) {
     choiceKind: target.dataset.choiceKind || "",
   };
   const log = Array.isArray(state.narrativeLog) ? state.narrativeLog : [];
-  state.narrativeLog = [...log, record].slice(-24);
+  state.narrativeLog = [...log, record].slice(-64);
 }
 
 function appendNarrativeOutcome(text) {
   if (!text || !Array.isArray(state.narrativeLog) || !state.narrativeLog.length) return;
   const record = state.narrativeLog.at(-1);
   const lines = Array.isArray(record.lines) ? record.lines : [];
-  record.lines = [...lines, { type: "narration", speaker: "", text: String(text).slice(0, 300) }].slice(-4);
+  const outcomes = (Array.isArray(text) ? text : String(text).split(/\n+/))
+    .map((item) => String(item).trim())
+    .filter(Boolean)
+    .map((item) => ({ type: "narration", speaker: "", role: "outcome", text: item.slice(0, 300) }));
+  record.lines = [...lines, ...outcomes].slice(-8);
 }
 
 function combatOutcomeText(result) {
@@ -2783,10 +2832,16 @@ const handlers = {
     const result = resolveTempleOpeningAction(state.templeOpening, value);
     if (!result.available) return;
     state.templeOpening = result.state;
-    if (value === "tend_fire") state.firePower = 40;
+    if (value === "tend_fire") {
+      const previousFire = Number(state.firePower || 0);
+      state.firePower = 40;
+      pendingSceneFeedback = { text: `火势 +${Math.max(0, state.firePower - previousFire)}`, tone: "gain", resource: "fire" };
+    }
+    if (value === "check_belongings") pendingSceneFeedback = { text: "行囊 · 已查明", tone: "notice", resource: "inventory" };
     if (value === "eat_peach") {
       state.peaches = Math.max(0, Number(state.peaches || 0) - 1);
       state.hungerLevel = 0;
+      pendingSceneFeedback = { text: "饥饿 · 暂缓", tone: "relief", resource: "hunger" };
     }
     appendNarrativeOutcome(result.outcome);
     track("temple_opening_action", { action: value, stable: result.stable });
