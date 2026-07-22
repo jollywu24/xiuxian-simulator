@@ -121,7 +121,7 @@ function templePresentation(screen, state) {
         id: "patched_wall",
         label: hasTask(state, "traveler_relic") || hasTask(state, "shen_promise") ? "已经拆开的暗墙" : "新砌暗墙",
         detail: !fateSeen
-          ? "东北角墙色更深，新旧砖缝对不上。墙后或许藏着东西。"
+          ? "墙灰颜色更深，新旧砖缝对不上。墙后是空的。"
           : hasTask(state, "traveler_relic") || hasTask(state, "shen_promise")
             ? `你已经从墙后取出${[hasTask(state, "traveler_relic") ? "旅人遗物" : "", hasTask(state, "shen_promise") ? "沈字铜钱" : ""].filter(Boolean).join("与")}。`
             : "命格照见墙后的两段因果：旅人遗物与沈氏旧诺。砸墙仍要支付时间、山桃或力气。",

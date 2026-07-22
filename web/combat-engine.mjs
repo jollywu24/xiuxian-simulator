@@ -1,4 +1,4 @@
-import { rollCausalDie } from "./wudao-p0-core.mjs?v=20260722.4";
+import { rollCausalDie } from "./wudao-p0-core.mjs?v=20260722.5";
 
 export const COMBAT_MAX_ENERGY = 3;
 

@@ -2718,6 +2718,27 @@ h1 {
   line-height: 1.65;
 }
 
+.scene-inspection small {
+  display: block;
+  grid-column: 1 / -1;
+  color: #c89a4f;
+  font-family: var(--font-story);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.scene-inspection-line {
+  position: absolute;
+  z-index: 7;
+  display: block;
+  width: var(--inspection-line-length, 0);
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(var(--inspection-line-x, 0), var(--inspection-line-y, 0)) rotate(var(--inspection-line-angle, 0));
+  transform-origin: left center;
+}
+
 .route-board {
   color: #e9e2d5;
   border: 1px solid rgba(229, 211, 172, 0.24);
@@ -4958,6 +4979,18 @@ h1 {
   }
 }
 
+@keyframes inspection-marker-breathe {
+  0%,
+  100% {
+    transform: scale(0.92);
+    filter: brightness(0.94);
+  }
+  50% {
+    transform: scale(1.08);
+    filter: brightness(1.18);
+  }
+}
+
 @media (orientation: landscape) and (max-height: 540px) {
   .screen-templeWake .opening-copy {
     display: none;
@@ -5646,6 +5679,154 @@ h1 {
   .world-stage-shell .scene-ruined_temple [data-value="doorway"] {
     --marker-x: 86% !important;
     --marker-y: 43% !important;
+  }
+
+  .world-stage-shell .scene-ruined_temple .scene-inspection {
+    position: absolute;
+    top: 23cqw;
+    right: auto;
+    bottom: auto;
+    left: 40.1cqw;
+    z-index: 9;
+    display: grid;
+    width: 23.75cqw;
+    min-height: 10.95cqw;
+    box-sizing: border-box;
+    padding: 1.02cqw 1.34cqw 0.72cqw;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    gap: 0.34cqw;
+    align-items: start;
+    overflow: visible;
+    color: #d7cbb8;
+    border: 1px solid rgba(183, 134, 61, 0.68);
+    border-radius: 0.72cqw;
+    background:
+      repeating-linear-gradient(97deg, transparent 0 3.2cqw, rgba(195, 151, 81, 0.022) 3.26cqw 3.34cqw),
+      radial-gradient(ellipse at 42% 22%, rgba(83, 63, 33, 0.18), transparent 58%),
+      rgba(12, 12, 10, 0.94);
+    box-shadow:
+      inset 0 0 1.5cqw rgba(0, 0, 0, 0.42),
+      0 0 0.18cqw rgba(219, 161, 72, 0.24),
+      0 0.9cqw 2.1cqw rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(0.55cqw);
+    transition: opacity 180ms ease, transform 180ms ease;
+  }
+
+  .world-stage-shell .scene-ruined_temple .scene-inspection::after {
+    position: absolute;
+    inset: 0.3cqw;
+    pointer-events: none;
+    content: "";
+    border: 1px solid rgba(220, 181, 111, 0.05);
+    border-radius: 0.5cqw;
+  }
+
+  .world-stage-shell .scene-ruined_temple .scene-inspection.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .world-stage-shell .scene-ruined_temple .scene-inspection span {
+    color: #a98b60;
+    font-family: "STKaiti", "KaiTi", "Kaiti SC", var(--font-story);
+    font-size: 0.82cqw;
+    font-weight: 400;
+    letter-spacing: 0.16em;
+    line-height: 1.1;
+  }
+
+  .world-stage-shell .scene-ruined_temple .scene-inspection strong {
+    color: #ddd0bd;
+    font-family: "STKaiti", "KaiTi", "Kaiti SC", var(--font-story);
+    font-size: 1.62cqw;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    line-height: 1.2;
+  }
+
+  .world-stage-shell .scene-ruined_temple .scene-inspection p {
+    margin: 0.1cqw 0 0;
+    color: #b9aa96;
+    font-family: "STKaiti", "KaiTi", "Kaiti SC", var(--font-story);
+    font-size: 1.05cqw;
+    line-height: 1.48;
+    letter-spacing: 0.05em;
+  }
+
+  .world-stage-shell .scene-ruined_temple .scene-inspection small {
+    margin: 0.35cqw -1.34cqw -0.72cqw;
+    padding: 0.48cqw 1.34cqw 0.58cqw;
+    color: #cf9c4e;
+    border-top: 1px solid rgba(183, 134, 61, 0.28);
+    font-family: "STKaiti", "KaiTi", "Kaiti SC", var(--font-story);
+    font-size: 0.94cqw;
+    line-height: 1.25;
+    letter-spacing: 0.08em;
+  }
+
+  .world-stage-shell .scene-ruined_temple .scene-inspection-line {
+    top: 0;
+    left: 0;
+    z-index: 8;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(227, 173, 85, 0.9), rgba(182, 126, 49, 0.72));
+    box-shadow: 0 0 0.32cqw rgba(221, 158, 63, 0.36);
+    opacity: 0;
+    transition: opacity 180ms ease;
+  }
+
+  .world-stage-shell .scene-ruined_temple .scene-inspection-line.is-visible {
+    opacity: 1;
+  }
+
+  .world-stage-shell .scene-ruined_temple .scene-hotspot.selected {
+    z-index: 10;
+  }
+
+  .world-stage-shell .scene-ruined_temple .scene-hotspot.selected .scene-marker-label {
+    opacity: 0;
+  }
+
+  .world-stage-shell .scene-ruined_temple .scene-hotspot.selected .scene-hotspot-ring {
+    width: 1.3cqw;
+    height: 1.3cqw;
+    border: 0.14cqw solid #f2c269;
+    background: rgba(73, 49, 20, 0.52);
+    box-shadow:
+      0 0 0 0.34cqw rgba(219, 159, 65, 0.24),
+      0 0 0.95cqw rgba(235, 174, 79, 0.74),
+      inset 0 0 0.28cqw rgba(255, 223, 157, 0.52);
+    outline: 0;
+    animation: inspection-marker-breathe 1.65s ease-in-out infinite;
+  }
+
+  .world-stage-shell .scene-ruined_temple .scene-hotspot.selected .scene-hotspot-ring::before,
+  .world-stage-shell .scene-ruined_temple .scene-hotspot.selected .scene-hotspot-ring::after {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    pointer-events: none;
+    content: "";
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .world-stage-shell .scene-ruined_temple .scene-hotspot.selected .scene-hotspot-ring::before {
+    width: 2.45cqw;
+    height: 2.45cqw;
+    border: 1px solid rgba(224, 166, 73, 0.72);
+    box-shadow: inset 0 0 0.48cqw rgba(235, 180, 91, 0.12), 0 0 0.5cqw rgba(225, 158, 57, 0.2);
+  }
+
+  .world-stage-shell .scene-ruined_temple .scene-hotspot.selected .scene-hotspot-ring::after {
+    width: 3.08cqw;
+    height: 3.08cqw;
+    background: repeating-conic-gradient(from 8deg, rgba(235, 176, 78, 0.5) 0 1deg, transparent 1deg 44deg);
+    mask: radial-gradient(circle, transparent 0 48%, #000 51% 54%, transparent 57%);
+    opacity: 0.72;
   }
 
   .world-stage-shell .narrative-deck {

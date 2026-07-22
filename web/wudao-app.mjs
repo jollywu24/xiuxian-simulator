@@ -50,8 +50,8 @@ import {
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs?v=20260722.4";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260722.4";
+} from "./wudao-core.mjs?v=20260722.5";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260722.5";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -81,7 +81,7 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260722.4";
+} from "./wudao-p0-core.mjs?v=20260722.5";
 import {
   M4_EVIDENCE,
   M4_METHOD,
@@ -100,7 +100,7 @@ import {
   resolveM4Training,
   resolveMoneyInquiry,
   resolveOldHouseChoice,
-} from "./wudao-p1-core.mjs?v=20260722.4";
+} from "./wudao-p1-core.mjs?v=20260722.5";
 import {
   advanceCombatLabCampaign,
   createCombatLabSession,
@@ -111,7 +111,7 @@ import {
   restartCombatLab,
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
-} from "./combat-lab-core.mjs?v=20260722.4";
+} from "./combat-lab-core.mjs?v=20260722.5";
 
 const STORAGE_KEY = "wudao-high-martial-v1";
 const app = document.querySelector("#app");
@@ -568,7 +568,7 @@ function sceneVisualHtml() {
       <div class="scene-canvas tone-${escapeHtml(scene.tone)}" data-scene-id="${escapeHtml(scene.id)}" role="img" aria-label="${escapeHtml(scene.alt)}" style="--scene-image:url('${escapeHtml(scene.image)}')">
         <div class="scene-vignette" aria-hidden="true"></div>
         ${scene.hotspots.map((hotspot) => `
-          <button type="button" class="scene-hotspot ${sceneMarkerState(hotspot.state)}" data-action="inspect-scene-object" data-value="${escapeHtml(hotspot.id)}" style="--marker-x:${hotspot.x}%;--marker-y:${hotspot.y}%" aria-label="查看${escapeHtml(hotspot.label)}">
+          <button type="button" class="scene-hotspot ${sceneMarkerState(hotspot.state)}" data-action="inspect-scene-object" data-value="${escapeHtml(hotspot.id)}" style="--marker-x:${hotspot.x}%;--marker-y:${hotspot.y}%" aria-label="查看${escapeHtml(hotspot.label)}" aria-pressed="false">
             <span class="scene-hotspot-ring" aria-hidden="true"></span><span class="scene-marker-label">${escapeHtml(hotspot.label)}</span>
           </button>
         `).join("")}
@@ -579,7 +579,8 @@ function sceneVisualHtml() {
         `).join("")}
         ${scene.player?.visible === false ? "" : `<div class="scene-player" style="--marker-x:${scene.player.x}%;--marker-y:${scene.player.y}%" aria-label="${escapeHtml(scene.player.label)}在此"><span aria-hidden="true">命</span><b>${escapeHtml(scene.player.label)}</b></div>`}
       </div>
-      <div class="scene-inspection" data-scene-inspection aria-live="polite"><span>眼前</span><strong>${escapeHtml(scene.title)}</strong><p>${escapeHtml(scene.summary)}</p></div>
+      <i class="scene-inspection-line" data-scene-inspection-line aria-hidden="true"></i>
+      <div class="scene-inspection" data-scene-inspection aria-live="polite"><span>眼前</span><strong>${escapeHtml(scene.title)}</strong><p>${escapeHtml(scene.summary)}</p><small data-inspection-status></small></div>
       ${route ? `
         <details class="route-board">
           <summary><span><small>行路图</small><strong>${escapeHtml(route.title)}</strong></span><i>展开</i></summary>
@@ -2521,19 +2522,60 @@ function render() {
   });
 }
 
-function updateSceneInspection(kind, title, detail, markerClass, value) {
+function positionSceneInspectionLine(marker, panel) {
+  const stage = panel.closest(".scene-experience");
+  const line = stage?.querySelector("[data-scene-inspection-line]");
+  if (!line || !marker?.closest(".scene-canvas")) {
+    line?.classList.remove("is-visible");
+    return;
+  }
+  requestAnimationFrame(() => {
+    if (!panel.classList.contains("is-visible") || !marker.classList.contains("selected")) return;
+    const stageRect = stage.getBoundingClientRect();
+    const markerRect = marker.getBoundingClientRect();
+    const panelRect = panel.getBoundingClientRect();
+    const startX = markerRect.left + markerRect.width / 2 - stageRect.left;
+    const startY = markerRect.top + markerRect.height / 2 - stageRect.top;
+    const endX = panelRect.left + panelRect.width * 0.53 - stageRect.left;
+    const endY = panelRect.top - stageRect.top + 1;
+    const deltaX = endX - startX;
+    const deltaY = endY - startY;
+    line.style.setProperty("--inspection-line-x", `${startX}px`);
+    line.style.setProperty("--inspection-line-y", `${startY}px`);
+    line.style.setProperty("--inspection-line-length", `${Math.hypot(deltaX, deltaY)}px`);
+    line.style.setProperty("--inspection-line-angle", `${Math.atan2(deltaY, deltaX)}rad`);
+    line.classList.add("is-visible");
+  });
+}
+
+function updateSceneInspection(kind, title, detail, markerClass, value, status = "已察觉") {
   const panel = app.querySelector("[data-scene-inspection]");
   if (!panel) return;
+  const markers = [...app.querySelectorAll(".scene-hotspot, .scene-actor, .route-node")];
+  const marker = [...app.querySelectorAll(`.${markerClass}`)].find((node) => node.dataset.value === value);
+  const isClosing = Boolean(marker?.classList.contains("selected") && panel.classList.contains("is-visible"));
+  markers.forEach((node) => {
+    node.classList.remove("selected");
+    if (node.matches("[aria-pressed]")) node.setAttribute("aria-pressed", "false");
+  });
+  const line = app.querySelector("[data-scene-inspection-line]");
+  line?.classList.remove("is-visible");
+  if (isClosing) {
+    panel.classList.remove("is-visible");
+    return;
+  }
   panel.classList.add("is-visible");
   const kindNode = panel.querySelector("span");
   const titleNode = panel.querySelector("strong");
   const detailNode = panel.querySelector("p");
+  const statusNode = panel.querySelector("[data-inspection-status]");
   if (kindNode) kindNode.textContent = kind;
   if (titleNode) titleNode.textContent = title;
   if (detailNode) detailNode.textContent = detail;
-  app.querySelectorAll(".scene-hotspot, .scene-actor, .route-node").forEach((node) => node.classList.remove("selected"));
-  const marker = [...app.querySelectorAll(`.${markerClass}`)].find((node) => node.dataset.value === value);
+  if (statusNode) statusNode.textContent = status;
   marker?.classList.add("selected");
+  marker?.setAttribute("aria-pressed", "true");
+  positionSceneInspectionLine(marker, panel);
 }
 
 function recordNarrativeChoice(target) {
@@ -2688,19 +2730,23 @@ const handlers = {
     const scene = getScenePresentation(state.screen, state);
     const hotspot = scene?.hotspots.find((item) => item.id === value);
     if (!hotspot) return;
-    updateSceneInspection("所见", hotspot.label, hotspot.detail, "scene-hotspot", value);
+    const status = hotspot.id === "patched_wall"
+      ? "悟性 · 已察觉"
+      : hotspot.state === "completed" ? "此处 · 已查明" : "此处 · 已察觉";
+    updateSceneInspection("所见", hotspot.label, hotspot.detail, "scene-hotspot", value, status);
   },
   "inspect-scene-actor": (value) => {
     const scene = getScenePresentation(state.screen, state);
     const actor = scene?.actors.find((item) => item.id === value);
     if (!actor) return;
-    updateSceneInspection("人物", actor.label, actor.detail, "scene-actor", value);
+    const status = actor.state === "allied" ? "关系 · 已亲近" : actor.state === "locked" ? "身份 · 尚未看清" : "身份 · 已察觉";
+    updateSceneInspection("人物", actor.label, actor.detail, "scene-actor", value, status);
   },
   "inspect-route-node": (value) => {
     const route = getRoutePresentation(state.screen, state);
     const node = route?.nodes.find((item) => item.id === value);
     if (!node) return;
-    updateSceneInspection("去处", node.label, node.detail, "route-node", value);
+    updateSceneInspection("去处", node.label, node.detail, "route-node", value, node.status === "locked" ? "路径 · 尚未走通" : "路径 · 已知");
   },
   "new-journey": () => {
     clearState();
@@ -3777,6 +3823,16 @@ document.addEventListener("keydown", (event) => {
   if (event.target.matches("input, textarea") || !/^[1-9]$/.test(event.key)) return;
   const actions = [...app.querySelectorAll(".action-card:not(:disabled), .inline-button:not(:disabled)")];
   actions[Number(event.key) - 1]?.click();
+});
+
+let sceneInspectionResizeFrame = 0;
+window.addEventListener("resize", () => {
+  cancelAnimationFrame(sceneInspectionResizeFrame);
+  sceneInspectionResizeFrame = requestAnimationFrame(() => {
+    const panel = app.querySelector("[data-scene-inspection].is-visible");
+    const marker = app.querySelector(".scene-canvas :is(.scene-hotspot, .scene-actor).selected");
+    if (panel && marker) positionSceneInspectionLine(marker, panel);
+  });
 });
 
 render();
