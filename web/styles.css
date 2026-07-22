@@ -5377,3 +5377,576 @@ h1 {
     transition-duration: 1ms !important;
   }
 }
+
+/* 1672 × 941 横屏画布：以确认过的破庙效果图作为唯一尺寸标尺。 */
+@media (orientation: landscape) and (min-width: 640px) {
+  html:has(.world-stage-shell),
+  body:has(.world-stage-shell),
+  #app:has(.world-stage-shell) {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    background: #020303;
+  }
+
+  .world-stage-shell {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    display: grid;
+    width: min(100vw, calc(100dvh * 1.776833));
+    height: min(100dvh, calc(100vw * 0.562799));
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    grid-template-rows: 4.067cqw minmax(0, 1fr);
+    overflow: hidden;
+    background: #070807;
+    box-shadow: 0 0 7cqw rgba(0, 0, 0, 0.72);
+    container-type: inline-size;
+    transform: translate(-50%, -50%);
+  }
+
+  .world-stage-shell .topbar {
+    position: relative;
+    top: 0;
+    z-index: 50;
+    display: grid;
+    height: 4.067cqw;
+    min-height: 0;
+    padding: 0 1.18cqw 0 1.02cqw;
+    grid-template-columns: 10.3cqw minmax(0, 1fr) auto;
+    gap: 0;
+    border: 0;
+    border-bottom: 1px solid rgba(167, 128, 70, 0.22);
+    background:
+      linear-gradient(90deg, rgba(7, 8, 7, 0.92), rgba(8, 9, 8, 0.78) 48%, rgba(5, 6, 5, 0.96)),
+      repeating-linear-gradient(104deg, transparent 0 2.1cqw, rgba(180, 142, 78, 0.025) 2.15cqw 2.22cqw);
+    box-shadow: 0 0.4cqw 1.4cqw rgba(0, 0, 0, 0.32);
+    backdrop-filter: blur(0.45cqw);
+  }
+
+  .world-stage-shell .weather-clock {
+    min-width: 0;
+    gap: 1.12cqw;
+    font-family: "STKaiti", "KaiTi", "Kaiti SC", var(--font-story);
+  }
+
+  .world-stage-shell .weather-mark {
+    width: 3.34cqw;
+    height: 3.34cqw;
+    border-color: rgba(194, 156, 91, 0.65);
+    background:
+      radial-gradient(circle at 47% 49%, rgba(157, 178, 174, 0.4), transparent 46%),
+      radial-gradient(circle at 50% 50%, #172329, #080d10 72%);
+    box-shadow: inset 0 0 0.8cqw rgba(0, 0, 0, 0.62), 0 0 0.45cqw rgba(170, 139, 81, 0.14);
+  }
+
+  .world-stage-shell .weather-mark::before {
+    top: 0.72cqw;
+    left: 0.88cqw;
+    width: 1.02cqw;
+    height: 1.02cqw;
+    border-width: 0.12cqw;
+  }
+
+  .world-stage-shell .weather-mark::after {
+    right: 0.62cqw;
+    bottom: 0.62cqw;
+    width: 1.25cqw;
+    height: 0.8cqw;
+  }
+
+  .world-stage-shell .weather-clock > span:last-child {
+    gap: 0;
+  }
+
+  .world-stage-shell .weather-clock strong {
+    color: #d6cbb8;
+    font-size: 1.32cqw;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    line-height: 1.05;
+  }
+
+  .world-stage-shell .weather-clock small {
+    color: #b4a995;
+    font-size: 1.02cqw;
+    letter-spacing: 0.08em;
+    line-height: 1.1;
+  }
+
+  .world-stage-shell .mode-badge {
+    min-width: 0;
+    padding: 0;
+    text-align: left;
+    border: 0;
+    font-family: "STKaiti", "KaiTi", "Kaiti SC", var(--font-story);
+    font-size: 1.34cqw;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+  }
+
+  .world-stage-shell .resource-row {
+    width: 16.4cqw;
+    gap: 1.35cqw;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .world-stage-shell .resource {
+    gap: 0.1cqw 0.48cqw;
+  }
+
+  .world-stage-shell .resource span {
+    color: #a89c89;
+    font-family: "STKaiti", "KaiTi", "Kaiti SC", var(--font-story);
+    font-size: 1.08cqw;
+    letter-spacing: 0.06em;
+  }
+
+  .world-stage-shell .resource strong,
+  .world-stage-shell .hunger-resource strong {
+    font-size: 1.3cqw;
+    font-weight: 500;
+  }
+
+  .world-stage-shell .fire-resource strong::after {
+    display: inline-block;
+    width: 0.72cqw;
+    height: 0.92cqw;
+    margin-left: 0.46cqw;
+    content: "";
+    border-radius: 72% 12% 68% 42%;
+    background: linear-gradient(145deg, #a75832, #58281e 72%);
+    box-shadow: inset 0 0 0.2cqw rgba(245, 172, 82, 0.35), 0 0 0.3cqw rgba(125, 55, 33, 0.22);
+    transform: rotate(43deg) translateY(0.08cqw);
+  }
+
+  .world-stage-shell .hunger-resource strong {
+    position: relative;
+    display: block;
+    width: 2.25cqw;
+    height: 1.55cqw;
+    overflow: visible;
+    color: transparent;
+    font-size: 0;
+  }
+
+  .world-stage-shell .hunger-resource strong::before {
+    position: absolute;
+    right: 0;
+    bottom: 0.05cqw;
+    width: 1.72cqw;
+    height: 0.68cqw;
+    content: "";
+    border: 0.12cqw solid #9f8764;
+    border-top: 0;
+    border-radius: 0 0 1cqw 1cqw;
+    transform: skewX(-8deg);
+  }
+
+  .world-stage-shell .hunger-resource strong::after {
+    position: absolute;
+    top: -0.3cqw;
+    right: 0.25cqw;
+    color: #9f8764;
+    content: "≋";
+    font-family: serif;
+    font-size: 1.35cqw;
+    line-height: 1;
+    transform: rotate(-12deg);
+  }
+
+  .world-stage-shell .game-grid {
+    height: 100%;
+    min-height: 0;
+    margin: 0;
+  }
+
+  .world-stage-shell .scene-panel.has-visual-scene {
+    display: grid;
+    height: 100%;
+    min-height: 0;
+    grid-template-columns: 66.63% 33.37%;
+    align-items: stretch;
+    overflow: hidden;
+    border: 0;
+    background: #060706;
+    box-shadow: none;
+  }
+
+  .world-stage-shell .scene-experience,
+  .world-stage-shell .scene-ruined_temple {
+    position: relative;
+    top: 0;
+    display: grid;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    padding: 0;
+    grid-template-rows: minmax(0, 1fr);
+    overflow: visible;
+    background: #050606;
+    place-items: stretch;
+  }
+
+  .world-stage-shell .scene-experience::before {
+    position: absolute;
+    top: 0;
+    right: -0.72cqw;
+    z-index: 12;
+    width: 1.72cqw;
+    height: 100%;
+    pointer-events: none;
+    content: "";
+    background: linear-gradient(90deg, rgba(7, 7, 6, 0.1), #4a4943 42%, #181817 58%, rgba(5, 5, 5, 0));
+    clip-path: polygon(25% 0, 67% 2%, 36% 5%, 74% 8%, 39% 12%, 71% 16%, 34% 21%, 64% 25%, 31% 29%, 73% 34%, 40% 40%, 67% 44%, 32% 49%, 75% 54%, 39% 60%, 69% 65%, 35% 71%, 72% 77%, 36% 84%, 68% 90%, 31% 95%, 61% 100%, 0 100%, 0 0);
+    filter: drop-shadow(0.22cqw 0 0.32cqw rgba(0, 0, 0, 0.72));
+  }
+
+  .world-stage-shell .scene-canvas,
+  .world-stage-shell .scene-ruined_temple .scene-canvas {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    max-height: none;
+    aspect-ratio: auto;
+    border: 0;
+    background-position: left center;
+    background-size: auto 100%;
+    box-shadow: none;
+  }
+
+  .world-stage-shell .scene-canvas::after {
+    background:
+      linear-gradient(180deg, rgba(2, 3, 3, 0.16), transparent 18%, transparent 72%, rgba(2, 3, 3, 0.64)),
+      linear-gradient(90deg, rgba(2, 3, 3, 0.1), transparent 30%, rgba(2, 3, 3, 0.2));
+  }
+
+  .world-stage-shell .scene-ruined_temple [data-value="embers"] {
+    --marker-x: 69% !important;
+    --marker-y: 70% !important;
+  }
+
+  .world-stage-shell .scene-ruined_temple [data-value="offering_table"] {
+    --marker-x: 36% !important;
+    --marker-y: 44% !important;
+  }
+
+  .world-stage-shell .scene-ruined_temple [data-value="patched_wall"] {
+    --marker-x: 60% !important;
+    --marker-y: 22% !important;
+  }
+
+  .world-stage-shell .scene-ruined_temple [data-value="doorway"] {
+    --marker-x: 86% !important;
+    --marker-y: 43% !important;
+  }
+
+  .world-stage-shell .narrative-deck {
+    position: relative;
+    z-index: 8;
+    display: block;
+    height: 100%;
+    min-height: 0;
+    padding: 5.72cqw 3.12cqw 1.9cqw 4.2cqw;
+    overflow-x: hidden;
+    overflow-y: auto;
+    border: 0;
+    background:
+      radial-gradient(ellipse at 40% 28%, rgba(49, 42, 30, 0.18), transparent 48%),
+      repeating-linear-gradient(96deg, transparent 0 2.3cqw, rgba(187, 151, 89, 0.018) 2.36cqw 2.43cqw),
+      linear-gradient(90deg, #0b0c0b, #10110f 48%, #090a09);
+    box-shadow: inset 0.75cqw 0 1.8cqw rgba(0, 0, 0, 0.5);
+    scrollbar-color: rgba(171, 133, 70, 0.48) transparent;
+    scrollbar-width: thin;
+  }
+
+  .screen-templeWake .narrative-deck {
+    padding: 5.72cqw 3.12cqw 1.9cqw 4.2cqw;
+  }
+
+  .screen-templeWake .opening-scene-head {
+    max-width: none;
+    margin: 0;
+  }
+
+  .screen-templeWake .opening-scene-head .scene-title {
+    position: relative;
+    margin: 0 0 2.63cqw 0.78cqw;
+    color: #d4c8b5;
+    font-family: "STKaiti", "KaiTi", "Kaiti SC", var(--font-story);
+    font-size: 2.64cqw;
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: 0.06em;
+    text-shadow: 0 0.18cqw 0.32cqw rgba(0, 0, 0, 0.72);
+  }
+
+  .screen-templeWake .opening-scene-head .scene-title::after {
+    position: absolute;
+    bottom: -1.22cqw;
+    left: 0;
+    width: 12.5cqw;
+    height: 0.18cqw;
+    content: "";
+    background: linear-gradient(90deg, rgba(183, 137, 70, 0.78), rgba(183, 137, 70, 0.5) 65%, transparent);
+    box-shadow: 0 0 0.35cqw rgba(176, 126, 57, 0.16);
+    transform: skewX(-18deg);
+  }
+
+  .screen-templeWake .opening-scene-head .scene-subtitle {
+    display: grid;
+    width: 20cqw;
+    margin: 0 0 0 1.12cqw;
+    color: #bcb09f;
+    font-family: "STKaiti", "KaiTi", "Kaiti SC", var(--font-story);
+    font-size: 1.5cqw;
+    font-weight: 400;
+    line-height: 1.8;
+    letter-spacing: 0.08em;
+  }
+
+  .screen-templeWake .opening-scene-head .scene-subtitle span {
+    display: block;
+  }
+
+  .screen-templeWake .insight-whisper {
+    width: 24.2cqw;
+    height: 3.08cqw;
+    margin: 1.18cqw 0 2.42cqw;
+    padding: 0 1.08cqw;
+    gap: 0.82cqw;
+    border-color: rgba(190, 145, 74, 0.6);
+    background: rgba(20, 18, 14, 0.7);
+    box-shadow: inset 0 0 1.1cqw rgba(0, 0, 0, 0.26);
+  }
+
+  .screen-templeWake .insight-whisper span {
+    font-family: "STKaiti", "KaiTi", "Kaiti SC", var(--font-story);
+    font-size: 1.02cqw;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+  }
+
+  .screen-templeWake .insight-whisper strong {
+    font-family: "STKaiti", "KaiTi", "Kaiti SC", var(--font-story);
+    font-size: 1.36cqw;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+  }
+
+  .screen-templeWake .opening-action-list {
+    max-width: none;
+    margin: 0 -0.1cqw 0 -1.3cqw;
+    gap: 1.3cqw;
+  }
+
+  .screen-templeWake .opening-action-list .choice-entry {
+    position: relative;
+    display: block;
+    min-height: 4.46cqw;
+    border: 0;
+    background: transparent;
+  }
+
+  .screen-templeWake .opening-action-list .choice-entry:hover {
+    border: 0;
+    background: transparent;
+  }
+
+  .screen-templeWake .opening-action-list .action-card {
+    display: block;
+    height: 4.46cqw;
+    min-height: 0;
+    padding: 0.25cqw 5.6cqw 0 4.95cqw;
+    color: #c5b8a6;
+    border: 1px solid rgba(133, 103, 62, 0.28);
+    border-radius: 0.18cqw;
+    background: linear-gradient(90deg, rgba(29, 27, 23, 0.72), rgba(16, 17, 15, 0.84));
+    box-shadow: inset 0 0 1.3cqw rgba(0, 0, 0, 0.28);
+  }
+
+  .screen-templeWake .opening-action-list .action-card:hover:not(:disabled) {
+    border-color: rgba(183, 139, 70, 0.54);
+    background: linear-gradient(90deg, rgba(38, 31, 22, 0.78), rgba(18, 18, 15, 0.9));
+  }
+
+  .screen-templeWake .opening-action-list .choice-entry.special .action-card {
+    color: #e5c17d;
+    border-color: rgba(214, 159, 69, 0.94);
+    background:
+      linear-gradient(90deg, rgba(70, 48, 20, 0.3), rgba(24, 22, 17, 0.88) 70%),
+      rgba(20, 18, 14, 0.92);
+    box-shadow:
+      inset 0 0 1.5cqw rgba(184, 120, 33, 0.15),
+      0 0 0.18cqw rgba(226, 166, 73, 0.95),
+      0 0 1.05cqw rgba(195, 126, 39, 0.24);
+  }
+
+  .screen-templeWake .opening-action-list .action-card:not(:disabled)::before {
+    top: 50%;
+    left: 2.55cqw;
+    width: auto;
+    height: auto;
+    color: currentColor;
+    border: 0;
+    border-radius: 0;
+    content: counter(story-actions) ".";
+    font-family: "STKaiti", "KaiTi", "Kaiti SC", var(--font-story);
+    font-size: 1.58cqw;
+    line-height: 1;
+    transform: translateY(-50%);
+  }
+
+  .screen-templeWake .opening-action-list .action-title {
+    display: flex;
+    height: 100%;
+    margin: 0;
+    align-items: center;
+    color: inherit;
+    font-family: "STKaiti", "KaiTi", "Kaiti SC", var(--font-story);
+    font-size: 1.56cqw;
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
+
+  .screen-templeWake .opening-action-list :is(.action-description, .action-meta) {
+    display: none;
+  }
+
+  .screen-templeWake .opening-action-list .choice-condition {
+    position: absolute;
+    top: 0;
+    right: 0.65cqw;
+    z-index: 5;
+    height: 4.46cqw;
+    border: 0;
+  }
+
+  .screen-templeWake .opening-action-list .choice-condition summary {
+    display: flex;
+    width: auto;
+    height: 100%;
+    min-height: 0;
+    padding: 0;
+    align-items: center;
+    gap: 0;
+  }
+
+  .screen-templeWake .opening-action-list .condition-status,
+  .screen-templeWake .opening-action-list .choice-condition summary i {
+    display: none;
+  }
+
+  .screen-templeWake .opening-action-list .choice-condition summary strong {
+    overflow: visible;
+    color: #9d8766;
+    font-family: "STKaiti", "KaiTi", "Kaiti SC", var(--font-story);
+    font-size: 1.02cqw;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
+
+  .screen-templeWake .opening-action-list .choice-condition summary strong::before {
+    margin-right: 0.38cqw;
+    content: "◇";
+    color: #b98a48;
+  }
+
+  .screen-templeWake .opening-action-list .choice-entry:not(.special) .choice-condition {
+    display: none;
+  }
+
+  .screen-templeWake .opening-action-list .choice-condition > div {
+    position: absolute;
+    top: calc(100% + 0.28cqw);
+    right: 0;
+    z-index: 30;
+    width: 18cqw;
+    padding: 0.75cqw 0.9cqw;
+    border: 1px solid rgba(183, 139, 70, 0.5);
+    background: rgba(10, 10, 9, 0.97);
+    box-shadow: 0 0.8cqw 1.8cqw rgba(0, 0, 0, 0.62);
+  }
+
+  .world-stage-shell .utility-dock {
+    position: absolute;
+    bottom: 1.02cqw;
+    left: 1.9cqw;
+    z-index: 60;
+    gap: 1.42cqw;
+  }
+
+  .world-stage-shell .dock-drawer > summary {
+    position: relative;
+    display: flex;
+    width: 9.05cqw;
+    min-width: 0;
+    height: 3.95cqw;
+    min-height: 0;
+    padding: 0 0.72cqw 0 4.15cqw;
+    align-items: center;
+    justify-content: flex-start;
+    overflow: visible;
+    color: #17130e;
+    border: 1px solid rgba(39, 31, 21, 0.9);
+    border-radius: 0.2cqw;
+    background:
+      repeating-linear-gradient(98deg, transparent 0 0.9cqw, rgba(84, 63, 35, 0.035) 0.95cqw 1cqw),
+      linear-gradient(180deg, #c9baa0, #a7987e);
+    box-shadow: inset 0 0 0 1px rgba(229, 216, 190, 0.5), 0 0.32cqw 0.8cqw rgba(0, 0, 0, 0.58);
+    backdrop-filter: none;
+  }
+
+  .world-stage-shell .dock-drawer:nth-child(1) > summary {
+    transform: rotate(-1.6deg);
+  }
+
+  .world-stage-shell .dock-drawer:nth-child(2) > summary {
+    transform: rotate(0.8deg);
+  }
+
+  .world-stage-shell .dock-drawer:nth-child(3) > summary {
+    transform: rotate(-0.7deg);
+  }
+
+  .world-stage-shell .dock-drawer > summary strong {
+    display: block;
+    font-family: "STKaiti", "KaiTi", "Kaiti SC", var(--font-story);
+    font-size: 1.65cqw;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+  }
+
+  .world-stage-shell .dock-glyph {
+    position: absolute;
+    top: 50%;
+    left: -0.28cqw;
+    display: grid;
+    width: 3.75cqw;
+    height: 3.75cqw;
+    color: #17130e;
+    border: 0.13cqw solid #17130e;
+    background: #b8aa91;
+    box-shadow: inset 0 0 0 0.18cqw rgba(222, 207, 179, 0.58), 0 0.25cqw 0.55cqw rgba(0, 0, 0, 0.42);
+    font-size: 1.42cqw;
+    border-radius: 50%;
+    transform: translateY(-50%);
+  }
+
+  .world-stage-shell .dock-sheet,
+  .world-stage-shell .character-panel .dock-sheet,
+  .world-stage-shell .inventory-panel .dock-sheet,
+  .world-stage-shell .martial-panel .dock-sheet {
+    bottom: 4.55cqw;
+    left: 0;
+    width: 20cqw;
+    max-height: 32cqw;
+  }
+}

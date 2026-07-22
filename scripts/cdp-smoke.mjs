@@ -100,6 +100,25 @@ async function snapshot(label) {
       const scene = document.querySelector(".scene-canvas")?.getBoundingClientRect();
       return scene?.height ? scene.width / scene.height : 0;
     })(),
+    shellRatio: (() => {
+      const shell = document.querySelector(".world-stage-shell")?.getBoundingClientRect();
+      return shell?.height ? shell.width / shell.height : 0;
+    })(),
+    sceneShare: (() => {
+      const stage = document.querySelector(".scene-experience")?.getBoundingClientRect();
+      const narrative = document.querySelector(".narrative-deck")?.getBoundingClientRect();
+      return stage && narrative ? stage.width / (stage.width + narrative.width) : 0;
+    })(),
+    topbarScale: (() => {
+      const shell = document.querySelector(".world-stage-shell")?.getBoundingClientRect();
+      const topbar = document.querySelector(".topbar")?.getBoundingClientRect();
+      return shell?.width && topbar ? topbar.height / shell.width : 0;
+    })(),
+    openingActionScale: (() => {
+      const shell = document.querySelector(".world-stage-shell")?.getBoundingClientRect();
+      const action = document.querySelector(".opening-action-list .action-card")?.getBoundingClientRect();
+      return shell?.width && action ? [action.width / shell.width, action.height / shell.width] : [0, 0];
+    })(),
     currentChoicesVisible: (() => {
       const narrative = document.querySelector(".narrative-deck")?.getBoundingClientRect();
       const choices = [...document.querySelectorAll("[data-narrative-current] .choice-entry")];
@@ -132,8 +151,8 @@ const checkpoints = [];
 checkpoints.push(await snapshot("landing"));
 assert.equal(checkpoints.at(-1).title, "武道");
 assert.ok(checkpoints.at(-1).scrollWidth <= 1280);
-assert.match(await evaluate(`document.querySelector('script[type="module"]')?.src || ""`), /wudao-app\.mjs\?v=20260722\.2/);
-assert.match(await evaluate(`document.querySelector('link[rel="stylesheet"]')?.href || ""`), /styles\.css\?v=20260722\.2/);
+assert.match(await evaluate(`document.querySelector('script[type="module"]')?.src || ""`), /wudao-app\.mjs\?v=20260722\.3/);
+assert.match(await evaluate(`document.querySelector('link[rel="stylesheet"]')?.href || ""`), /styles\.css\?v=20260722\.3/);
 assert.match(checkpoints.at(-1).text, /大曜四百二十七年/);
 assert.doesNotMatch(checkpoints.at(-1).text, /现实|论坛|武道局|其他玩家|其它玩家|太虚命盘|归尘门|黑日|Demo|P0|P1|P2|测试|原型/);
 
@@ -147,12 +166,23 @@ assert.match(await text(), /爬向供桌，拿那枚山桃/);
 assert.doesNotMatch(await text(), /行录/);
 assert.doesNotMatch(await text(), /现实|论坛|武道局|其他玩家|其它玩家/);
 await screenshot("wudao-temple-opening-desktop.png");
+await send("Emulation.setDeviceMetricsOverride", { width: 1672, height: 941, deviceScaleFactor: 1, mobile: false });
+const referenceOpening = await snapshot("opening-reference-1672x941");
+assert.ok(referenceOpening.scrollWidth <= 1672);
+assert.ok(referenceOpening.scrollHeight <= 941);
+assert.ok(referenceOpening.shellRatio > 1.775 && referenceOpening.shellRatio < 1.779);
+assert.ok(referenceOpening.sceneShare > 0.66 && referenceOpening.sceneShare < 0.672);
+assert.ok(referenceOpening.topbarScale > 0.039 && referenceOpening.topbarScale < 0.042);
+assert.ok(referenceOpening.openingActionScale[0] > 0.265 && referenceOpening.openingActionScale[0] < 0.285);
+assert.ok(referenceOpening.openingActionScale[1] > 0.043 && referenceOpening.openingActionScale[1] < 0.047);
+assert.equal(referenceOpening.currentChoicesVisible, true);
+await screenshot("wudao-temple-opening-reference-1672x941.png");
 await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 622, deviceScaleFactor: 1, mobile: false });
 const shortDesktopOpening = await snapshot("opening-short-desktop");
 assert.ok(shortDesktopOpening.scrollWidth <= 1280);
 assert.ok(shortDesktopOpening.scrollHeight <= 622);
 assert.equal(shortDesktopOpening.splitView, true);
-assert.ok(shortDesktopOpening.sceneRatio > 1.74 && shortDesktopOpening.sceneRatio < 1.81);
+assert.ok(shortDesktopOpening.sceneRatio > 1.25 && shortDesktopOpening.sceneRatio < 1.3);
 assert.equal(shortDesktopOpening.currentChoicesVisible, true);
 await screenshot("wudao-temple-opening-short-desktop.png");
 await send("Emulation.setDeviceMetricsOverride", { width: 1024, height: 498, deviceScaleFactor: 1, mobile: false });
@@ -167,7 +197,7 @@ const phoneLandscapeOpening = await snapshot("opening-phone-landscape");
 assert.ok(phoneLandscapeOpening.scrollWidth <= 844);
 assert.ok(phoneLandscapeOpening.scrollHeight <= 390);
 assert.equal(phoneLandscapeOpening.splitView, true);
-assert.ok(phoneLandscapeOpening.sceneRatio > 1.74 && phoneLandscapeOpening.sceneRatio < 1.81);
+assert.ok(phoneLandscapeOpening.sceneRatio > 1.25 && phoneLandscapeOpening.sceneRatio < 1.3);
 assert.equal(phoneLandscapeOpening.currentChoicesVisible, true);
 await screenshot("wudao-temple-opening-phone-landscape.png");
 await send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });

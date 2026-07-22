@@ -50,8 +50,8 @@ import {
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs?v=20260722.2";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260722.2";
+} from "./wudao-core.mjs?v=20260722.3";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260722.3";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -81,7 +81,7 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260722.2";
+} from "./wudao-p0-core.mjs?v=20260722.3";
 import {
   M4_EVIDENCE,
   M4_METHOD,
@@ -100,7 +100,7 @@ import {
   resolveM4Training,
   resolveMoneyInquiry,
   resolveOldHouseChoice,
-} from "./wudao-p1-core.mjs?v=20260722.2";
+} from "./wudao-p1-core.mjs?v=20260722.3";
 import {
   advanceCombatLabCampaign,
   createCombatLabSession,
@@ -111,7 +111,7 @@ import {
   restartCombatLab,
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
-} from "./combat-lab-core.mjs?v=20260722.2";
+} from "./combat-lab-core.mjs?v=20260722.3";
 
 const STORAGE_KEY = "wudao-high-martial-v1";
 const app = document.querySelector("#app");
@@ -918,8 +918,14 @@ function renderTempleWake() {
   const stable = canInspectTempleWall(opening);
   const remaining = TEMPLE_OPENING_ACTIONS.filter((item) => !opening.actions.includes(item.id));
   return gameShell(`
-    ${sceneHeader("破瓦漏雨 · 余火将熄", "你是被冷醒的", stable ? "手脚恢复知觉后，庙里的不对劲终于连成了一条线。" : "破瓦漏下月光。炭火只剩一点红，庙外有狼，腹中正一阵阵绞痛。")}
-    <div class="story-copy opening-copy"><p>你叫陈司命，十六岁。先让自己熬过这场夜雨。</p></div>
+    <header class="scene-head opening-scene-head">
+      <h1 class="scene-title">你是被冷醒的</h1>
+      <p class="scene-subtitle">
+        ${stable
+          ? "<span>余火已经拢住。</span><span>身上的旧物也已摸清，</span><span>饥饿暂时退去，</span><span>庙里的异样终于连成一线。</span>"
+          : "<span>破瓦漏下月光。</span><span>炭火只剩一点红，</span><span>庙外有狼，</span><span>供桌上滚着一枚山桃。</span>"}
+      </p>
+    </header>
     <div class="insight-whisper"><span>悟性</span><strong>东北角的砖缝是新的。</strong></div>
     <div class="action-list opening-action-list">
       ${remaining.map((item) => actionCard({ action: "temple-opening", value: item.id, title: item.title, description: item.description, source: item.source, meta: item.meta, kind: item.id === "tend_fire" ? "special" : "" })).join("")}
