@@ -50,8 +50,8 @@ import {
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs?v=20260722.3";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260722.3";
+} from "./wudao-core.mjs?v=20260722.4";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260722.4";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -81,7 +81,7 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260722.3";
+} from "./wudao-p0-core.mjs?v=20260722.4";
 import {
   M4_EVIDENCE,
   M4_METHOD,
@@ -100,7 +100,7 @@ import {
   resolveM4Training,
   resolveMoneyInquiry,
   resolveOldHouseChoice,
-} from "./wudao-p1-core.mjs?v=20260722.3";
+} from "./wudao-p1-core.mjs?v=20260722.4";
 import {
   advanceCombatLabCampaign,
   createCombatLabSession,
@@ -111,7 +111,7 @@ import {
   restartCombatLab,
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
-} from "./combat-lab-core.mjs?v=20260722.3";
+} from "./combat-lab-core.mjs?v=20260722.4";
 
 const STORAGE_KEY = "wudao-high-martial-v1";
 const app = document.querySelector("#app");
