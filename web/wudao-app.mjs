@@ -50,8 +50,8 @@ import {
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs?v=20260723.2";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260723.2";
+} from "./wudao-core.mjs?v=20260723.3";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260723.3";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -81,7 +81,7 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260723.2";
+} from "./wudao-p0-core.mjs?v=20260723.3";
 import {
   M4_EVIDENCE,
   M4_METHOD,
@@ -100,7 +100,7 @@ import {
   resolveM4Training,
   resolveMoneyInquiry,
   resolveOldHouseChoice,
-} from "./wudao-p1-core.mjs?v=20260723.2";
+} from "./wudao-p1-core.mjs?v=20260723.3";
 import {
   advanceCombatLabCampaign,
   createCombatLabSession,
@@ -111,7 +111,14 @@ import {
   restartCombatLab,
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
-} from "./combat-lab-core.mjs?v=20260723.2";
+} from "./combat-lab-core.mjs?v=20260723.3";
+import {
+  INVENTORY_CAPACITY,
+  createInventoryBoard,
+  formatSilver,
+  getInventoryCategory,
+  getInventoryUseState,
+} from "./inventory-core.mjs?v=20260723.3";
 
 const STORAGE_KEY = "wudao-high-martial-v1";
 const app = document.querySelector("#app");
@@ -119,6 +126,8 @@ const COMBAT_ATTRIBUTE_NAMES = { constitution: "根骨", insight: "悟性", agil
 const COMBAT_STAGE_NAMES = { mortal: "未入门", body: "锻体", qi: "聚气", meridian: "通脉", master: "宗师" };
 const COMBAT_CHECK_LABELS = { great: "大成", success: "得手", costly: "得手有损", failure: "失手" };
 let pendingSceneFeedback = null;
+let pendingInventoryFeedback = null;
+const inventoryUi = { open: false, category: "all", selectedId: null };
 
 function freshFateSeed() {
   const fixedSeed = new URLSearchParams(window.location.search).get("seed");
@@ -275,6 +284,7 @@ function track(name, data = {}) {
 }
 
 function moveTo(screen) {
+  inventoryUi.open = false;
   state.screen = screen;
   saveState();
   render();
@@ -717,28 +727,103 @@ function characterPanelHtml() {
   `;
 }
 
-function inventoryPanelHtml() {
-  const belongingsKnown = state.screen !== "templeWake" || state.templeOpening?.belongingsChecked;
-  const p0Items = Object.entries(state.p0?.items || {}).filter(([, quantity]) => Number(quantity) > 0);
-  const hasInventory = belongingsKnown || state.completedTempleTasks.length || state.inventory.length || p0Items.length;
+function inventoryCategoryIcon(id) {
+  const icons = {
+    all: `<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 18c1-6 4-9 9-9s8 3 9 9l4 5-2 17H13l-2-17 4-5Z"/><path d="M18 18h12M20 9l-3-4M28 9l3-4"/></svg>`,
+    medicine: `<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M20 7h8l-1 7c7 4 11 10 10 17-1 8-6 12-13 12S12 39 11 31c-1-7 3-13 10-17l-1-7Z"/><path d="M17 28c4-2 10-2 14 0M18 35c4 2 8 2 12 0"/></svg>`,
+    ingredient: `<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M39 8C21 10 11 20 10 39c10-1 19-5 24-13 4-6 5-12 5-18Z"/><path d="M11 38c7-8 14-14 23-23M23 25l-7-1M29 19l1-6"/></svg>`,
+    tool: `<svg viewBox="0 0 48 48" aria-hidden="true"><path d="m9 39 27-27 3-3M13 35l-4-4M18 30l-3-3M33 15l-3-3"/><path d="m35 8 5 5"/></svg>`,
+    token: `<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="16"/><circle cx="24" cy="24" r="6"/><path d="M24 8v10M24 30v10M8 24h10M30 24h10"/></svg>`,
+    clue: `<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M7 10c7-2 12 0 17 4 5-4 10-6 17-4v28c-7-2-12 0-17 4-5-4-10-6-17-4V10Z"/><path d="M24 14v28M12 18h7M12 24h7M29 18h7M29 24h7"/></svg>`,
+  };
+  return icons[id] || icons.all;
+}
+
+function inventoryItemSlotHtml(item, selected) {
   return `
-    <div class="panel-body inventory-panel-body">
-      <div><div class="panel-title">行囊</div><p class="drawer-intro">只放能被带走、消耗或交给别人的东西。</p></div>
-      <div class="inventory-list">
-        ${belongingsKnown && state.backgroundId === "mystery" ? `<div><strong>半块家传玉佩</strong><span>${state.destinyRevealed ? `可重分五维 · 当前总点 ${shenAttributePool()}` : "贴着胸口，正透出不合时宜的暖意"}</span></div><div><strong>一封染暗的血书</strong><span>末尾只辨得出：金龙会万鲤堂，孙不离</span></div>` : ""}
-        ${state.templeOpening?.peachEaten && state.peaches > 0 ? `<div><strong>山桃 ×${Number(state.peaches)}</strong><span>贡桌所得 · 新鲜得不像荒庙之物</span></div>` : ""}
-        ${state.completedTempleTasks.includes("traveler_relic") ? `<div><strong>金陵东郊残图</strong><span>标出破庙外的旧路</span></div>` : ""}
-        ${state.completedTempleTasks.includes("shen_promise") ? `<div><strong>沈字铜钱</strong><span>可作为金陵沈家信物</span></div>` : ""}
-        ${state.inventory.includes(QINGQING_BOOK.id) ? `<div><strong>${QINGQING_BOOK.name}</strong><span>${state.qingQingStudied ? `已研习 · 医术 ${state.medicalLevel}级 ${state.medicalProgress}%` : "曹青所授 · 尚未研习"}</span></div>` : ""}
-        ${state.inventory.includes("return_spring_pills") && !state.p0?.started ? `<div><strong>${Number(state.alchemyPills || 0)}枚下品回春丹</strong><span>亲手炼成 · 止血补气</span></div>` : ""}
-        ${state.inventory.includes("hundred_pills_notes") ? `<div><strong>《百丹注解》</strong><span>曹青所授 · 再成三丹可换武功</span></div>` : ""}
-        ${p0Items.map(([id, quantity]) => {
-          const item = getP0Item(id);
-          return item ? `<div><strong>${escapeHtml(item.name)}${Number(quantity) > 1 ? ` ×${Number(quantity)}` : ""}</strong><span>${escapeHtml(item.description)}</span></div>` : "";
-        }).join("")}
-        ${hasInventory ? "" : `<p class="empty-state">你还没有摸清身上带着什么。</p>`}
+    <button type="button" class="inventory-item-slot quality-${escapeHtml(item.quality)} ${selected ? "selected" : ""}" data-action="select-inventory-item" data-value="${escapeHtml(item.id)}" aria-label="${escapeHtml(`${item.name}，持有${item.quantity}`)}" aria-pressed="${selected ? "true" : "false"}">
+      <img src="${escapeHtml(item.art)}" alt="" draggable="false" />
+      <span class="inventory-item-quantity">${Number(item.quantity)}</span>
+      <i class="inventory-quality-base" aria-hidden="true"></i>
+    </button>
+  `;
+}
+
+function inventoryEffectHtml(effect) {
+  const [first, ...rest] = String(effect || "").split("：");
+  const label = rest.length ? first : "效用";
+  const body = rest.length ? rest.join("：") : first;
+  return `<strong>${escapeHtml(label)}：</strong>${escapeHtml(body)}`;
+}
+
+function inventoryScreenHtml() {
+  const board = createInventoryBoard(state, inventoryUi);
+  inventoryUi.category = board.category.id;
+  inventoryUi.selectedId = board.selected?.id || null;
+  const visibleItems = board.filteredItems.slice(0, INVENTORY_CAPACITY);
+  const emptySlots = Math.max(0, INVENTORY_CAPACITY - visibleItems.length);
+  const selected = board.selected;
+  const quality = board.selectedQuality;
+  const scene = getScenePresentation(state.screen, state);
+  const sceneImage = scene?.image || "./assets/scenes/ruined-temple-stage-v3.webp";
+
+  return `
+    <section class="inventory-screen" role="dialog" aria-modal="true" aria-label="行囊" style="--inventory-scene:url('${escapeHtml(sceneImage)}')">
+      <header class="inventory-topbar">
+        <div class="inventory-owner"><strong>${escapeHtml(state.name)}</strong><span>· 行囊</span></div>
+        <nav class="inventory-global-tabs" aria-label="人物、行囊与武学">
+          <button type="button" data-action="inventory-switch" data-value="character">人物</button>
+          <span aria-current="page">行囊</span>
+          <button type="button" data-action="inventory-switch" data-value="martial">武学</button>
+        </nav>
+        <div class="inventory-top-actions">
+          <div class="inventory-silver" aria-label="当前银两"><i aria-hidden="true"></i><span>银两</span><strong>${escapeHtml(formatSilver(board.silver))}</strong></div>
+          <button type="button" class="inventory-return" data-action="close-inventory">返回 <span aria-hidden="true">↩</span></button>
+        </div>
+      </header>
+      <div class="inventory-layout">
+        <section class="inventory-catalog" aria-label="物品栏">
+          <nav class="inventory-category-tabs" aria-label="道具类型">
+            ${board.categories.map((category) => `
+              <button type="button" class="${category.id === board.category.id ? "selected" : ""}" data-action="inventory-category" data-value="${escapeHtml(category.id)}" aria-label="${escapeHtml(category.name)}" title="${escapeHtml(category.name)}" aria-pressed="${category.id === board.category.id ? "true" : "false"}">
+                ${inventoryCategoryIcon(category.id)}
+              </button>
+            `).join("")}
+          </nav>
+          <div class="inventory-catalog-heading">
+            <h1>${escapeHtml(board.category.name)}</h1>
+            <strong><span>${Number(board.usedSlots)}</span> / ${Number(board.capacity)}</strong>
+          </div>
+          <div class="inventory-grid" aria-label="${escapeHtml(board.category.name)}">
+            ${visibleItems.map((item) => inventoryItemSlotHtml(item, item.id === selected?.id)).join("")}
+            ${Array.from({ length: emptySlots }, () => `<span class="inventory-item-slot empty" aria-hidden="true"><i></i></span>`).join("")}
+          </div>
+        </section>
+        <section class="inventory-detail" aria-live="polite">
+          ${selected ? `
+            <header>
+              <h2>${escapeHtml(selected.name)}</h2>
+              <p class="quality-${escapeHtml(selected.quality)}"><strong>${escapeHtml(quality?.name || "")}</strong><span>·</span><span>${escapeHtml(selected.typeName)}</span></p>
+              <small>持有 ${Number(selected.quantity)} / ${Number(selected.maxStack)}</small>
+            </header>
+            <div class="inventory-detail-art"><img src="${escapeHtml(selected.detailArt || selected.art)}" alt="${escapeHtml(selected.name)}" draggable="false" /></div>
+            <div class="inventory-detail-copy">
+              <p>${escapeHtml(selected.description)}</p>
+              <p class="inventory-effect">${inventoryEffectHtml(selected.effect)}</p>
+            </div>
+            ${board.use.visible ? `
+              <div class="inventory-use-block">
+                <button type="button" data-action="use-inventory-item" data-value="${escapeHtml(selected.id)}" ${board.use.available ? "" : "disabled"}>使用</button>
+                <small>${escapeHtml(board.use.reason)}</small>
+              </div>
+            ` : ""}
+          ` : `
+            <div class="inventory-empty-detail"><span>囊</span><strong>此类尚无物品</strong><p>换一个图标，看看已经带在身上的其他东西。</p></div>
+          `}
+          ${pendingInventoryFeedback ? `<div class="inventory-feedback ${escapeHtml(pendingInventoryFeedback.tone || "gain")}" role="status">${escapeHtml(pendingInventoryFeedback.text)}</div>` : ""}
+        </section>
       </div>
-    </div>
+    </section>
   `;
 }
 
@@ -798,8 +883,7 @@ function gameShell(content) {
           <div class="dock-sheet">${characterPanelHtml()}</div>
         </details>
         <details class="dock-drawer inventory-panel">
-          <summary><span class="dock-glyph glyph-bag" aria-hidden="true">囊</span><strong>行囊</strong></summary>
-          <div class="dock-sheet">${inventoryPanelHtml()}</div>
+          <summary data-action="open-inventory"><span class="dock-glyph glyph-bag" aria-hidden="true">囊</span><strong>行囊</strong></summary>
         </details>
         <details class="dock-drawer martial-panel">
           <summary><span class="dock-glyph glyph-martial" aria-hidden="true">武</span><strong>武学</strong></summary>
@@ -807,6 +891,7 @@ function gameShell(content) {
         </details>
       </nav>
     </main>
+    ${inventoryUi.open ? inventoryScreenHtml() : ""}
   `;
 }
 
@@ -2597,10 +2682,13 @@ function screenMode() {
 
 function render() {
   document.body.dataset.mode = screenMode();
+  document.body.dataset.inventoryOpen = inventoryUi.open ? "true" : "false";
   const renderer = renderers[state.screen] || renderLanding;
   const feedbackWasRendered = Boolean(pendingSceneFeedback?.text);
+  const inventoryFeedbackWasRendered = Boolean(pendingInventoryFeedback?.text);
   app.innerHTML = renderer();
   pendingSceneFeedback = null;
+  pendingInventoryFeedback = null;
   requestAnimationFrame(() => {
     positionSceneCanvasMarkers();
     const deck = app.querySelector(".world-stage-shell .narrative-deck");
@@ -2611,6 +2699,10 @@ function render() {
     if (feedbackWasRendered) {
       const feedback = app.querySelector(".scene-float-feedback");
       if (feedback) window.setTimeout(() => feedback.remove(), 1450);
+    }
+    if (inventoryFeedbackWasRendered) {
+      const feedback = app.querySelector(".inventory-feedback");
+      if (feedback) window.setTimeout(() => feedback.remove(), 1650);
     }
   });
 }
@@ -2859,6 +2951,62 @@ const handlers = {
     const node = route?.nodes.find((item) => item.id === value);
     if (!node) return;
     updateSceneInspection("去处", node.label, node.detail, "route-node", value, node.status === "locked" ? "路径 · 尚未走通" : "路径 · 已知");
+  },
+  "open-inventory": () => {
+    inventoryUi.open = true;
+    inventoryUi.category = "all";
+    inventoryUi.selectedId = null;
+    render();
+  },
+  "close-inventory": () => {
+    inventoryUi.open = false;
+    render();
+  },
+  "inventory-switch": (value) => {
+    if (!["character", "martial"].includes(value)) return;
+    inventoryUi.open = false;
+    render();
+    requestAnimationFrame(() => {
+      const drawer = app.querySelector(value === "character" ? ".character-panel" : ".martial-panel");
+      if (drawer) drawer.open = true;
+    });
+  },
+  "inventory-category": (value) => {
+    inventoryUi.category = getInventoryCategory(value).id;
+    inventoryUi.selectedId = null;
+    render();
+  },
+  "select-inventory-item": (value) => {
+    const board = createInventoryBoard(state, inventoryUi);
+    if (!board.filteredItems.some((item) => item.id === value)) return;
+    inventoryUi.selectedId = value;
+    render();
+  },
+  "use-inventory-item": (value) => {
+    const use = getInventoryUseState(value, state);
+    if (!use.visible || !use.available) return;
+
+    if (use.action === "eat_peach") {
+      state.peaches = Math.max(0, Number(state.peaches || 0) - 1);
+      state.hungerLevel = Math.max(0, Number(state.hungerLevel || 0) - 1);
+      pendingInventoryFeedback = { text: "山桃 -1 · 饥饿缓解", tone: "relief" };
+      track("inventory_item_used", { item: value, effect: "hunger_relief" });
+    } else if (use.action === "treat_wound") {
+      if (Number(state.p0.items.return_spring_pill || 0) < 1 && Number(state.alchemyPills || 0) > 0) {
+        state.p0.items.return_spring_pill = Number(state.alchemyPills || 0);
+      }
+      const result = resolveWoundTreatment("return_spring", state.p0, { medicalLevel: state.medicalLevel });
+      if (!result?.available) return;
+      state.p0 = result.state;
+      state.alchemyPills = Number(state.p0.items.return_spring_pill || 0);
+      pendingInventoryFeedback = { text: "回春丹 -1 · 伤势稳定", tone: "gain" };
+      track("inventory_item_used", { item: value, effect: "wound_stabilized" });
+    } else {
+      return;
+    }
+
+    saveState();
+    render();
   },
   "new-journey": () => {
     clearState();
@@ -3942,6 +4090,13 @@ app.addEventListener("toggle", (event) => {
 }, true);
 
 document.addEventListener("keydown", (event) => {
+  if (inventoryUi.open) {
+    if (event.key === "Escape") {
+      inventoryUi.open = false;
+      render();
+    }
+    return;
+  }
   if (event.target.matches("input, textarea") || !/^[1-9]$/.test(event.key)) return;
   const actions = [...app.querySelectorAll(".action-card:not(:disabled), .inline-button:not(:disabled)")];
   actions[Number(event.key) - 1]?.click();
