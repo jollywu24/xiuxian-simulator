@@ -25,7 +25,7 @@ const INVENTORY_ITEMS = Object.freeze({
     typeName: "旧物",
     quality: "treasure",
     maxStack: 1,
-    art: "./assets/items/family-jade.png",
+    art: "./assets/inventory/family-jade.png",
     description: "玉质温润，断口却像被利器生生斩开。贴在胸口时，总有一丝不合时宜的暖意。",
     effect: "怀中玉佩会对与身世、命格有关的异常生出反应。",
   },
@@ -36,7 +36,7 @@ const INVENTORY_ITEMS = Object.freeze({
     typeName: "线索",
     quality: "rare",
     maxStack: 1,
-    art: "./assets/items/blood-letter.png",
+    art: "./assets/inventory/blood-letter.png",
     description: "纸上血迹已经发黑，大半字句被雨水泡烂，只剩末尾一行还能辨认。",
     effect: "可辨字迹：金龙会万鲤堂，孙不离。",
   },
@@ -47,7 +47,7 @@ const INVENTORY_ITEMS = Object.freeze({
     typeName: "食物",
     quality: "fine",
     maxStack: 12,
-    art: "./assets/items/mountain-peach.png",
+    art: "./assets/inventory/mountain-peach.png",
     description: "贡桌所得，果皮还带着凉意，新鲜得不像荒庙之物。",
     effect: "服用：缓解一层饥饿。",
     useAction: "eat_peach",
@@ -59,7 +59,7 @@ const INVENTORY_ITEMS = Object.freeze({
     typeName: "信物",
     quality: "rare",
     maxStack: 1,
-    art: "./assets/items/shen-token.png",
+    art: "./assets/inventory/shen-token.png",
     description: "边缘刻着三道火纹，不是银钱，而是金陵沈家留下的一份旧诺。",
     effect: "可让沈家侧门为一个来路不明的人开一次。",
   },
@@ -70,7 +70,7 @@ const INVENTORY_ITEMS = Object.freeze({
     typeName: "舆图",
     quality: "fine",
     maxStack: 1,
-    art: "./assets/items/east-map.png",
+    art: "./assets/inventory/east-map.png",
     description: "一张被火烟熏脆的残图，标出了破庙、紫金河与东湖之间的旧路。",
     effect: "使紫金河水路成为可以验证的去路。",
   },
@@ -81,8 +81,8 @@ const INVENTORY_ITEMS = Object.freeze({
     typeName: "丹药",
     quality: "fine",
     maxStack: 20,
-    art: "./assets/items/return-spring-pill.png",
-    detailArt: "./assets/items/return-spring-pill-detail.png",
+    art: "./assets/inventory/return-spring-pill.png",
+    detailArt: "./assets/inventory/return-spring-pill-detail.png",
     description: "曹青传授、由你亲手炼成，可止血补气并稳住轻中伤。",
     effect: "服用：恢复气血，稳定一处轻中伤。",
     useAction: "treat_wound",
@@ -94,7 +94,7 @@ const INVENTORY_ITEMS = Object.freeze({
     typeName: "药材",
     quality: "fine",
     maxStack: 20,
-    art: "./assets/items/purple-scale-herb.png",
+    art: "./assets/inventory/purple-scale-herb.png",
     description: "叶背生着细密紫纹，药性偏暖，能引动衰弱气血。",
     effect: "炼制换血类丹药的主材之一。",
   },
@@ -105,7 +105,7 @@ const INVENTORY_ITEMS = Object.freeze({
     typeName: "药材",
     quality: "fine",
     maxStack: 20,
-    art: "./assets/items/blood-vine-core.png",
+    art: "./assets/inventory/blood-vine-core.png",
     description: "只取藤心一线，离土后仍像细小血脉般轻轻抽动。",
     effect: "用于约束换血时过猛的药力。",
   },
@@ -116,7 +116,7 @@ const INVENTORY_ITEMS = Object.freeze({
     typeName: "药材",
     quality: "precious",
     maxStack: 20,
-    art: "./assets/items/calm-pulse-sand.png",
+    art: "./assets/inventory/calm-pulse-sand.png",
     description: "沈家秘库所藏，砂砾触手冰凉，落入水中却不沉底。",
     effect: "可以暂压逆行经脉。",
   },
@@ -127,7 +127,7 @@ const INVENTORY_ITEMS = Object.freeze({
     typeName: "丹药",
     quality: "rare",
     maxStack: 6,
-    art: "./assets/items/purple-dragon-pill.png",
+    art: "./assets/inventory/purple-dragon-pill.png",
     description: "以猛药换动气血，丹气刚烈，不辨病势便服下等同自寻死路。",
     effect: "只可用于已经查明的换血病局。",
   },
@@ -138,7 +138,7 @@ const INVENTORY_ITEMS = Object.freeze({
     typeName: "兵具",
     quality: "fine",
     maxStack: 20,
-    art: "./assets/items/spring-rain-needles.png",
+    art: "./assets/inventory/spring-rain-needles.png",
     description: "针身轻细，既可止血封穴，也能在一念之间夺命。",
     effect: "作为春风化雨针的施术兵具。",
   },
@@ -149,7 +149,7 @@ const INVENTORY_ITEMS = Object.freeze({
     typeName: "暗记",
     quality: "rare",
     maxStack: 1,
-    art: "./assets/items/fish-scale-token.png",
+    art: "./assets/inventory/fish-scale-token.png",
     description: "刀客用来回报成败的凭证，背面刻着东水门桥洞与丑时暗记。",
     effect: "可用于伪报、改写交接或追查回报链。",
   },
@@ -160,7 +160,7 @@ const INVENTORY_ITEMS = Object.freeze({
     typeName: "灵酿",
     quality: "rare",
     maxStack: 6,
-    art: "./assets/items/monkey-wine.png",
+    art: "./assets/inventory/monkey-wine.png",
     description: "百果与山泉自然发酵，开封便有暖香直透筋骨。",
     effect: "药力足以洗练初入锻体者，不宜在寻常状态下贸然饮用。",
   },
@@ -171,7 +171,7 @@ const INVENTORY_ITEMS = Object.freeze({
     typeName: "武学残线",
     quality: "precious",
     maxStack: 1,
-    art: "./assets/items/ape-rubbing.png",
+    art: "./assets/inventory/ape-rubbing.png",
     description: "水洞石壁上的挥棒残势，只来得及拓下一段发力轮廓。",
     effect: "补齐相应条件后，可继续追索神猿传承。",
   },
@@ -182,7 +182,7 @@ const INVENTORY_ITEMS = Object.freeze({
     typeName: "医书",
     quality: "precious",
     maxStack: 1,
-    art: "./assets/items/qingqing-book.png",
+    art: "./assets/inventory/qingqing-book.png",
     description: "曹青随手抛来的薄册，记着药性、经脉与数种险症的辨法。",
     effect: "研读后可提升医术。",
   },
@@ -193,7 +193,7 @@ const INVENTORY_ITEMS = Object.freeze({
     typeName: "丹书",
     quality: "rare",
     maxStack: 1,
-    art: "./assets/items/hundred-pills-notes.png",
+    art: "./assets/inventory/hundred-pills-notes.png",
     description: "曹青批注过的丹书，页边满是对火候、药序和废丹的刻薄评语。",
     effect: "继续炼成丹药后，可据此换取更深的指点。",
   },
@@ -204,7 +204,7 @@ const INVENTORY_ITEMS = Object.freeze({
     typeName: "丹方",
     quality: "precious",
     maxStack: 1,
-    art: "./assets/items/hundred-pills-notes.png",
+    art: "./assets/inventory/hundred-pills-notes.png",
     description: "回春丹的药序、火候与收丹手法已经被完整记下。",
     effect: "允许在材料与丹炉齐备时再次炼制回春丹。",
   },
@@ -215,7 +215,7 @@ const INVENTORY_ITEMS = Object.freeze({
     typeName: "信物",
     quality: "fine",
     maxStack: 1,
-    art: "./assets/items/fish-scale-token.png",
+    art: "./assets/inventory/fish-scale-token.png",
     description: "沈家外院发下的取药木牌，牌角留着一缕药香。",
     effect: "可在仍有权限时调用一批普通药材。",
   },
@@ -226,7 +226,7 @@ const INVENTORY_ITEMS = Object.freeze({
     typeName: "线索",
     quality: "precious",
     maxStack: 1,
-    art: "./assets/items/east-map.png",
+    art: "./assets/inventory/east-map.png",
     description: "药批编号与丹房出入记录对不上，说明有人绕开了外院账目。",
     effect: "可用于追查沈家药物流向。",
   },
@@ -237,7 +237,7 @@ const INVENTORY_ITEMS = Object.freeze({
     typeName: "书册",
     quality: "common",
     maxStack: 1,
-    art: "./assets/items/qingqing-book.png",
+    art: "./assets/inventory/qingqing-book.png",
     description: "一本磨损严重的算术抄本，足以应付普通账目。",
     effect: "满足部分账房差事的基础门槛。",
   },
@@ -246,6 +246,7 @@ const INVENTORY_ITEMS = Object.freeze({
 const LEGACY_ITEM_ALIASES = Object.freeze({
   return_spring_pills: "return_spring_pill",
 });
+const INVENTORY_ITEM_ORDER = Object.freeze(Object.keys(INVENTORY_ITEMS));
 
 function addItem(map, id, quantity = 1) {
   const item = INVENTORY_ITEMS[id];
@@ -288,7 +289,9 @@ export function getInventoryItems(state = {}) {
     addItem(items, id, quantity);
   }
 
-  return [...items.values()];
+  return [...items.values()].sort((left, right) => (
+    INVENTORY_ITEM_ORDER.indexOf(left.id) - INVENTORY_ITEM_ORDER.indexOf(right.id)
+  ));
 }
 
 export function getInventoryUseState(itemId, state = {}) {
@@ -341,7 +344,8 @@ export function createInventoryBoard(state = {}, options = {}) {
 
 export function formatSilver(value) {
   const amount = Math.max(0, Number(value || 0));
-  const whole = Math.floor(amount);
-  const qian = Math.round((amount - whole) * 10);
-  return qian > 0 ? `${whole}两 ${qian}钱` : `${whole}两`;
+  const totalWen = Math.round(amount * 1000);
+  const whole = Math.floor(totalWen / 1000);
+  const wen = totalWen % 1000;
+  return wen > 0 ? `${whole}两 ${wen}文` : `${whole}两`;
 }

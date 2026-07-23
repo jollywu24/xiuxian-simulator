@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="180" height="64" viewBox="0 0 180 64">
+  <defs>
+    <filter id="rough">
+      <feTurbulence baseFrequency=".03 .16" numOctaves="2" seed="9" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="4"/>
+    </filter>
+    <linearGradient id="paper" x1="0" x2="1">
+      <stop stop-color="#aa946c"/>
+      <stop offset=".13" stop-color="#d1bd91"/>
+      <stop offset=".52" stop-color="#e1cfaa"/>
+      <stop offset=".87" stop-color="#c5ae7e"/>
+      <stop offset="1" stop-color="#9e865f"/>
+    </linearGradient>
+    <pattern id="grain" width="13" height="9" patternUnits="userSpaceOnUse">
+      <path d="M0 4h13M3 0l8 9" stroke="#604a2d" stroke-opacity=".09" stroke-width=".8"/>
+    </pattern>
+  </defs>
+  <path d="M7 7 19 3l14 3 18-3 20 4 18-3 19 4 18-4 17 4 18-3 15 5-4 11 4 12-4 11 4 12-17 4-16-3-18 4-18-3-19 4-19-4-19 3-17-4-17 3-14-5 4-11-4-12 4-12Z" fill="url(#paper)" filter="url(#rough)"/>
+  <path d="M7 7 19 3l14 3 18-3 20 4 18-3 19 4 18-4 17 4 18-3 15 5-4 11 4 12-4 11 4 12-17 4-16-3-18 4-18-3-19 4-19-4-19 3-17-4-17 3-14-5 4-11-4-12 4-12Z" fill="url(#grain)" opacity=".8"/>
+</svg>

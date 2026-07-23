@@ -41,10 +41,10 @@ test("陌生开局不会提前泄露随身物，查身后才进入行囊", () =>
     "family_jade",
     "blood_letter",
     "mountain_peach",
-    "east_map",
     "shen_token",
-    "qingqing_book",
+    "east_map",
     "return_spring_pill",
+    "qingqing_book",
     "hundred_pills_notes",
   ]);
   assert.equal(known.find((item) => item.id === "mountain_peach")?.quantity, 2);
@@ -124,5 +124,5 @@ test("只有可直接使用的物品显示使用状态，且条件来自当前�
 test("银两资源条只呈现真实持有数", () => {
   assert.equal(formatSilver(0), "0两");
   assert.equal(formatSilver(12), "12两");
-  assert.equal(formatSilver(12.4), "12两 4钱");
+  assert.equal(formatSilver(12.43), "12两 430文");
 });

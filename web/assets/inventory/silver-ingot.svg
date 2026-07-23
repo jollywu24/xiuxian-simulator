@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="52" height="32" viewBox="0 0 52 32">
+  <defs>
+    <linearGradient id="s" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#f0f0eb"/>
+      <stop offset=".35" stop-color="#b8bbb7"/>
+      <stop offset=".7" stop-color="#747a79"/>
+      <stop offset="1" stop-color="#d9dad5"/>
+    </linearGradient>
+    <filter id="g"><feGaussianBlur stdDeviation="1.5"/></filter>
+  </defs>
+  <ellipse cx="26" cy="26" rx="19" ry="4" fill="#000" opacity=".55" filter="url(#g)"/>
+  <path d="M6 16c4-1 7-4 9-10 6 3 16 3 22 0 2 6 5 9 9 10-2 8-9 12-20 12S8 24 6 16Z" fill="url(#s)" stroke="#d5d5cf" stroke-opacity=".58"/>
+  <ellipse cx="26" cy="10" rx="11" ry="5" fill="#d9dad5"/>
+  <ellipse cx="26" cy="11" rx="7" ry="3" fill="#777c7a"/>
+</svg>

@@ -50,8 +50,8 @@ import {
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs?v=20260723.3";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260723.3";
+} from "./wudao-core.mjs?v=20260723.4";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260723.4";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -81,7 +81,7 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260723.3";
+} from "./wudao-p0-core.mjs?v=20260723.4";
 import {
   M4_EVIDENCE,
   M4_METHOD,
@@ -100,7 +100,7 @@ import {
   resolveM4Training,
   resolveMoneyInquiry,
   resolveOldHouseChoice,
-} from "./wudao-p1-core.mjs?v=20260723.3";
+} from "./wudao-p1-core.mjs?v=20260723.4";
 import {
   advanceCombatLabCampaign,
   createCombatLabSession,
@@ -111,14 +111,14 @@ import {
   restartCombatLab,
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
-} from "./combat-lab-core.mjs?v=20260723.3";
+} from "./combat-lab-core.mjs?v=20260723.4";
 import {
   INVENTORY_CAPACITY,
   createInventoryBoard,
   formatSilver,
   getInventoryCategory,
   getInventoryUseState,
-} from "./inventory-core.mjs?v=20260723.3";
+} from "./inventory-core.mjs?v=20260723.4";
 
 const STORAGE_KEY = "wudao-high-martial-v1";
 const app = document.querySelector("#app");
@@ -728,15 +728,10 @@ function characterPanelHtml() {
 }
 
 function inventoryCategoryIcon(id) {
-  const icons = {
-    all: `<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 18c1-6 4-9 9-9s8 3 9 9l4 5-2 17H13l-2-17 4-5Z"/><path d="M18 18h12M20 9l-3-4M28 9l3-4"/></svg>`,
-    medicine: `<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M20 7h8l-1 7c7 4 11 10 10 17-1 8-6 12-13 12S12 39 11 31c-1-7 3-13 10-17l-1-7Z"/><path d="M17 28c4-2 10-2 14 0M18 35c4 2 8 2 12 0"/></svg>`,
-    ingredient: `<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M39 8C21 10 11 20 10 39c10-1 19-5 24-13 4-6 5-12 5-18Z"/><path d="M11 38c7-8 14-14 23-23M23 25l-7-1M29 19l1-6"/></svg>`,
-    tool: `<svg viewBox="0 0 48 48" aria-hidden="true"><path d="m9 39 27-27 3-3M13 35l-4-4M18 30l-3-3M33 15l-3-3"/><path d="m35 8 5 5"/></svg>`,
-    token: `<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="16"/><circle cx="24" cy="24" r="6"/><path d="M24 8v10M24 30v10M8 24h10M30 24h10"/></svg>`,
-    clue: `<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M7 10c7-2 12 0 17 4 5-4 10-6 17-4v28c-7-2-12 0-17 4-5-4-10-6-17-4V10Z"/><path d="M24 14v28M12 18h7M12 24h7M29 18h7M29 24h7"/></svg>`,
-  };
-  return icons[id] || icons.all;
+  const icon = ["bag", "gourd", "leaf", "sword", "token", "book"].find((value) => value === id)
+    || { all: "bag", medicine: "gourd", ingredient: "leaf", tool: "sword", token: "token", clue: "book" }[id]
+    || "bag";
+  return `<svg viewBox="0 0 64 64" aria-hidden="true"><use href="./assets/inventory/category-icons.svg#${escapeHtml(icon)}"></use></svg>`;
 }
 
 function inventoryItemSlotHtml(item, selected) {
@@ -764,11 +759,9 @@ function inventoryScreenHtml() {
   const emptySlots = Math.max(0, INVENTORY_CAPACITY - visibleItems.length);
   const selected = board.selected;
   const quality = board.selectedQuality;
-  const scene = getScenePresentation(state.screen, state);
-  const sceneImage = scene?.image || "./assets/scenes/ruined-temple-stage-v3.webp";
 
   return `
-    <section class="inventory-screen" role="dialog" aria-modal="true" aria-label="行囊" style="--inventory-scene:url('${escapeHtml(sceneImage)}')">
+    <section class="inventory-screen" role="dialog" aria-modal="true" aria-label="行囊">
       <header class="inventory-topbar">
         <div class="inventory-owner"><strong>${escapeHtml(state.name)}</strong><span>· 行囊</span></div>
         <nav class="inventory-global-tabs" aria-label="人物、行囊与武学">
@@ -777,7 +770,7 @@ function inventoryScreenHtml() {
           <button type="button" data-action="inventory-switch" data-value="martial">武学</button>
         </nav>
         <div class="inventory-top-actions">
-          <div class="inventory-silver" aria-label="当前银两"><i aria-hidden="true"></i><span>银两</span><strong>${escapeHtml(formatSilver(board.silver))}</strong></div>
+          <div class="inventory-silver" aria-label="当前银两"><img src="./assets/inventory/silver-ingot.svg" alt="" /><span>银两</span><strong>${escapeHtml(formatSilver(board.silver))}</strong></div>
           <button type="button" class="inventory-return" data-action="close-inventory">返回 <span aria-hidden="true">↩</span></button>
         </div>
       </header>
@@ -806,7 +799,7 @@ function inventoryScreenHtml() {
               <p class="quality-${escapeHtml(selected.quality)}"><strong>${escapeHtml(quality?.name || "")}</strong><span>·</span><span>${escapeHtml(selected.typeName)}</span></p>
               <small>持有 ${Number(selected.quantity)} / ${Number(selected.maxStack)}</small>
             </header>
-            <div class="inventory-detail-art"><img src="${escapeHtml(selected.detailArt || selected.art)}" alt="${escapeHtml(selected.name)}" draggable="false" /></div>
+            <div class="inventory-detail-art"><img class="${selected.detailArt ? "inventory-detail-hero" : "inventory-detail-icon"}" src="${escapeHtml(selected.detailArt || selected.art)}" alt="${escapeHtml(selected.name)}" draggable="false" /></div>
             <div class="inventory-detail-copy">
               <p>${escapeHtml(selected.description)}</p>
               <p class="inventory-effect">${inventoryEffectHtml(selected.effect)}</p>

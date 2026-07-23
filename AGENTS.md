@@ -129,7 +129,7 @@
 | `web/wudao-app.mjs` | 状态机、渲染、事件委托与本地存档 |
 | `web/wudao-scenes.mjs` | 2D场景物件、人物站位和已知路线视图 |
 | `web/assets/scenes/` | 破庙、紫金河、沈家侧门和丹房背景图；破庙舞台与人物变体使用1280×1000的5:4规格 |
-| `web/assets/items/` | 行囊物品格与详情展示图 |
+| `web/assets/inventory/` | 行囊生成背景、十六件统一画风物品、回春丹详情与可缩放界面纹样 |
 | `web/styles.css` | 江湖、死亡、场景热点、路线与手机响应式 |
 | `tests/wudao.test.mjs` | 当前纯高武路线规则测试 |
 | `tests/inventory-system.test.mjs` | 行囊揭示、去重、分类、容量与使用条件测试 |

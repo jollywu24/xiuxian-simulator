@@ -52,7 +52,7 @@ async function writeSave(value) {
 async function reloadWithSave(value) {
   await writeSave(value);
   await send("Page.reload", { ignoreCache: false });
-  await new Promise((resolve) => setTimeout(resolve, 250));
+  await new Promise((resolve) => setTimeout(resolve, 650));
 }
 
 async function click(action, value = null) {
@@ -192,9 +192,18 @@ async function snapshot(label) {
       const tabs = [...document.querySelectorAll(".inventory-category-tabs button")];
       const slots = [...document.querySelectorAll(".inventory-item-slot")];
       const occupied = slots.filter((slot) => !slot.classList.contains("empty"));
+      const box = (selector) => {
+        const target = document.querySelector(selector)?.getBoundingClientRect();
+        return target ? [target.left, target.top, target.width, target.height] : [0, 0, 0, 0];
+      };
       return {
         visible: Boolean(overlay),
         rect: rect ? [rect.left, rect.top, rect.width, rect.height] : [0, 0, 0, 0],
+        topbarRect: box(".inventory-topbar"),
+        catalogRect: box(".inventory-catalog"),
+        detailRect: box(".inventory-detail"),
+        gridRect: box(".inventory-grid"),
+        firstSlotRect: box(".inventory-item-slot"),
         heading: document.querySelector(".inventory-catalog-heading h1")?.textContent?.trim() || "",
         capacity: document.querySelector(".inventory-catalog-heading strong")?.textContent?.replace(/\\s+/g, " ").trim() || "",
         categoryTabs: tabs.length,
@@ -240,17 +249,19 @@ async function screenshot(name) {
 await send("Page.enable");
 await send("Runtime.enable");
 await send("DOMStorage.enable");
+await send("Network.enable");
+await send("Network.clearBrowserCache");
 await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
 await send("Storage.clearDataForOrigin", { origin: pageOrigin, storageTypes: "local_storage" });
 await send("Page.navigate", { url: testUrl });
-await new Promise((resolve) => setTimeout(resolve, 300));
+await new Promise((resolve) => setTimeout(resolve, 1000));
 
 const checkpoints = [];
 checkpoints.push(await snapshot("landing"));
 assert.equal(checkpoints.at(-1).title, "武道");
 assert.ok(checkpoints.at(-1).scrollWidth <= 1280);
-assert.match(await evaluate(`document.querySelector('script[type="module"]')?.src || ""`), /wudao-app\.mjs\?v=20260723\.3/);
-assert.match(await evaluate(`document.querySelector('link[rel="stylesheet"]')?.href || ""`), /styles\.css\?v=20260723\.3/);
+assert.match(await evaluate(`document.querySelector('script[type="module"]')?.src || ""`), /wudao-app\.mjs\?v=20260723\.4/);
+assert.match(await evaluate(`document.querySelector('link[rel="stylesheet"]')?.href || ""`), /styles\.css\?v=20260723\.4/);
 assert.match(checkpoints.at(-1).text, /大曜四百二十七年/);
 assert.doesNotMatch(checkpoints.at(-1).text, /现实|论坛|武道局|其他玩家|其它玩家|太虚命盘|归尘门|黑日|Demo|P0|P1|P2|测试|原型/);
 
@@ -944,27 +955,53 @@ assert.ok(saved.m4.jianghuTrace.every((entry) => entry.text && entry.source));
 
 const inventoryUseSave = structuredClone(saved);
 inventoryUseSave.screen = "stakeTraining";
+inventoryUseSave.shenSilver = 12.43;
+inventoryUseSave.peaches = 3;
+inventoryUseSave.templeOpening = { ...inventoryUseSave.templeOpening, belongingsChecked: true, peachEaten: true };
+inventoryUseSave.completedTempleTasks = ["traveler_relic", "shen_promise"];
+inventoryUseSave.inventory = ["qingqing_book", "hundred_pills_notes", "return_spring_pills"];
 inventoryUseSave.alchemyPills = 2;
 inventoryUseSave.p0 = createP0State();
 inventoryUseSave.p0.started = true;
-inventoryUseSave.p0.items.return_spring_pill = 2;
+inventoryUseSave.p0.items = {
+  ...inventoryUseSave.p0.items,
+  return_spring_pill: 6,
+  purple_scale_herb: 2,
+  blood_vine_core: 2,
+  calm_pulse_sand: 3,
+  purple_dragon_blood_pill: 1,
+  spring_rain_needles: 6,
+  fish_scale_token: 2,
+  monkey_wine: 1,
+  ape_relief_rubbing: 1,
+};
 inventoryUseSave.p0.wounds = [{ id: "inventory_rib_cut", bodyPart: "ribs", severity: 2 }];
 await reloadWithSave(inventoryUseSave);
+await send("Emulation.setDeviceMetricsOverride", { width: 1672, height: 941, deviceScaleFactor: 1, mobile: false });
 await click("open-inventory");
 await click("select-inventory-item", "return_spring_pill");
 const usablePillInventory = await snapshot("inventory-usable-pill");
 assert.equal(usablePillInventory.inventoryView.useVisible, true);
 assert.equal(usablePillInventory.inventoryView.useDisabled, false);
+assert.equal(usablePillInventory.inventoryView.capacity, "16 / 24");
+assert.equal(usablePillInventory.inventoryView.occupied, 16);
+assert.ok(Math.abs(usablePillInventory.inventoryView.topbarRect[3] - 68) < 2);
+assert.ok(Math.abs(usablePillInventory.inventoryView.catalogRect[2] - 1080) < 3);
+assert.ok(Math.abs(usablePillInventory.inventoryView.gridRect[0] - 80) < 5);
+assert.ok(Math.abs(usablePillInventory.inventoryView.gridRect[1] - 259) < 8);
+assert.ok(Math.abs(usablePillInventory.inventoryView.firstSlotRect[2] - 144) < 8);
 assert.match(usablePillInventory.inventoryView.detail, /下品回春丹/);
 assert.doesNotMatch(usablePillInventory.inventoryView.detail, /来处|来源/);
+await screenshot("wudao-inventory-reference-1672x941.png");
 await click("use-inventory-item", "return_spring_pill");
 const usedPillState = JSON.parse(await evaluate(`localStorage.getItem("wudao-high-martial-v1")`));
-assert.equal(usedPillState.p0.items.return_spring_pill, 1);
+assert.equal(usedPillState.p0.items.return_spring_pill, 5);
 assert.equal(usedPillState.p0.wounds.length, 0);
-assert.equal(usedPillState.alchemyPills, 1);
+assert.equal(usedPillState.alchemyPills, 5);
 assert.match(await evaluate(`document.querySelector(".inventory-feedback")?.textContent || ""`), /回春丹 -1 · 伤势稳定/);
 await screenshot("wudao-full-inventory-used-pill.png");
 await click("close-inventory");
+await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
 
 const versionFourSave = structuredClone(saved);
 versionFourSave.version = 4;
