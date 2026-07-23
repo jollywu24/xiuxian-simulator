@@ -31,8 +31,8 @@ test("six compressed environment assets anchor the first visual locations and co
   assert.equal(SCENE_ASSET_PATHS.length, 6);
   assert.equal(new Set(SCENE_ASSET_PATHS).size, 6);
   assert.ok(SCENE_ASSET_PATHS.every((asset) => asset.startsWith("./assets/") && asset.endsWith(".webp")));
-  assert.ok(SCENE_ASSET_PATHS.some((asset) => asset.endsWith("ruined-temple-rain-v2.webp")));
-  assert.ok(SCENE_ASSET_PATHS.some((asset) => asset.endsWith("ruined-temple-lady-v2.webp")));
+  assert.ok(SCENE_ASSET_PATHS.some((asset) => asset.endsWith("ruined-temple-stage-v3.webp")));
+  assert.ok(SCENE_ASSET_PATHS.some((asset) => asset.endsWith("ruined-temple-lady-stage-v3.webp")));
 });
 
 test("every visual scene exposes serializable, bounded and uniquely identified markers", () => {
@@ -63,9 +63,17 @@ test("character identity on the ruined-temple stage follows the story reveal", (
   const opening = getScenePresentation("templeWake", state());
   assert.equal(opening.actors.length, 0);
   assert.equal(opening.player.visible, false);
+  assert.equal(opening.imageAspect, 1.28);
+  assert.deepEqual(Object.fromEntries(opening.hotspots.map((hotspot) => [hotspot.id, [hotspot.x, hotspot.y]])), {
+    embers: [51.8, 72.5],
+    offering_table: [25.5, 49.5],
+    patched_wall: [54.5, 41],
+    doorway: [77, 44],
+  });
   const arrival = getScenePresentation("ladyArrival", state());
   assert.equal(arrival.actors[0].label, "青衣妇人");
-  assert.match(arrival.image, /ruined-temple-lady-v2/);
+  assert.match(arrival.image, /ruined-temple-lady-stage-v3/);
+  assert.deepEqual([arrival.actors[0].x, arrival.actors[0].y], [75.5, 48]);
   assert.equal(getScenePresentation("encounterReward", state()).actors[0].label, "龙青鱼");
 });
 

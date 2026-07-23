@@ -1,6 +1,6 @@
 const ASSETS = {
-  temple: "./assets/scenes/ruined-temple-rain-v2.webp",
-  templeLady: "./assets/scenes/ruined-temple-lady-v2.webp",
+  temple: "./assets/scenes/ruined-temple-stage-v3.webp",
+  templeLady: "./assets/scenes/ruined-temple-lady-stage-v3.webp",
   river: "./assets/scenes/purple-gold-river-dawn.webp",
   alley: "./assets/combat/jinling-rain-ambush.webp",
   shenGate: "./assets/scenes/shen-manor-side-gate.webp",
@@ -80,8 +80,8 @@ function templePresentation(screen, state) {
         : screen === "quietDeparture"
           ? "她正踏过门槛离去。这次擦肩之后，再无相遇条件。"
           : "她没有受伤，也没有追兵。真正危险的是她本人。",
-      x: screen === "quietDeparture" ? 81 : 76,
-      y: 53,
+      x: screen === "quietDeparture" ? 79 : 75.5,
+      y: 48,
       kind: "lady",
       state: screen === "gameDeath" ? "danger" : identityKnown ? "allied" : "unknown",
     });
@@ -91,7 +91,7 @@ function templePresentation(screen, state) {
     id: "ruined_temple",
     title: "金陵东郊 · 无名破庙",
     image: ladyScreens.has(screen) ? ASSETS.templeLady : ASSETS.temple,
-    imageAspect: 1672 / 941,
+    imageAspect: 1280 / 1000,
     alt: "雨夜破庙内，少年守着余火；供桌山桃、新砌墙面和敞开的庙门分处四方",
     summary: ladyScreens.has(screen)
       ? "雨压在残瓦上，门口、火堆和青衣来客之间只隔着几步。"
@@ -104,8 +104,8 @@ function templePresentation(screen, state) {
         detail: fireTended
           ? `火势暂时稳住，还能支撑约${Math.max(0, Number(state.fireMinutes || 0))}分钟。`
           : "炭心只剩一点红。吃下一枚山桃并拨亮余火，才能继续检查破庙。",
-        x: 50.5,
-        y: 79.5,
+        x: 51.8,
+        y: 72.5,
         state: fireTended ? "completed" : "available",
       },
       {
@@ -114,8 +114,8 @@ function templePresentation(screen, state) {
         detail: fateSeen
           ? "供桌上没有神像，山桃却很新鲜。命格所见的贡品因果，要到初一晴日辰时才能继续。"
           : "供桌上没有神像，只摆着几枚新鲜山桃。荒庙里似乎一直有人送来贡品。",
-        x: 22,
-        y: 46.5,
+        x: 25.5,
+        y: 49.5,
         state: "locked",
       },
       {
@@ -126,8 +126,8 @@ function templePresentation(screen, state) {
           : hasTask(state, "traveler_relic") || hasTask(state, "shen_promise")
             ? `你已经从墙后取出${[hasTask(state, "traveler_relic") ? "旅人遗物" : "", hasTask(state, "shen_promise") ? "沈字铜钱" : ""].filter(Boolean).join("与")}。`
             : "命格照见墙后的两段因果：旅人遗物与沈氏旧诺。砸墙仍要支付时间、山桃或力气。",
-        x: 50.5,
-        y: 34,
+        x: 54.5,
+        y: 41,
         state: hasTask(state, "traveler_relic") || hasTask(state, "shen_promise") ? "completed" : fateSeen ? "special" : "available",
       },
       {
@@ -136,8 +136,8 @@ function templePresentation(screen, state) {
         detail: ladyScreens.has(screen)
           ? "门外没有第二个人。雨声会遮住脚步，却遮不住聚气武者的杀机。"
           : "狼嚎在雨幕后断断续续。此刻离开破庙，比留在火边更危险。",
-        x: 74,
-        y: 48,
+        x: 77,
+        y: 44,
         state: ladyScreens.has(screen) ? "danger" : "available",
       },
     ],

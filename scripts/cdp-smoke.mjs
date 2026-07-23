@@ -90,6 +90,18 @@ async function snapshot(label) {
     scrollWidth: document.documentElement.scrollWidth,
     scrollHeight: document.documentElement.scrollHeight,
     sceneId: document.querySelector("[data-scene-id]")?.dataset.sceneId || "",
+    sceneBackground: (() => {
+      const canvas = document.querySelector(".scene-canvas");
+      return canvas ? getComputedStyle(canvas).backgroundImage : "";
+    })(),
+    sceneCropFraction: (() => {
+      const canvas = document.querySelector(".scene-canvas");
+      const aspect = Number(canvas?.dataset.sceneAspect || 0);
+      const rect = canvas?.getBoundingClientRect();
+      if (!aspect || !rect?.height) return 0;
+      const canvasAspect = rect.width / rect.height;
+      return canvasAspect < aspect ? 1 - canvasAspect / aspect : 1 - aspect / canvasAspect;
+    })(),
     hotspotCount: document.querySelectorAll(".scene-hotspot").length,
     sceneMarkers: (() => {
       const canvas = document.querySelector(".scene-canvas");
@@ -134,6 +146,15 @@ async function snapshot(label) {
       };
     })(),
     actorLabels: [...document.querySelectorAll(".scene-actor .scene-marker-label")].map((item) => item.textContent.trim()),
+    actorPositions: (() => {
+      const canvas = document.querySelector(".scene-canvas")?.getBoundingClientRect();
+      return Object.fromEntries([...document.querySelectorAll(".scene-canvas .scene-actor")].map((actor) => {
+        const rect = actor.getBoundingClientRect();
+        return [actor.dataset.value, canvas?.width && canvas?.height
+          ? [(rect.left + rect.width / 2 - canvas.left) / canvas.width, (rect.top + rect.height / 2 - canvas.top) / canvas.height]
+          : [0, 0]];
+      }));
+    })(),
     routeNodeCount: document.querySelectorAll(".route-node").length,
     dockCount: document.querySelectorAll(".dock-drawer").length,
     narrativeHistoryCount: document.querySelectorAll(".narrative-entry").length,
@@ -202,8 +223,8 @@ const checkpoints = [];
 checkpoints.push(await snapshot("landing"));
 assert.equal(checkpoints.at(-1).title, "武道");
 assert.ok(checkpoints.at(-1).scrollWidth <= 1280);
-assert.match(await evaluate(`document.querySelector('script[type="module"]')?.src || ""`), /wudao-app\.mjs\?v=20260723\.1/);
-assert.match(await evaluate(`document.querySelector('link[rel="stylesheet"]')?.href || ""`), /styles\.css\?v=20260723\.1/);
+assert.match(await evaluate(`document.querySelector('script[type="module"]')?.src || ""`), /wudao-app\.mjs\?v=20260723\.2/);
+assert.match(await evaluate(`document.querySelector('link[rel="stylesheet"]')?.href || ""`), /styles\.css\?v=20260723\.2/);
 assert.match(checkpoints.at(-1).text, /大曜四百二十七年/);
 assert.doesNotMatch(checkpoints.at(-1).text, /现实|论坛|武道局|其他玩家|其它玩家|太虚命盘|归尘门|黑日|Demo|P0|P1|P2|测试|原型/);
 
@@ -227,15 +248,17 @@ assert.ok(referenceOpening.topbarScale > 0.039 && referenceOpening.topbarScale <
 assert.ok(referenceOpening.openingActionScale[0] > 0.265 && referenceOpening.openingActionScale[0] < 0.285);
 assert.ok(referenceOpening.openingActionScale[1] > 0.043 && referenceOpening.openingActionScale[1] < 0.047);
 assert.equal(referenceOpening.currentChoicesVisible, true);
+assert.match(referenceOpening.sceneBackground, /ruined-temple-stage-v3\.webp/);
+assert.ok(referenceOpening.sceneCropFraction < 0.01);
 assert.equal(referenceOpening.sceneMarkers.aligned, true);
-assert.ok(referenceOpening.sceneMarkers.positions.embers[0] > 0.69 && referenceOpening.sceneMarkers.positions.embers[0] < 0.72);
-assert.ok(referenceOpening.sceneMarkers.positions.embers[1] > 0.78 && referenceOpening.sceneMarkers.positions.embers[1] < 0.81);
-assert.ok(referenceOpening.sceneMarkers.positions.offering_table[0] > 0.29 && referenceOpening.sceneMarkers.positions.offering_table[0] < 0.32);
-assert.ok(referenceOpening.sceneMarkers.positions.offering_table[1] > 0.45 && referenceOpening.sceneMarkers.positions.offering_table[1] < 0.48);
-assert.ok(referenceOpening.sceneMarkers.positions.patched_wall[0] > 0.69 && referenceOpening.sceneMarkers.positions.patched_wall[0] < 0.72);
-assert.ok(referenceOpening.sceneMarkers.positions.patched_wall[1] > 0.33 && referenceOpening.sceneMarkers.positions.patched_wall[1] < 0.35);
-assert.ok(referenceOpening.sceneMarkers.positions.doorway[0] > 0.96);
-assert.ok(referenceOpening.sceneMarkers.positions.doorway[1] > 0.47 && referenceOpening.sceneMarkers.positions.doorway[1] < 0.49);
+assert.ok(referenceOpening.sceneMarkers.positions.embers[0] > 0.50 && referenceOpening.sceneMarkers.positions.embers[0] < 0.54);
+assert.ok(referenceOpening.sceneMarkers.positions.embers[1] > 0.71 && referenceOpening.sceneMarkers.positions.embers[1] < 0.74);
+assert.ok(referenceOpening.sceneMarkers.positions.offering_table[0] > 0.24 && referenceOpening.sceneMarkers.positions.offering_table[0] < 0.27);
+assert.ok(referenceOpening.sceneMarkers.positions.offering_table[1] > 0.48 && referenceOpening.sceneMarkers.positions.offering_table[1] < 0.51);
+assert.ok(referenceOpening.sceneMarkers.positions.patched_wall[0] > 0.53 && referenceOpening.sceneMarkers.positions.patched_wall[0] < 0.56);
+assert.ok(referenceOpening.sceneMarkers.positions.patched_wall[1] > 0.39 && referenceOpening.sceneMarkers.positions.patched_wall[1] < 0.43);
+assert.ok(referenceOpening.sceneMarkers.positions.doorway[0] > 0.75 && referenceOpening.sceneMarkers.positions.doorway[0] < 0.79);
+assert.ok(referenceOpening.sceneMarkers.positions.doorway[1] > 0.42 && referenceOpening.sceneMarkers.positions.doorway[1] < 0.46);
 await screenshot("wudao-temple-opening-reference-1672x941.png");
 await click("inspect-scene-object", "patched_wall");
 await evaluate(`new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
@@ -278,6 +301,8 @@ assert.equal(phoneLandscapeOpening.splitView, true);
 assert.ok(phoneLandscapeOpening.sceneRatio > 1.25 && phoneLandscapeOpening.sceneRatio < 1.3);
 assert.equal(phoneLandscapeOpening.currentChoicesVisible, true);
 assert.equal(phoneLandscapeOpening.sceneMarkers.aligned, true);
+assert.match(phoneLandscapeOpening.sceneBackground, /ruined-temple-stage-v3\.webp/);
+assert.ok(phoneLandscapeOpening.sceneCropFraction < 0.02);
 await screenshot("wudao-temple-opening-phone-landscape.png");
 await click("inspect-scene-object", "patched_wall");
 await evaluate(`new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
@@ -383,6 +408,11 @@ const ladyBeforeReveal = await text();
 assert.match(ladyBeforeReveal, /青衣妇人/);
 assert.doesNotMatch(ladyBeforeReveal, /龙青鱼|漕帮帮主夫人/);
 assert.doesNotMatch(ladyBeforeReveal, /现实|论坛|武道局|其他玩家|其它玩家/);
+const ladyStage = await snapshot("lady-stage-desktop");
+assert.match(ladyStage.sceneBackground, /ruined-temple-lady-stage-v3\.webp/);
+assert.ok(ladyStage.sceneCropFraction < 0.02);
+assert.ok(ladyStage.actorPositions.green_lady[0] > 0.74 && ladyStage.actorPositions.green_lady[0] < 0.77);
+assert.ok(ladyStage.actorPositions.green_lady[1] > 0.46 && ladyStage.actorPositions.green_lady[1] < 0.5);
 await screenshot("wudao-lady-arrival-desktop.png");
 await send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
 const mobileLady = await snapshot("lady-mobile");

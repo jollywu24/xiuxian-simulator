@@ -2222,7 +2222,7 @@ h1 {
   width: 100%;
   height: auto;
   max-height: 100%;
-  aspect-ratio: 1672 / 941;
+  aspect-ratio: 1280 / 1000;
 }
 
 .world-stage-shell .scene-ruined_temple .scene-inspection {
@@ -2564,7 +2564,7 @@ h1 {
   z-index: 2;
   pointer-events: none;
   content: "";
-  background: radial-gradient(ellipse 12% 9% at 51% 82%, rgba(237, 103, 39, 0.32), rgba(167, 55, 21, 0.12) 38%, transparent 72%);
+  background: radial-gradient(ellipse 12% 9% at 51.8% 72.5%, rgba(237, 103, 39, 0.32), rgba(167, 55, 21, 0.12) 38%, transparent 72%);
   mix-blend-mode: screen;
   animation: kindled-fire-breathe 1.9s ease-in-out infinite alternate;
 }
@@ -5837,6 +5837,11 @@ h1 {
     box-shadow: none;
   }
 
+  .world-stage-shell .scene-ruined_temple .scene-canvas {
+    background-position: center;
+    background-size: cover;
+  }
+
   .world-stage-shell .scene-canvas::after {
     background:
       linear-gradient(180deg, rgba(2, 3, 3, 0.16), transparent 18%, transparent 72%, rgba(2, 3, 3, 0.64)),
@@ -5844,7 +5849,7 @@ h1 {
   }
 
   .world-stage-shell .scene-ruined_temple .scene-canvas.fire-kindled::before {
-    background: radial-gradient(ellipse 11% 9% at 69% 70%, rgba(241, 106, 41, 0.42), rgba(178, 57, 20, 0.15) 38%, transparent 72%);
+    background: radial-gradient(ellipse 11% 9% at 51.8% 72.5%, rgba(241, 106, 41, 0.42), rgba(178, 57, 20, 0.15) 38%, transparent 72%);
   }
 
   .world-stage-shell .scene-float-feedback {
