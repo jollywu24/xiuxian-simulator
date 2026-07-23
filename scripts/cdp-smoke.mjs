@@ -68,6 +68,15 @@ async function click(action, value = null) {
   })()`);
 }
 
+async function clickSceneBlank() {
+  return evaluate(`(() => {
+    const canvas = document.querySelector(".scene-canvas");
+    if (!canvas) throw new Error("Missing scene canvas");
+    canvas.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+    return true;
+  })()`);
+}
+
 async function text() {
   return evaluate(`document.querySelector("#app")?.innerText || ""`);
 }
@@ -82,6 +91,18 @@ async function snapshot(label) {
     scrollHeight: document.documentElement.scrollHeight,
     sceneId: document.querySelector("[data-scene-id]")?.dataset.sceneId || "",
     hotspotCount: document.querySelectorAll(".scene-hotspot").length,
+    sceneMarkers: (() => {
+      const canvas = document.querySelector(".scene-canvas");
+      const rect = canvas?.getBoundingClientRect();
+      const positions = {};
+      canvas?.querySelectorAll(".scene-hotspot").forEach((marker) => {
+        const markerRect = marker.getBoundingClientRect();
+        positions[marker.dataset.value] = rect?.width && rect?.height
+          ? [(markerRect.left + markerRect.width / 2 - rect.left) / rect.width, (markerRect.top + markerRect.height / 2 - rect.top) / rect.height]
+          : [0, 0];
+      });
+      return { aligned: canvas?.dataset.markersAligned === "true", positions };
+    })(),
     sceneInspection: (() => {
       const shell = document.querySelector(".world-stage-shell")?.getBoundingClientRect();
       const stage = document.querySelector(".scene-experience")?.getBoundingClientRect();
@@ -181,8 +202,8 @@ const checkpoints = [];
 checkpoints.push(await snapshot("landing"));
 assert.equal(checkpoints.at(-1).title, "武道");
 assert.ok(checkpoints.at(-1).scrollWidth <= 1280);
-assert.match(await evaluate(`document.querySelector('script[type="module"]')?.src || ""`), /wudao-app\.mjs\?v=20260722\.6/);
-assert.match(await evaluate(`document.querySelector('link[rel="stylesheet"]')?.href || ""`), /styles\.css\?v=20260722\.6/);
+assert.match(await evaluate(`document.querySelector('script[type="module"]')?.src || ""`), /wudao-app\.mjs\?v=20260723\.1/);
+assert.match(await evaluate(`document.querySelector('link[rel="stylesheet"]')?.href || ""`), /styles\.css\?v=20260723\.1/);
 assert.match(checkpoints.at(-1).text, /大曜四百二十七年/);
 assert.doesNotMatch(checkpoints.at(-1).text, /现实|论坛|武道局|其他玩家|其它玩家|太虚命盘|归尘门|黑日|Demo|P0|P1|P2|测试|原型/);
 
@@ -206,6 +227,15 @@ assert.ok(referenceOpening.topbarScale > 0.039 && referenceOpening.topbarScale <
 assert.ok(referenceOpening.openingActionScale[0] > 0.265 && referenceOpening.openingActionScale[0] < 0.285);
 assert.ok(referenceOpening.openingActionScale[1] > 0.043 && referenceOpening.openingActionScale[1] < 0.047);
 assert.equal(referenceOpening.currentChoicesVisible, true);
+assert.equal(referenceOpening.sceneMarkers.aligned, true);
+assert.ok(referenceOpening.sceneMarkers.positions.embers[0] > 0.69 && referenceOpening.sceneMarkers.positions.embers[0] < 0.72);
+assert.ok(referenceOpening.sceneMarkers.positions.embers[1] > 0.78 && referenceOpening.sceneMarkers.positions.embers[1] < 0.81);
+assert.ok(referenceOpening.sceneMarkers.positions.offering_table[0] > 0.29 && referenceOpening.sceneMarkers.positions.offering_table[0] < 0.32);
+assert.ok(referenceOpening.sceneMarkers.positions.offering_table[1] > 0.45 && referenceOpening.sceneMarkers.positions.offering_table[1] < 0.48);
+assert.ok(referenceOpening.sceneMarkers.positions.patched_wall[0] > 0.69 && referenceOpening.sceneMarkers.positions.patched_wall[0] < 0.72);
+assert.ok(referenceOpening.sceneMarkers.positions.patched_wall[1] > 0.33 && referenceOpening.sceneMarkers.positions.patched_wall[1] < 0.35);
+assert.ok(referenceOpening.sceneMarkers.positions.doorway[0] > 0.96);
+assert.ok(referenceOpening.sceneMarkers.positions.doorway[1] > 0.47 && referenceOpening.sceneMarkers.positions.doorway[1] < 0.49);
 await screenshot("wudao-temple-opening-reference-1672x941.png");
 await click("inspect-scene-object", "patched_wall");
 await evaluate(`new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
@@ -220,8 +250,11 @@ assert.match(inspectedWall.sceneInspection.text, /所见\s*新砌暗墙/);
 assert.match(inspectedWall.sceneInspection.text, /墙灰颜色更深，新旧砖缝对不上。墙后是空的。/);
 assert.match(inspectedWall.sceneInspection.text, /悟性 · 已察觉/);
 await screenshot("wudao-temple-wall-inspection-1672x941.png");
-await click("inspect-scene-object", "patched_wall");
-assert.equal((await snapshot("opening-wall-inspection-closed")).sceneInspection.visible, false);
+await clickSceneBlank();
+const blankClosedInspection = await snapshot("opening-wall-inspection-blank-closed");
+assert.equal(blankClosedInspection.sceneInspection.visible, false);
+assert.equal(blankClosedInspection.sceneInspection.selectedId, "");
+assert.equal(blankClosedInspection.sceneInspection.lineVisible, false);
 await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 622, deviceScaleFactor: 1, mobile: false });
 const shortDesktopOpening = await snapshot("opening-short-desktop");
 assert.ok(shortDesktopOpening.scrollWidth <= 1280);
@@ -244,6 +277,7 @@ assert.ok(phoneLandscapeOpening.scrollHeight <= 390);
 assert.equal(phoneLandscapeOpening.splitView, true);
 assert.ok(phoneLandscapeOpening.sceneRatio > 1.25 && phoneLandscapeOpening.sceneRatio < 1.3);
 assert.equal(phoneLandscapeOpening.currentChoicesVisible, true);
+assert.equal(phoneLandscapeOpening.sceneMarkers.aligned, true);
 await screenshot("wudao-temple-opening-phone-landscape.png");
 await click("inspect-scene-object", "patched_wall");
 await evaluate(`new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
@@ -254,7 +288,8 @@ assert.equal(phoneLandscapeInspection.sceneInspection.withinScene, true);
 assert.ok(phoneLandscapeInspection.scrollWidth <= 844);
 assert.ok(phoneLandscapeInspection.scrollHeight <= 390);
 await screenshot("wudao-temple-wall-inspection-phone-landscape.png");
-await click("inspect-scene-object", "patched_wall");
+await clickSceneBlank();
+assert.equal((await snapshot("opening-wall-inspection-phone-blank-closed")).sceneInspection.visible, false);
 await send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
 const mobileOpening = await snapshot("opening-mobile");
 assert.ok(mobileOpening.scrollWidth <= 390);

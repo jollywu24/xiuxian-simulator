@@ -1,6 +1,6 @@
-import { rollCausalDie } from "./wudao-p0-core.mjs?v=20260722.6";
-import { P1_ARCS, P1_CONTENT_NODES, getP1Arc, getP1Node } from "./content/p1/arcs.mjs?v=20260722.6";
-import { M4_EVIDENCE, M4_LOCATIONS, M4_METHOD } from "./content/p1/catalogs.mjs?v=20260722.6";
+import { rollCausalDie } from "./wudao-p0-core.mjs?v=20260723.1";
+import { P1_ARCS, P1_CONTENT_NODES, getP1Arc, getP1Node } from "./content/p1/arcs.mjs?v=20260723.1";
+import { M4_EVIDENCE, M4_LOCATIONS, M4_METHOD } from "./content/p1/catalogs.mjs?v=20260723.1";
 
 export { P1_ARCS, P1_CONTENT_NODES, M4_EVIDENCE, M4_LOCATIONS, M4_METHOD, getP1Arc, getP1Node };
 

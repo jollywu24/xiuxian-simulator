@@ -50,8 +50,8 @@ import {
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs?v=20260722.6";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260722.6";
+} from "./wudao-core.mjs?v=20260723.1";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260723.1";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -81,7 +81,7 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260722.6";
+} from "./wudao-p0-core.mjs?v=20260723.1";
 import {
   M4_EVIDENCE,
   M4_METHOD,
@@ -100,7 +100,7 @@ import {
   resolveM4Training,
   resolveMoneyInquiry,
   resolveOldHouseChoice,
-} from "./wudao-p1-core.mjs?v=20260722.6";
+} from "./wudao-p1-core.mjs?v=20260723.1";
 import {
   advanceCombatLabCampaign,
   createCombatLabSession,
@@ -111,7 +111,7 @@ import {
   restartCombatLab,
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
-} from "./combat-lab-core.mjs?v=20260722.6";
+} from "./combat-lab-core.mjs?v=20260723.1";
 
 const STORAGE_KEY = "wudao-high-martial-v1";
 const app = document.querySelector("#app");
@@ -583,6 +583,59 @@ function sceneFeedbackHtml() {
   return `<div class="scene-float-feedback ${escapeHtml(pendingSceneFeedback.tone || "gain")}" role="status"><span>${escapeHtml(pendingSceneFeedback.text)}</span><i></i><i></i><i></i></div>`;
 }
 
+function scenePositionFraction(value, fallback = 0.5) {
+  const normalized = String(value || "").trim().toLowerCase();
+  if (normalized === "left" || normalized === "top") return 0;
+  if (normalized === "right" || normalized === "bottom") return 1;
+  if (normalized === "center") return 0.5;
+  if (normalized.endsWith("%")) {
+    const parsed = Number.parseFloat(normalized);
+    return Number.isFinite(parsed) ? parsed / 100 : fallback;
+  }
+  return fallback;
+}
+
+function positionSceneCanvasMarkers(canvas = app.querySelector(".scene-canvas")) {
+  if (!canvas) return;
+  const sourceAspect = Number(canvas.dataset.sceneAspect || 0);
+  const width = canvas.clientWidth;
+  const height = canvas.clientHeight;
+  if (!(sourceAspect > 0) || !(width > 0) || !(height > 0)) return;
+
+  const style = getComputedStyle(canvas);
+  const backgroundSize = style.backgroundSize.split(",")[0].trim().toLowerCase();
+  let drawnWidth = width;
+  let drawnHeight = height;
+  if (backgroundSize === "cover") {
+    if (width / height > sourceAspect) drawnHeight = width / sourceAspect;
+    else drawnWidth = height * sourceAspect;
+  } else if (/^auto\s+100%$/.test(backgroundSize)) {
+    drawnWidth = height * sourceAspect;
+  } else if (/^100%\s+auto$/.test(backgroundSize)) {
+    drawnHeight = width / sourceAspect;
+  } else {
+    canvas.dataset.markersAligned = "false";
+    return;
+  }
+
+  const positionX = scenePositionFraction(style.backgroundPositionX, 0.5);
+  const positionY = scenePositionFraction(style.backgroundPositionY, 0.5);
+  const offsetX = (width - drawnWidth) * positionX;
+  const offsetY = (height - drawnHeight) * positionY;
+  const safeInset = Math.min(24, Math.max(12, Math.min(width, height) * 0.045));
+
+  canvas.querySelectorAll("[data-source-x][data-source-y]").forEach((marker) => {
+    const sourceX = Number(marker.dataset.sourceX);
+    const sourceY = Number(marker.dataset.sourceY);
+    if (!Number.isFinite(sourceX) || !Number.isFinite(sourceY)) return;
+    const renderedX = Math.max(safeInset, Math.min(width - safeInset, offsetX + drawnWidth * sourceX / 100));
+    const renderedY = Math.max(safeInset, Math.min(height - safeInset, offsetY + drawnHeight * sourceY / 100));
+    marker.style.setProperty("--marker-render-x", `${renderedX}px`);
+    marker.style.setProperty("--marker-render-y", `${renderedY}px`);
+  });
+  canvas.dataset.markersAligned = "true";
+}
+
 function sceneVisualHtml() {
   const scene = getScenePresentation(state.screen, state);
   if (!scene) return "";
@@ -597,20 +650,20 @@ function sceneVisualHtml() {
 
   return `
     <section class="scene-experience scene-${escapeHtml(scene.id)}" aria-label="${escapeHtml(scene.title)}">
-      <div class="scene-canvas tone-${escapeHtml(scene.tone)} ${scene.id === "ruined_temple" && state.templeOpening?.fireTended ? "fire-kindled" : ""}" data-scene-id="${escapeHtml(scene.id)}" role="img" aria-label="${escapeHtml(scene.alt)}" style="--scene-image:url('${escapeHtml(scene.image)}')">
+      <div class="scene-canvas tone-${escapeHtml(scene.tone)} ${scene.id === "ruined_temple" && state.templeOpening?.fireTended ? "fire-kindled" : ""}" data-scene-id="${escapeHtml(scene.id)}" data-scene-aspect="${Number(scene.imageAspect || 0)}" role="img" aria-label="${escapeHtml(scene.alt)}" style="--scene-image:url('${escapeHtml(scene.image)}')">
         <div class="scene-vignette" aria-hidden="true"></div>
         ${sceneFeedbackHtml()}
         ${scene.hotspots.map((hotspot) => `
-          <button type="button" class="scene-hotspot ${sceneMarkerState(hotspot.state)}" data-action="inspect-scene-object" data-value="${escapeHtml(hotspot.id)}" style="--marker-x:${hotspot.x}%;--marker-y:${hotspot.y}%" aria-label="查看${escapeHtml(hotspot.label)}" aria-pressed="false">
+          <button type="button" class="scene-hotspot ${sceneMarkerState(hotspot.state)}" data-action="inspect-scene-object" data-value="${escapeHtml(hotspot.id)}" data-source-x="${hotspot.x}" data-source-y="${hotspot.y}" style="--marker-x:${hotspot.x}%;--marker-y:${hotspot.y}%" aria-label="查看${escapeHtml(hotspot.label)}" aria-pressed="false">
             <span class="scene-hotspot-ring" aria-hidden="true"></span><span class="scene-marker-label">${escapeHtml(hotspot.label)}</span>
           </button>
         `).join("")}
         ${scene.actors.map((actor) => `
-          <button type="button" class="scene-actor ${sceneMarkerState(actor.state)} actor-${escapeHtml(actor.kind)}" data-action="inspect-scene-actor" data-value="${escapeHtml(actor.id)}" style="--marker-x:${actor.x}%;--marker-y:${actor.y}%" aria-label="查看${escapeHtml(actor.label)}">
+          <button type="button" class="scene-actor ${sceneMarkerState(actor.state)} actor-${escapeHtml(actor.kind)}" data-action="inspect-scene-actor" data-value="${escapeHtml(actor.id)}" data-source-x="${actor.x}" data-source-y="${actor.y}" style="--marker-x:${actor.x}%;--marker-y:${actor.y}%" aria-label="查看${escapeHtml(actor.label)}">
             <span class="actor-silhouette" aria-hidden="true"></span><span class="scene-marker-label">${escapeHtml(actor.label)}</span>
           </button>
         `).join("")}
-        ${scene.player?.visible === false ? "" : `<div class="scene-player" style="--marker-x:${scene.player.x}%;--marker-y:${scene.player.y}%" aria-label="${escapeHtml(scene.player.label)}在此"><span aria-hidden="true">命</span><b>${escapeHtml(scene.player.label)}</b></div>`}
+        ${scene.player?.visible === false ? "" : `<div class="scene-player" data-source-x="${scene.player.x}" data-source-y="${scene.player.y}" style="--marker-x:${scene.player.x}%;--marker-y:${scene.player.y}%" aria-label="${escapeHtml(scene.player.label)}在此"><span aria-hidden="true">命</span><b>${escapeHtml(scene.player.label)}</b></div>`}
       </div>
       <i class="scene-inspection-line" data-scene-inspection-line aria-hidden="true"></i>
       <div class="scene-inspection" data-scene-inspection aria-live="polite"><span>眼前</span><strong>${escapeHtml(scene.title)}</strong><p>${escapeHtml(scene.summary)}</p><small data-inspection-status></small></div>
@@ -2549,6 +2602,7 @@ function render() {
   app.innerHTML = renderer();
   pendingSceneFeedback = null;
   requestAnimationFrame(() => {
+    positionSceneCanvasMarkers();
     const deck = app.querySelector(".world-stage-shell .narrative-deck");
     const current = deck?.querySelector("[data-narrative-current]");
     const feedAnchor = deck?.querySelector("[data-feed-anchor]");
@@ -2587,6 +2641,15 @@ function positionSceneInspectionLine(marker, panel) {
   });
 }
 
+function closeSceneInspection() {
+  app.querySelectorAll(".scene-hotspot.selected, .scene-actor.selected, .route-node.selected").forEach((marker) => {
+    marker.classList.remove("selected");
+    if (marker.matches("[aria-pressed]")) marker.setAttribute("aria-pressed", "false");
+  });
+  app.querySelector("[data-scene-inspection-line]")?.classList.remove("is-visible");
+  app.querySelector("[data-scene-inspection]")?.classList.remove("is-visible");
+}
+
 function updateSceneInspection(kind, title, detail, markerClass, value, status = "已察觉") {
   const panel = app.querySelector("[data-scene-inspection]");
   if (!panel) return;
@@ -2600,7 +2663,7 @@ function updateSceneInspection(kind, title, detail, markerClass, value, status =
   const line = app.querySelector("[data-scene-inspection-line]");
   line?.classList.remove("is-visible");
   if (isClosing) {
-    panel.classList.remove("is-visible");
+    closeSceneInspection();
     return;
   }
   panel.classList.add("is-visible");
@@ -3853,7 +3916,11 @@ const handlers = {
 
 app.addEventListener("click", (event) => {
   const target = event.target.closest("[data-action]");
-  if (!target || target.disabled) return;
+  if (!target) {
+    if (event.target.closest(".scene-canvas")) closeSceneInspection();
+    return;
+  }
+  if (target.disabled) return;
   recordNarrativeChoice(target);
   handlers[target.dataset.action]?.(target.dataset.value || "");
 });
@@ -3884,6 +3951,7 @@ let sceneInspectionResizeFrame = 0;
 window.addEventListener("resize", () => {
   cancelAnimationFrame(sceneInspectionResizeFrame);
   sceneInspectionResizeFrame = requestAnimationFrame(() => {
+    positionSceneCanvasMarkers();
     const panel = app.querySelector("[data-scene-inspection].is-visible");
     const marker = app.querySelector(".scene-canvas :is(.scene-hotspot, .scene-actor).selected");
     if (panel && marker) positionSceneInspectionLine(marker, panel);

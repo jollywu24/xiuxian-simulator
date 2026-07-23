@@ -2649,8 +2649,8 @@ h1 {
 .scene-actor,
 .scene-player {
   position: absolute;
-  left: var(--marker-x);
-  top: var(--marker-y);
+  left: var(--marker-render-x, var(--marker-x));
+  top: var(--marker-render-y, var(--marker-y));
   z-index: 3;
   transform: translate(-50%, -50%);
 }
@@ -5854,26 +5854,6 @@ h1 {
     font-size: 1.72cqw;
     letter-spacing: 0.1em;
     text-shadow: 0 0 0.62cqw rgba(225, 148, 49, 0.52), 0 0.14cqw 0.28cqw rgba(0, 0, 0, 0.78);
-  }
-
-  .world-stage-shell .scene-ruined_temple [data-value="embers"] {
-    --marker-x: 69% !important;
-    --marker-y: 70% !important;
-  }
-
-  .world-stage-shell .scene-ruined_temple [data-value="offering_table"] {
-    --marker-x: 36% !important;
-    --marker-y: 44% !important;
-  }
-
-  .world-stage-shell .scene-ruined_temple [data-value="patched_wall"] {
-    --marker-x: 60% !important;
-    --marker-y: 22% !important;
-  }
-
-  .world-stage-shell .scene-ruined_temple [data-value="doorway"] {
-    --marker-x: 86% !important;
-    --marker-y: 43% !important;
   }
 
   .world-stage-shell .scene-ruined_temple .scene-inspection {
