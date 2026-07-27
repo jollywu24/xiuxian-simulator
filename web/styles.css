@@ -1832,29 +1832,31 @@ button:focus-visible > .equipment-art {
 }
 
 .character-equipment-slot .inventory-quality-base,
-.character-bag-item .inventory-quality-base {
+.character-bag-item .inventory-quality-base,
+.character-equipment-detail-art .inventory-quality-base {
   height: 0.2cqw;
+  background: var(--equipment-quality-color, #718472);
 }
 
-.character-equipment-slot.quality-fine .inventory-quality-base,
-.character-bag-item.quality-fine .inventory-quality-base {
-  background: #688653;
-}
+.character-equipment-slot.quality-common,
+.character-bag-item.quality-common,
+.character-equipment-detail.quality-common { --equipment-quality-color: #718472; }
 
-.character-equipment-slot.quality-precious .inventory-quality-base,
-.character-bag-item.quality-precious .inventory-quality-base {
-  background: #3f7897;
-}
+.character-equipment-slot.quality-fine,
+.character-bag-item.quality-fine,
+.character-equipment-detail.quality-fine { --equipment-quality-color: #6087a0; }
 
-.character-equipment-slot.quality-rare .inventory-quality-base,
-.character-bag-item.quality-rare .inventory-quality-base {
-  background: #815590;
-}
+.character-equipment-slot.quality-precious,
+.character-bag-item.quality-precious,
+.character-equipment-detail.quality-precious { --equipment-quality-color: #7869a6; }
 
-.character-equipment-slot.quality-treasure .inventory-quality-base,
-.character-bag-item.quality-treasure .inventory-quality-base {
-  background: #c0913f;
-}
+.character-equipment-slot.quality-rare,
+.character-bag-item.quality-rare,
+.character-equipment-detail.quality-rare { --equipment-quality-color: #b3863f; }
+
+.character-equipment-slot.quality-treasure,
+.character-bag-item.quality-treasure,
+.character-equipment-detail.quality-treasure { --equipment-quality-color: #9f4f3f; }
 
 .paperdoll-weapons {
   position: absolute;
@@ -1974,10 +1976,23 @@ button:focus-visible > .equipment-art {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   grid-auto-rows: auto;
   align-content: start;
-  gap: 0.72cqw;
+  gap: 0.82cqw;
   overflow-x: hidden;
   overflow-y: auto;
   scrollbar-color: rgba(168, 123, 61, 0.48) transparent;
+}
+
+.character-equipment-grid::-webkit-scrollbar {
+  width: 0.34cqw;
+}
+
+.character-equipment-grid::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.character-equipment-grid::-webkit-scrollbar-thumb {
+  border-radius: 99px;
+  background: rgba(168, 123, 61, 0.34);
 }
 
 .character-bag-item {
@@ -1985,6 +2000,8 @@ button:focus-visible > .equipment-art {
   height: auto;
   min-height: 0;
   aspect-ratio: 0.9;
+  align-self: start;
+  box-sizing: border-box;
 }
 
 .character-bag-item .equipment-art {
@@ -2010,7 +2027,8 @@ button:focus-visible > .equipment-art {
 
 .character-bag-item.empty {
   cursor: default;
-  opacity: 0.68;
+  opacity: 0.88;
+  border-color: rgba(126, 94, 55, 0.48);
 }
 
 .character-bag-item.empty i {
@@ -2083,7 +2101,7 @@ button:focus-visible > .equipment-art {
   overflow-y: auto;
   color: #c2ae8b;
   border: 1px solid rgba(177, 127, 61, 0.78);
-  border-top: 0.3cqw solid var(--detail-quality, #718472);
+  border-top: 0.3cqw solid var(--equipment-quality-color, #718472);
   border-radius: 0.28cqw;
   background:
     radial-gradient(circle at 75% 4%, rgba(169, 123, 54, 0.13), transparent 28%),
@@ -2091,11 +2109,6 @@ button:focus-visible > .equipment-art {
   box-shadow: 0 1cqw 3cqw rgba(0, 0, 0, 0.78), inset 0 0 0 1px rgba(232, 199, 135, 0.06);
   pointer-events: auto;
 }
-
-.character-equipment-detail.quality-fine { --detail-quality: #688653; }
-.character-equipment-detail.quality-precious { --detail-quality: #3f7897; }
-.character-equipment-detail.quality-rare { --detail-quality: #815590; }
-.character-equipment-detail.quality-treasure { --detail-quality: #c0913f; }
 
 .character-equipment-detail-close {
   position: absolute;
@@ -2143,9 +2156,13 @@ button:focus-visible > .equipment-art {
   letter-spacing: 0.08em;
 }
 
+.character-equipment-detail header small {
+  color: var(--equipment-quality-color, #718472);
+}
+
 .character-equipment-detail h2 {
   margin: 0.35cqw 0;
-  color: #e1c28a;
+  color: var(--equipment-quality-color, #718472);
   font-size: 1.55cqw;
   font-weight: 400;
   letter-spacing: 0.1em;

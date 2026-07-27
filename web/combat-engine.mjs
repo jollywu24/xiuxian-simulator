@@ -1,10 +1,10 @@
-import { rollCausalDie } from "./wudao-p0-core.mjs?v=20260727.1";
+import { rollCausalDie } from "./wudao-p0-core.mjs?v=20260727.2";
 import {
   actionTargetValue,
   applyDamageReduction,
   calculateDamageRange,
   damageForTier,
-} from "./character-system.mjs?v=20260727.1";
+} from "./character-system.mjs?v=20260727.2";
 
 export const COMBAT_MAX_ENERGY = 3;
 

@@ -50,8 +50,8 @@ import {
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs?v=20260727.1";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260727.1";
+} from "./wudao-core.mjs?v=20260727.2";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260727.2";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -81,7 +81,7 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260727.1";
+} from "./wudao-p0-core.mjs?v=20260727.2";
 import {
   M4_EVIDENCE,
   M4_METHOD,
@@ -100,7 +100,7 @@ import {
   resolveM4Training,
   resolveMoneyInquiry,
   resolveOldHouseChoice,
-} from "./wudao-p1-core.mjs?v=20260727.1";
+} from "./wudao-p1-core.mjs?v=20260727.2";
 import {
   advanceCombatLabCampaign,
   createCombatLabSession,
@@ -111,14 +111,14 @@ import {
   restartCombatLab,
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
-} from "./combat-lab-core.mjs?v=20260727.1";
+} from "./combat-lab-core.mjs?v=20260727.2";
 import {
   INVENTORY_CAPACITY,
   createInventoryBoard,
   formatSilver,
   getInventoryCategory,
   getInventoryUseState,
-} from "./inventory-core.mjs?v=20260727.1";
+} from "./inventory-core.mjs?v=20260727.2";
 import {
   EQUIPMENT_CAPACITY,
   EQUIPMENT_SLOTS,
@@ -132,7 +132,7 @@ import {
   migrateCharacterVitals,
   migrateEquipmentState,
   unequipEquipmentSlot,
-} from "./character-system.mjs?v=20260727.1";
+} from "./character-system.mjs?v=20260727.2";
 
 const STORAGE_KEY = "wudao-high-martial-v1";
 const app = document.querySelector("#app");
@@ -892,6 +892,29 @@ function characterEquipmentDetailHtml(board) {
   const equippedSlots = EQUIPMENT_SLOTS.filter((slot) => board.equipment.slots[slot.id] === item.id);
   const requestedSlot = equippedSlots.find((slot) => slot.id === characterUi.selectedSlot) || equippedSlots[0] || null;
   const equipPreview = requestedSlot ? null : equipEquipmentItem(board.equipment, item.id, { attributes: state.attributes });
+  const nextEquippedIds = new Set(Object.values(equipPreview?.state?.slots || {}).filter(Boolean));
+  const targetSlotId = item.twoHanded
+    ? (item.weapon?.kind === "ranged" ? "rangedMain" : "meleeMain")
+    : item.slotIds.find((slotId) => !board.equipment.slots[slotId]) || item.slotIds[0];
+  const displacedIds = new Set(requestedSlot ? [] :
+    Object.values(board.equipment.slots)
+      .filter((itemId) => itemId && itemId !== item.id && !nextEquippedIds.has(itemId))
+  );
+  if (!requestedSlot && targetSlotId && board.equipment.slots[targetSlotId] !== item.id) {
+    displacedIds.add(board.equipment.slots[targetSlotId]);
+  }
+  if (!requestedSlot && item.twoHanded) {
+    displacedIds.add(board.equipment.slots[item.weapon?.kind === "ranged" ? "rangedOff" : "meleeOff"]);
+  }
+  if (!requestedSlot && ["meleeOff", "rangedOff"].includes(targetSlotId)) {
+    const mainSlotId = targetSlotId === "rangedOff" ? "rangedMain" : "meleeMain";
+    const mainItem = getEquipmentItem(board.equipment.slots[mainSlotId]);
+    if (mainItem?.twoHanded) displacedIds.add(mainItem.id);
+  }
+  displacedIds.delete(null);
+  displacedIds.delete(undefined);
+  const displacedItems = [...displacedIds].map(getEquipmentItem).filter(Boolean);
+  const replacing = displacedItems.length > 0;
   const categoryName = item.category === "weapon" ? "兵刃" : item.category === "armor" ? "衣甲" : "佩饰";
   const slotNames = item.slotIds.map((slotId) => EQUIPMENT_SLOTS.find((slot) => slot.id === slotId)?.name).filter(Boolean).join("／");
   const attributeNames = { constitution: "根骨", insight: "悟性", agility: "身法", strength: "力道", fortune: "福缘" };
@@ -917,7 +940,7 @@ function characterEquipmentDetailHtml(board) {
         <header>
           <div class="character-equipment-detail-art">${equipmentArtHtml(item)}<i class="inventory-quality-base" aria-hidden="true"></i></div>
           <div>
-            <small style="color:${escapeHtml(quality.color)}">${escapeHtml(quality.name)} · ${escapeHtml(categoryName)}</small>
+            <small>${escapeHtml(quality.name)} · ${escapeHtml(categoryName)}</small>
             <h2>${escapeHtml(item.name)}</h2>
             <p>${escapeHtml(slotNames)}</p>
           </div>
@@ -932,10 +955,14 @@ function characterEquipmentDetailHtml(board) {
         ${requirementRows ? `<section><h3>装备要求</h3><ul>${requirementRows}</ul></section>` : ""}
         <p class="character-equipment-lore">${escapeHtml(item.description)}</p>
         <footer>
-          <small>${requestedSlot ? `已装备于${escapeHtml(requestedSlot.name)}` : equipPreview?.available ? "可立即装备" : escapeHtml(equipPreview?.reason || "暂时无法装备")}</small>
+          <small>${requestedSlot
+            ? `已装备于${escapeHtml(requestedSlot.name)}`
+            : replacing
+              ? `将替换${escapeHtml(displacedItems.map((entry) => entry.name).join("、"))}`
+              : equipPreview?.available ? "可立即装备" : escapeHtml(equipPreview?.reason || "暂时无法装备")}</small>
           ${requestedSlot
             ? `<button type="button" data-action="confirm-unequip-character-item" data-value="${escapeHtml(requestedSlot.id)}">卸下</button>`
-            : `<button type="button" data-action="confirm-equip-character-item" data-value="${escapeHtml(item.id)}" ${equipPreview?.available ? "" : "disabled"}>装备</button>`}
+            : `<button type="button" data-action="confirm-equip-character-item" data-value="${escapeHtml(item.id)}" ${equipPreview?.available ? "" : "disabled"}>${replacing ? "替换" : "装备"}</button>`}
         </footer>
       </article>
     </div>

@@ -262,6 +262,11 @@ async function snapshot(label) {
         }),
         equipmentDetail: document.querySelector(".character-equipment-detail")?.innerText?.replace(/\\s+/g, " ").trim() || "",
         equipmentDetailAction: document.querySelector(".character-equipment-detail footer button")?.dataset.action || "",
+        equipmentDetailButton: document.querySelector(".character-equipment-detail footer button")?.textContent?.trim() || "",
+        equipmentDetailDisabled: Boolean(document.querySelector(".character-equipment-detail footer button")?.disabled),
+        equipmentDetailQualityColor: getComputedStyle(document.querySelector(".character-equipment-detail header small") || document.body).color,
+        equipmentDetailNameColor: getComputedStyle(document.querySelector(".character-equipment-detail h2") || document.body).color,
+        equipmentDetailBaseColor: getComputedStyle(document.querySelector(".character-equipment-detail-art .inventory-quality-base") || document.body).backgroundColor,
         profileText: document.querySelector(".character-profile-copy")?.textContent?.replace(/\\s+/g, " ").trim() || "",
         heroBackground: getComputedStyle(document.querySelector(".character-hero") || document.body).backgroundImage,
         overflowX: overlay ? overlay.scrollWidth - overlay.clientWidth : 0,
@@ -538,6 +543,9 @@ await click("inspect-character-equipment", "traveler_straw_hat");
 const equipmentDetail = await snapshot("character-equipment-detail");
 assert.ok(equipmentDetail.characterView.equipmentDetail.length > 0);
 assert.equal(equipmentDetail.characterView.equipmentDetailAction, "confirm-equip-character-item");
+assert.equal(equipmentDetail.characterView.equipmentDetailButton, "替换");
+assert.equal(equipmentDetail.characterView.equipmentDetailQualityColor, equipmentDetail.characterView.equipmentDetailNameColor);
+assert.equal(equipmentDetail.characterView.equipmentDetailQualityColor, equipmentDetail.characterView.equipmentDetailBaseColor);
 assert.equal(await evaluate(`document.querySelector(".slot-head")?.getAttribute("aria-label") || ""`), headBeforeEquipmentDetail);
 await click("confirm-equip-character-item", "traveler_straw_hat");
 assert.match(await evaluate(`document.querySelector(".slot-head")?.getAttribute("aria-label") || ""`), /江行斗笠/);
@@ -546,6 +554,11 @@ await click("inspect-character-equipment", "traveler_straw_hat|head");
 assert.equal((await snapshot("character-equipped-detail")).characterView.equipmentDetailAction, "confirm-unequip-character-item");
 await click("confirm-unequip-character-item", "head");
 assert.match(await evaluate(`document.querySelector(".slot-head")?.getAttribute("aria-label") || ""`), /未装备/);
+await click("inspect-character-equipment", "iron_scale_vest");
+const blockedReplacementDetail = await snapshot("character-blocked-replacement-detail");
+assert.equal(blockedReplacementDetail.characterView.equipmentDetailButton, "替换");
+assert.equal(blockedReplacementDetail.characterView.equipmentDetailDisabled, true);
+await click("close-character-equipment-detail");
 await screenshot("wudao-character-phone-landscape.png");
 await click("close-character");
 await click("open-inventory");
