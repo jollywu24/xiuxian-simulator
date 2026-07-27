@@ -273,6 +273,33 @@ async function snapshot(label) {
         overflowY: overlay ? overlay.scrollHeight - overlay.clientHeight : 0,
       };
     })(),
+    martialView: (() => {
+      const overlay = document.querySelector(".martial-screen");
+      const rect = overlay?.getBoundingClientRect();
+      const box = (selector) => {
+        const target = document.querySelector(selector)?.getBoundingClientRect();
+        return target ? [target.left, target.top, target.width, target.height] : [0, 0, 0, 0];
+      };
+      return {
+        visible: Boolean(overlay),
+        rect: rect ? [rect.left, rect.top, rect.width, rect.height] : [0, 0, 0, 0],
+        listRect: box(".martial-library"),
+        loadoutRect: box(".martial-loadout"),
+        detailRect: box(".martial-detail"),
+        categories: document.querySelectorAll(".martial-category-tabs button").length,
+        subtypes: document.querySelectorAll(".martial-subtype-tabs button").length,
+        listItems: document.querySelectorAll(".martial-list-item").length,
+        loadoutSlots: document.querySelectorAll(".martial-slot").length,
+        selected: document.querySelector(".martial-list-item.selected")?.dataset.value || "",
+        selectedName: document.querySelector(".martial-detail h1")?.textContent?.trim() || "",
+        mastery: document.querySelector(".martial-detail-head p")?.textContent?.replace(/\\s+/g, " ").trim() || "",
+        progress: document.querySelector(".martial-training header strong")?.textContent?.replace(/\\s+/g, " ").trim() || "",
+        equipAction: document.querySelector(".martial-loadout-action [data-action='equip-martial'], .martial-loadout-action [data-action='confirm-replace-martial']")?.textContent?.trim() || "",
+        trainDisabled: Boolean(document.querySelector("[data-action='train-martial']")?.disabled),
+        overflowX: overlay ? overlay.scrollWidth - overlay.clientWidth : 0,
+        overflowY: overlay ? overlay.scrollHeight - overlay.clientHeight : 0,
+      };
+    })(),
     openingActionScale: (() => {
       const shell = document.querySelector(".world-stage-shell")?.getBoundingClientRect();
       const action = document.querySelector(".opening-action-list .action-card")?.getBoundingClientRect();
@@ -312,8 +339,8 @@ const checkpoints = [];
 checkpoints.push(await snapshot("landing"));
 assert.equal(checkpoints.at(-1).title, "武道");
 assert.ok(checkpoints.at(-1).scrollWidth <= 1280);
-assert.match(await evaluate(`document.querySelector('script[type="module"]')?.src || ""`), /wudao-app\.mjs\?v=20260724\.1/);
-assert.match(await evaluate(`document.querySelector('link[rel="stylesheet"]')?.href || ""`), /styles\.css\?v=20260724\.1/);
+assert.match(await evaluate(`document.querySelector('script[type="module"]')?.src || ""`), /wudao-app\.mjs\?v=20260727\.5/);
+assert.match(await evaluate(`document.querySelector('link[rel="stylesheet"]')?.href || ""`), /styles\.css\?v=20260727\.5/);
 assert.match(checkpoints.at(-1).text, /大曜四百二十七年/);
 assert.doesNotMatch(checkpoints.at(-1).text, /现实|论坛|武道局|其他玩家|其它玩家|太虚命盘|归尘门|黑日|Demo|P0|P1|P2|测试|原型/);
 
@@ -573,8 +600,18 @@ assert.ok(landscapeInventory.scrollHeight <= 390);
 await screenshot("wudao-full-inventory-phone-landscape.png");
 await click("inventory-switch", "martial");
 await evaluate(`new Promise((resolve) => requestAnimationFrame(resolve))`);
-assert.equal(await evaluate(`document.querySelector(".martial-panel").open && !document.querySelector(".character-screen")`), true);
-await screenshot("wudao-temple-drawers-landscape.png");
+const emptyMartialLandscape = await snapshot("martial-empty-phone-landscape");
+assert.equal(emptyMartialLandscape.martialView.visible, true);
+assert.ok(Math.abs(emptyMartialLandscape.martialView.rect[2] - 844) < 2, JSON.stringify(emptyMartialLandscape.martialView));
+assert.ok(Math.abs(emptyMartialLandscape.martialView.rect[3] - 390) < 2, JSON.stringify(emptyMartialLandscape.martialView));
+assert.equal(emptyMartialLandscape.martialView.categories, 4);
+assert.equal(emptyMartialLandscape.martialView.loadoutSlots, 6);
+assert.ok(emptyMartialLandscape.martialView.overflowX <= 1);
+assert.ok(emptyMartialLandscape.martialView.overflowY <= 1);
+assert.ok(emptyMartialLandscape.scrollWidth <= 844);
+assert.ok(emptyMartialLandscape.scrollHeight <= 390);
+await screenshot("wudao-martial-empty-phone-landscape.png");
+await click("close-martial");
 await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
 await click("temple-task", "traveler_relic");
 await click("temple-task", "shen_promise");
@@ -678,7 +715,7 @@ assert.match(await text(), /尚未突破/);
 await click("begin-shen-cycle");
 assert.match(await text(), /剩余时段/);
 assert.equal(await evaluate(`document.querySelectorAll('[data-action="shen-daily-action"]').length`), 5);
-assert.match(await text(), /医术一、悟性三、潜能五百方可入门/);
+assert.match(await text(), /医术一、悟性三、阅历五百方可入门/);
 await click("breakthrough-five-animals");
 assert.equal(await evaluate(`document.querySelectorAll('[data-action="choose-five-aspect"]').length`), 5);
 await click("choose-five-aspect", "ape");
@@ -689,8 +726,8 @@ await click("shen-daily-action", "observe");
 assert.equal((await snapshot("daily-death")).mode, "death");
 assert.match(await text(), /剩余命灯\s*1/);
 await click("return-shen-death");
-assert.match(await text(), /医术一、悟性三、潜能五百方可入门/);
-assert.match(await text(), /潜能\s*1695/);
+assert.match(await text(), /医术一、悟性三、阅历五百方可入门/);
+assert.match(await text(), /阅历\s*1695/);
 await click("breakthrough-five-animals");
 await click("choose-five-aspect", "ape");
 await click("shen-daily-action", "qingqing");
@@ -814,7 +851,7 @@ await click("treat-third-lady", "seal_then_pill");
 assert.match(await text(), /经脉归位，气息渐稳/);
 assert.match(await text(), /情分 30 · 信任 35 · 人情债 40/);
 await click("receive-spring-needles");
-assert.match(await text(), /当前运用\s*春风化雨针/);
+assert.match(await text(), /当前携带\s*打鱼杆法／春风化雨针/);
 assert.ok(await evaluate(`Boolean(document.querySelector('[data-action="first-battle-action"][data-value="reckless"]'))`));
 const observeCondition = await evaluate(`(() => {
   const entry = document.querySelector('[data-action="first-battle-action"][data-value="observe"]')?.closest(".choice-entry");
@@ -844,12 +881,16 @@ assert.deepEqual(repeatedObserveCheck, firstObserveCheck);
 await screenshot("wudao-battle-check-result-desktop.png");
 await click("first-battle-action", "extinguish");
 assert.match(await text(), /第 2 轮/);
-await click("first-battle-action", "needle_wrist");
+await click("first-battle-action", "reckless");
 await click("end-first-battle-turn");
 assert.match(await text(), /第 3 轮/);
-await click("first-battle-action", "needle_wrist");
+await click("first-battle-action", "reckless");
 await click("end-first-battle-turn");
 assert.match(await text(), /第 4 轮/);
+await click("first-battle-action", "reckless");
+await click("end-first-battle-turn");
+assert.match(await text(), /第 5 轮/);
+assert.equal(await evaluate(`document.querySelector('[data-action="first-battle-action"][data-value="kill"]')?.disabled === false`), true);
 await click("first-battle-action", "kill");
 assert.match(await text(), /第一条人命/);
 assert.match(await text(), /判定结果\s*大成/);
@@ -874,23 +915,29 @@ await click("apprenticeship-choice", "accept");
 assert.match(await text(), /神农枯木桩/);
 assert.match(await text(), /沧澜定海桩/);
 await click("choose-stake", "sea_stilling_stake");
+if (await evaluate(`Boolean(document.querySelector('[data-action="treat-p0-wound"][data-value="needles"]'))`)) {
+  await click("treat-p0-wound", "needles");
+}
 await click("train-stake");
 assert.match(await text(), /一次真正的生死见闻\s*已具备/);
 assert.equal(await evaluate(`document.querySelector('[data-action="body-breakthrough"][data-value="force"]')`), null);
 await click("body-breakthrough", "steady");
 assert.match(await text(), /锻体一重/);
+assert.equal(JSON.parse(await evaluate(`localStorage.getItem("wudao-high-martial-v1")`)).characterVitals.health > 0, true);
 assert.match(await text(), /燕惊鸿/);
 await click("enter-wang-encounter");
 assert.match(await text(), /身份线索/);
 assert.match(await text(), /尾随/);
 await click("wang-battle-action", "observe_tail");
 await click("wang-battle-action", "send_yan_ahead");
-await click("wang-battle-action", "observe_tail");
+if (await evaluate(`Boolean(document.querySelector('[data-action="wang-battle-action"][data-value="observe_tail"]'))`)) {
+  await click("wang-battle-action", "observe_tail");
+}
 assert.match(await text(), /王卓在东湖岸边抖开锁链刀/);
 await click("wang-battle-action", "cut_skiff_loose");
 let wangState = JSON.parse(await evaluate(`localStorage.getItem("wudao-high-martial-v1")`));
 if (!wangState.p0.wangBattle.battle.conditions.escapeRoute) {
-  await click("end-wang-battle-turn");
+  await click("wang-battle-action", "read_chain");
   await click("wang-battle-action", "cut_skiff_loose");
   wangState = JSON.parse(await evaluate(`localStorage.getItem("wudao-high-martial-v1")`));
 }
@@ -986,7 +1033,7 @@ if (!savedEntry) throw new Error("Missing local save after complete flow");
 const saved = JSON.parse(savedEntry[1]);
 assert.equal(saved.backgroundId, "mystery");
 assert.equal(saved.vowId, "path");
-assert.equal(saved.version, 6);
+assert.equal(saved.version, 7);
 assert.equal(saved.fateSeed, "seed-2");
 assert.ok(Array.isArray(saved.narrativeLog));
 assert.ok(saved.narrativeLog.length > 0 && saved.narrativeLog.length <= 64);
@@ -1019,6 +1066,12 @@ assert.equal(saved.attributes.insight, 5);
 assert.equal(saved.attributes.constitution, -1);
 assert.equal(saved.martialStage, "body");
 assert.deepEqual(saved.skills, ["five_animal_play", "fishing_rod_method", "spring_rain_needles", "sea_stilling_stake", "ape_legacy_clue"]);
+assert.equal(saved.martial.experience, saved.potential);
+assert.equal(saved.martial.loadout.heart, "fish_leap_art");
+const savedTechniques = [saved.martial.loadout.technique1, saved.martial.loadout.technique2, saved.martial.loadout.technique3].filter(Boolean);
+assert.ok(savedTechniques.includes("spring_rain_needles"));
+assert.ok(savedTechniques.includes("fishing_rod_method"));
+assert.equal(saved.martial.loadout.body, "sea_stilling_stake");
 assert.equal(saved.p0.complete, true);
 assert.equal(saved.p0.treatmentOutcome, "saved");
 assert.equal(saved.p0.battleOutcome, "killed");
@@ -1027,7 +1080,7 @@ assert.equal(saved.p0.wangConsequences.yanJinghong, "safe");
 assert.ok(saved.p0.relationships.yan_jinghong.trust >= 58);
 assert.equal(saved.p0.assailantPlot.outcome, "false_report");
 assert.ok(saved.p0.evidence.includes("assailant_channel_controlled"));
-assert.equal(saved.p0.activeMartial.technique, "spring_rain_needles");
+assert.equal(saved.p0.activeMartial.technique, savedTechniques[0]);
 assert.equal(saved.p0.activeMartial.stance, "sea_stilling_stake");
 assert.equal(saved.p0.stakeId, "sea_stilling_stake");
 assert.equal(saved.p0.bodyProgress, 1);
@@ -1113,6 +1166,46 @@ assert.ok(characterReference.characterView.overflowX <= 1);
 assert.ok(characterReference.characterView.overflowY <= 1);
 await screenshot("wudao-character-reference-1672x941.png");
 await click("close-character");
+await click("open-martial");
+const martialReference = await snapshot("martial-reference-1672x941");
+assert.equal(martialReference.martialView.visible, true);
+assert.equal(martialReference.martialView.categories, 4);
+assert.equal(martialReference.martialView.loadoutSlots, 6);
+assert.ok(martialReference.martialView.listItems >= 1);
+assert.ok(martialReference.martialView.overflowX <= 1);
+assert.ok(martialReference.martialView.overflowY <= 1);
+assert.match(martialReference.martialView.mastery, /入门|熟练|精通|圆满/);
+await click("martial-category", "technique");
+await click("martial-subtype", "hidden_weapon");
+await click("select-martial", "spring_rain_needles");
+const techniqueReference = await snapshot("martial-technique-reference-1672x941");
+assert.equal(techniqueReference.martialView.subtypes, 6);
+assert.equal(techniqueReference.martialView.listItems, 1);
+assert.equal(techniqueReference.martialView.selectedName, "春风化雨针");
+assert.match(techniqueReference.martialView.progress, /熟练 · 60／100/);
+await click("martial-node-detail", "seal_wrist");
+assert.match(await evaluate(`document.querySelector(".martial-node-tip")?.innerText || ""`), /主动 · 入门.*封腕/s);
+await screenshot("wudao-martial-reference-1672x941.png");
+await click("close-martial-node");
+const martialBeforeTraining = JSON.parse(await evaluate(`localStorage.getItem("wudao-high-martial-v1")`));
+await click("train-martial", "spring_rain_needles");
+const martialAfterTraining = JSON.parse(await evaluate(`localStorage.getItem("wudao-high-martial-v1")`));
+assert.equal(martialAfterTraining.martial.experience, martialBeforeTraining.martial.experience - 40);
+assert.equal(martialAfterTraining.martial.learned.spring_rain_needles.progress, 70);
+await click("unequip-martial", "spring_rain_needles");
+assert.equal(Object.values(JSON.parse(await evaluate(`localStorage.getItem("wudao-high-martial-v1")`)).martial.loadout).includes("spring_rain_needles"), false);
+await click("equip-martial", "spring_rain_needles");
+assert.equal(Object.values(JSON.parse(await evaluate(`localStorage.getItem("wudao-high-martial-v1")`)).martial.loadout).includes("spring_rain_needles"), true);
+await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
+const martialDesktop = await snapshot("martial-desktop-1280x720");
+assert.ok(martialDesktop.martialView.overflowX <= 1);
+assert.ok(martialDesktop.martialView.overflowY <= 1);
+await send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
+const martialPortrait = await snapshot("martial-phone-portrait");
+assert.equal(martialPortrait.martialView.visible, true);
+assert.ok(martialPortrait.martialView.overflowX <= 1);
+assert.ok(martialPortrait.scrollWidth <= 390);
+await click("close-martial");
 await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
 
 const versionFiveSave = structuredClone(saved);
@@ -1120,11 +1213,13 @@ versionFiveSave.version = 5;
 delete versionFiveSave.equipment;
 delete versionFiveSave.characterVitals;
 await reloadWithSave(versionFiveSave);
-const migratedVersionSix = JSON.parse(await evaluate(`localStorage.getItem("wudao-high-martial-v1")`));
-assert.equal(migratedVersionSix.version, 6);
-assert.equal(migratedVersionSix.equipment.owned.length, 12);
-assert.equal(Object.keys(migratedVersionSix.equipment.slots).length, 9);
-assert.deepEqual(migratedVersionSix.characterVitals, { health: null, qi: null });
+const migratedVersionSeven = JSON.parse(await evaluate(`localStorage.getItem("wudao-high-martial-v1")`));
+assert.equal(migratedVersionSeven.version, 7);
+assert.equal(migratedVersionSeven.equipment.owned.length, 12);
+assert.equal(Object.keys(migratedVersionSeven.equipment.slots).length, 9);
+assert.deepEqual(migratedVersionSeven.characterVitals, { health: null, qi: null });
+assert.ok(migratedVersionSeven.martial);
+assert.equal(migratedVersionSeven.martial.experience, migratedVersionSeven.potential);
 
 const versionFourSave = structuredClone(saved);
 versionFourSave.version = 4;
@@ -1180,7 +1275,7 @@ const failedCheckSave = structuredClone(saved);
 failedCheckSave.fateSeed = "seed-4";
 failedCheckSave.screen = "firstNeedleAmbush";
 failedCheckSave.lives = 2;
-failedCheckSave.attributes = { constitution: 0, insight: 0, agility: 0, strength: 0, fortune: 0 };
+failedCheckSave.attributes = { constitution: 0, insight: -5, agility: 0, strength: 0, fortune: 0 };
 failedCheckSave.martialStage = "mortal";
 failedCheckSave.p0 = createP0State();
 failedCheckSave.p0.started = true;

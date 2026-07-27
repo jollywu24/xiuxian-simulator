@@ -85,7 +85,7 @@ test("装备需求会读取五维，不能只靠界面绕过", () => {
   assert.equal(equipped.state.slots.body, "iron_scale_vest");
 });
 
-test("人物五维、境界、伤势和装备共同生成气血、防御、减伤与真气", () => {
+test("人物五维、境界、伤势和装备共同生成气血、防御与减伤，聚气后才生成真气", () => {
   const stats = deriveCharacterStats({
     attributes: { constitution: 1, insight: 0, agility: 1, strength: 1, fortune: 0 },
     stageId: "mortal",
@@ -101,14 +101,30 @@ test("人物五维、境界、伤势和装备共同生成气血、防御、减�
     attributes: { constitution: 3, insight: 2, agility: 4, strength: 4, fortune: 1 },
     stageId: "body",
     equipment: createEquipmentState(),
-    mindArt: { id: "fish_leap_art" },
+    martial: {
+      learned: { fish_leap_art: { mastery: "skilled", progress: 60 } },
+      loadout: { heart: "fish_leap_art", body: null },
+    },
     wounds: [{ id: "rib", severity: 2 }],
   });
   assert.equal(advanced.health.max, 20);
-  assert.equal(advanced.qi.available, true);
-  assert.equal(advanced.qi.max, 9);
+  assert.equal(advanced.qi.available, false);
+  assert.equal(advanced.qi.max, 0);
   assert.equal(advanced.defense, 4);
   assert.equal(advanced.reduction, 1);
+
+  const qiStage = deriveCharacterStats({
+    attributes: { constitution: 3, insight: 2, agility: 4, strength: 4, fortune: 1 },
+    stageId: "qi",
+    equipment: createEquipmentState(),
+    martial: {
+      learned: { fish_leap_art: { mastery: "skilled", progress: 60 } },
+      loadout: { heart: "fish_leap_art", body: null },
+    },
+    wounds: [],
+  });
+  assert.equal(qiStage.qi.available, true);
+  assert.equal(qiStage.qi.max, 6);
 });
 
 test("兵刃、主属性、境界、招式威力与真气强化进入同一伤害区间", () => {

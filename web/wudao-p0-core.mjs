@@ -1,5 +1,5 @@
-import { P0_ITEMS, P0_LOCATIONS, P0_NPCS, P0_SKILLS, getP0Item, getP0Location, getP0Npc, getP0Skill } from "./content/p0/catalogs.mjs?v=20260727.2";
-import { P0_ARCS, P0_CONTENT_NODES, getP0Arc, getP0Node } from "./content/p0/arcs.mjs?v=20260727.2";
+import { P0_ITEMS, P0_LOCATIONS, P0_NPCS, P0_SKILLS, getP0Item, getP0Location, getP0Npc, getP0Skill } from "./content/p0/catalogs.mjs?v=20260727.5";
+import { P0_ARCS, P0_CONTENT_NODES, getP0Arc, getP0Node } from "./content/p0/arcs.mjs?v=20260727.5";
 
 export { P0_ITEMS, P0_LOCATIONS, P0_NPCS, P0_SKILLS, P0_ARCS, P0_CONTENT_NODES, getP0Item, getP0Location, getP0Npc, getP0Skill, getP0Arc, getP0Node };
 
@@ -517,6 +517,8 @@ function relevantWoundPenalty(action, wounds = []) {
 
 export function evaluateCombatAction(action, battle, context = {}) {
   if (!action) return { available: false, reason: "没有这个行动。" };
+  const martialRequirement = action.skillId ? context.martialRequirements?.[action.skillId] : null;
+  if (martialRequirement) return { available: false, reason: martialRequirement };
   const mastery = action.skillId ? skillMastery(context.skills?.[action.skillId]) : { available: true, bonus: 0, label: null };
   if (action.skillId && !mastery.available) return { available: false, reason: `尚未真正学会${getP0Skill(action.skillId)?.name || "这门武学"}。` };
   if (!action.attribute) return { available: true, rating: "safe", ratingLabel: "稳妥", tier: "success", reasons: ["无需正面较量"], score: 0, difficulty: 0, action };
@@ -1072,7 +1074,7 @@ export function chooseStake(stakeId, p0) {
 
 export function resolveStakeTraining(p0, context = {}) {
   if (!p0.stakeId) return { available: false, reason: "尚未选定桩功。" };
-  if (Number(context.potential || 0) < 120) return { available: false, reason: "潜能不足一百二十。" };
+  if (Number(context.potential || 0) < 120) return { available: false, reason: "阅历不足一百二十。" };
   const effects = [
     { id: "stake_first_training", type: "set", path: "stakeProgress", value: 1 },
     { id: "stake_skill_progress", type: "set", path: `skills.${p0.stakeId}.progress`, value: 30 },
@@ -1085,7 +1087,7 @@ export function resolveStakeTraining(p0, context = {}) {
 export function getBodyBreakthroughBoard(p0, context = {}) {
   const checks = [
     { id: "stake", met: Boolean(p0.stakeId && p0.stakeProgress >= 1), label: "一门已经入门的桩功" },
-    { id: "potential", met: Number(context.potential || 0) >= 200, label: "潜能二百" },
+    { id: "potential", met: Number(context.potential || 0) >= 200, label: "阅历二百" },
     { id: "wounds", met: !p0.wounds.some((wound) => Number(wound.severity || 0) >= 3), label: "没有阻塞性重伤" },
     { id: "experience", met: Boolean(p0.battleOutcome), label: "一次真正的生死见闻" },
   ];

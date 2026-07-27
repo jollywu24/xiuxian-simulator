@@ -1,4 +1,9 @@
-export const CHARACTER_SAVE_VERSION = 1;
+import {
+  getMartialCombatBonuses,
+  heartMasteryQiBonus,
+} from "./martial-system.mjs?v=20260727.5";
+
+export const CHARACTER_SAVE_VERSION = 2;
 
 export const CHARACTER_STAGE_ORDER = Object.freeze({
   mortal: 0,
@@ -379,18 +384,21 @@ export function deriveCharacterStats({
   stageId = "mortal",
   equipment,
   wounds = [],
-  mindArt = null,
+  martial = null,
   vitals,
 } = {}) {
   const normalized = normalizeAttributes(attributes);
   const bonuses = getEquipmentBonuses(equipment);
+  const martialBonuses = getMartialCombatBonuses(martial, { wounds });
   const stage = stageIndex(stageId);
   const woundLoss = (wounds || []).reduce((total, wound) => total + Math.max(0, Number(wound.severity || 0)) * 2, 0);
-  const maxHealth = Math.max(1, 12 + normalized.constitution * 2 + stage * 4 + Number(bonuses.health || 0) - woundLoss);
-  const hasQi = Boolean(mindArt) || stage >= CHARACTER_STAGE_ORDER.qi;
-  const maxQi = hasQi ? Math.max(1, 3 + normalized.constitution + stage * 2 + Number(bonuses.qi || 0)) : 0;
-  const defense = Math.max(0, Math.floor(normalized.agility / 2) + Number(bonuses.defense || 0));
-  const reduction = Math.max(0, Number(bonuses.reduction || 0));
+  const maxHealth = Math.max(1, 12 + normalized.constitution * 2 + stage * 4 + Number(bonuses.health || 0) + martialBonuses.health - woundLoss);
+  const hasQi = stage >= CHARACTER_STAGE_ORDER.qi;
+  const maxQi = hasQi
+    ? Math.max(1, Math.min(6, 3 + Math.floor(normalized.constitution / 3) + heartMasteryQiBonus(martial) + Number(bonuses.qi || 0)))
+    : 0;
+  const defense = Math.max(0, Math.floor(normalized.agility / 2) + Number(bonuses.defense || 0) + martialBonuses.defense);
+  const reduction = Math.max(0, Number(bonuses.reduction || 0) + martialBonuses.reduction);
   const melee = calculateDamageRange({ attributes: normalized, stageId, equipment, kind: "melee" });
   const ranged = calculateDamageRange({ attributes: normalized, stageId, equipment, kind: "ranged" });
   const currentHealth = vitals?.health == null ? maxHealth : Math.max(0, Math.min(maxHealth, Number(vitals.health)));
@@ -406,6 +414,7 @@ export function deriveCharacterStats({
     melee,
     ranged,
     bonuses,
+    martialBonuses,
   };
 }
 
@@ -415,7 +424,7 @@ export function characterCombatProfile(state = {}) {
     stageId: state.martialStage,
     equipment: state.equipment,
     wounds: state.p0?.wounds,
-    mindArt: state.mindArt,
+    martial: state.martial,
     vitals: state.characterVitals,
   });
   return {
@@ -500,7 +509,7 @@ export function createEquipmentBoard(state, { category = "all" } = {}) {
     stageId: state?.martialStage,
     equipment,
     wounds: state?.p0?.wounds,
-    mindArt: state?.mindArt,
+    martial: state?.martial,
     vitals: state?.characterVitals,
   });
   const items = equipment.owned

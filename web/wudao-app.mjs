@@ -50,8 +50,8 @@ import {
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs?v=20260727.2";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260727.2";
+} from "./wudao-core.mjs?v=20260727.5";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260727.5";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -81,7 +81,7 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260727.2";
+} from "./wudao-p0-core.mjs?v=20260727.5";
 import {
   M4_EVIDENCE,
   M4_METHOD,
@@ -100,7 +100,7 @@ import {
   resolveM4Training,
   resolveMoneyInquiry,
   resolveOldHouseChoice,
-} from "./wudao-p1-core.mjs?v=20260727.2";
+} from "./wudao-p1-core.mjs?v=20260727.5";
 import {
   advanceCombatLabCampaign,
   createCombatLabSession,
@@ -111,14 +111,14 @@ import {
   restartCombatLab,
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
-} from "./combat-lab-core.mjs?v=20260727.2";
+} from "./combat-lab-core.mjs?v=20260727.5";
 import {
   INVENTORY_CAPACITY,
   createInventoryBoard,
   formatSilver,
   getInventoryCategory,
   getInventoryUseState,
-} from "./inventory-core.mjs?v=20260727.2";
+} from "./inventory-core.mjs?v=20260727.5";
 import {
   EQUIPMENT_CAPACITY,
   EQUIPMENT_SLOTS,
@@ -132,7 +132,27 @@ import {
   migrateCharacterVitals,
   migrateEquipmentState,
   unequipEquipmentSlot,
-} from "./character-system.mjs?v=20260727.2";
+} from "./character-system.mjs?v=20260727.5";
+import {
+  MARTIAL_MASTERIES,
+  breakthroughMartial,
+  compatibleMartialSlots,
+  equipMartial,
+  getMartialBoard,
+  getMartialBreakthroughBoard,
+  getMartialCategory,
+  getMartialDefinition,
+  getMartialGrade,
+  getMartialMastery,
+  getTechniqueSubtype,
+  martialIsCarried,
+  martialSkillsForCombat,
+  martialWeaponRequirements,
+  migrateMartialState,
+  trainMartial,
+  unequipMartial,
+  unlockedMartialNodes,
+} from "./martial-system.mjs?v=20260727.5";
 
 const STORAGE_KEY = "wudao-high-martial-v1";
 const app = document.querySelector("#app");
@@ -142,8 +162,10 @@ const COMBAT_CHECK_LABELS = { great: "大成", success: "得手", costly: "得�
 let pendingSceneFeedback = null;
 let pendingInventoryFeedback = null;
 let pendingCharacterFeedback = null;
+let pendingMartialFeedback = null;
 const inventoryUi = { open: false, category: "all", selectedId: null };
 const characterUi = { open: false, section: "body", category: "all", selectedId: null, selectedSlot: null };
+const martialUi = { open: false, category: "heart", subtype: "all", selectedId: null, replacing: false };
 
 function freshFateSeed() {
   const fixedSeed = new URLSearchParams(window.location.search).get("seed");
@@ -167,7 +189,7 @@ function legacyFateSeed(saved) {
 
 function createInitialState() {
   return {
-    version: 6,
+    version: 7,
     screen: "landing",
     name: "陈司命",
     backgroundId: "mystery",
@@ -185,6 +207,7 @@ function createInitialState() {
     inventory: [],
     equipment: createEquipmentState(),
     characterVitals: createCharacterVitals(),
+    martial: migrateMartialState(null, { potential: 0 }),
     templeOpening: createTempleOpeningState(),
     completedTempleTasks: [],
     templeLog: [],
@@ -258,16 +281,17 @@ function createInitialState() {
 function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (!saved || ![2, 3, 4, 5, 6].includes(saved.version) || !saved.screen) return null;
+    if (!saved || ![2, 3, 4, 5, 6, 7].includes(saved.version) || !saved.screen) return null;
     const migrated = {
       ...createInitialState(),
       ...saved,
-      version: 6,
+      version: 7,
       p0: migrateP0State(saved.p0),
       m4: migrateM4State(saved.m4),
       equipment: migrateEquipmentState(saved.equipment),
       characterVitals: migrateCharacterVitals(saved.characterVitals),
     };
+    migrated.martial = migrateMartialState(saved.martial, migrated);
     const isDeathScreen = ["gameDeath", "shenDeath", "p0Death"].includes(saved.screen);
     if (
       saved.version === 6 &&
@@ -306,6 +330,8 @@ if (savedState && storedVersionBeforeMigration !== state.version) {
 
 function saveState() {
   if (state.screen === "landing") return;
+  state.martial = migrateMartialState(state.martial, state);
+  state.martial.experience = Math.max(0, Number(state.potential || 0));
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   savedState = structuredClone(state);
 }
@@ -330,6 +356,8 @@ function track(name, data = {}) {
 
 function moveTo(screen) {
   inventoryUi.open = false;
+  characterUi.open = false;
+  martialUi.open = false;
   state.screen = screen;
   saveState();
   render();
@@ -415,10 +443,12 @@ function m4KnownPersonLabel(id) {
 function p0CombatContext() {
   const knownFacts = state.p0.deathRecords.some((record) => record.id === "left_sleeve_blade") ? ["left_sleeve_blade"] : [];
   const combatStats = characterCombatProfile(state);
+  const martialSkills = martialSkillsForCombat(state.martial);
   return {
     attributes: state.attributes,
     playerStage: state.martialStage,
-    skills: state.p0.skills,
+    skills: martialSkills,
+    martialRequirements: martialWeaponRequirements(state.martial, state.equipment),
     wounds: state.p0.wounds,
     knownFacts,
     canRiskDeath: state.lives > 1,
@@ -483,7 +513,8 @@ function createWangCombatSession() {
     lives: state.lives,
     attributes: state.attributes,
     playerStage: state.martialStage,
-    skills: state.p0.skills,
+    skills: martialSkillsForCombat(state.martial),
+    martialRequirements: martialWeaponRequirements(state.martial, state.equipment),
     wounds: state.p0.wounds,
     knownFacts: [...new Set([...(base.setup?.knownFacts || []), ...wangKnownFacts()])],
     relationships: { yan_jinghong: state.p0.relationships.yan_jinghong },
@@ -766,7 +797,7 @@ function characterPanelHtml() {
           <div><span>初心</span><strong>${escapeHtml(vow?.title)}</strong></div>
           <div><span>境界</span><strong>${state.martialStage === "body" ? "锻体一重" : stage.name}</strong></div>
           <div><span>命灯</span><strong>${state.lives}</strong></div>
-          <div><span>潜能</span><strong>${state.potential}</strong></div>
+          <div><span>阅历</span><strong>${state.potential}</strong></div>
         </div>
       </div>
       <div>
@@ -1122,24 +1153,248 @@ function inventoryScreenHtml() {
   `;
 }
 
-function martialPanelHtml() {
-  const p0Skills = Object.entries(state.p0?.skills || {});
-  const hasMartial = Boolean(state.mindArt || state.fiveAnimalBook || state.fishingRodMethod || p0Skills.length);
+function martialIconHtml(definition) {
+  if (!definition) return `<span class="martial-empty-mark" aria-hidden="true">纹</span>`;
+  return `<svg viewBox="0 0 64 64" aria-hidden="true"><use href="./assets/martial/martial-icons.svg#${escapeHtml(definition.icon || "fish")}"></use></svg>`;
+}
+
+function martialCategoryLabel(definition) {
+  if (!definition) return "";
+  const category = getMartialCategory(definition.category).name;
+  if (definition.category !== "technique") return category;
+  return `${category}·${getTechniqueSubtype(definition.subtype).name}`;
+}
+
+function martialStageIndex() {
+  return Number({ mortal: 0, body: 1, breath: 2, qi: 2, meridian: 3, master: 4 }[state.martialStage] || 0);
+}
+
+function martialDetailMetrics(definition, learned) {
+  if (!definition) return [];
+  const mastery = getMartialMastery(learned?.mastery);
+  if (definition.category === "technique") {
+    const rule = definition.damage || {};
+    const requirement = definition.weaponRequirement;
+    const equippedIds = new Set(Object.values(state.equipment?.slots || {}).filter(Boolean));
+    const weaponItem = requirement?.itemIds.map(getEquipmentItem).find((item) => equippedIds.has(item?.id))
+      || getEquipmentItem(requirement?.itemIds?.[0]);
+    const weapon = weaponItem?.weapon || { min: 1, max: 3 };
+    const attributeValue = Number(state.attributes?.[rule.attribute] || 0);
+    const stage = martialStageIndex();
+    const min = Math.max(1, Number(weapon.min || 1) + Number(rule.techniquePower || 0) + Math.floor(attributeValue / 2) + stage);
+    const max = Math.max(min, Number(weapon.max || weapon.min || 1) + Number(rule.techniquePower || 0) + Math.floor(attributeValue / 2) + stage + Number(rule.maxBonus || 0));
+    const equipmentAccuracy = Number(weaponItem?.bonuses?.needleAccuracy || 0);
+    const hit = attributeValue + mastery.combatBonus + equipmentAccuracy;
+    const ranges = { near: "近距", middle: "中距", far: "远距" };
+    return [
+      ["当前伤害", `${min}～${max}`],
+      ["基础命中", `${hit >= 0 ? "+" : ""}${hit}`],
+      ["行动", Number(rule.actionCost || 1)],
+      ["距离", (rule.range || []).map((id) => ranges[id] || id).join("／") || "近距"],
+      ...(Number(rule.ignoreReduction || 0) ? [["忽略减伤", Number(rule.ignoreReduction)]] : []),
+    ];
+  }
+  if (definition.category === "heart") {
+    const qiAvailable = martialStageIndex() >= 2;
+    const entries = qiAvailable ? definition.metrics?.qi : definition.metrics?.body;
+    return (entries || []).map(([label, value]) => [label, value]);
+  }
+  if (definition.category === "movement") {
+    return [
+      ["移动", definition.metrics?.movement || "一段"],
+      ["行动", definition.metrics?.actionCost || 1],
+      ["脱离", definition.metrics?.disengage || "视招式而定"],
+      ["地形", definition.metrics?.terrain || "尚未明"],
+    ];
+  }
+  const profile = characterCombatProfile(state);
+  return [
+    ["气血", `${profile.health}／${profile.maxHealth}`],
+    ["防御", profile.defense],
+    ["减伤", profile.reduction],
+    ["伤势", state.p0?.wounds?.length ? `${state.p0.wounds.length}处` : "无碍"],
+  ];
+}
+
+function martialNodeHtml(definition, learned, entry) {
+  const currentOrder = getMartialMastery(learned?.mastery).order;
+  const nodeOrder = getMartialMastery(entry.stage).order;
+  const unlocked = nodeOrder <= currentOrder;
+  const stageLocked = entry.requiresStage && martialStageIndex() < Number({ qi: 2, meridian: 3, master: 4 }[entry.requiresStage] || 0);
+  const kindLabel = entry.kind === "active" ? "主动" : "被动";
   return `
-    <div class="panel-body martial-panel-body">
-      <div><div class="panel-title">武学</div><p class="drawer-intro">心法、招式与桩功分别记录；学会之后仍要亲手用出来。</p></div>
-      <div class="inventory-list">
-        ${state.mindArt ? `<div><strong>${MIND_ART.name}</strong><span>${MIND_ART.rank} · 龙青鱼所授${state.roadTrial === "dive" ? " · 已在紫金河运用" : ""}</span></div>` : ""}
-        ${state.fiveAnimalBook ? `<div><strong>${FIVE_ANIMAL_PLAY.name}</strong><span>${state.fiveAnimalLevel ? `${state.fiveAnimalLevel}级 ${state.fiveAnimalProgress}% · ${escapeHtml(getFiveAnimalAspect(state.fiveAnimalAspect)?.name || "已入门")}` : "基础健体功 · 尚未练成"}</span></div>` : ""}
-        ${state.fishingRodMethod ? `<div><strong>《打鱼杆法》</strong><span>王五所授 · 抄水拍鱼、劈浪戳鱼</span></div>` : ""}
-        ${p0Skills.map(([id, progress]) => {
-          const skill = getP0Skill(id);
-          return skill ? `<div><strong>${escapeHtml(skill.name)}</strong><span>${escapeHtml(p0SkillStageLabel(progress))} · ${Number(progress.progress || 0)}%</span></div>` : "";
-        }).join("")}
-        ${hasMartial ? "" : `<p class="empty-state">还没有一门真正属于你的武学。</p>`}
-      </div>
-    </div>
+    <button type="button" class="martial-node ${unlocked && !stageLocked ? "unlocked" : "locked"}" data-action="martial-node-detail" data-value="${escapeHtml(entry.id)}" aria-label="${escapeHtml(`${entry.name}，${unlocked && !stageLocked ? "已解锁" : "未解锁"}`)}">
+      <span>${escapeHtml(getMartialMastery(entry.stage).name)}</span>
+      <strong>${escapeHtml(entry.name)}</strong>
+      <small>${escapeHtml(stageLocked ? "尚未聚气" : unlocked ? kindLabel : `${getMartialMastery(entry.stage).name}解锁`)}</small>
+    </button>
   `;
+}
+
+function martialSelectedDetailHtml(board) {
+  const definition = board.selected;
+  if (!definition) {
+    return `<div class="martial-empty-detail"><span>武</span><strong>此类尚无传承</strong><p>江湖很大。拜师、救人、夺谱或亲历奇遇，都会把新的本事写进这里。</p></div>`;
+  }
+  const learned = state.martial.learned[definition.id] || { mastery: "unlearned", progress: 0, firstUseNodes: [] };
+  const mastery = getMartialMastery(learned.mastery);
+  const grade = getMartialGrade(learned.gradeOverride || definition.grade);
+  const carried = martialIsCarried(state.martial, definition.id);
+  const carryingSlot = board.slots.find((slot) => slot.martialId === definition.id);
+  const compatible = compatibleMartialSlots(definition.id);
+  const hasEmpty = compatible.some((slotId) => !state.martial.loadout[slotId]);
+  const weaponFailure = martialWeaponRequirements(state.martial, state.equipment)[definition.id];
+  const breakthrough = getMartialBreakthroughBoard(definition.id, state.martial, state);
+  const metrics = martialDetailMetrics(definition, learned);
+  const progress = Math.max(0, Math.min(100, Number(learned.progress || 0)));
+  const nextNode = definition.nodes.find((entry) => getMartialMastery(entry.stage).order > mastery.order);
+  const inCombat = ["firstNeedleAmbush", "wangBattle"].includes(state.screen)
+    && [state.p0?.battle, state.p0?.wangBattle].some((battle) => battle?.status === "fighting");
+  const canTrain = mastery.id !== "unlearned" && mastery.id !== "perfect" && progress < 100 && Number(state.potential || 0) >= 40;
+  const canBreakthrough = Boolean(breakthrough.available);
+  const nodeDetail = definition.nodes.find((entry) => entry.id === martialUi.nodeId);
+  const loadoutLabel = carried ? "卸下" : hasEmpty ? "携带" : "替换";
+  return `
+    <article class="martial-detail-card quality-${escapeHtml(grade.id)}">
+      <header class="martial-detail-head">
+        <div class="martial-detail-icon">${martialIconHtml(definition)}</div>
+        <div>
+          <small>${escapeHtml(grade.name)} · ${escapeHtml(martialCategoryLabel(definition))}</small>
+          <h1>${escapeHtml(definition.name)}</h1>
+          <p>${escapeHtml(mastery.name)} · ${escapeHtml(definition.source)}</p>
+        </div>
+      </header>
+      <p class="martial-summary">${escapeHtml(definition.summary)}</p>
+      ${weaponFailure ? `<div class="martial-requirement">${escapeHtml(weaponFailure)}</div>` : ""}
+      <div class="martial-metrics">
+        ${metrics.map(([label, value]) => `<div><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join("")}
+      </div>
+      ${definition.category === "heart" && martialStageIndex() < 2 ? `<div class="martial-qi-lock"><span>聚气以后</span><strong>真气与催动尚未开启</strong><p>眼下只生效呼吸、身体和场景被动；到达聚气境时才出现真气条。</p></div>` : ""}
+      <section class="martial-node-section">
+        <header><span>武学招路</span><strong>${nextNode ? `下一步 · ${escapeHtml(nextNode.name)}` : "传承已尽数看清"}</strong></header>
+        <div class="martial-node-list">${definition.nodes.map((entry) => martialNodeHtml(definition, learned, entry)).join("")}</div>
+        ${nodeDetail ? `<div class="martial-node-tip"><button type="button" data-action="close-martial-node" aria-label="关闭">×</button><span>${escapeHtml(nodeDetail.kind === "active" ? "主动" : "被动")} · ${escapeHtml(getMartialMastery(nodeDetail.stage).name)}</span><strong>${escapeHtml(nodeDetail.name)}</strong><p>${escapeHtml(nodeDetail.description)}</p></div>` : ""}
+      </section>
+      <section class="martial-training">
+        <header><span>武学修为</span><strong>${escapeHtml(mastery.name)} · ${progress}／100</strong></header>
+        <div class="martial-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${progress}"><i style="width:${progress}%"></i></div>
+        ${mastery.id === "unlearned" ? `
+          <div class="martial-breakthrough-board">
+            ${(breakthrough.requirements || []).map((item) => `<span class="${item.met ? "met" : "missing"}">${item.met ? "已满足" : "尚缺"} · ${escapeHtml(item.label)}</span>`).join("")}
+          </div>
+          <button type="button" class="martial-study-button" data-action="breakthrough-martial" data-value="${escapeHtml(definition.id)}" ${canBreakthrough ? "" : "disabled"}>入门 · 阅历 ${Number(breakthrough.cost || 80)}</button>
+        ` : mastery.id === "perfect" ? `<p class="martial-training-note">这门武学的造诣已至圆满，下一步只可能来自品阶晋升或传承补全。</p>` : progress < 100 ? `
+          <button type="button" class="martial-study-button" data-action="train-martial" data-value="${escapeHtml(definition.id)}" ${canTrain ? "" : "disabled"}>研习 · 阅历 40 <small>修为 +10</small></button>
+          ${canTrain ? "" : `<p class="martial-training-note">${Number(state.potential || 0) < 40 ? "阅历不足四十。" : "当前不能继续研习。"}</p>`}
+        ` : `
+          <div class="martial-breakthrough-board">
+            ${(breakthrough.requirements || []).map((item) => `<span class="${item.met ? "met" : "missing"}">${item.met ? "已满足" : "尚缺"} · ${escapeHtml(item.label)}</span>`).join("")}
+          </div>
+          <button type="button" class="martial-study-button" data-action="breakthrough-martial" data-value="${escapeHtml(definition.id)}" ${canBreakthrough ? "" : "disabled"}>突破至${escapeHtml(getMartialMastery(breakthrough.target).name)} · 阅历 ${Number(breakthrough.cost || 0)}</button>
+        `}
+      </section>
+      ${mastery.id !== "unlearned" ? `
+        <footer class="martial-loadout-action">
+          <span>${inCombat ? "交锋未止，不能临阵换法" : carried ? `当前位于${escapeHtml(carryingSlot?.name || "携带位")}` : hasEmpty ? "有相合的空余携带位" : "相合位置已满，需选择替换"}</span>
+          <button type="button" data-action="${carried ? "unequip-martial" : "equip-martial"}" data-value="${escapeHtml(definition.id)}" ${inCombat ? "disabled" : ""}>${loadoutLabel}</button>
+        </footer>
+      ` : ""}
+    </article>
+  `;
+}
+
+function martialListItemHtml(definition, selected) {
+  const learned = state.martial.learned[definition.id] || { mastery: "unlearned" };
+  const grade = getMartialGrade(learned.gradeOverride || definition.grade);
+  const carried = martialIsCarried(state.martial, definition.id);
+  return `
+    <button type="button" class="martial-list-item quality-${escapeHtml(grade.id)} ${selected ? "selected" : ""}" data-action="select-martial" data-value="${escapeHtml(definition.id)}" aria-pressed="${selected ? "true" : "false"}">
+      <span class="martial-list-icon">${martialIconHtml(definition)}</span>
+      <span class="martial-list-copy"><strong>${escapeHtml(definition.name)}</strong><small>${escapeHtml(grade.name)} · ${escapeHtml(martialCategoryLabel(definition))}</small></span>
+      ${carried ? `<i class="martial-carried-mark" title="已携带">携</i>` : ""}
+    </button>
+  `;
+}
+
+function martialSlotHtml(slot) {
+  const definition = slot.martial;
+  const replacing = martialUi.replacing && definition?.category === getMartialDefinition(martialUi.selectedId)?.category;
+  const compatible = martialUi.replacing && slot.category === getMartialDefinition(martialUi.selectedId)?.category;
+  const grade = definition ? getMartialGrade(state.martial.learned[definition.id]?.gradeOverride || definition.grade) : null;
+  return `
+    <button type="button" class="martial-slot ${definition ? `filled quality-${escapeHtml(grade.id)}` : "empty"} ${compatible ? "replace-target" : ""}" data-action="${compatible ? "choose-martial-slot" : definition ? "select-martial" : "noop"}" data-value="${escapeHtml(compatible ? slot.id : definition?.id || "")}" ${!definition && !compatible ? "disabled" : ""}>
+      <small>${escapeHtml(slot.name)}</small>
+      <span>${martialIconHtml(definition)}</span>
+      <strong>${escapeHtml(definition?.name || "空位")}</strong>
+      ${replacing ? `<i>替换此位</i>` : ""}
+    </button>
+  `;
+}
+
+function martialScreenHtml() {
+  const board = getMartialBoard(state.martial, martialUi);
+  martialUi.category = board.category.id;
+  martialUi.subtype = board.subtype.id;
+  martialUi.selectedId = board.selectedId;
+  return `
+    <section class="martial-screen" role="dialog" aria-modal="true" aria-label="武学">
+      <header class="inventory-topbar martial-topbar">
+        <div class="inventory-owner"><strong>${escapeHtml(state.name)}</strong><span>· ${escapeHtml(COMBAT_STAGE_NAMES[state.martialStage] || "未入门")}</span></div>
+        <nav class="inventory-global-tabs" aria-label="人物、行囊与武学">
+          <button type="button" data-action="martial-global-switch" data-value="character">人物</button>
+          <button type="button" data-action="martial-global-switch" data-value="inventory">行囊</button>
+          <span aria-current="page">武学</span>
+        </nav>
+        <div class="inventory-top-actions">
+          <div class="martial-experience" aria-label="当前阅历"><span>阅历</span><strong>${Number(state.potential || 0)}</strong></div>
+          <button type="button" class="inventory-return" data-action="close-martial">返回 <span aria-hidden="true">↩</span></button>
+        </div>
+      </header>
+      <div class="martial-layout">
+        <aside class="martial-library">
+          <nav class="martial-category-tabs" aria-label="武学大类">
+            ${board.categories.map((category) => `<button type="button" class="${category.id === board.category.id ? "selected" : ""}" data-action="martial-category" data-value="${escapeHtml(category.id)}"><span>${escapeHtml(category.glyph)}</span><strong>${escapeHtml(category.name)}</strong></button>`).join("")}
+          </nav>
+          ${board.category.id === "technique" ? `<nav class="martial-subtype-tabs" aria-label="招式门类">${board.subtypes.map((subtype) => `<button type="button" class="${subtype.id === board.subtype.id ? "selected" : ""}" data-action="martial-subtype" data-value="${escapeHtml(subtype.id)}">${escapeHtml(subtype.name)}</button>`).join("")}</nav>` : ""}
+          <header class="martial-library-heading"><h2>${escapeHtml(board.category.name)}</h2><span>${board.items.length}门</span></header>
+          <div class="martial-list ${board.items.length > 5 ? "has-more" : ""}">
+            ${board.items.map((entry) => martialListItemHtml(entry, entry.id === board.selectedId)).join("")}
+            ${board.items.length ? "" : `<div class="martial-list-empty"><span>${escapeHtml(board.category.glyph)}</span><p>尚未得到这一类传承。</p></div>`}
+          </div>
+        </aside>
+        <section class="martial-loadout" aria-label="当前携带武学">
+          <header><span>当前携带</span><strong>六门之内，定下临阵所用</strong></header>
+          <div class="martial-slot-grid">${board.slots.map(martialSlotHtml).join("")}</div>
+          <p>${martialUi.replacing ? "选择一个高亮位置完成替换；原武学仍会保留在已学列表中。" : "已学武学不会遗忘；只有携带中的主动与被动会进入突发战斗。"}</p>
+          ${martialUi.replacing ? `<button type="button" class="martial-cancel-replace" data-action="cancel-martial-replace">取消替换</button>` : ""}
+        </section>
+        <section class="martial-detail" aria-live="polite">${martialSelectedDetailHtml(board)}</section>
+        ${pendingMartialFeedback ? `<div class="martial-feedback ${escapeHtml(pendingMartialFeedback.tone || "gain")}" role="status">${escapeHtml(pendingMartialFeedback.text)}</div>` : ""}
+      </div>
+    </section>
+  `;
+}
+
+function syncLegacyActiveMartial() {
+  if (!state.p0?.activeMartial) return;
+  state.p0.activeMartial.foundation = state.martial.loadout.heart;
+  state.p0.activeMartial.technique = [
+    state.martial.loadout.technique1,
+    state.martial.loadout.technique2,
+    state.martial.loadout.technique3,
+  ].find(Boolean) || null;
+  state.p0.activeMartial.stance = state.martial.loadout.body;
+}
+
+function applyMartialState(next, feedback, tone = "gain") {
+  const before = characterCombatProfile(state);
+  state.martial = migrateMartialState(next, state);
+  state.potential = Math.max(0, Number(state.martial.experience || 0));
+  syncLegacyActiveMartial();
+  const after = characterCombatProfile(state);
+  state.characterVitals.health = Math.min(after.maxHealth, before.health);
+  state.characterVitals.qi = after.maxQi > 0 ? Math.min(after.maxQi, before.qi) : 0;
+  pendingMartialFeedback = { text: feedback, tone };
 }
 
 const TEMPLE_HUD_SCREENS = new Set([
@@ -1167,7 +1422,7 @@ function gameShell(content) {
       <header class="topbar">
         ${templeHud ? `<div class="weather-clock" aria-label="夜雨，${templeClockLabel()}"><span class="weather-mark" aria-hidden="true"><i></i></span><span><strong>夜雨</strong><small>${templeClockLabel()}</small></span></div>` : `<div class="brand-mini"><span class="brand-seal">武</span><span>大曜江湖</span></div>`}
         <div class="mode-badge">${escapeHtml(modeLabel())}</div>
-        <div class="resource-row">${templeHud ? `<div class="resource fire-resource ${pendingSceneFeedback?.resource === "fire" ? "resource-changed" : ""}" aria-live="polite"><span>火势</span><strong>${Number(state.firePower || 0)}</strong></div><div class="resource hunger-resource ${pendingSceneFeedback?.resource === "hunger" ? "resource-changed" : ""}" aria-live="polite"><span>饥饿</span><strong>${hungerLabel()}</strong></div>` : `<div class="resource"><span>命灯</span><strong>${state.lives}</strong></div><div class="resource"><span>潜能</span><strong>${state.potential}</strong></div>`}</div>
+        <div class="resource-row">${templeHud ? `<div class="resource fire-resource ${pendingSceneFeedback?.resource === "fire" ? "resource-changed" : ""}" aria-live="polite"><span>火势</span><strong>${Number(state.firePower || 0)}</strong></div><div class="resource hunger-resource ${pendingSceneFeedback?.resource === "hunger" ? "resource-changed" : ""}" aria-live="polite"><span>饥饿</span><strong>${hungerLabel()}</strong></div>` : `<div class="resource"><span>命灯</span><strong>${state.lives}</strong></div><div class="resource"><span>阅历</span><strong>${state.potential}</strong></div>`}</div>
       </header>
       <div class="game-grid">
         <section class="scene-panel ${visual ? "has-visual-scene" : "narrative-only"}">${visual}<div class="narrative-deck">${narrativeHistoryHtml()}<section class="narrative-current" data-narrative-current>${content}</section></div></section>
@@ -1177,14 +1432,12 @@ function gameShell(content) {
         <details class="dock-drawer inventory-panel">
           <summary data-action="open-inventory"><span class="dock-glyph glyph-bag" aria-hidden="true">囊</span><strong>行囊</strong></summary>
         </details>
-        <details class="dock-drawer martial-panel">
-          <summary><span class="dock-glyph glyph-martial" aria-hidden="true">武</span><strong>武学</strong></summary>
-          <div class="dock-sheet">${martialPanelHtml()}</div>
-        </details>
+        <button type="button" class="dock-entry martial-panel" data-action="open-martial"><span class="dock-glyph glyph-martial" aria-hidden="true">武</span><strong>武学</strong></button>
       </nav>
     </main>
     ${inventoryUi.open ? inventoryScreenHtml() : ""}
     ${characterUi.open ? characterScreenHtml() : ""}
+    ${martialUi.open ? martialScreenHtml() : ""}
   `;
 }
 
@@ -1520,7 +1773,7 @@ function renderEncounterReward() {
   return gameShell(`
     ${sceneHeader("天色将明", "青衣妇人终于说出自己的名字", "她叫龙青鱼，漕帮帮主夫人。昨夜坐在你对面的，是足以调动半条大江船队的人。")}
     <div class="npc-reveal-card"><div class="reveal-seal">龙<br />青<br />鱼</div><div><span>漕帮 · 帮主夫人</span><h2>${escapeHtml(state.relationship)}</h2><p>她记住了你没有趁虚而入，也记住了你如何说出她不愿承认的真相。</p></div></div>
-    <div class="encounter-ledger"><div><span>关系</span><strong>${escapeHtml(state.relationship)}</strong><p>龙青鱼好感 ${state.ladyFavor}，临安重逢条件已经出现。</p></div><div><span>所得</span><strong>${MIND_ART.name}</strong><p>潜能一千五百，并获得一门水行心法。</p></div></div>
+    <div class="encounter-ledger"><div><span>关系</span><strong>${escapeHtml(state.relationship)}</strong><p>龙青鱼好感 ${state.ladyFavor}，临安重逢条件已经出现。</p></div><div><span>所得</span><strong>${MIND_ART.name}</strong><p>阅历一千五百，并获得一门水行心法。</p></div></div>
     <div class="button-row"><button class="primary-button" data-action="receive-mind-art">接受灌顶</button></div>
   `);
 }
@@ -1710,7 +1963,7 @@ function renderLegacyShenResolution() {
     ${sceneHeader("沈家丹房 · 午时", outcome?.title || "死局已破", outcome?.result || "青炉平稳熄灭。")}
     <div class="encounter-ledger">
       <div><span>破局层级</span><strong>${state.shenOutcome === "bait" ? "借局反制" : state.shenOutcome === "waterway" ? "改局救人" : "守规避劫"}</strong><p>${escapeHtml(state.shenStanding || "沈家记下了你的名字")}</p></div>
-      <div><span>所得</span><strong>${escapeHtml(outcome?.reward || "丹房平安")}</strong><p>当前潜能 ${state.potential}</p></div>
+      <div><span>所得</span><strong>${escapeHtml(outcome?.reward || "丹房平安")}</strong><p>当前阅历 ${state.potential}</p></div>
     </div>
     <div class="notice-block"><strong>沈砚秋的判断</strong><br />“你不是靠运气活下来的。铜钱兑的是旧诺，接下来的报酬，是你自己挣的。”</div>
     <div class="action-list">${actionCard({ action: "continue-shen-reward", title: "进入沈家药阁", description: "基础锻体法、补根秘药与长期门路，只能选择一项。", source: "差事报酬", meta: "三选一", kind: "special" })}</div>
@@ -1723,7 +1976,7 @@ function renderLegacyShenReward() {
     <div class="reward-choice-grid">
       ${Object.values(SHEN_REWARDS).map((reward) => {
         const status = getShenReward(reward.id, state.potential);
-        return actionCard({ action: "choose-shen-reward", value: reward.id, title: reward.name, description: reward.description, source: reward.type, meta: status.available ? reward.effect : `还缺潜能 ${status.missingPotential}`, kind: reward.id === "five_animals" ? "special" : "", disabled: !status.available });
+        return actionCard({ action: "choose-shen-reward", value: reward.id, title: reward.name, description: reward.description, source: reward.type, meta: status.available ? reward.effect : `还缺阅历 ${status.missingPotential}`, kind: reward.id === "five_animals" ? "special" : "", disabled: !status.available });
       }).join("")}
     </div>
   `);
@@ -1765,8 +2018,8 @@ function renderLegacyShenChapterEnding() {
     ${sceneHeader("金陵城 · 日过午时", state.martialStage === "body" ? "你终于跨过武道的第一道门槛" : "你从沈家带走了一条更长的路", state.martialStage === "body" ? "五禽桩运转一周，筋骨第一次生出超越凡人的整劲。" : "没有立刻突破，并不代表这场死局没有改变你。")}
     <div class="wudao-ending-grid shen-ending-grid">
       <div><span>丹房死局</span><strong>${escapeHtml(outcome?.title || "已破")}</strong><p>${escapeHtml(state.shenStanding || "沈家记名")}</p></div>
-      <div><span>所得</span><strong>${escapeHtml(reward?.name || "无")}</strong><p>${state.shenRewardUsed ? `已亲手运用 · 潜能再增五十` : escapeHtml(reward?.effect || "")}</p></div>
-      <div><span>境界</span><strong>${state.martialStage === "body" ? "锻体一重" : "未入门"}</strong><p>${state.skills.includes("five_animals") ? "已习得五禽桩" : "仍可继续积累潜能"}</p></div>
+      <div><span>所得</span><strong>${escapeHtml(reward?.name || "无")}</strong><p>${state.shenRewardUsed ? `已亲手运用 · 阅历再增五十` : escapeHtml(reward?.effect || "")}</p></div>
+      <div><span>境界</span><strong>${state.martialStage === "body" ? "锻体一重" : "未入门"}</strong><p>${state.skills.includes("five_animals") ? "已习得五禽桩" : "仍可继续积累阅历"}</p></div>
       <div><span>命灯</span><strong>${state.lives} / ${LIFE_RULE.lives}</strong><p>${state.shenDeathMemory ? "记得丹火焚身的完整过程" : "没有用死亡换取答案"}</p></div>
     </div>
     <div class="next-hooks shen-next-hooks">
@@ -1903,9 +2156,9 @@ function renderShenDeath() {
 function renderQingQingReward() {
   return gameShell(`
     ${sceneHeader("酉时三刻 · 炼药房", "虎口求生", "曹青相信你只是想活下去，也认可你确实记住了整炉丹。他丢来一本自己早年写下的入门医书。")}
-    <div class="encounter-ledger"><div><span>随机奇遇</span><strong>虎口求生</strong><p>潜能 +180 · 曹青好感 20</p></div><div><span>所得</span><strong>${QINGQING_BOOK.name}</strong><p>炼丹进度 61% · 需要悟性三方可研习</p></div></div>
+    <div class="encounter-ledger"><div><span>随机奇遇</span><strong>虎口求生</strong><p>阅历 +180 · 曹青好感 20</p></div><div><span>所得</span><strong>${QINGQING_BOOK.name}</strong><p>炼丹进度 61% · 需要悟性三方可研习</p></div></div>
     <div class="notice-block"><strong>曹青的规矩</strong><br />每天炼丹都可以来旁观、搭手。若是不堪大用，仍要继续献血。</div>
-    <div class="action-list">${actionCard({ action: "study-qingqing", title: "用潜能研习《青青册》", description: "把书中的草药辨认、舌苔脉象与基础医术变成真正掌握的知识。", source: "一夜苦读", meta: `潜能 -${QINGQING_BOOK.studyCost} · 医术入门`, kind: "special" })}</div>
+    <div class="action-list">${actionCard({ action: "study-qingqing", title: "用阅历研习《青青册》", description: "把书中的草药辨认、舌苔脉象与基础医术变成真正掌握的知识。", source: "一夜苦读", meta: `阅历 -${QINGQING_BOOK.studyCost} · 医术入门`, kind: "special" })}</div>
   `);
 }
 
@@ -1946,13 +2199,13 @@ function renderShenDaily() {
     ${sceneHeader(location, state.shenLocation === "pharmacy" ? "曹青把药铺后院交给你打理" : "曹青炼他的丹，你得先把自己练成有用的人", state.shenLocation === "pharmacy" ? "医术二级会让你看出下一次外出差事的真正价值；在那以前，每一段白昼仍要自己安排。" : "《青青册》能让你留下，《五禽戏》能让你活久一点。饥饿与失血却不会因为有了秘籍便消失。")}
     ${shenDailyStatusHtml()}
     <div class="skill-progress-grid">
-      <div><span>《青青册》</span><strong>${state.medicalLevel}级 ${state.medicalProgress}%</strong><div class="progress-track"><i style="width:${Math.min(100, state.medicalProgress)}%"></i></div><p>${state.medicalLevel >= 2 ? "医术二级 · 已能辨认离院时机" : "再读到十七分，可用潜能贯通二级"}</p></div>
-      <div><span>《五禽戏》</span><strong>${state.fiveAnimalLevel}级 ${state.fiveAnimalProgress}%</strong><div class="progress-track"><i style="width:${Math.min(100, state.fiveAnimalProgress)}%"></i></div><p>${state.fiveAnimalLevel ? `${getFiveAnimalAspect(state.fiveAnimalAspect)?.name || "一戏"}已成 · 属性总点 ${shenAttributePool()}` : "医术一、悟性三、潜能五百方可入门"}</p></div>
+      <div><span>《青青册》</span><strong>${state.medicalLevel}级 ${state.medicalProgress}%</strong><div class="progress-track"><i style="width:${Math.min(100, state.medicalProgress)}%"></i></div><p>${state.medicalLevel >= 2 ? "医术二级 · 已能辨认离院时机" : "再读到十七分，可用阅历贯通二级"}</p></div>
+      <div><span>《五禽戏》</span><strong>${state.fiveAnimalLevel}级 ${state.fiveAnimalProgress}%</strong><div class="progress-track"><i style="width:${Math.min(100, state.fiveAnimalProgress)}%"></i></div><p>${state.fiveAnimalLevel ? `${getFiveAnimalAspect(state.fiveAnimalAspect)?.name || "一戏"}已成 · 属性总点 ${shenAttributePool()}` : "医术一、悟性三、阅历五百方可入门"}</p></div>
       <div><span>丹理</span><strong>${state.alchemyProgress}%</strong><div class="progress-track"><i style="width:${Math.min(100, state.alchemyProgress)}%"></i></div><p>好感四十后，曹青才会正式传授</p></div>
     </div>
     ${state.shenDayLog.length ? `<div class="result-log">${state.shenDayLog.map((line) => `<p>${escapeHtml(line)}</p>`).join("")}</div>` : ""}
-    ${!state.fiveAnimalLevel ? `<div class="action-list">${actionCard({ action: "breakthrough-five-animals", title: "用五百潜能贯通《五禽戏》", description: "医术让你看懂吐纳与架势；把悟性集中到三点，才能抓住五兽灵光。", source: "奇术入门", meta: breakthrough.available ? "潜能 -500 · 选择一戏" : `尚缺：${breakthrough.missing.join("、")}`, kind: "special", disabled: !breakthrough.available })}</div>` : ""}
-    ${state.medicalLevel === 1 && state.medicalProgress >= 17 ? `<div class="action-list">${actionCard({ action: "breakthrough-medicine", title: "用一百六十六潜能贯通《青青册》二级", description: "把已经读懂的脉象、药理与采集知识连成一体。", source: "医术突破", meta: medicine.available ? "医术二级 · 采集一级" : "潜能不足", kind: "special", disabled: !medicine.available })}</div>` : ""}
+    ${!state.fiveAnimalLevel ? `<div class="action-list">${actionCard({ action: "breakthrough-five-animals", title: "用五百阅历贯通《五禽戏》", description: "医术让你看懂吐纳与架势；把悟性集中到三点，才能抓住五兽灵光。", source: "锻体入门", meta: breakthrough.available ? "阅历 -500 · 选择一戏" : `尚缺：${breakthrough.missing.join("、")}`, kind: "special", disabled: !breakthrough.available })}</div>` : ""}
+    ${state.medicalLevel === 1 && state.medicalProgress >= 17 ? `<div class="action-list">${actionCard({ action: "breakthrough-medicine", title: "用一百六十六阅历贯通《青青册》二级", description: "把已经读懂的脉象、药理与采集知识连成一体。", source: "医术突破", meta: medicine.available ? "医术二级 · 采集一级" : "阅历不足", kind: "special", disabled: !medicine.available })}</div>` : ""}
     <div class="daily-action-grid">
       ${Object.values(SHEN_DAILY_ACTIONS).map((action) => {
         const status = resolveShenDailyAction(action.id, { timeLeft: state.shenTimeLeft, stamina: state.shenStamina, satiety: state.shenSatiety, fiveAnimalLevel: state.fiveAnimalLevel });
@@ -2076,9 +2329,9 @@ function renderTreasureShare() {
   return gameShell(`
     ${sceneHeader("紫金河岸 · 申时", "黄金钱鳘躺在岸上，鱼颈留着老翁那一竿的伤口", "没有他，你保不住鱼，也未必保得住命。逆天改命同时显出：眼前人名叫王五，六十好感便愿传一门自己磨了四十年的杆法。")}
     <div class="action-list">
-      ${actionCard({ action: "share-treasure-fish", value: "share", title: "生火烤鱼，与王五一同分食", description: "承认这一尾鱼是两个人的收获。你吃下能承受的部分，把余下都留给他。", source: "互惠互利", meta: "王五好感 60 · 力道 +1 · 潜能 +500", kind: "special" })}
-      ${actionCard({ action: "share-treasure-fish", value: "gift", title: "把整尾宝鱼送给王五", description: "王五会记住这份情，也愿传杆法；你却得不到宝鱼的一点力道与五百潜能。", source: "赠鱼", meta: "王五好感 70" })}
-      ${actionCard({ action: "share-treasure-fish", value: "keep", title: "谢过援手，独自带走宝鱼", description: "你得到宝鱼，却永远失去王五的杆法与这一条水上关系。", source: "独吞", meta: "力道 +1 · 潜能 +500 · 无传功", kind: "danger" })}
+      ${actionCard({ action: "share-treasure-fish", value: "share", title: "生火烤鱼，与王五一同分食", description: "承认这一尾鱼是两个人的收获。你吃下能承受的部分，把余下都留给他。", source: "互惠互利", meta: "王五好感 60 · 力道 +1 · 阅历 +500", kind: "special" })}
+      ${actionCard({ action: "share-treasure-fish", value: "gift", title: "把整尾宝鱼送给王五", description: "王五会记住这份情，也愿传杆法；你却得不到宝鱼的一点力道与五百阅历。", source: "赠鱼", meta: "王五好感 70" })}
+      ${actionCard({ action: "share-treasure-fish", value: "keep", title: "谢过援手，独自带走宝鱼", description: "你得到宝鱼，却永远失去王五的杆法与这一条水上关系。", source: "独吞", meta: "力道 +1 · 阅历 +500 · 无传功", kind: "danger" })}
     </div>
   `);
 }
@@ -2331,7 +2584,11 @@ function renderFirstNeedleAmbush() {
   const recommended = getCombatLabRecommendations(session);
   const recommendedIds = new Set(recommended.map((entry) => entry.id));
   const moreActions = actions.filter((entry) => !recommendedIds.has(entry.id));
-  const technique = getP0Skill(state.p0.activeMartial?.technique);
+  const carriedTechniques = [
+    state.martial.loadout.technique1,
+    state.martial.loadout.technique2,
+    state.martial.loadout.technique3,
+  ].map(getMartialDefinition).filter(Boolean);
   const turn = board.turn;
   const energy = Array.from({ length: turn.maxEnergy }, (_, index) => `<i class="${index < turn.energy ? "ready" : "spent"}"></i>`).join("");
   const lastEntry = session.history.at(-1);
@@ -2347,7 +2604,7 @@ function renderFirstNeedleAmbush() {
       <div class="p0-turn-strip ${escapeHtml(turn.phase)}">
         <div><span>第 ${Number(turn.round)} 轮</span><strong>${turn.phase === "player" ? "你的回合" : "敌方回合"}</strong></div>
         <div class="p0-energy" role="meter" aria-label="本轮行动" aria-valuemin="0" aria-valuemax="${Number(turn.maxEnergy)}" aria-valuenow="${Number(turn.energy)}"><span>行动 ${Number(turn.energy)} / ${Number(turn.maxEnergy)}</span><b>${energy}</b></div>
-        <div><span>当前运用</span><strong>${escapeHtml(technique?.name || "徒手")}</strong></div>
+        <div><span>当前携带</span><strong>${escapeHtml(carriedTechniques.map((entry) => entry.name).join("／") || "徒手")}</strong></div>
       </div>
       <div class="combat-vitality-grid">
         ${combatVitalityBarHtml(state.name || "陈司命", COMBAT_STAGE_NAMES[state.martialStage] || state.martialStage, board.vitality.player, "player")}
@@ -2501,8 +2758,8 @@ function renderStakeTraining() {
   const treatableWound = state.p0.wounds.some((wound) => Number(wound.severity || 0) <= 2);
   return gameShell(`
     ${sceneHeader("后院石坪 · 月过中天", `第一夜只练${stake?.name || "桩功"}`, stake?.description || "曹青以竹梢敲正你的肩胯，让呼吸领着气血走。")}
-    <div class="skill-gate-board"><div><span>潜能</span><strong>${state.potential}/120</strong></div><div><span>伤势</span><strong>${state.p0.wounds.length ? "带伤" : "无碍"}</strong></div><div><span>修行所得</span><strong>入门三成</strong></div></div>
-    <div class="action-list">${actionCard({ action: "train-stake", title: "用一百二十潜能记住呼吸、肩胯与落足", description: "这一夜把桩架写进身体，往后才能靠它冲开锻体第一关。", source: "首次修炼", meta: "潜能 -120", kind: "special", disabled: state.potential < 120 })}</div>
+    <div class="skill-gate-board"><div><span>阅历</span><strong>${state.potential}/120</strong></div><div><span>伤势</span><strong>${state.p0.wounds.length ? "带伤" : "无碍"}</strong></div><div><span>修行所得</span><strong>入门三成</strong></div></div>
+    <div class="action-list">${actionCard({ action: "train-stake", title: "用一百二十阅历记住呼吸、肩胯与落足", description: "这一夜把桩架写进身体，往后才能靠它冲开锻体第一关。", source: "首次修炼", meta: "阅历 -120", kind: "special", disabled: state.potential < 120 })}</div>
     ${treatableWound ? `<div class="action-list">
       ${actionCard({ action: "treat-p0-wound", value: "needles", title: "先以春风针封住伤口周围气血", description: "用医术二级清创封穴，不耗丹药，但要把今夜站桩往后推一刻。", source: "医针治伤", meta: "清除轻中伤", kind: "special" })}
       ${actionCard({ action: "treat-p0-wound", value: "return_spring", title: "服下一枚亲手炼成的回春丹", description: "以成丹补回血气，先把肋下或腿上的伤势稳住。", source: "下品回春丹", meta: `余 ${Number(state.p0.items.return_spring_pill || 0)} 枚`, disabled: Number(state.p0.items.return_spring_pill || 0) < 1 })}
@@ -2516,7 +2773,7 @@ function renderBodyBreakthrough() {
     ${sceneHeader("鸡鸣之前 · 气血撞关", "未入门与锻体之间，只隔着一次敢不敢让全身气血同时醒来", "曹青让你按桩功呼吸缓推，不许抢在吐纳之前催血。那场夜战留下的生死感，此刻正好用来辨认极限。")}
     <div class="skill-gate-board">${board.checks.map((check) => `<div><span>${escapeHtml(check.label)}</span><strong>${check.met ? "已具备" : "尚欠缺"}</strong></div>`).join("")}</div>
     <div class="action-list">
-      ${actionCard({ action: "body-breakthrough", value: "steady", title: "让桩功领着气血，一寸寸推过四肢", description: "按曹青所教稳步撞关，不抢快，不绕过旧伤。", source: "稳破", meta: "潜能 -200 · 踏入锻体", kind: "special", disabled: !board.available })}
+      ${actionCard({ action: "body-breakthrough", value: "steady", title: "让桩功领着气血，一寸寸推过四肢", description: "按曹青所教稳步撞关，不抢快，不绕过旧伤。", source: "稳破", meta: "阅历 -200 · 踏入锻体", kind: "special", disabled: !board.available })}
       ${state.lives > 1 ? actionCard({ action: "body-breakthrough", value: "force", title: "趁血热强催全身，抢在一息内破关", description: "不让桩功领路，直接让气血冲撞旧伤和心脉。", source: "死局", meta: "必死 · 可带回见闻", kind: "danger", disabled: !board.available }) : ""}
     </div>
   `);
@@ -2974,17 +3231,23 @@ function screenMode() {
 }
 
 function render() {
+  state.martial = migrateMartialState(state.martial, state);
+  state.martial.experience = Math.max(0, Number(state.potential || 0));
+  syncLegacyActiveMartial();
   document.body.dataset.mode = screenMode();
   document.body.dataset.inventoryOpen = inventoryUi.open ? "true" : "false";
   document.body.dataset.characterOpen = characterUi.open ? "true" : "false";
+  document.body.dataset.martialOpen = martialUi.open ? "true" : "false";
   const renderer = renderers[state.screen] || renderLanding;
   const feedbackWasRendered = Boolean(pendingSceneFeedback?.text);
   const inventoryFeedbackWasRendered = Boolean(pendingInventoryFeedback?.text);
   const characterFeedbackWasRendered = Boolean(pendingCharacterFeedback?.text);
+  const martialFeedbackWasRendered = Boolean(pendingMartialFeedback?.text);
   app.innerHTML = renderer();
   pendingSceneFeedback = null;
   pendingInventoryFeedback = null;
   pendingCharacterFeedback = null;
+  pendingMartialFeedback = null;
   requestAnimationFrame(() => {
     positionSceneCanvasMarkers();
     const deck = app.querySelector(".world-stage-shell .narrative-deck");
@@ -3003,6 +3266,10 @@ function render() {
     if (characterFeedbackWasRendered) {
       const feedback = app.querySelector(".character-feedback");
       if (feedback) window.setTimeout(() => feedback.remove(), 1650);
+    }
+    if (martialFeedbackWasRendered) {
+      const feedback = app.querySelector(".martial-feedback");
+      if (feedback) window.setTimeout(() => feedback.remove(), 1800);
     }
   });
 }
@@ -3254,6 +3521,7 @@ const handlers = {
   },
   "open-character": () => {
     inventoryUi.open = false;
+    martialUi.open = false;
     characterUi.open = true;
     characterUi.section = "body";
     characterUi.category = "all";
@@ -3344,14 +3612,16 @@ const handlers = {
       inventoryUi.selectedId = null;
       return render();
     }
+    if (value === "martial") {
+      martialUi.open = true;
+      martialUi.replacing = false;
+      martialUi.nodeId = null;
+    }
     render();
-    if (value === "martial") requestAnimationFrame(() => {
-      const drawer = app.querySelector(".martial-panel");
-      if (drawer) drawer.open = true;
-    });
   },
   "open-inventory": () => {
     characterUi.open = false;
+    martialUi.open = false;
     inventoryUi.open = true;
     inventoryUi.category = "all";
     inventoryUi.selectedId = null;
@@ -3372,11 +3642,144 @@ const handlers = {
       characterUi.selectedSlot = null;
       return render();
     }
+    martialUi.open = true;
+    martialUi.replacing = false;
+    martialUi.nodeId = null;
     render();
-    requestAnimationFrame(() => {
-      const drawer = app.querySelector(".martial-panel");
-      if (drawer) drawer.open = true;
-    });
+  },
+  "open-martial": () => {
+    inventoryUi.open = false;
+    characterUi.open = false;
+    martialUi.open = true;
+    martialUi.replacing = false;
+    martialUi.nodeId = null;
+    const known = Object.keys(state.martial?.learned || {}).map(getMartialDefinition).filter(Boolean);
+    if (!known.some((entry) => entry.category === martialUi.category)) {
+      martialUi.category = known[0]?.category || "heart";
+      martialUi.subtype = "all";
+    }
+    render();
+  },
+  "close-martial": () => {
+    martialUi.open = false;
+    martialUi.replacing = false;
+    martialUi.nodeId = null;
+    render();
+  },
+  "martial-global-switch": (value) => {
+    if (!["character", "inventory"].includes(value)) return;
+    martialUi.open = false;
+    martialUi.replacing = false;
+    martialUi.nodeId = null;
+    if (value === "character") {
+      characterUi.open = true;
+      characterUi.section = "body";
+      characterUi.category = "all";
+      characterUi.selectedId = null;
+      characterUi.selectedSlot = null;
+    } else {
+      inventoryUi.open = true;
+      inventoryUi.category = "all";
+      inventoryUi.selectedId = null;
+    }
+    render();
+  },
+  "martial-category": (value) => {
+    martialUi.category = getMartialCategory(value).id;
+    martialUi.subtype = "all";
+    martialUi.selectedId = null;
+    martialUi.replacing = false;
+    martialUi.nodeId = null;
+    render();
+  },
+  "martial-subtype": (value) => {
+    martialUi.subtype = getTechniqueSubtype(value).id;
+    martialUi.selectedId = null;
+    martialUi.replacing = false;
+    martialUi.nodeId = null;
+    render();
+  },
+  "select-martial": (value) => {
+    if (!getMartialDefinition(value) || !state.martial.known.includes(value)) return;
+    martialUi.selectedId = value;
+    martialUi.category = getMartialDefinition(value).category;
+    martialUi.subtype = getMartialDefinition(value).subtype || "all";
+    martialUi.replacing = false;
+    martialUi.nodeId = null;
+    render();
+  },
+  "martial-node-detail": (value) => {
+    const definition = getMartialDefinition(martialUi.selectedId);
+    if (!definition?.nodes.some((entry) => entry.id === value)) return;
+    martialUi.nodeId = value;
+    render();
+  },
+  "close-martial-node": () => {
+    martialUi.nodeId = null;
+    render();
+  },
+  "train-martial": (value) => {
+    if (value !== martialUi.selectedId) return;
+    state.martial.experience = Math.max(0, Number(state.potential || 0));
+    const result = trainMartial(value, state.martial);
+    if (!result.available) {
+      pendingMartialFeedback = { text: result.reason, tone: "danger" };
+      return render();
+    }
+    applyMartialState(result.state, result.reason);
+    track("martial_trained", { martialId: value, cost: result.cost, gain: result.gain });
+    refresh();
+  },
+  "breakthrough-martial": (value) => {
+    if (value !== martialUi.selectedId) return;
+    state.martial.experience = Math.max(0, Number(state.potential || 0));
+    const result = breakthroughMartial(value, state.martial, state);
+    if (!result.available) {
+      pendingMartialFeedback = { text: result.reason, tone: "danger" };
+      return render();
+    }
+    applyMartialState(result.state, result.reason);
+    track("martial_breakthrough", { martialId: value, mastery: result.target, cost: result.cost });
+    refresh();
+  },
+  "equip-martial": (value) => {
+    if (value !== martialUi.selectedId || martialIsCarried(state.martial, value)) return;
+    const slots = compatibleMartialSlots(value);
+    const empty = slots.find((slotId) => !state.martial.loadout[slotId]);
+    if (!empty) {
+      martialUi.replacing = true;
+      return render();
+    }
+    const result = equipMartial(state.martial, value, empty);
+    if (!result.available) {
+      pendingMartialFeedback = { text: result.reason, tone: "danger" };
+      return render();
+    }
+    applyMartialState(result.state, result.reason);
+    track("martial_equipped", { martialId: value, slotId: result.slotId });
+    refresh();
+  },
+  "choose-martial-slot": (value) => {
+    if (!martialUi.replacing || !compatibleMartialSlots(martialUi.selectedId).includes(value)) return;
+    const result = equipMartial(state.martial, martialUi.selectedId, value);
+    if (!result.available) return;
+    martialUi.replacing = false;
+    applyMartialState(result.state, result.reason);
+    track("martial_replaced", { martialId: martialUi.selectedId, slotId: value, replacedId: result.replacedId });
+    refresh();
+  },
+  "cancel-martial-replace": () => {
+    martialUi.replacing = false;
+    render();
+  },
+  "unequip-martial": (value) => {
+    if (value !== martialUi.selectedId) return;
+    const slotId = Object.entries(state.martial.loadout).find(([, martialId]) => martialId === value)?.[0];
+    const result = unequipMartial(state.martial, slotId);
+    if (!result.available) return;
+    applyMartialState(result.state, result.reason, "relief");
+    track("martial_unequipped", { martialId: value, slotId });
+    refresh();
   },
   "inventory-category": (value) => {
     inventoryUi.category = getInventoryCategory(value).id;
@@ -4251,6 +4654,11 @@ const handlers = {
     state.p0 = result.state;
     state.potential -= result.potentialCost;
     state.martialStage = "body";
+    state.martial = migrateMartialState(state.martial, state);
+    syncLegacyActiveMartial();
+    const breakthroughStats = characterCombatProfile(state);
+    state.characterVitals.health = breakthroughStats.maxHealth;
+    state.characterVitals.qi = breakthroughStats.maxQi;
     state.p0.checkpoint = null;
     state.p0.checkpoint = structuredClone(state.p0);
     track("body_breakthrough", { stake: state.p0.stakeId, cost: result.potentialCost });
@@ -4497,6 +4905,15 @@ app.addEventListener("toggle", (event) => {
 }, true);
 
 document.addEventListener("keydown", (event) => {
+  if (martialUi.open) {
+    if (event.key === "Escape") {
+      if (martialUi.nodeId) martialUi.nodeId = null;
+      else if (martialUi.replacing) martialUi.replacing = false;
+      else martialUi.open = false;
+      render();
+    }
+    return;
+  }
   if (inventoryUi.open) {
     if (event.key === "Escape") {
       inventoryUi.open = false;

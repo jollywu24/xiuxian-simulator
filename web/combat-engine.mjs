@@ -1,10 +1,10 @@
-import { rollCausalDie } from "./wudao-p0-core.mjs?v=20260727.2";
+import { rollCausalDie } from "./wudao-p0-core.mjs?v=20260727.5";
 import {
   actionTargetValue,
   applyDamageReduction,
   calculateDamageRange,
   damageForTier,
-} from "./character-system.mjs?v=20260727.2";
+} from "./character-system.mjs?v=20260727.5";
 
 export const COMBAT_MAX_ENERGY = 3;
 
@@ -515,6 +515,10 @@ export function evaluateCombatAction(state, actionOrId, definition, suppliedCont
   const availability = action.availableWhen?.(state, context);
   if (availability === false || typeof availability === "string") {
     return { available: false, reason: typeof availability === "string" ? availability : "当前条件不足。", rating: "locked", ratingLabel: RATING_LABELS.locked };
+  }
+  const martialRequirement = action.skillId ? context.martialRequirements?.[action.skillId] : null;
+  if (martialRequirement) {
+    return { available: false, reason: martialRequirement, rating: "locked", ratingLabel: RATING_LABELS.locked };
   }
   const mastery = action.skillId ? skillMastery(context.skills?.[action.skillId]) : { available: true, rank: 0, bonus: 0, stage: null };
   const requiredMastery = Number(MASTERY_ORDER[action.masteryRequired || "learned"] ?? 0);
