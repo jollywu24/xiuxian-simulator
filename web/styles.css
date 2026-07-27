@@ -1396,36 +1396,55 @@ body[data-character-open="true"] {
 .character-section-tabs {
   position: absolute;
   top: 3.9cqw;
-  bottom: 3.9cqw;
   left: 1.1cqw;
   z-index: 3;
   display: grid;
   width: 3.65cqw;
-  align-content: space-between;
+  align-content: start;
+  gap: 2.05cqw;
 }
 
 .character-section-tabs button {
   position: relative;
   display: grid;
   width: 3.65cqw;
-  height: 9.2cqw;
+  height: 8.65cqw;
   padding: 0.6cqw 0;
   grid-template-rows: 1fr auto;
   place-items: center;
-  color: #a98d64;
-  border: 1px solid rgba(147, 105, 52, 0.52);
+  color: #3d2b19;
+  border: 1px solid #6e512f;
   background:
-    linear-gradient(180deg, rgba(17, 18, 16, 0.96), rgba(7, 8, 7, 0.98)),
-    repeating-linear-gradient(90deg, transparent 0 0.7cqw, rgba(198, 160, 96, 0.025) 0.76cqw 0.82cqw);
-  box-shadow: inset 0 0 1cqw rgba(0, 0, 0, 0.48);
+    linear-gradient(90deg, rgba(74, 52, 28, 0.2), transparent 16% 84%, rgba(74, 52, 28, 0.25)),
+    repeating-linear-gradient(8deg, rgba(70, 49, 25, 0.05) 0 1px, transparent 1px 5px),
+    linear-gradient(145deg, #a78d5f, #d5c092 48%, #9a7d50);
+  box-shadow:
+    inset 0 0 0 0.22cqw rgba(56, 40, 22, 0.72),
+    inset 0 0 0 0.3cqw rgba(211, 184, 130, 0.3),
+    0 0.25cqw 0.8cqw rgba(0, 0, 0, 0.48);
   font-family: inherit;
+  filter: saturate(0.72) brightness(0.64);
+  opacity: 0.82;
   cursor: pointer;
+}
+
+.character-section-tabs button::before {
+  position: absolute;
+  inset: 0.48cqw;
+  border: 1px solid rgba(75, 52, 27, 0.58);
+  content: "";
+  pointer-events: none;
 }
 
 .character-section-tabs button.selected {
   color: #2b2013;
-  background: url("./assets/inventory/parchment-tab.svg") center / 155% 100% no-repeat;
-  box-shadow: 0 0.25cqw 0.8cqw rgba(0, 0, 0, 0.48);
+  filter: none;
+  opacity: 1;
+  box-shadow:
+    inset 0 0 0 0.22cqw rgba(56, 40, 22, 0.72),
+    inset 0 0 0 0.3cqw rgba(226, 200, 147, 0.32),
+    0 0.25cqw 0.8cqw rgba(0, 0, 0, 0.48),
+    0 0 0.7cqw rgba(188, 139, 68, 0.12);
 }
 
 .character-section-tabs button > span {
@@ -1770,6 +1789,12 @@ body[data-character-open="true"] {
   cursor: default;
 }
 
+.character-equipment-slot.selected,
+.character-bag-item.selected {
+  border-color: #e0b665;
+  box-shadow: inset 0 0 0 1px rgba(244, 213, 151, 0.34), 0 0 0.75cqw rgba(214, 151, 58, 0.62);
+}
+
 .character-equipment-slot small {
   position: absolute;
   top: 0.36cqw;
@@ -1947,7 +1972,8 @@ button:focus-visible > .equipment-art {
   min-height: 0;
   padding: 0.55cqw 0.1cqw;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  grid-auto-rows: minmax(5.5cqw, 1fr);
+  grid-auto-rows: auto;
+  align-content: start;
   gap: 0.72cqw;
   overflow-x: hidden;
   overflow-y: auto;
@@ -1957,7 +1983,24 @@ button:focus-visible > .equipment-art {
 .character-bag-item {
   width: 100%;
   height: auto;
-  min-height: 5.5cqw;
+  min-height: 0;
+  aspect-ratio: 0.9;
+}
+
+.character-bag-item .equipment-art {
+  top: 50%;
+  right: 0;
+  bottom: auto;
+  left: 0;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  transform: translateY(-50%);
+}
+
+.character-bag-item:hover > .equipment-art,
+.character-bag-item:focus-visible > .equipment-art {
+  transform: translateY(-50%) scale(1.035);
 }
 
 .character-bag-item.equipped {
@@ -2006,6 +2049,195 @@ button:focus-visible > .equipment-art {
 .character-equipment-bag footer strong {
   color: #a98c5e;
   font-weight: 400;
+}
+
+.character-equipment-detail-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 18;
+  display: grid;
+  padding: 1.45cqw 2cqw;
+  justify-items: end;
+  pointer-events: none;
+}
+
+.character-equipment-detail-dismiss {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border: 0;
+  background: rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(1px);
+  pointer-events: auto;
+  cursor: default;
+}
+
+.character-equipment-detail {
+  position: relative;
+  z-index: 1;
+  align-self: start;
+  width: min(28cqw, 430px);
+  max-height: 100%;
+  padding: 1.35cqw;
+  overflow-x: hidden;
+  overflow-y: auto;
+  color: #c2ae8b;
+  border: 1px solid rgba(177, 127, 61, 0.78);
+  border-top: 0.3cqw solid var(--detail-quality, #718472);
+  border-radius: 0.28cqw;
+  background:
+    radial-gradient(circle at 75% 4%, rgba(169, 123, 54, 0.13), transparent 28%),
+    linear-gradient(155deg, rgba(33, 29, 22, 0.985), rgba(8, 9, 8, 0.995) 58%);
+  box-shadow: 0 1cqw 3cqw rgba(0, 0, 0, 0.78), inset 0 0 0 1px rgba(232, 199, 135, 0.06);
+  pointer-events: auto;
+}
+
+.character-equipment-detail.quality-fine { --detail-quality: #688653; }
+.character-equipment-detail.quality-precious { --detail-quality: #3f7897; }
+.character-equipment-detail.quality-rare { --detail-quality: #815590; }
+.character-equipment-detail.quality-treasure { --detail-quality: #c0913f; }
+
+.character-equipment-detail-close {
+  position: absolute;
+  top: 0.55cqw;
+  right: 0.65cqw;
+  z-index: 3;
+  width: 2cqw;
+  height: 2cqw;
+  padding: 0;
+  color: #b89a6c;
+  border: 0;
+  background: transparent;
+  font: 1.45cqw/1 Georgia, serif;
+  cursor: pointer;
+}
+
+.character-equipment-detail > header {
+  display: grid;
+  padding: 0 2.2cqw 1cqw 0;
+  grid-template-columns: 5.7cqw minmax(0, 1fr);
+  align-items: center;
+  gap: 1cqw;
+  border-bottom: 1px solid rgba(151, 109, 55, 0.38);
+}
+
+.character-equipment-detail-art {
+  position: relative;
+  width: 5.7cqw;
+  height: 5.7cqw;
+  overflow: hidden;
+  border: 1px solid rgba(169, 124, 64, 0.65);
+  background: #0d0f0e;
+}
+
+.character-equipment-detail-art .inventory-quality-base {
+  z-index: 4;
+}
+
+.character-equipment-detail header small,
+.character-equipment-detail header p {
+  display: block;
+  margin: 0;
+  color: #8f7a5b;
+  font-size: 0.82cqw;
+  letter-spacing: 0.08em;
+}
+
+.character-equipment-detail h2 {
+  margin: 0.35cqw 0;
+  color: #e1c28a;
+  font-size: 1.55cqw;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+}
+
+.character-equipment-primary-stat {
+  display: grid;
+  margin: 1cqw 0 0.6cqw;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  color: #bca37d;
+}
+
+.character-equipment-primary-stat strong {
+  color: #e2bd77;
+  font-family: Georgia, serif;
+  font-size: 1.65cqw;
+  font-weight: 400;
+}
+
+.character-equipment-primary-stat small {
+  grid-column: 1 / -1;
+  color: #88765c;
+  font-size: 0.82cqw;
+}
+
+.character-equipment-detail section h3 {
+  margin: 0.85cqw 0 0.35cqw;
+  color: #b89561;
+  font-size: 0.92cqw;
+  font-weight: 400;
+}
+
+.character-equipment-detail ul {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  gap: 0.25cqw;
+  list-style: none;
+}
+
+.character-equipment-detail li {
+  display: flex;
+  justify-content: space-between;
+  color: #9d8a6b;
+  font-size: 0.88cqw;
+}
+
+.character-equipment-detail li strong {
+  color: #8fb276;
+  font-weight: 400;
+}
+
+.character-equipment-lore {
+  margin: 1cqw 0;
+  padding-top: 0.8cqw;
+  color: #8f826d;
+  border-top: 1px solid rgba(151, 109, 55, 0.3);
+  font-size: 0.86cqw;
+  line-height: 1.7;
+}
+
+.character-equipment-detail > footer {
+  display: flex;
+  padding-top: 0.85cqw;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1cqw;
+  border-top: 1px solid rgba(151, 109, 55, 0.34);
+}
+
+.character-equipment-detail > footer small {
+  color: #8b7659;
+  font-size: 0.82cqw;
+}
+
+.character-equipment-detail > footer button {
+  min-width: 6.6cqw;
+  min-height: 2.8cqw;
+  padding: 0.45cqw 1.2cqw;
+  color: #2c2013;
+  border: 1px solid #b48643;
+  background: linear-gradient(180deg, #d4b06d, #9e7136);
+  font: inherit;
+  cursor: pointer;
+}
+
+.character-equipment-detail > footer button:disabled {
+  color: #766c5d;
+  border-color: #625848;
+  background: #292824;
+  cursor: not-allowed;
 }
 
 .character-feedback {
@@ -2090,7 +2322,25 @@ button:focus-visible > .equipment-art {
   }
 
   .character-equipment-grid {
-    grid-auto-rows: 6.3cqw;
+    grid-auto-rows: auto;
+  }
+
+  .character-equipment-detail {
+    width: 34cqw;
+  }
+
+  .character-equipment-detail h2 {
+    font-size: max(12px, 1.55cqw);
+  }
+
+  .character-equipment-detail header small,
+  .character-equipment-detail header p,
+  .character-equipment-primary-stat small,
+  .character-equipment-detail section h3,
+  .character-equipment-detail li,
+  .character-equipment-lore,
+  .character-equipment-detail > footer small {
+    font-size: max(9px, 0.84cqw);
   }
 
   .paperdoll-slots {
@@ -2196,9 +2446,10 @@ button:focus-visible > .equipment-art {
 
   .character-section-tabs {
     top: 46px;
-    bottom: 46px;
+    bottom: auto;
     left: 24px;
     width: 44px;
+    gap: 20px;
   }
 
   .character-section-tabs button {
@@ -2368,11 +2619,11 @@ button:focus-visible > .equipment-art {
 
   .character-equipment-grid {
     gap: 8px;
-    grid-auto-rows: 82px;
+    grid-auto-rows: auto;
   }
 
   .character-bag-item {
-    min-height: 82px;
+    min-height: 0;
   }
 
   .equipment-check {
@@ -2392,6 +2643,73 @@ button:focus-visible > .equipment-art {
     max-width: 310px;
     padding: 12px 18px;
     font-size: 14px;
+  }
+
+  .character-equipment-detail-layer {
+    position: fixed;
+    padding: 72px 16px 18px;
+    align-items: center;
+    justify-items: center;
+  }
+
+  .character-equipment-detail {
+    width: min(100%, 380px);
+    max-height: 100%;
+    padding: 18px;
+    border-top-width: 4px;
+    border-radius: 4px;
+  }
+
+  .character-equipment-detail-close {
+    top: 7px;
+    right: 8px;
+    width: 30px;
+    height: 30px;
+    font-size: 22px;
+  }
+
+  .character-equipment-detail > header {
+    padding: 0 34px 12px 0;
+    grid-template-columns: 76px minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .character-equipment-detail-art {
+    width: 76px;
+    height: 76px;
+  }
+
+  .character-equipment-detail h2 {
+    margin: 5px 0;
+    font-size: 21px;
+  }
+
+  .character-equipment-detail header small,
+  .character-equipment-detail header p,
+  .character-equipment-primary-stat small,
+  .character-equipment-detail section h3,
+  .character-equipment-detail li,
+  .character-equipment-lore,
+  .character-equipment-detail > footer small {
+    font-size: 12px;
+  }
+
+  .character-equipment-primary-stat {
+    margin: 13px 0 8px;
+  }
+
+  .character-equipment-primary-stat strong {
+    font-size: 22px;
+  }
+
+  .character-equipment-detail > footer {
+    padding-top: 12px;
+  }
+
+  .character-equipment-detail > footer button {
+    min-width: 86px;
+    min-height: 38px;
+    padding: 6px 15px;
   }
 }
 

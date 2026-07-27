@@ -50,8 +50,8 @@ import {
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs?v=20260724.3";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260724.3";
+} from "./wudao-core.mjs?v=20260727.1";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260727.1";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -81,7 +81,7 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260724.3";
+} from "./wudao-p0-core.mjs?v=20260727.1";
 import {
   M4_EVIDENCE,
   M4_METHOD,
@@ -100,7 +100,7 @@ import {
   resolveM4Training,
   resolveMoneyInquiry,
   resolveOldHouseChoice,
-} from "./wudao-p1-core.mjs?v=20260724.3";
+} from "./wudao-p1-core.mjs?v=20260727.1";
 import {
   advanceCombatLabCampaign,
   createCombatLabSession,
@@ -111,14 +111,14 @@ import {
   restartCombatLab,
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
-} from "./combat-lab-core.mjs?v=20260724.3";
+} from "./combat-lab-core.mjs?v=20260727.1";
 import {
   INVENTORY_CAPACITY,
   createInventoryBoard,
   formatSilver,
   getInventoryCategory,
   getInventoryUseState,
-} from "./inventory-core.mjs?v=20260724.3";
+} from "./inventory-core.mjs?v=20260727.1";
 import {
   EQUIPMENT_CAPACITY,
   EQUIPMENT_SLOTS,
@@ -128,10 +128,11 @@ import {
   createEquipmentState,
   equipEquipmentItem,
   getEquipmentItem,
+  getEquipmentQuality,
   migrateCharacterVitals,
   migrateEquipmentState,
   unequipEquipmentSlot,
-} from "./character-system.mjs?v=20260724.3";
+} from "./character-system.mjs?v=20260727.1";
 
 const STORAGE_KEY = "wudao-high-martial-v1";
 const app = document.querySelector("#app");
@@ -142,7 +143,7 @@ let pendingSceneFeedback = null;
 let pendingInventoryFeedback = null;
 let pendingCharacterFeedback = null;
 const inventoryUi = { open: false, category: "all", selectedId: null };
-const characterUi = { open: false, section: "body", category: "all" };
+const characterUi = { open: false, section: "body", category: "all", selectedId: null, selectedSlot: null };
 
 function freshFateSeed() {
   const fixedSeed = new URLSearchParams(window.location.search).get("seed");
@@ -788,8 +789,9 @@ function equipmentArtHtml(item) {
 
 function equipmentSlotHtml(slot) {
   const item = slot.item;
+  const selected = item && characterUi.selectedId === item.id && characterUi.selectedSlot === slot.id;
   return `
-    <button type="button" class="character-equipment-slot slot-${escapeHtml(slot.id)} quality-${escapeHtml(item?.quality || "empty")}" ${item ? `data-action="unequip-character-item" data-value="${escapeHtml(slot.id)}"` : "disabled"} aria-label="${escapeHtml(item ? `${slot.name}：${item.name}，点击卸下` : `${slot.name}：未装备`)}">
+    <button type="button" class="character-equipment-slot slot-${escapeHtml(slot.id)} quality-${escapeHtml(item?.quality || "empty")} ${selected ? "selected" : ""}" ${item ? `data-action="inspect-character-equipment" data-value="${escapeHtml(`${item.id}|${slot.id}`)}"` : "disabled"} aria-label="${escapeHtml(item ? `${slot.name}：${item.name}，点击查看详情` : `${slot.name}：未装备`)}">
       <small>${escapeHtml(slot.name)}</small>
       ${equipmentArtHtml(item)}
       <i class="inventory-quality-base" aria-hidden="true"></i>
@@ -873,12 +875,70 @@ function characterProfileHtml(board) {
 
 function characterBagItemHtml(item) {
   const equipped = item.equippedSlots?.length > 0;
+  const selected = characterUi.selectedId === item.id && !characterUi.selectedSlot;
   return `
-    <button type="button" class="character-bag-item quality-${escapeHtml(item.quality)} ${equipped ? "equipped" : ""}" data-action="equip-character-item" data-value="${escapeHtml(item.id)}" aria-label="${escapeHtml(`${item.name}，${equipped ? "已经装备" : "点击装备"}`)}">
+    <button type="button" class="character-bag-item quality-${escapeHtml(item.quality)} ${equipped ? "equipped" : ""} ${selected ? "selected" : ""}" data-action="inspect-character-equipment" data-value="${escapeHtml(item.id)}" aria-label="${escapeHtml(`${item.name}，点击查看详情`)}">
       ${equipmentArtHtml(item)}
       ${equipped ? `<span class="equipment-check" aria-hidden="true">已</span>` : ""}
       <i class="inventory-quality-base" aria-hidden="true"></i>
     </button>
+  `;
+}
+
+function characterEquipmentDetailHtml(board) {
+  const item = getEquipmentItem(characterUi.selectedId);
+  if (!item || !board.equipment.owned.includes(item.id)) return "";
+  const quality = getEquipmentQuality(item.quality);
+  const equippedSlots = EQUIPMENT_SLOTS.filter((slot) => board.equipment.slots[slot.id] === item.id);
+  const requestedSlot = equippedSlots.find((slot) => slot.id === characterUi.selectedSlot) || equippedSlots[0] || null;
+  const equipPreview = requestedSlot ? null : equipEquipmentItem(board.equipment, item.id, { attributes: state.attributes });
+  const categoryName = item.category === "weapon" ? "兵刃" : item.category === "armor" ? "衣甲" : "佩饰";
+  const slotNames = item.slotIds.map((slotId) => EQUIPMENT_SLOTS.find((slot) => slot.id === slotId)?.name).filter(Boolean).join("／");
+  const attributeNames = { constitution: "根骨", insight: "悟性", agility: "身法", strength: "力道", fortune: "福缘" };
+  const bonusNames = {
+    health: "气血上限",
+    qi: "真气上限",
+    defense: "防御",
+    reduction: "减伤",
+    rangedDefense: "远程防护",
+    needleAccuracy: "暗器命中",
+  };
+  const bonusRows = Object.entries(item.bonuses || {}).map(([id, value]) => `
+    <li><span>${escapeHtml(bonusNames[id] || id)}</span><strong>${Number(value) >= 0 ? "+" : ""}${Number(value)}</strong></li>
+  `).join("");
+  const requirementRows = Object.entries(item.requirements || {}).map(([id, value]) => `
+    <li><span>${escapeHtml(attributeNames[id] || id)}</span><strong>${Number(value)}</strong></li>
+  `).join("");
+  return `
+    <div class="character-equipment-detail-layer" role="presentation">
+      <button type="button" class="character-equipment-detail-dismiss" data-action="close-character-equipment-detail" aria-label="关闭装备详情"></button>
+      <article class="character-equipment-detail quality-${escapeHtml(item.quality)}" role="dialog" aria-modal="true" aria-label="${escapeHtml(`${item.name}详情`)}">
+        <button type="button" class="character-equipment-detail-close" data-action="close-character-equipment-detail" aria-label="关闭">×</button>
+        <header>
+          <div class="character-equipment-detail-art">${equipmentArtHtml(item)}<i class="inventory-quality-base" aria-hidden="true"></i></div>
+          <div>
+            <small style="color:${escapeHtml(quality.color)}">${escapeHtml(quality.name)} · ${escapeHtml(categoryName)}</small>
+            <h2>${escapeHtml(item.name)}</h2>
+            <p>${escapeHtml(slotNames)}</p>
+          </div>
+        </header>
+        ${item.weapon ? `
+          <section class="character-equipment-primary-stat">
+            <span>基础伤害</span><strong>${Number(item.weapon.min)}—${Number(item.weapon.max)}</strong>
+            <small>${item.weapon.kind === "ranged" ? "远程" : "近战"} · ${escapeHtml(attributeNames[item.weapon.powerAttribute] || item.weapon.powerAttribute)}加成${Number(item.weapon.penetration || 0) ? ` · 穿透 ${Number(item.weapon.penetration)}` : ""}</small>
+          </section>
+        ` : ""}
+        ${bonusRows ? `<section><h3>装备效果</h3><ul>${bonusRows}</ul></section>` : ""}
+        ${requirementRows ? `<section><h3>装备要求</h3><ul>${requirementRows}</ul></section>` : ""}
+        <p class="character-equipment-lore">${escapeHtml(item.description)}</p>
+        <footer>
+          <small>${requestedSlot ? `已装备于${escapeHtml(requestedSlot.name)}` : equipPreview?.available ? "可立即装备" : escapeHtml(equipPreview?.reason || "暂时无法装备")}</small>
+          ${requestedSlot
+            ? `<button type="button" data-action="confirm-unequip-character-item" data-value="${escapeHtml(requestedSlot.id)}">卸下</button>`
+            : `<button type="button" data-action="confirm-equip-character-item" data-value="${escapeHtml(item.id)}" ${equipPreview?.available ? "" : "disabled"}>装备</button>`}
+        </footer>
+      </article>
+    </div>
   `;
 }
 
@@ -933,8 +993,9 @@ function characterScreenHtml() {
             ${board.items.map(characterBagItemHtml).join("")}
             ${Array.from({ length: emptyCount }, () => `<span class="character-bag-item empty" aria-hidden="true"><i>纹</i></span>`).join("")}
           </div>
-          <footer><span>点击装备 · 点击身上部位卸下</span><strong>${escapeHtml(board.category.name)}</strong></footer>
+          <footer><span>点击物品查看详情</span><strong>${escapeHtml(board.category.name)}</strong></footer>
         </section>
+        ${characterEquipmentDetailHtml(board)}
         ${pendingCharacterFeedback ? `<div class="character-feedback ${escapeHtml(pendingCharacterFeedback.tone || "gain")}" role="status">${escapeHtml(pendingCharacterFeedback.text)}</div>` : ""}
       </div>
     </section>
@@ -3169,23 +3230,45 @@ const handlers = {
     characterUi.open = true;
     characterUi.section = "body";
     characterUi.category = "all";
+    characterUi.selectedId = null;
+    characterUi.selectedSlot = null;
     render();
   },
   "close-character": () => {
     characterUi.open = false;
+    characterUi.selectedId = null;
+    characterUi.selectedSlot = null;
     render();
   },
   "character-section": (value) => {
     if (!["body", "relations", "arts"].includes(value)) return;
     characterUi.section = value;
+    characterUi.selectedId = null;
+    characterUi.selectedSlot = null;
     render();
   },
   "character-equipment-category": (value) => {
     if (!["all", "weapon", "armor", "accessory"].includes(value)) return;
     characterUi.category = value;
+    characterUi.selectedId = null;
+    characterUi.selectedSlot = null;
     render();
   },
-  "equip-character-item": (value) => {
+  "inspect-character-equipment": (value) => {
+    const [itemId, slotId = ""] = String(value || "").split("|");
+    const item = getEquipmentItem(itemId);
+    if (!item || !state.equipment?.owned?.includes(itemId)) return;
+    characterUi.selectedId = itemId;
+    characterUi.selectedSlot = slotId && state.equipment?.slots?.[slotId] === itemId ? slotId : null;
+    render();
+  },
+  "close-character-equipment-detail": () => {
+    characterUi.selectedId = null;
+    characterUi.selectedSlot = null;
+    render();
+  },
+  "confirm-equip-character-item": (value) => {
+    if (value !== characterUi.selectedId) return;
     const before = characterCombatProfile(state);
     const equipped = equipEquipmentItem(state.equipment, value, { attributes: state.attributes });
     if (!equipped.available) {
@@ -3197,10 +3280,13 @@ const handlers = {
     state.characterVitals.health = Math.min(after.maxHealth, before.health);
     state.characterVitals.qi = Math.min(after.maxQi, before.qi);
     pendingCharacterFeedback = { text: equipped.reason, tone: "gain" };
+    characterUi.selectedId = null;
+    characterUi.selectedSlot = null;
     track("equipment_equipped", { item: value, slot: equipped.slotId });
     refresh();
   },
-  "unequip-character-item": (value) => {
+  "confirm-unequip-character-item": (value) => {
+    if (!characterUi.selectedId || state.equipment?.slots?.[value] !== characterUi.selectedId) return;
     const before = characterCombatProfile(state);
     const removed = unequipEquipmentSlot(state.equipment, value);
     if (!removed.available) return;
@@ -3209,6 +3295,8 @@ const handlers = {
     state.characterVitals.health = Math.min(after.maxHealth, before.health);
     state.characterVitals.qi = Math.min(after.maxQi, before.qi);
     pendingCharacterFeedback = { text: removed.reason, tone: "relief" };
+    characterUi.selectedId = null;
+    characterUi.selectedSlot = null;
     track("equipment_unequipped", { item: removed.item?.id, slot: value });
     refresh();
   },
@@ -3221,6 +3309,8 @@ const handlers = {
   },
   "character-global-switch": (value) => {
     characterUi.open = false;
+    characterUi.selectedId = null;
+    characterUi.selectedSlot = null;
     if (value === "inventory") {
       inventoryUi.open = true;
       inventoryUi.category = "all";
@@ -3251,6 +3341,8 @@ const handlers = {
       characterUi.open = true;
       characterUi.section = "body";
       characterUi.category = "all";
+      characterUi.selectedId = null;
+      characterUi.selectedSlot = null;
       return render();
     }
     render();
@@ -4383,6 +4475,16 @@ document.addEventListener("keydown", (event) => {
       inventoryUi.open = false;
       render();
     }
+    return;
+  }
+  if (characterUi.open && event.key === "Escape") {
+    if (characterUi.selectedId) {
+      characterUi.selectedId = null;
+      characterUi.selectedSlot = null;
+    } else {
+      characterUi.open = false;
+    }
+    render();
     return;
   }
   if (event.target.matches("input, textarea") || !/^[1-9]$/.test(event.key)) return;

@@ -230,6 +230,7 @@ async function snapshot(label) {
       };
       const slots = [...document.querySelectorAll(".character-equipment-slot")];
       const bagSlots = [...document.querySelectorAll(".character-bag-item")];
+      const sectionTabs = [...document.querySelectorAll(".character-section-tabs button")];
       return {
         visible: Boolean(overlay),
         rect: rect ? [rect.left, rect.top, rect.width, rect.height] : [0, 0, 0, 0],
@@ -248,8 +249,19 @@ async function snapshot(label) {
           const slotRect = entry.getBoundingClientRect();
           return [Math.round(slotRect.width * 10) / 10, Math.round(slotRect.height * 10) / 10];
         }),
+        sectionTabRects: sectionTabs.map((entry) => {
+          const tabRect = entry.getBoundingClientRect();
+          return [Math.round(tabRect.left * 10) / 10, Math.round(tabRect.top * 10) / 10, Math.round(tabRect.width * 10) / 10, Math.round(tabRect.height * 10) / 10];
+        }),
+        sectionTabBackgrounds: sectionTabs.map((entry) => getComputedStyle(entry).backgroundImage),
         bagSlots: bagSlots.length,
         occupiedBagSlots: bagSlots.filter((entry) => !entry.classList.contains("empty")).length,
+        bagSlotSizes: bagSlots.map((entry) => {
+          const slotRect = entry.getBoundingClientRect();
+          return [Math.round(slotRect.width * 10) / 10, Math.round(slotRect.height * 10) / 10];
+        }),
+        equipmentDetail: document.querySelector(".character-equipment-detail")?.innerText?.replace(/\\s+/g, " ").trim() || "",
+        equipmentDetailAction: document.querySelector(".character-equipment-detail footer button")?.dataset.action || "",
         profileText: document.querySelector(".character-profile-copy")?.textContent?.replace(/\\s+/g, " ").trim() || "",
         heroBackground: getComputedStyle(document.querySelector(".character-hero") || document.body).backgroundImage,
         overflowX: overlay ? overlay.scrollWidth - overlay.clientWidth : 0,
@@ -511,14 +523,29 @@ assert.match(landscapeCharacter.characterView.qi, /真气/);
 assert.equal(landscapeCharacter.characterView.attributes.length, 5);
 assert.equal(landscapeCharacter.characterView.equipmentSlots, 9);
 assert.equal(new Set(landscapeCharacter.characterView.equipmentSlotSizes.map((entry) => entry.join("x"))).size, 1, JSON.stringify(landscapeCharacter.characterView.equipmentSlotSizes));
+assert.equal(landscapeCharacter.characterView.sectionTabRects.length, 3);
+assert.ok(landscapeCharacter.characterView.sectionTabBackgrounds.every((entry) => /gradient/.test(entry)), JSON.stringify(landscapeCharacter.characterView.sectionTabBackgrounds));
+assert.ok(landscapeCharacter.characterView.sectionTabRects[2][1] + landscapeCharacter.characterView.sectionTabRects[2][3] < 390, JSON.stringify(landscapeCharacter.characterView.sectionTabRects));
 assert.equal(landscapeCharacter.characterView.bagSlots, 24);
 assert.equal(landscapeCharacter.characterView.occupiedBagSlots, 12);
+assert.ok(landscapeCharacter.characterView.bagSlotSizes.every(([width, height]) => height > width), JSON.stringify(landscapeCharacter.characterView.bagSlotSizes));
 assert.doesNotMatch(landscapeCharacter.characterView.profileText, /潜能|命灯/);
 assert.match(landscapeCharacter.characterView.heroBackground, /chen-siming-paperdoll/);
 assert.ok(landscapeCharacter.characterView.overflowX <= 1, JSON.stringify(landscapeCharacter.characterView));
 assert.ok(landscapeCharacter.characterView.overflowY <= 1, JSON.stringify(landscapeCharacter.characterView));
-await click("equip-character-item", "traveler_straw_hat");
+const headBeforeEquipmentDetail = await evaluate(`document.querySelector(".slot-head")?.getAttribute("aria-label") || ""`);
+await click("inspect-character-equipment", "traveler_straw_hat");
+const equipmentDetail = await snapshot("character-equipment-detail");
+assert.ok(equipmentDetail.characterView.equipmentDetail.length > 0);
+assert.equal(equipmentDetail.characterView.equipmentDetailAction, "confirm-equip-character-item");
+assert.equal(await evaluate(`document.querySelector(".slot-head")?.getAttribute("aria-label") || ""`), headBeforeEquipmentDetail);
+await click("confirm-equip-character-item", "traveler_straw_hat");
 assert.match(await evaluate(`document.querySelector(".slot-head")?.getAttribute("aria-label") || ""`), /江行斗笠/);
+assert.equal(await evaluate(`Boolean(document.querySelector(".character-equipment-detail"))`), false);
+await click("inspect-character-equipment", "traveler_straw_hat|head");
+assert.equal((await snapshot("character-equipped-detail")).characterView.equipmentDetailAction, "confirm-unequip-character-item");
+await click("confirm-unequip-character-item", "head");
+assert.match(await evaluate(`document.querySelector(".slot-head")?.getAttribute("aria-label") || ""`), /未装备/);
 await screenshot("wudao-character-phone-landscape.png");
 await click("close-character");
 await click("open-inventory");
