@@ -1247,6 +1247,1154 @@ h1 {
   font-size: 38px;
 }
 
+/* 人物全卷：以 1672 × 941 定稿画布为基准，属性、纸娃娃与装备行囊共用真实状态。 */
+body[data-character-open="true"] {
+  overflow: hidden;
+  background: #050504;
+}
+
+.dock-entry {
+  display: flex;
+  min-width: 72px;
+  min-height: 48px;
+  padding: 6px 12px 6px 7px;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+  border: 1px solid var(--line-strong);
+  border-radius: 0;
+  background: color-mix(in srgb, var(--panel-solid) 92%, transparent);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.34);
+  font: inherit;
+  cursor: pointer;
+  backdrop-filter: blur(16px);
+}
+
+.dock-entry strong {
+  font-family: var(--font-story);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.world-stage-shell .dock-entry {
+  position: relative;
+  display: flex;
+  width: 9.05cqw;
+  min-width: 0;
+  height: 3.95cqw;
+  min-height: 0;
+  padding: 0 0.72cqw 0 4.15cqw;
+  align-items: center;
+  justify-content: flex-start;
+  overflow: visible;
+  color: #17130e;
+  border: 1px solid rgba(39, 31, 21, 0.9);
+  border-radius: 0.2cqw;
+  background:
+    repeating-linear-gradient(98deg, transparent 0 0.9cqw, rgba(84, 63, 35, 0.035) 0.95cqw 1cqw),
+    linear-gradient(180deg, #c9baa0, #a7987e);
+  box-shadow: inset 0 0 0 1px rgba(229, 216, 190, 0.5), 0 0.32cqw 0.8cqw rgba(0, 0, 0, 0.58);
+  transform: rotate(-1.6deg);
+}
+
+.world-stage-shell .dock-entry strong {
+  display: block;
+  font-family: "STKaiti", "KaiTi", "Kaiti SC", var(--font-story);
+  font-size: 1.65cqw;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+}
+
+.world-stage-shell .dock-entry .dock-glyph {
+  position: absolute;
+  top: 50%;
+  left: -0.28cqw;
+  width: 3.75cqw;
+  height: 3.75cqw;
+  color: #17130e;
+  border: 0.13cqw solid #17130e;
+  background: #b8aa91;
+  box-shadow: inset 0 0 0 0.18cqw rgba(222, 207, 179, 0.58), 0 0.25cqw 0.55cqw rgba(0, 0, 0, 0.42);
+  font-size: 1.42cqw;
+  transform: translateY(-50%);
+}
+
+.character-screen {
+  --character-gold: #c9974d;
+  --character-gold-bright: #e2b461;
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: grid;
+  width: 100vw;
+  height: 100vh;
+  min-width: 0;
+  min-height: 0;
+  grid-template-rows: 4.067cqw minmax(0, 1fr);
+  overflow: hidden;
+  container-type: inline-size;
+  color: #d8c4a0;
+  background:
+    linear-gradient(90deg, rgba(2, 3, 3, 0.22), rgba(3, 4, 4, 0.04) 64%, rgba(1, 2, 2, 0.28)),
+    url("./assets/inventory/inventory-backdrop.png") center / cover no-repeat;
+  font-family: "LXGW WenKai", "STKaiti", "KaiTi", var(--font-story);
+  isolation: isolate;
+}
+
+.character-screen::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  content: "";
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(96deg, transparent 0 5.7cqw, rgba(211, 183, 126, 0.012) 5.76cqw 5.82cqw),
+    radial-gradient(circle at 50% 42%, rgba(105, 132, 128, 0.08), transparent 44%);
+}
+
+.character-layout {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  grid-template-columns: minmax(0, 30.7%) minmax(0, 33.7%) minmax(0, 35.6%);
+  overflow: hidden;
+  border-top: 1px solid rgba(158, 116, 58, 0.26);
+}
+
+.character-left-panel,
+.character-paperdoll,
+.character-equipment-bag {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-right: 1px solid rgba(143, 104, 53, 0.32);
+}
+
+.character-left-panel {
+  display: grid;
+  padding: 2.7cqw 2.1cqw 2.7cqw 5.55cqw;
+  align-content: start;
+  background:
+    linear-gradient(90deg, rgba(5, 7, 7, 0.95), rgba(7, 9, 9, 0.78)),
+    repeating-linear-gradient(0deg, transparent 0 2.6cqw, rgba(198, 163, 105, 0.012) 2.66cqw 2.72cqw);
+  box-shadow: inset -1.4cqw 0 2.5cqw rgba(0, 0, 0, 0.2);
+}
+
+.character-left-panel::after,
+.character-equipment-bag::after {
+  position: absolute;
+  inset: 1.65cqw 1.5cqw;
+  z-index: 0;
+  border: 1px solid rgba(130, 94, 47, 0.38);
+  content: "";
+  pointer-events: none;
+  box-shadow: inset 0 0 2.8cqw rgba(0, 0, 0, 0.22);
+}
+
+.character-section-tabs {
+  position: absolute;
+  top: 3.9cqw;
+  bottom: 3.9cqw;
+  left: 1.1cqw;
+  z-index: 3;
+  display: grid;
+  width: 3.65cqw;
+  align-content: space-between;
+}
+
+.character-section-tabs button {
+  position: relative;
+  display: grid;
+  width: 3.65cqw;
+  height: 9.2cqw;
+  padding: 0.6cqw 0;
+  grid-template-rows: 1fr auto;
+  place-items: center;
+  color: #a98d64;
+  border: 1px solid rgba(147, 105, 52, 0.52);
+  background:
+    linear-gradient(180deg, rgba(17, 18, 16, 0.96), rgba(7, 8, 7, 0.98)),
+    repeating-linear-gradient(90deg, transparent 0 0.7cqw, rgba(198, 160, 96, 0.025) 0.76cqw 0.82cqw);
+  box-shadow: inset 0 0 1cqw rgba(0, 0, 0, 0.48);
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.character-section-tabs button.selected {
+  color: #2b2013;
+  background: url("./assets/inventory/parchment-tab.svg") center / 155% 100% no-repeat;
+  box-shadow: 0 0.25cqw 0.8cqw rgba(0, 0, 0, 0.48);
+}
+
+.character-section-tabs button > span {
+  display: grid;
+  font-size: 2.05cqw;
+  line-height: 1;
+  place-items: center;
+  writing-mode: vertical-rl;
+}
+
+.character-section-tabs button small {
+  padding-bottom: 0.25cqw;
+  font-size: 0.86cqw;
+  letter-spacing: 0.12em;
+  writing-mode: vertical-rl;
+}
+
+.character-profile-copy,
+.character-secondary-copy {
+  position: relative;
+  z-index: 2;
+  min-width: 0;
+  min-height: 0;
+}
+
+.character-profile-copy > header {
+  padding: 0.6cqw 1.2cqw 1.7cqw;
+  border-bottom: 1px solid rgba(137, 99, 50, 0.24);
+}
+
+.character-profile-copy h1 {
+  margin: 0 0 0.45cqw;
+  color: #d7b67d;
+  font-size: 1.72cqw;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+}
+
+.character-profile-copy header p,
+.character-profile-copy header small {
+  display: block;
+  margin: 0;
+  color: #af9872;
+  font-size: 1.05cqw;
+  letter-spacing: 0.11em;
+  line-height: 1.55;
+}
+
+.character-profile-copy header small {
+  color: #806b50;
+  font-size: 0.9cqw;
+}
+
+.character-realm {
+  display: flex;
+  height: 3.15cqw;
+  margin: 1.15cqw 0.45cqw 0.9cqw;
+  padding: 0 1.1cqw;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid rgba(153, 112, 58, 0.46);
+  background: linear-gradient(90deg, rgba(31, 27, 20, 0.58), rgba(12, 13, 12, 0.8));
+}
+
+.character-realm span {
+  color: #aa9068;
+  font-size: 1.05cqw;
+}
+
+.character-realm strong {
+  color: #d4bd93;
+  font-size: 1.18cqw;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+}
+
+.character-vitals {
+  display: grid;
+  padding: 0.55cqw 0.8cqw 1.2cqw;
+  gap: 0.9cqw;
+  border-bottom: 1px solid rgba(137, 99, 50, 0.22);
+}
+
+.vital-row {
+  display: grid;
+  grid-template-columns: 3.4cqw minmax(0, 1fr) 4.2cqw;
+  align-items: center;
+  gap: 0.72cqw;
+  color: #b99472;
+  font-size: 1.03cqw;
+}
+
+.vital-row > i {
+  display: block;
+  height: 0.58cqw;
+  overflow: hidden;
+  border: 1px solid rgba(133, 98, 56, 0.44);
+  background: #0c0e0e;
+  transform: skewX(-9deg);
+}
+
+.vital-row > i b {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #8c342b, #bd5f4a);
+  box-shadow: 0 0 0.5cqw rgba(182, 74, 55, 0.4);
+}
+
+.vital-row.qi > i b {
+  background: linear-gradient(90deg, #28697a, #56a8b3);
+  box-shadow: 0 0 0.5cqw rgba(62, 151, 169, 0.4);
+}
+
+.vital-row strong {
+  color: #c8b38f;
+  font-family: Georgia, serif;
+  font-size: 0.98cqw;
+  font-weight: 400;
+  text-align: right;
+}
+
+.vital-row.dormant {
+  opacity: 0.48;
+}
+
+.character-section-title {
+  margin: 1.1cqw 0.9cqw 0.7cqw;
+  color: #b89561;
+  font-size: 1.12cqw;
+  letter-spacing: 0.12em;
+}
+
+.character-attributes {
+  display: grid;
+  padding: 0.15cqw 0.15cqw 0.75cqw;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.38cqw;
+}
+
+.attribute-medallion {
+  position: relative;
+  display: grid;
+  aspect-ratio: 1;
+  place-content: center;
+  place-items: center;
+  color: #a78f6c;
+  border: 1px solid rgba(139, 104, 61, 0.52);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(32, 29, 23, 0.92) 0 55%, transparent 57%),
+    conic-gradient(from 22deg, #5f4a31, #211d17, #745737, #211d17, #5f4a31);
+  box-shadow: inset 0 0 0 0.24cqw #0d0e0d, 0 0.22cqw 0.45cqw rgba(0, 0, 0, 0.5);
+}
+
+.attribute-medallion.accent {
+  color: #e1b65f;
+  border-color: rgba(213, 158, 68, 0.82);
+  box-shadow: inset 0 0 0 0.24cqw #15110c, 0 0 0.7cqw rgba(190, 126, 35, 0.36);
+}
+
+.attribute-medallion span {
+  font-size: 0.84cqw;
+}
+
+.attribute-medallion strong {
+  color: #d4b980;
+  font-family: Georgia, serif;
+  font-size: 1.32cqw;
+  font-weight: 400;
+}
+
+.character-defense-row {
+  display: flex;
+  margin: 0 0.7cqw;
+  padding: 0.9cqw 0.5cqw;
+  gap: 2.4cqw;
+  color: #9d8867;
+  border-bottom: 1px solid rgba(137, 99, 50, 0.22);
+  font-size: 1.02cqw;
+}
+
+.character-defense-row strong {
+  padding-left: 0.35cqw;
+  color: #d0b37c;
+  font-family: Georgia, serif;
+  font-weight: 400;
+}
+
+.character-wound-row {
+  display: flex;
+  margin: 0 0.7cqw;
+  padding: 0.88cqw 0.5cqw;
+  justify-content: space-between;
+  color: #718c68;
+  border-bottom: 1px solid rgba(137, 99, 50, 0.22);
+  font-size: 0.98cqw;
+}
+
+.character-wound-row.hurt {
+  color: #bc6859;
+}
+
+.character-wound-row strong {
+  font-weight: 400;
+}
+
+.character-trait {
+  display: flex;
+  width: calc(100% - 1.4cqw);
+  height: 3.3cqw;
+  margin: 0 0.7cqw;
+  padding: 0 0.6cqw;
+  align-items: center;
+  gap: 0.8cqw;
+  color: #c5a673;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.character-trait > span {
+  display: grid;
+  width: 2.65cqw;
+  height: 2.65cqw;
+  color: #2a1e10;
+  border: 0.14cqw double #1b150f;
+  border-radius: 50%;
+  background: radial-gradient(circle, #b89456, #75552d);
+  font-size: 1.18cqw;
+  place-items: center;
+}
+
+.character-trait strong {
+  font-size: 1.13cqw;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+}
+
+.character-secondary-copy {
+  padding: 1.1cqw 1.2cqw;
+}
+
+.character-secondary-copy > span {
+  color: #b08c56;
+  font-size: 1.1cqw;
+}
+
+.character-secondary-copy h2 {
+  margin: 1cqw 0 2cqw;
+  color: #d5bc90;
+  font-size: 1.8cqw;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.character-record-list {
+  display: grid;
+  gap: 0.7cqw;
+}
+
+.character-record-list > div {
+  display: flex;
+  padding: 0.9cqw 1cqw;
+  justify-content: space-between;
+  border: 1px solid rgba(140, 102, 52, 0.35);
+  background: rgba(12, 13, 12, 0.72);
+}
+
+.character-record-list strong,
+.character-record-list small {
+  color: #c9ae7e;
+  font-size: 1cqw;
+  font-weight: 400;
+}
+
+.character-record-list small {
+  color: #85745b;
+}
+
+.character-paperdoll {
+  background:
+    linear-gradient(180deg, rgba(2, 4, 4, 0.04), rgba(3, 4, 4, 0.28)),
+    #080a09;
+}
+
+.character-paperdoll::after {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  content: "";
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(1, 2, 2, 0.82), transparent 18%, transparent 82%, rgba(1, 2, 2, 0.82)),
+    linear-gradient(180deg, rgba(1, 2, 2, 0.15), transparent 65%, rgba(1, 2, 2, 0.66));
+}
+
+.character-hero {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: url("./assets/character/chen-siming-paperdoll.png") center 44% / cover no-repeat;
+  filter: saturate(0.82) contrast(1.06) brightness(0.83);
+}
+
+.paperdoll-slots {
+  position: absolute;
+  top: 8.3cqw;
+  z-index: 4;
+  display: grid;
+  gap: 2.05cqw;
+}
+
+.paperdoll-left {
+  left: 1.35cqw;
+}
+
+.paperdoll-right {
+  right: 1.35cqw;
+  top: 16.7cqw;
+}
+
+.character-equipment-slot,
+.character-bag-item {
+  position: relative;
+  display: block;
+  width: 6.05cqw;
+  height: 6.05cqw;
+  padding: 0;
+  overflow: hidden;
+  color: #c3a26f;
+  border: 1px solid rgba(151, 110, 56, 0.66);
+  border-radius: 0.14cqw;
+  background:
+    radial-gradient(circle at 50% 44%, rgba(84, 67, 42, 0.13), transparent 62%),
+    linear-gradient(145deg, rgba(23, 24, 21, 0.98), rgba(8, 9, 8, 0.99));
+  box-shadow: inset 0 0 0 1px rgba(224, 194, 139, 0.045), 0 0.25cqw 0.72cqw rgba(0, 0, 0, 0.48);
+  cursor: pointer;
+}
+
+.character-equipment-slot:disabled {
+  cursor: default;
+}
+
+.character-equipment-slot small {
+  position: absolute;
+  top: 0.36cqw;
+  left: 0.45cqw;
+  z-index: 5;
+  color: #d2ad71;
+  font-size: 0.96cqw;
+  text-shadow: 0 1px 3px #000;
+}
+
+.equipment-art {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: block;
+  background-position: var(--equipment-art-x) var(--equipment-art-y);
+  background-size: 400% 400%;
+  background-repeat: no-repeat;
+  transition: filter 150ms ease, transform 150ms ease;
+}
+
+button:hover > .equipment-art,
+button:focus-visible > .equipment-art {
+  filter: brightness(1.12);
+  transform: scale(1.035);
+}
+
+.equipment-slot-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  color: rgba(130, 98, 58, 0.22);
+  font-size: 1.2cqw;
+  place-items: center;
+}
+
+.character-equipment-slot .inventory-quality-base,
+.character-bag-item .inventory-quality-base {
+  height: 0.2cqw;
+}
+
+.character-equipment-slot.quality-fine .inventory-quality-base,
+.character-bag-item.quality-fine .inventory-quality-base {
+  background: #688653;
+}
+
+.character-equipment-slot.quality-precious .inventory-quality-base,
+.character-bag-item.quality-precious .inventory-quality-base {
+  background: #3f7897;
+}
+
+.character-equipment-slot.quality-rare .inventory-quality-base,
+.character-bag-item.quality-rare .inventory-quality-base {
+  background: #815590;
+}
+
+.character-equipment-slot.quality-treasure .inventory-quality-base,
+.character-bag-item.quality-treasure .inventory-quality-base {
+  background: #c0913f;
+}
+
+.paperdoll-weapons {
+  position: absolute;
+  right: 1.4cqw;
+  bottom: 1.7cqw;
+  left: 1.4cqw;
+  z-index: 4;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+}
+
+.weapon-pair {
+  display: grid;
+  justify-items: center;
+  gap: 0.35cqw;
+}
+
+.weapon-pair > strong,
+.weapon-pair > small {
+  color: #c8a875;
+  font-size: 1.05cqw;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-shadow: 0 2px 4px #000;
+}
+
+.weapon-pair > div {
+  display: flex;
+  gap: 0.45cqw;
+}
+
+.weapon-pair .character-equipment-slot {
+  width: 6.05cqw;
+  height: 6.05cqw;
+}
+
+.weapon-pair .character-equipment-slot small {
+  display: none;
+}
+
+.character-equipment-bag {
+  display: grid;
+  padding: 2.25cqw 3.05cqw 2.5cqw 2.2cqw;
+  grid-template-rows: 2.6cqw 3.65cqw minmax(0, 1fr) 2.1cqw;
+  background:
+    linear-gradient(90deg, rgba(7, 9, 8, 0.68), rgba(5, 6, 6, 0.92)),
+    repeating-linear-gradient(0deg, transparent 0 2.6cqw, rgba(198, 163, 105, 0.012) 2.66cqw 2.72cqw);
+}
+
+.character-equipment-bag > header,
+.character-equipment-bag > nav,
+.character-equipment-bag > div,
+.character-equipment-bag > footer {
+  position: relative;
+  z-index: 2;
+}
+
+.character-equipment-bag > header {
+  display: flex;
+  padding: 0 0.55cqw;
+  align-items: start;
+  justify-content: space-between;
+}
+
+.character-equipment-bag h2,
+.character-equipment-bag header strong {
+  margin: 0;
+  color: #d2a45c;
+  font-size: 1.55cqw;
+  font-weight: 400;
+  letter-spacing: 0.11em;
+}
+
+.character-equipment-bag header strong {
+  color: #cdb68d;
+  font-family: Georgia, serif;
+  letter-spacing: 0.03em;
+}
+
+.character-equipment-bag header strong span {
+  color: #e2b86d;
+}
+
+.character-equipment-categories {
+  display: grid;
+  padding: 0.32cqw 0;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.7cqw;
+}
+
+.character-equipment-categories button {
+  display: grid;
+  min-width: 0;
+  color: #a9916d;
+  border: 1px solid rgba(136, 99, 51, 0.48);
+  background: linear-gradient(180deg, rgba(23, 23, 20, 0.9), rgba(10, 11, 10, 0.96));
+  font: inherit;
+  place-items: center;
+  cursor: pointer;
+}
+
+.character-equipment-categories button.selected {
+  color: #241a0f;
+  background: url("./assets/inventory/parchment-tab.svg") center / 100% 100% no-repeat;
+}
+
+.character-equipment-categories span {
+  font-size: 1.15cqw;
+}
+
+.character-equipment-grid {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  padding: 0.55cqw 0.1cqw;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: minmax(5.5cqw, 1fr);
+  gap: 0.72cqw;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-color: rgba(168, 123, 61, 0.48) transparent;
+}
+
+.character-bag-item {
+  width: 100%;
+  height: auto;
+  min-height: 5.5cqw;
+}
+
+.character-bag-item.equipped {
+  border-color: #d29b44;
+  box-shadow: inset 0 0 0 1px rgba(234, 189, 105, 0.26), 0 0 0.55cqw rgba(193, 129, 39, 0.44);
+}
+
+.character-bag-item.empty {
+  cursor: default;
+  opacity: 0.68;
+}
+
+.character-bag-item.empty i {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  color: rgba(138, 103, 62, 0.16);
+  font-size: 1.15cqw;
+  font-style: normal;
+  place-items: center;
+}
+
+.equipment-check {
+  position: absolute;
+  top: 0.3cqw;
+  right: 0.3cqw;
+  z-index: 7;
+  display: grid;
+  width: 1.42cqw;
+  height: 1.42cqw;
+  color: #261b0e;
+  border-radius: 50%;
+  background: #c69b54;
+  font-size: 0.72cqw;
+  place-items: center;
+}
+
+.character-equipment-bag footer {
+  display: flex;
+  padding: 0.45cqw 0.25cqw 0;
+  justify-content: space-between;
+  color: #74664f;
+  font-size: 0.84cqw;
+}
+
+.character-equipment-bag footer strong {
+  color: #a98c5e;
+  font-weight: 400;
+}
+
+.character-feedback {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 20;
+  max-width: 34cqw;
+  padding: 0.8cqw 1.4cqw;
+  color: #e8cf9d;
+  border: 1px solid rgba(190, 139, 62, 0.72);
+  background: rgba(12, 11, 8, 0.94);
+  box-shadow: 0 0.45cqw 1.5cqw rgba(0, 0, 0, 0.64);
+  font-size: 1.05cqw;
+  line-height: 1.6;
+  text-align: center;
+  transform: translate(-50%, -50%);
+}
+
+.character-feedback.danger {
+  color: #e3a29a;
+  border-color: rgba(183, 76, 64, 0.74);
+}
+
+@media (max-width: 1100px) and (orientation: landscape) {
+  .character-left-panel {
+    padding-right: 1.25cqw;
+    padding-left: 5.15cqw;
+  }
+
+  .character-section-tabs {
+    left: 0.75cqw;
+  }
+
+  .character-profile-copy > header {
+    padding-bottom: 0.75cqw;
+  }
+
+  .character-profile-copy header small {
+    display: none;
+  }
+
+  .character-realm {
+    margin-top: 0.55cqw;
+    margin-bottom: 0.4cqw;
+  }
+
+  .character-vitals {
+    padding-top: 0.2cqw;
+    padding-bottom: 0.55cqw;
+    gap: 0.38cqw;
+  }
+
+  .character-section-title {
+    margin-top: 0.45cqw;
+    margin-bottom: 0.28cqw;
+  }
+
+  .character-attributes {
+    padding-bottom: 0.25cqw;
+  }
+
+  .character-defense-row,
+  .character-wound-row {
+    padding-top: 0.36cqw;
+    padding-bottom: 0.36cqw;
+  }
+
+  .character-trait {
+    height: 2.45cqw;
+  }
+
+  .character-trait > span {
+    width: 2.1cqw;
+    height: 2.1cqw;
+  }
+
+  .character-equipment-bag {
+    padding-top: 1.3cqw;
+    padding-bottom: 1.25cqw;
+    grid-template-rows: 2.25cqw 3.25cqw minmax(0, 1fr) 1.55cqw;
+  }
+
+  .character-equipment-grid {
+    grid-auto-rows: 6.3cqw;
+  }
+
+  .paperdoll-slots {
+    top: 6.4cqw;
+    gap: 1.25cqw;
+  }
+
+  .paperdoll-right {
+    top: 11.7cqw;
+  }
+
+  .paperdoll-weapons {
+    bottom: 0.75cqw;
+  }
+
+  .character-equipment-slot {
+    width: 6.15cqw;
+    height: 6.15cqw;
+  }
+
+  .weapon-pair .character-equipment-slot {
+    width: 6.15cqw;
+    height: 6.15cqw;
+  }
+}
+
+@media (max-width: 620px) and (orientation: portrait) {
+  body[data-character-open="true"] {
+    overflow: hidden;
+  }
+
+  .character-screen {
+    display: block;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .character-screen .inventory-topbar {
+    position: sticky;
+    top: 0;
+    height: 58px;
+    min-height: 58px;
+    padding: 0 12px;
+    grid-template-columns: 1fr auto;
+  }
+
+  .character-screen .inventory-owner span,
+  .character-screen .inventory-silver {
+    display: none;
+  }
+
+  .character-screen .inventory-owner strong {
+    font-size: 16px;
+  }
+
+  .character-screen .inventory-global-tabs {
+    position: absolute;
+    top: 58px;
+    right: 0;
+    left: 0;
+    height: 44px;
+    padding: 0 12px;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(5, 6, 5, 0.98);
+    border-bottom: 1px solid rgba(153, 111, 56, 0.3);
+  }
+
+  .character-screen .inventory-global-tabs button,
+  .character-screen .inventory-global-tabs span {
+    width: 92px;
+    height: 38px;
+    font-size: 17px;
+  }
+
+  .character-screen .inventory-return {
+    font-size: 14px;
+  }
+
+  .character-layout {
+    display: block;
+    margin-top: 44px;
+    overflow: visible;
+  }
+
+  .character-left-panel,
+  .character-paperdoll,
+  .character-equipment-bag {
+    width: 100%;
+    min-height: 0;
+    border-right: 0;
+    border-bottom: 1px solid rgba(143, 104, 53, 0.32);
+  }
+
+  .character-left-panel {
+    min-height: 560px;
+    padding: 38px 24px 38px 82px;
+  }
+
+  .character-left-panel::after {
+    inset: 18px 16px;
+  }
+
+  .character-section-tabs {
+    top: 46px;
+    bottom: 46px;
+    left: 24px;
+    width: 44px;
+  }
+
+  .character-section-tabs button {
+    width: 44px;
+    height: 128px;
+    padding: 8px 0;
+  }
+
+  .character-section-tabs button > span {
+    font-size: 25px;
+  }
+
+  .character-section-tabs button small {
+    font-size: 11px;
+  }
+
+  .character-profile-copy > header {
+    padding: 8px 14px 18px;
+  }
+
+  .character-profile-copy h1 {
+    font-size: 25px;
+  }
+
+  .character-profile-copy header p {
+    font-size: 14px;
+  }
+
+  .character-profile-copy header small {
+    display: block;
+    font-size: 12px;
+  }
+
+  .character-realm {
+    height: 46px;
+    margin: 14px 5px 11px;
+    padding: 0 16px;
+  }
+
+  .character-realm span,
+  .character-realm strong {
+    font-size: 15px;
+  }
+
+  .character-vitals {
+    padding: 8px 12px 15px;
+    gap: 12px;
+  }
+
+  .vital-row {
+    grid-template-columns: 44px 1fr 64px;
+    gap: 8px;
+    font-size: 14px;
+  }
+
+  .vital-row > i {
+    height: 8px;
+  }
+
+  .vital-row strong {
+    font-size: 13px;
+  }
+
+  .character-section-title {
+    margin: 16px 12px 10px;
+    font-size: 15px;
+  }
+
+  .character-attributes {
+    gap: 5px;
+  }
+
+  .attribute-medallion {
+    box-shadow: inset 0 0 0 3px #0d0e0d, 0 3px 6px rgba(0, 0, 0, 0.5);
+  }
+
+  .attribute-medallion span {
+    font-size: 11px;
+  }
+
+  .attribute-medallion strong {
+    font-size: 18px;
+  }
+
+  .character-defense-row,
+  .character-wound-row {
+    padding: 12px 7px;
+    font-size: 14px;
+  }
+
+  .character-trait {
+    height: 50px;
+    font-size: 15px;
+  }
+
+  .character-trait > span {
+    width: 38px;
+    height: 38px;
+    font-size: 16px;
+  }
+
+  .character-paperdoll {
+    height: 690px;
+  }
+
+  .paperdoll-slots {
+    top: 90px;
+    left: 18px;
+    gap: 24px;
+  }
+
+  .paperdoll-right {
+    top: 180px;
+    right: 18px;
+    left: auto;
+  }
+
+  .character-equipment-slot {
+    width: 72px;
+    height: 72px;
+  }
+
+  .character-equipment-slot small {
+    top: 4px;
+    left: 5px;
+    font-size: 12px;
+  }
+
+  .paperdoll-weapons {
+    right: 18px;
+    bottom: 16px;
+    left: 18px;
+  }
+
+  .weapon-pair > strong,
+  .weapon-pair > small {
+    font-size: 13px;
+  }
+
+  .weapon-pair .character-equipment-slot {
+    width: 72px;
+    height: 72px;
+  }
+
+  .character-equipment-bag {
+    height: 780px;
+    padding: 36px 26px 34px;
+    grid-template-rows: 46px 56px minmax(0, 1fr) 34px;
+  }
+
+  .character-equipment-bag::after {
+    inset: 18px 16px;
+  }
+
+  .character-equipment-bag h2,
+  .character-equipment-bag header strong {
+    font-size: 22px;
+  }
+
+  .character-equipment-categories {
+    gap: 8px;
+  }
+
+  .character-equipment-categories span {
+    font-size: 17px;
+  }
+
+  .character-equipment-grid {
+    gap: 8px;
+    grid-auto-rows: 82px;
+  }
+
+  .character-bag-item {
+    min-height: 82px;
+  }
+
+  .equipment-check {
+    top: 4px;
+    right: 4px;
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+  }
+
+  .character-equipment-bag footer {
+    font-size: 11px;
+  }
+
+  .character-feedback {
+    position: fixed;
+    max-width: 310px;
+    padding: 12px 18px;
+    font-size: 14px;
+  }
+}
+
 /* Full-screen wuxia inventory */
 body[data-inventory-open="true"] {
   overflow: hidden;

@@ -11,7 +11,7 @@ import {
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
   rewindCombatLabDeath,
-} from "./combat-lab-core.mjs?v=20260723.4";
+} from "./combat-lab-core.mjs?v=20260724.1";
 
 const root = document.querySelector("#combat-lab");
 const liveRegion = document.querySelector("#combat-status");
@@ -398,7 +398,7 @@ function contextActionHtml(entry, index) {
     <button type="button" class="context-action ${riskClass(entry)} ${index === 0 ? "primary" : ""}" data-action-id="${escapeHtml(entry.id)}" ${unavailable || visualState.animating ? "disabled" : ""}>
       <span class="action-icon">${iconSvg(entry.display.icon)}</span>
       <span class="action-copy">
-        <strong>${escapeHtml(entry.display.title)} <i class="energy-cost">${"◆".repeat(Number(entry.energyCost || 0))}</i></strong>
+        <strong>${escapeHtml(entry.display.title)} <i class="energy-cost">${"◆".repeat(Number(entry.energyCost || 0))}</i>${entry.qiCost ? `<i class="qi-cost">真气−${Number(entry.qiCost)}</i>` : ""}</strong>
         <small>${escapeHtml(entry.display.consequence)}</small>
         <small class="action-forecast">${escapeHtml(forecast)}</small>
       </span>
@@ -418,7 +418,7 @@ function allActionHtml(entry) {
     <button type="button" class="arsenal-action ${riskClass(entry)}" data-action-id="${escapeHtml(entry.id)}" ${unavailable || visualState.animating ? "disabled" : ""}>
       <span>${iconSvg(icon)}</span>
       <span>
-        <small>${escapeHtml(entry.intent)} · ${escapeHtml(entry.objectName)} · ${"◆".repeat(Number(entry.energyCost || 0))}</small>
+        <small>${escapeHtml(entry.intent)} · ${escapeHtml(entry.objectName)} · ${"◆".repeat(Number(entry.energyCost || 0))}${entry.qiCost ? ` · 真气−${Number(entry.qiCost)}` : ""}</small>
         <strong>${escapeHtml(entry.title)}</strong>
         <p>${escapeHtml(entry.evaluation.available ? entry.positionPreview || entry.successPreview : entry.evaluation.reason)}；${escapeHtml(entry.riskPreview)}；${escapeHtml(entry.enemyPhasePreview || "")}</p>
       </span>
@@ -562,7 +562,7 @@ function settingsHtml() {
           <input type="checkbox" data-setting="known-danger" ${knownDanger ? "checked" : ""} />
           <span><strong>带着死中见闻入场</strong><small>${isWangBattle() ? "提前知道王卓正手是引线，真正杀招从袖底回链。" : "提前知道右手是诱饵，真正杀招藏在左袖。"}</small></span>
         </label>
-        ${isWangBattle() ? `<label class="fact-toggle"><input type="checkbox" data-setting="antidote" ${Number(session.setup.items?.antidote || 0) > 0 ? "checked" : ""} /><span><strong>携带一份解毒散</strong><small>中毒后可耗费一点气机，移除持续蛇毒。</small></span></label>` : ""}
+        ${isWangBattle() ? `<label class="fact-toggle"><input type="checkbox" data-setting="antidote" ${Number(session.setup.items?.antidote || 0) > 0 ? "checked" : ""} /><span><strong>携带一份解毒散</strong><small>中毒后可耗费一点行动，移除持续蛇毒。</small></span></label>` : ""}
         <button type="button" class="reset-fate" data-command="reset-defaults">恢复此战默认命盘</button>
       </div>
     </details>
@@ -580,7 +580,7 @@ function historyHtml(board) {
             <span>${entry.round ? `第${Number(entry.round)}轮${entry.stageRound ? `／幕内${Number(entry.stageRound)}` : ""} · ${entry.phase === "enemy" ? "敌方" : entry.phase === "upkeep" ? "持续" : "我方"}` : entry.phase === "campaign" ? "承接前局" : "回照"}</span>
             <strong>${escapeHtml(entry.intent || "因果回转")}</strong>
             <p>${escapeHtml(entry.text)}</p>
-            ${entry.position ? `<small>身位：${escapeHtml(entry.position)}${entry.energyCost ? ` · 气机 −${Number(entry.energyCost)}` : ""}</small>` : ""}
+            ${entry.position ? `<small>身位：${escapeHtml(entry.position)}${entry.energyCost ? ` · 行动 −${Number(entry.energyCost)}` : ""}</small>` : ""}
             ${entry.impact ? `<small>气血：你 −${Number(entry.impact.playerDamage || 0)}，敌方 −${Number(entry.impact.enemyDamage || 0)}</small>` : ""}
             ${entry.check ? `<small>骰面 ${Number(entry.check.roll)} ${escapeHtml(signed(entry.check.modifier))} = ${Number(entry.check.total)} · ${escapeHtml(entry.check.tierLabel)}</small>` : ""}
           </li>
@@ -597,9 +597,11 @@ function turnBarHtml(board) {
   return `
     <div class="turn-bar ${playerPhase ? "player-turn" : "enemy-turn"}" data-phase="${escapeHtml(session.turn.phase)}" data-round="${Number(session.turn.round)}" data-energy="${Number(session.turn.energy)}">
       <div class="turn-label"><span>第${Number(session.turn.round)}轮</span><strong>${playerPhase ? "我方行动" : "敌方行动"}</strong></div>
-      <div class="energy-pool" aria-label="本轮气机 ${Number(session.turn.energy)} / ${Number(session.turn.maxEnergy)}">
-        <span>气机</span>
+      <div class="energy-pool" aria-label="本轮行动 ${Number(session.turn.energy)} / ${Number(session.turn.maxEnergy)}">
+        <span>行动</span>
         ${Array.from({ length: session.turn.maxEnergy }, (_, index) => `<i class="${index < session.turn.energy ? "filled" : ""}">◆</i>`).join("")}
+        ${board.combat.maxQi ? `<b class="qi-pool">真气 ${Number(board.combat.qi)}/${Number(board.combat.maxQi)}</b>` : ""}
+        <b class="guard-pool">防御 ${Number(board.combat.defense)} · 减伤 ${Number(board.combat.reduction)}</b>
       </div>
       ${playerPhase
         ? `<button type="button" data-command="end-turn" ${visualState.animating ? "disabled" : ""}>收势迎敌${board.intent.threat ? ` · 预计−${Number(board.intent.threat)}` : ""}</button>`
@@ -726,7 +728,7 @@ function commandDeckHtml(board) {
         <div class="context-heading">
           <span>${escapeHtml(contextLabel)}</span>
           <strong>${escapeHtml(contextTitle)}</strong>
-          <p>${escapeHtml(position ? `从${board.playerNode?.shortName || "当前身位"}出发；移动、出招与环境行动共用三点气机。` : contextHint)}</p>
+          <p>${escapeHtml(position ? `从${board.playerNode?.shortName || "当前身位"}出发；移动、出招与环境行动共用三点行动。` : contextHint)}</p>
         </div>
         <div class="recommended-actions">
           ${recommendations.map(contextActionHtml).join("")}

@@ -79,7 +79,7 @@ function prepareNaturalWangFinish() {
   return session;
 }
 
-test("通用战斗状态使用三点气机且保持JSON可序列化", () => {
+test("通用战斗状态使用三点行动且保持JSON可序列化", () => {
   for (const entries of [
     WANG_ZHUO_ENCOUNTER.participants,
     WANG_ZHUO_ENCOUNTER.nodes,
@@ -108,6 +108,27 @@ test("通用战斗状态使用三点气机且保持JSON可序列化", () => {
   });
   assert.equal(partial.setup.skills.spring_rain_needles.progress, 60);
   assert.equal(partial.battle.ledger.relationships.yan_jinghong.favor, 48);
+});
+
+test("真气催劲沿用同一因果骰并提高原招式伤害", () => {
+  const base = enterRiver();
+  base.battle.conditions.weakPoint = true;
+
+  const actions = getAvailableCombatActions(base, WANG_ZHUO_ENCOUNTER);
+  assert.equal(actions.some((entry) => entry.id === "needle_wang"), true);
+  assert.equal(actions.some((entry) => entry.id === "needle_wang__qi"), true);
+
+  const ordinary = resolveCombatAction(structuredClone(base), "needle_wang", WANG_ZHUO_ENCOUNTER);
+  const boosted = resolveCombatAction(structuredClone(base), "needle_wang__qi", WANG_ZHUO_ENCOUNTER);
+  assert.equal(ordinary.available, true);
+  assert.equal(boosted.available, true);
+  assert.equal(boosted.result.check.roll, ordinary.result.check.roll);
+  assert.ok(boosted.result.impact.formulaDamage > ordinary.result.impact.formulaDamage);
+  assert.equal(boosted.result.impact.playerQi, base.battle.participants.player.qi - 1);
+
+  const recommended = getRecommendedCombatActions(base, WANG_ZHUO_ENCOUNTER);
+  const needleRecommendations = recommended.filter((entry) => entry.id.replace(/__qi$/, "") === "needle_wang");
+  assert.equal(needleRecommendations.length, 1);
 });
 
 test("柳巷目标完成后进入河岸阶段并重置气机与空间", () => {
@@ -169,14 +190,10 @@ test("轻重伤只按相关部位产生一档或两档惩罚", () => {
   assert.equal(evaluateCombatAction(heavy, "needle_wang", WANG_ZHUO_ENCOUNTER).available, false);
 });
 
-test("改命换势真实重分属性并耗尽整轮气机", () => {
+test("战斗中不能即时洗点，改命只保留为场外成长规则", () => {
   const session = createBattle(WANG_ZHUO_ENCOUNTER);
-  const totalBefore = Object.values(session.setup.attributes).reduce((total, value) => total + value, 0);
-  const resolved = resolveCombatAction(session, "fate_to_insight", WANG_ZHUO_ENCOUNTER);
-  assert.equal(resolved.available, true);
-  assert.equal(resolved.session.turn.energy, 0);
-  assert.equal(resolved.session.setup.attributes.insight, 4);
-  assert.equal(Object.values(resolved.session.setup.attributes).reduce((total, value) => total + value, 0), totalBefore);
+  assert.equal(getAvailableCombatActions(session, WANG_ZHUO_ENCOUNTER).some((action) => action.id.startsWith("fate_to_")), false);
+  assert.equal(resolveCombatAction(session, "fate_to_insight", WANG_ZHUO_ENCOUNTER).available, false);
 });
 
 test("同伴每轮只提供一次关系行动并抵消一次夹击", () => {

@@ -50,8 +50,8 @@ import {
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs?v=20260723.4";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260723.4";
+} from "./wudao-core.mjs?v=20260724.1";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260724.1";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -81,7 +81,7 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260723.4";
+} from "./wudao-p0-core.mjs?v=20260724.1";
 import {
   M4_EVIDENCE,
   M4_METHOD,
@@ -100,7 +100,7 @@ import {
   resolveM4Training,
   resolveMoneyInquiry,
   resolveOldHouseChoice,
-} from "./wudao-p1-core.mjs?v=20260723.4";
+} from "./wudao-p1-core.mjs?v=20260724.1";
 import {
   advanceCombatLabCampaign,
   createCombatLabSession,
@@ -111,14 +111,27 @@ import {
   restartCombatLab,
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
-} from "./combat-lab-core.mjs?v=20260723.4";
+} from "./combat-lab-core.mjs?v=20260724.1";
 import {
   INVENTORY_CAPACITY,
   createInventoryBoard,
   formatSilver,
   getInventoryCategory,
   getInventoryUseState,
-} from "./inventory-core.mjs?v=20260723.4";
+} from "./inventory-core.mjs?v=20260724.1";
+import {
+  EQUIPMENT_CAPACITY,
+  EQUIPMENT_SLOTS,
+  characterCombatProfile,
+  createCharacterVitals,
+  createEquipmentBoard,
+  createEquipmentState,
+  equipEquipmentItem,
+  getEquipmentItem,
+  migrateCharacterVitals,
+  migrateEquipmentState,
+  unequipEquipmentSlot,
+} from "./character-system.mjs?v=20260724.1";
 
 const STORAGE_KEY = "wudao-high-martial-v1";
 const app = document.querySelector("#app");
@@ -127,7 +140,9 @@ const COMBAT_STAGE_NAMES = { mortal: "未入门", body: "锻体", qi: "聚气", 
 const COMBAT_CHECK_LABELS = { great: "大成", success: "得手", costly: "得手有损", failure: "失手" };
 let pendingSceneFeedback = null;
 let pendingInventoryFeedback = null;
+let pendingCharacterFeedback = null;
 const inventoryUi = { open: false, category: "all", selectedId: null };
+const characterUi = { open: false, section: "body", category: "all" };
 
 function freshFateSeed() {
   const fixedSeed = new URLSearchParams(window.location.search).get("seed");
@@ -151,7 +166,7 @@ function legacyFateSeed(saved) {
 
 function createInitialState() {
   return {
-    version: 5,
+    version: 6,
     screen: "landing",
     name: "陈司命",
     backgroundId: "mystery",
@@ -167,6 +182,8 @@ function createInitialState() {
     firePower: 12,
     hungerLevel: 2,
     inventory: [],
+    equipment: createEquipmentState(),
+    characterVitals: createCharacterVitals(),
     templeOpening: createTempleOpeningState(),
     completedTempleTasks: [],
     templeLog: [],
@@ -240,8 +257,16 @@ function createInitialState() {
 function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (!saved || ![2, 3, 4, 5].includes(saved.version) || !saved.screen) return null;
-    const migrated = { ...createInitialState(), ...saved, version: 5, p0: migrateP0State(saved.p0), m4: migrateM4State(saved.m4) };
+    if (!saved || ![2, 3, 4, 5, 6].includes(saved.version) || !saved.screen) return null;
+    const migrated = {
+      ...createInitialState(),
+      ...saved,
+      version: 6,
+      p0: migrateP0State(saved.p0),
+      m4: migrateM4State(saved.m4),
+      equipment: migrateEquipmentState(saved.equipment),
+      characterVitals: migrateCharacterVitals(saved.characterVitals),
+    };
     migrated.fateSeed = saved.fateSeed || legacyFateSeed(saved);
     if (migrated.p0.started && saved.p0?.items?.return_spring_pill === undefined) migrated.p0.items.return_spring_pill = Number(saved.alchemyPills || 0);
     if (saved.version === 2 && saved.shenChapterComplete && saved.fiveAnimalBook) {
@@ -256,8 +281,18 @@ function loadState() {
   }
 }
 
+let storedVersionBeforeMigration = null;
+try {
+  storedVersionBeforeMigration = Number(JSON.parse(localStorage.getItem(STORAGE_KEY) || "null")?.version || 0);
+} catch {
+  storedVersionBeforeMigration = null;
+}
 let savedState = loadState();
 let state = savedState || createInitialState();
+if (savedState && storedVersionBeforeMigration !== state.version) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  savedState = structuredClone(state);
+}
 
 function saveState() {
   if (state.screen === "landing") return;
@@ -369,6 +404,7 @@ function m4KnownPersonLabel(id) {
 
 function p0CombatContext() {
   const knownFacts = state.p0.deathRecords.some((record) => record.id === "left_sleeve_blade") ? ["left_sleeve_blade"] : [];
+  const combatStats = characterCombatProfile(state);
   return {
     attributes: state.attributes,
     playerStage: state.martialStage,
@@ -379,6 +415,8 @@ function p0CombatContext() {
     hasNeedles: Number(state.p0.items.spring_rain_needles || 0) > 0,
     battleEdge: state.p0.battleEdge,
     fateSeed: state.fateSeed,
+    equipment: state.equipment,
+    combatStats,
   };
 }
 
@@ -402,6 +440,8 @@ function ensureP0CombatSession() {
 function syncP0CombatSession(session) {
   state.p0.battle = session;
   state.p0.wounds = structuredClone(session.wounds || []);
+  state.characterVitals.health = Number(session.battle?.participants?.player?.current ?? state.characterVitals.health);
+  state.characterVitals.qi = Number(session.battle?.participants?.player?.qi ?? state.characterVitals.qi);
   state.p0.battleHistory = (session.history || []).map((entry) => ({
     battleId: session.battle?.id || "first_needle_ambush",
     round: entry.round,
@@ -437,6 +477,8 @@ function createWangCombatSession() {
     wounds: state.p0.wounds,
     knownFacts: [...new Set([...(base.setup?.knownFacts || []), ...wangKnownFacts()])],
     relationships: { yan_jinghong: state.p0.relationships.yan_jinghong },
+    equipment: state.equipment,
+    combatStats: characterCombatProfile(state),
   });
 }
 
@@ -448,6 +490,8 @@ function ensureWangCombatSession() {
 function syncWangCombatSession(session) {
   state.p0.wangBattle = session;
   state.p0.wounds = structuredClone(session.wounds || []);
+  state.characterVitals.health = Number(session.battle?.participants?.player?.current ?? state.characterVitals.health);
+  state.characterVitals.qi = Number(session.battle?.participants?.player?.qi ?? state.characterVitals.qi);
 }
 
 function resolveFullEnemyPhase(session) {
@@ -727,6 +771,167 @@ function characterPanelHtml() {
   `;
 }
 
+function equipmentArtHtml(item) {
+  if (!item) return `<span class="equipment-slot-empty" aria-hidden="true">纹</span>`;
+  const [column, row] = item.atlas || [0, 0];
+  return `<span class="equipment-art" style="--equipment-art-x:${Number(column) * 33.3333}%;--equipment-art-y:${Number(row) * 33.3333}%;background-image:url('${escapeHtml(item.art)}')" aria-hidden="true"></span>`;
+}
+
+function equipmentSlotHtml(slot) {
+  const item = slot.item;
+  return `
+    <button type="button" class="character-equipment-slot slot-${escapeHtml(slot.id)} quality-${escapeHtml(item?.quality || "empty")}" ${item ? `data-action="unequip-character-item" data-value="${escapeHtml(slot.id)}"` : "disabled"} aria-label="${escapeHtml(item ? `${slot.name}：${item.name}，点击卸下` : `${slot.name}：未装备`)}">
+      <small>${escapeHtml(slot.name)}</small>
+      ${equipmentArtHtml(item)}
+      <i class="inventory-quality-base" aria-hidden="true"></i>
+    </button>
+  `;
+}
+
+function relationshipSummaryHtml() {
+  const entries = [
+    state.relationship ? { name: "龙青鱼", detail: state.relationship === "sworn" ? "莫逆之交" : state.relationship } : null,
+    state.caoFavor ? { name: "曹青", detail: `情分 ${Number(state.caoFavor)}` } : null,
+    state.wangFavor ? { name: "王五", detail: `情分 ${Number(state.wangFavor)}` } : null,
+    state.p0?.relationships?.bai_zhiyun ? { name: "白栀云", detail: `信任 ${Number(state.p0.relationships.bai_zhiyun.trust || 0)}` } : null,
+    state.p0?.relationships?.yan_jinghong ? { name: "燕惊鸿", detail: `信任 ${Number(state.p0.relationships.yan_jinghong.trust || 0)}` } : null,
+  ].filter(Boolean);
+  return `
+    <div class="character-secondary-copy">
+      <span>江湖关系</span>
+      <h2>一面之缘，也会留下因果</h2>
+      <div class="character-record-list">
+        ${entries.length ? entries.map((entry) => `<div><strong>${escapeHtml(entry.name)}</strong><small>${escapeHtml(entry.detail)}</small></div>`).join("") : `<p>眼下还没有一段足以写入行录的交情。</p>`}
+      </div>
+    </div>
+  `;
+}
+
+function artsSummaryHtml() {
+  const arts = [
+    { name: "医术", value: state.medicalLevel },
+    { name: "炼丹", value: state.alchemyLevel },
+    { name: "钓鱼", value: state.fishingLevel },
+    { name: "采集", value: state.gatheringProgress > 0 ? 1 : 0 },
+  ];
+  return `
+    <div class="character-secondary-copy">
+      <span>江湖百艺</span>
+      <h2>手上的营生，也是江湖里的路</h2>
+      <div class="character-record-list">
+        ${arts.map((art) => `<div><strong>${escapeHtml(art.name)}</strong><small>${Number(art.value || 0) > 0 ? `${Number(art.value)}级` : "尚未入门"}</small></div>`).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function characterProfileHtml(board) {
+  const background = getBackground(state.backgroundId);
+  const vow = getVow(state.vowId);
+  const stage = MARTIAL_STAGES.find((item) => item.id === state.martialStage) || MARTIAL_STAGES[0];
+  const openingUnknown = state.screen === "templeWake" && !state.templeOpening?.belongingsChecked;
+  const woundCount = (state.p0?.wounds || []).length;
+  if (characterUi.section === "relations") return relationshipSummaryHtml();
+  if (characterUi.section === "arts") return artsSummaryHtml();
+  return `
+    <div class="character-profile-copy">
+      <header>
+        <h1>${escapeHtml(state.name)}</h1>
+        <p>${openingUnknown ? "来处未明" : escapeHtml(background?.name)} · ${escapeHtml(vow?.title || "求道者")}</p>
+        <small>大曜 · 金陵</small>
+      </header>
+      <div class="character-realm"><span>境界</span><strong>${state.martialStage === "body" ? "锻体一重" : escapeHtml(stage.name)}</strong></div>
+      <div class="character-vitals">
+        <div class="vital-row health"><span>气血</span><i><b style="width:${Math.round(board.stats.health.current / Math.max(1, board.stats.health.max) * 100)}%"></b></i><strong>${Number(board.stats.health.current)} / ${Number(board.stats.health.max)}</strong></div>
+        <div class="vital-row qi ${board.stats.qi.available ? "" : "dormant"}"><span>真气</span><i><b style="width:${board.stats.qi.available ? Math.round(board.stats.qi.current / Math.max(1, board.stats.qi.max) * 100) : 0}%"></b></i><strong>${board.stats.qi.available ? `${Number(board.stats.qi.current)} / ${Number(board.stats.qi.max)}` : "尚未养成"}</strong></div>
+      </div>
+      <div class="character-section-title">根骨与心性</div>
+      <div class="character-attributes">
+        ${ATTRIBUTES.map((attribute) => `<div class="attribute-medallion ${attribute.id === "insight" ? "accent" : ""}"><span>${escapeHtml(attribute.name)}</span><strong>${Number(board.stats.attributes[attribute.id] || 0)}</strong></div>`).join("")}
+      </div>
+      <div class="character-defense-row">
+        <span>防御 <strong>${Number(board.stats.defense)}</strong></span>
+        <span>减伤 <strong>${Number(board.stats.reduction)}</strong></span>
+      </div>
+      <div class="character-wound-row ${woundCount ? "hurt" : ""}"><span>伤势</span><strong>${woundCount ? `${woundCount}处未愈` : "无"}</strong></div>
+      <div class="character-section-title">命格与特性</div>
+      <button type="button" class="character-trait" data-action="character-trait-detail" data-value="destiny">
+        <span aria-hidden="true">命</span><strong>${state.destinyRevealed ? escapeHtml(DESTINY.name) : "命格未明"}</strong>
+      </button>
+    </div>
+  `;
+}
+
+function characterBagItemHtml(item) {
+  const equipped = item.equippedSlots?.length > 0;
+  return `
+    <button type="button" class="character-bag-item quality-${escapeHtml(item.quality)} ${equipped ? "equipped" : ""}" data-action="equip-character-item" data-value="${escapeHtml(item.id)}" aria-label="${escapeHtml(`${item.name}，${equipped ? "已经装备" : "点击装备"}`)}">
+      ${equipmentArtHtml(item)}
+      ${equipped ? `<span class="equipment-check" aria-hidden="true">已</span>` : ""}
+      <i class="inventory-quality-base" aria-hidden="true"></i>
+    </button>
+  `;
+}
+
+function characterScreenHtml() {
+  const board = createEquipmentBoard(state, characterUi);
+  characterUi.category = board.category.id;
+  state.equipment = board.equipment;
+  const leftSlots = board.slots.filter((slot) => ["head", "body", "wrist"].includes(slot.id));
+  const rightSlots = board.slots.filter((slot) => ["boots", "accessory"].includes(slot.id));
+  const weaponSlots = EQUIPMENT_SLOTS
+    .filter((slot) => slot.group === "weapon")
+    .map((slot) => board.slots.find((entry) => entry.id === slot.id));
+  const emptyCount = Math.max(0, EQUIPMENT_CAPACITY - board.items.length);
+  return `
+    <section class="character-screen" role="dialog" aria-modal="true" aria-label="人物">
+      <header class="inventory-topbar character-topbar">
+        <div class="inventory-owner"><strong>${escapeHtml(state.name)}</strong><span>· 人物</span></div>
+        <nav class="inventory-global-tabs" aria-label="人物、行囊与武学">
+          <span aria-current="page">人物</span>
+          <button type="button" data-action="character-global-switch" data-value="inventory">行囊</button>
+          <button type="button" data-action="character-global-switch" data-value="martial">武学</button>
+        </nav>
+        <div class="inventory-top-actions">
+          <div class="inventory-silver" aria-label="当前银两"><img src="./assets/inventory/silver-ingot.svg" alt="" /><span>银两</span><strong>${escapeHtml(formatSilver(Number(state.shenSilver || 0)))}</strong></div>
+          <button type="button" class="inventory-return" data-action="close-character">返回 <span aria-hidden="true">↩</span></button>
+        </div>
+      </header>
+      <div class="character-layout">
+        <section class="character-left-panel">
+          <nav class="character-section-tabs" aria-label="人物分卷">
+            <button type="button" class="${characterUi.section === "body" ? "selected" : ""}" data-action="character-section" data-value="body"><span aria-hidden="true">身</span><small>人物</small></button>
+            <button type="button" class="${characterUi.section === "relations" ? "selected" : ""}" data-action="character-section" data-value="relations"><span aria-hidden="true">缘</span><small>关系</small></button>
+            <button type="button" class="${characterUi.section === "arts" ? "selected" : ""}" data-action="character-section" data-value="arts"><span aria-hidden="true">艺</span><small>百艺</small></button>
+          </nav>
+          ${characterProfileHtml(board)}
+        </section>
+        <section class="character-paperdoll" aria-label="当前装备">
+          <div class="character-hero" aria-hidden="true"></div>
+          <div class="paperdoll-slots paperdoll-left">${leftSlots.map(equipmentSlotHtml).join("")}</div>
+          <div class="paperdoll-slots paperdoll-right">${rightSlots.map(equipmentSlotHtml).join("")}</div>
+          <div class="paperdoll-weapons">
+            <div class="weapon-pair melee"><strong>近战</strong><div>${weaponSlots.slice(0, 2).map(equipmentSlotHtml).join("")}</div><small>伤害 ${board.stats.melee.min}—${board.stats.melee.max}</small></div>
+            <div class="weapon-pair ranged"><strong>远程</strong><div>${weaponSlots.slice(2, 4).map(equipmentSlotHtml).join("")}</div><small>伤害 ${board.stats.ranged.min}—${board.stats.ranged.max}</small></div>
+          </div>
+        </section>
+        <section class="character-equipment-bag" aria-label="装备行囊">
+          <header><h2>装备行囊</h2><strong><span>${Number(board.used)}</span> / ${Number(board.capacity)}</strong></header>
+          <nav class="character-equipment-categories" aria-label="装备种类">
+            ${board.categories.map((category) => `<button type="button" class="${category.id === board.category.id ? "selected" : ""}" data-action="character-equipment-category" data-value="${escapeHtml(category.id)}" title="${escapeHtml(category.name)}" aria-label="${escapeHtml(category.name)}"><span aria-hidden="true">${escapeHtml(category.glyph)}</span></button>`).join("")}
+          </nav>
+          <div class="character-equipment-grid">
+            ${board.items.map(characterBagItemHtml).join("")}
+            ${Array.from({ length: emptyCount }, () => `<span class="character-bag-item empty" aria-hidden="true"><i>纹</i></span>`).join("")}
+          </div>
+          <footer><span>点击装备 · 点击身上部位卸下</span><strong>${escapeHtml(board.category.name)}</strong></footer>
+        </section>
+        ${pendingCharacterFeedback ? `<div class="character-feedback ${escapeHtml(pendingCharacterFeedback.tone || "gain")}" role="status">${escapeHtml(pendingCharacterFeedback.text)}</div>` : ""}
+      </div>
+    </section>
+  `;
+}
+
 function inventoryCategoryIcon(id) {
   const icon = ["bag", "gourd", "leaf", "sword", "token", "book"].find((value) => value === id)
     || { all: "bag", medicine: "gourd", ingredient: "leaf", tool: "sword", token: "token", clue: "book" }[id]
@@ -871,10 +1076,7 @@ function gameShell(content) {
         <section class="scene-panel ${visual ? "has-visual-scene" : "narrative-only"}">${visual}<div class="narrative-deck">${narrativeHistoryHtml()}<section class="narrative-current" data-narrative-current>${content}</section></div></section>
       </div>
       <nav class="utility-dock" aria-label="人物、行囊与武学">
-        <details class="dock-drawer character-panel">
-          <summary><span class="dock-glyph glyph-person" aria-hidden="true">人</span><strong>人物</strong></summary>
-          <div class="dock-sheet">${characterPanelHtml()}</div>
-        </details>
+        <button type="button" class="dock-entry character-panel" data-action="open-character"><span class="dock-glyph glyph-person" aria-hidden="true">人</span><strong>人物</strong></button>
         <details class="dock-drawer inventory-panel">
           <summary data-action="open-inventory"><span class="dock-glyph glyph-bag" aria-hidden="true">囊</span><strong>行囊</strong></summary>
         </details>
@@ -885,6 +1087,7 @@ function gameShell(content) {
       </nav>
     </main>
     ${inventoryUi.open ? inventoryScreenHtml() : ""}
+    ${characterUi.open ? characterScreenHtml() : ""}
   `;
 }
 
@@ -2001,7 +2204,7 @@ function p0CombatActionHtml(entry, actionName = "first-battle-action") {
     value: entry.id,
     title: entry.title,
     description: `${entry.description} 兑现：${entry.successPreview}；风险：${entry.riskPreview}。${entry.enemyPhasePreview || entry.impactPreview?.enemyPhase || "敌方将按预告行动"}。`,
-    source: `${entry.intent} · ${entry.objectName || "战场"} · 气机 ${Number(entry.energyCost || 0)}`,
+    source: `${entry.intent} · ${entry.objectName || "战场"} · 行动 ${Number(entry.energyCost || 0)}`,
     meta: evaluation.available ? `${evaluation.ratingLabel} · ${attribute}` : "不可用",
     detail,
     kind: ["fatal", "dangerous"].includes(evaluation.rating) ? "danger" : entry.skillId || evaluation.rating === "safe" ? "special" : "",
@@ -2046,7 +2249,7 @@ function renderFirstNeedleAmbush() {
       <div class="combat-objective"><span>战斗目的</span><strong>${escapeHtml(board.objective || "活过伏击，并决定留下活口、取命或脱身。")}</strong></div>
       <div class="p0-turn-strip ${escapeHtml(turn.phase)}">
         <div><span>第 ${Number(turn.round)} 轮</span><strong>${turn.phase === "player" ? "你的回合" : "敌方回合"}</strong></div>
-        <div class="p0-energy" role="meter" aria-label="本轮气机" aria-valuemin="0" aria-valuemax="${Number(turn.maxEnergy)}" aria-valuenow="${Number(turn.energy)}"><span>气机 ${Number(turn.energy)} / ${Number(turn.maxEnergy)}</span><b>${energy}</b></div>
+        <div class="p0-energy" role="meter" aria-label="本轮行动" aria-valuemin="0" aria-valuemax="${Number(turn.maxEnergy)}" aria-valuenow="${Number(turn.energy)}"><span>行动 ${Number(turn.energy)} / ${Number(turn.maxEnergy)}</span><b>${energy}</b></div>
         <div><span>当前运用</span><strong>${escapeHtml(technique?.name || "徒手")}</strong></div>
       </div>
       <div class="combat-vitality-grid">
@@ -2075,7 +2278,7 @@ function renderFirstNeedleAmbush() {
       <div class="p0-action-heading"><span>眼下可取 · 至多连走三步</span><strong>先看敌招，再组合身位、环境与武学</strong></div>
       <div class="action-list">${recommended.map((entry) => p0CombatActionHtml(entry)).join("")}</div>
       ${moreActions.length ? `<details class="p0-more-actions"><summary>展开其余 ${moreActions.length} 条招路</summary><div class="action-list">${moreActions.map((entry) => p0CombatActionHtml(entry)).join("")}</div></details>` : ""}
-      <div class="button-row"><button class="primary-button ${turn.energy === 0 ? "danger-button" : ""}" data-action="end-first-battle-turn">${turn.energy === 0 ? "气机已尽，迎接敌方行动" : `收势，保留 ${Number(turn.energy)} 点未用气机`}</button></div>
+      <div class="button-row"><button class="primary-button ${turn.energy === 0 ? "danger-button" : ""}" data-action="end-first-battle-turn">${turn.energy === 0 ? "行动已尽，迎接敌方行动" : `收势，保留 ${Number(turn.energy)} 点未用行动`}</button></div>
     ` : `
       <div class="p0-enemy-resolution">
         <span>敌方行动 · ${Number(turn.enemyCursor) + 1} / ${Number(turn.enemyQueue.length)}</span>
@@ -2246,7 +2449,7 @@ function renderWangBattle() {
     ${sceneHeader(board.meta.location, pursuit ? "先看清尾随者，再让燕惊鸿脱开视线" : "王卓在东湖岸边抖开锁链刀", pursuit ? "这不是一场比谁先清空气血的搏杀。身份线索与同伴去向齐备之前，任何强攻都会把晚市变成他的掩护。" : "聚气境压住河岸，柳根后还有毒刃包抄。你要决定留下活口、当场取命、放线追踪，还是先护人撤走。")}
     <div class="battle-layout p0-combat-layout">
       <div class="combat-objective"><span>${pursuit ? "尾随目的" : "战斗目的"}</span><strong>${escapeHtml(board.objective)}</strong></div>
-      <div class="p0-turn-strip ${escapeHtml(board.turn.phase)}"><div><span>第 ${Number(board.turn.round)} 轮</span><strong>${board.turn.phase === "player" ? "你的回合" : "敌招连落"}</strong></div><div class="p0-energy" role="meter" aria-label="本轮气机" aria-valuemin="0" aria-valuemax="${Number(board.turn.maxEnergy)}" aria-valuenow="${Number(board.turn.energy)}"><span>气机 ${Number(board.turn.energy)} / ${Number(board.turn.maxEnergy)}</span><b>${energy}</b></div><div><span>当前身位</span><strong>${escapeHtml(board.playerNode?.shortName || "柳巷")}</strong></div></div>
+      <div class="p0-turn-strip ${escapeHtml(board.turn.phase)}"><div><span>第 ${Number(board.turn.round)} 轮</span><strong>${board.turn.phase === "player" ? "你的回合" : "敌招连落"}</strong></div><div class="p0-energy" role="meter" aria-label="本轮行动" aria-valuemin="0" aria-valuemax="${Number(board.turn.maxEnergy)}" aria-valuenow="${Number(board.turn.energy)}"><span>行动 ${Number(board.turn.energy)} / ${Number(board.turn.maxEnergy)}</span><b>${energy}</b></div><div><span>当前身位</span><strong>${escapeHtml(board.playerNode?.shortName || "柳巷")}</strong></div></div>
       <div class="combat-vitality-grid ${pursuit ? "pursuit-vitality" : ""}">
         ${combatVitalityBarHtml(state.name || "陈司命", COMBAT_STAGE_NAMES[state.martialStage] || state.martialStage, board.vitality.player, "player")}
         ${pursuit ? `<div class="p0-pursuit-board"><div><span>身份线索</span><strong>${identityProgress} / ${Number(board.pursuit?.identityGoal || 2)}</strong></div><div><span>燕惊鸿</span><strong>${board.pursuit?.allySafe ? "已脱身" : "仍在视线"}</strong></div><div><span>对方警觉</span><strong>${Number(board.pursuit?.alert || 0)}</strong></div></div>` : combatVitalityBarHtml(primaryEnemy?.name || "王卓", COMBAT_STAGE_NAMES[primaryEnemy?.stageId] || primaryEnemy?.stageId, board.vitality.enemy, "enemy")}
@@ -2255,7 +2458,7 @@ function renderWangBattle() {
       <div class="p0-spatial-board">${p0CombatPositionMapHtml(board)}<div class="combat-state-board"><div><span>同行之人</span><strong>燕惊鸿 · ${board.conditions.allySafe ? "已经安全" : board.conditions.allyGuard ? "已有掩护" : "仍受威胁"}</strong></div><div><span>当前代价</span><strong>${state.p0.wounds.length ? `${state.p0.wounds.length} 处伤势` : "尚未受伤"}</strong></div></div></div>
       ${lastEntry?.check ? combatCheckResultHtml(lastEntry.check, lastEntry.text) : lastEntry?.text ? `<div class="battle-log"><p><strong>${lastEntry.phase === "enemy" ? "敌方落招：" : "刚才："}</strong>${escapeHtml(lastEntry.text)}</p></div>` : ""}
     </div>
-    ${board.turn.phase === "player" ? `<div class="p0-action-heading"><span>${pursuit ? "眼下可取 · 不必拔针" : "眼下可取 · 先拆威胁再收束"}</span><strong>${pursuit ? "身份与同伴去向都比气血重要" : "环境、同伴和武学共用三点气机"}</strong></div><div class="action-list">${recommended.map((entry) => p0CombatActionHtml(entry, "wang-battle-action")).join("")}</div>${moreActions.length ? `<details class="p0-more-actions"><summary>展开其余 ${moreActions.length} 条路</summary><div class="action-list">${moreActions.map((entry) => p0CombatActionHtml(entry, "wang-battle-action")).join("")}</div></details>` : ""}<div class="button-row"><button class="primary-button" data-action="end-wang-battle-turn">收势，让敌方意图依次落下</button></div>` : `<div class="p0-enemy-resolution"><span>敌招正在结算</span><strong>无需逐招确认</strong><p>刀、弩、毒伤与失血会按已公开的顺序连续落定。</p><button class="primary-button danger-button" data-action="resolve-wang-enemy">继续结算</button></div>`}
+    ${board.turn.phase === "player" ? `<div class="p0-action-heading"><span>${pursuit ? "眼下可取 · 不必拔针" : "眼下可取 · 先拆威胁再收束"}</span><strong>${pursuit ? "身份与同伴去向都比气血重要" : "环境、同伴和武学共用三点行动"}</strong></div><div class="action-list">${recommended.map((entry) => p0CombatActionHtml(entry, "wang-battle-action")).join("")}</div>${moreActions.length ? `<details class="p0-more-actions"><summary>展开其余 ${moreActions.length} 条路</summary><div class="action-list">${moreActions.map((entry) => p0CombatActionHtml(entry, "wang-battle-action")).join("")}</div></details>` : ""}<div class="button-row"><button class="primary-button" data-action="end-wang-battle-turn">收势，让敌方意图依次落下</button></div>` : `<div class="p0-enemy-resolution"><span>敌招正在结算</span><strong>无需逐招确认</strong><p>刀、弩、毒伤与失血会按已公开的顺序连续落定。</p><button class="primary-button danger-button" data-action="resolve-wang-enemy">继续结算</button></div>`}
   `);
 }
 
@@ -2676,12 +2879,15 @@ function screenMode() {
 function render() {
   document.body.dataset.mode = screenMode();
   document.body.dataset.inventoryOpen = inventoryUi.open ? "true" : "false";
+  document.body.dataset.characterOpen = characterUi.open ? "true" : "false";
   const renderer = renderers[state.screen] || renderLanding;
   const feedbackWasRendered = Boolean(pendingSceneFeedback?.text);
   const inventoryFeedbackWasRendered = Boolean(pendingInventoryFeedback?.text);
+  const characterFeedbackWasRendered = Boolean(pendingCharacterFeedback?.text);
   app.innerHTML = renderer();
   pendingSceneFeedback = null;
   pendingInventoryFeedback = null;
+  pendingCharacterFeedback = null;
   requestAnimationFrame(() => {
     positionSceneCanvasMarkers();
     const deck = app.querySelector(".world-stage-shell .narrative-deck");
@@ -2695,6 +2901,10 @@ function render() {
     }
     if (inventoryFeedbackWasRendered) {
       const feedback = app.querySelector(".inventory-feedback");
+      if (feedback) window.setTimeout(() => feedback.remove(), 1650);
+    }
+    if (characterFeedbackWasRendered) {
+      const feedback = app.querySelector(".character-feedback");
       if (feedback) window.setTimeout(() => feedback.remove(), 1650);
     }
   });
@@ -2825,7 +3035,7 @@ function combatOutcomeText(result) {
     ? `因果骰掷出 ${check.roll}，加上行动修正 ${check.modifier >= 0 ? `+${check.modifier}` : check.modifier}，合计 ${check.total}，判定为${check.tierLabel || COMBAT_CHECK_LABELS[check.tier] || "落定"}。`
     : "";
   const impact = result.impact
-    ? `气血变化：你失去 ${Number(result.impact.playerDamage || 0)}，刀客失去 ${Number(result.impact.enemyDamage || 0)}。`
+    ? `气血变化：你失去 ${Number(result.impact.playerDamage || 0)}，敌方失去 ${Number(result.impact.enemyDamage || 0)}${result.impact.preventedDamage ? `，装备卸去 ${Number(result.impact.preventedDamage)} 点伤害` : ""}。`
     : "";
   return `${checkText}${impact}${result.text || result.battle?.lastResult || result.cause || ""}`;
 }
@@ -2945,7 +3155,77 @@ const handlers = {
     if (!node) return;
     updateSceneInspection("去处", node.label, node.detail, "route-node", value, node.status === "locked" ? "路径 · 尚未走通" : "路径 · 已知");
   },
+  "open-character": () => {
+    inventoryUi.open = false;
+    characterUi.open = true;
+    characterUi.section = "body";
+    characterUi.category = "all";
+    render();
+  },
+  "close-character": () => {
+    characterUi.open = false;
+    render();
+  },
+  "character-section": (value) => {
+    if (!["body", "relations", "arts"].includes(value)) return;
+    characterUi.section = value;
+    render();
+  },
+  "character-equipment-category": (value) => {
+    if (!["all", "weapon", "armor", "accessory"].includes(value)) return;
+    characterUi.category = value;
+    render();
+  },
+  "equip-character-item": (value) => {
+    const before = characterCombatProfile(state);
+    const equipped = equipEquipmentItem(state.equipment, value, { attributes: state.attributes });
+    if (!equipped.available) {
+      pendingCharacterFeedback = { text: equipped.reason, tone: "danger" };
+      return render();
+    }
+    state.equipment = equipped.state;
+    const after = characterCombatProfile(state);
+    state.characterVitals.health = Math.min(after.maxHealth, before.health);
+    state.characterVitals.qi = Math.min(after.maxQi, before.qi);
+    pendingCharacterFeedback = { text: equipped.reason, tone: "gain" };
+    track("equipment_equipped", { item: value, slot: equipped.slotId });
+    refresh();
+  },
+  "unequip-character-item": (value) => {
+    const before = characterCombatProfile(state);
+    const removed = unequipEquipmentSlot(state.equipment, value);
+    if (!removed.available) return;
+    state.equipment = removed.state;
+    const after = characterCombatProfile(state);
+    state.characterVitals.health = Math.min(after.maxHealth, before.health);
+    state.characterVitals.qi = Math.min(after.maxQi, before.qi);
+    pendingCharacterFeedback = { text: removed.reason, tone: "relief" };
+    track("equipment_unequipped", { item: removed.item?.id, slot: value });
+    refresh();
+  },
+  "character-trait-detail": () => {
+    pendingCharacterFeedback = {
+      text: state.destinyRevealed ? DESTINY.effect : "这道命格仍藏在玉佩与来处之后。",
+      tone: "gain",
+    };
+    render();
+  },
+  "character-global-switch": (value) => {
+    characterUi.open = false;
+    if (value === "inventory") {
+      inventoryUi.open = true;
+      inventoryUi.category = "all";
+      inventoryUi.selectedId = null;
+      return render();
+    }
+    render();
+    if (value === "martial") requestAnimationFrame(() => {
+      const drawer = app.querySelector(".martial-panel");
+      if (drawer) drawer.open = true;
+    });
+  },
   "open-inventory": () => {
+    characterUi.open = false;
     inventoryUi.open = true;
     inventoryUi.category = "all";
     inventoryUi.selectedId = null;
@@ -2958,9 +3238,15 @@ const handlers = {
   "inventory-switch": (value) => {
     if (!["character", "martial"].includes(value)) return;
     inventoryUi.open = false;
+    if (value === "character") {
+      characterUi.open = true;
+      characterUi.section = "body";
+      characterUi.category = "all";
+      return render();
+    }
     render();
     requestAnimationFrame(() => {
-      const drawer = app.querySelector(value === "character" ? ".character-panel" : ".martial-panel");
+      const drawer = app.querySelector(".martial-panel");
       if (drawer) drawer.open = true;
     });
   },

@@ -1,10 +1,17 @@
-import { rollCausalDie } from "./wudao-p0-core.mjs?v=20260723.4";
+import { rollCausalDie } from "./wudao-p0-core.mjs?v=20260724.1";
+import {
+  actionTargetValue,
+  applyDamageReduction,
+  calculateDamageRange,
+  damageForTier,
+} from "./character-system.mjs?v=20260724.1";
 
 export const COMBAT_MAX_ENERGY = 3;
 
 export const COMBAT_STAGE_ORDER = Object.freeze({
   mortal: 0,
   body: 1,
+  breath: 2,
   qi: 2,
   meridian: 3,
   master: 4,
@@ -168,6 +175,7 @@ function contextFor(state, context = {}) {
 }
 
 function maximumVitality(setup, wounds = []) {
+  if (Number.isFinite(Number(setup.combatStats?.maxHealth))) return Math.max(1, Number(setup.combatStats.maxHealth));
   const constitution = Number(setup.attributes?.constitution || 0);
   const base = 12 + constitution * 2 + stageIndex(setup.playerStage || "mortal") * 4;
   const injuryLoss = wounds.reduce((total, wound) => total + Math.max(0, Number(wound.severity || 0)) * 2, 0);
@@ -212,8 +220,12 @@ function createParticipants(definition, setup) {
     name: definition.player?.name || "陈司命",
     side: "player",
     stageId: setup.playerStage || "mortal",
-    current: maximum,
+    current: Math.max(0, Math.min(maximum, Number(setup.combatStats?.health ?? maximum))),
     max: maximum,
+    qi: Math.max(0, Math.min(Number(setup.combatStats?.maxQi || 0), Number(setup.combatStats?.qi ?? setup.combatStats?.maxQi ?? 0))),
+    maxQi: Math.max(0, Number(setup.combatStats?.maxQi || 0)),
+    defense: Math.max(0, Number(setup.combatStats?.defense || 0)),
+    reduction: Math.max(0, Number(setup.combatStats?.reduction || 0)),
     statuses: [],
     wounds: clone(setup.wounds),
   };
@@ -225,6 +237,8 @@ function createParticipants(definition, setup) {
       ...clone(entry),
       current: Number(entry.current ?? entry.max ?? 1),
       max: Number(entry.max ?? entry.current ?? 1),
+      defense: Math.max(0, Number(entry.defense || 0)),
+      reduction: Math.max(0, Number(entry.reduction || 0)),
       statuses: clone(entry.statuses || []),
       wounds: clone(entry.wounds || []),
       active: false,
@@ -348,6 +362,25 @@ function actionDefinition(definition, actionId) {
   return definition.actions.find((entry) => entry.id === actionId) || null;
 }
 
+function qiBoostDefinition(definition, actionId) {
+  if (!String(actionId).endsWith("__qi")) return null;
+  const baseId = String(actionId).slice(0, -4);
+  const base = actionDefinition(definition, baseId);
+  if (!base?.qiBoost || !base.formulaDamage) return null;
+  const cost = Math.max(1, Number(base.qiBoost.cost || 1));
+  const power = Math.max(1, Number(base.qiBoost.power || 2));
+  return {
+    ...base,
+    id: actionId,
+    title: `运气·${base.title}`,
+    description: `${base.description} 运转${cost}点真气，把这一式的威力再推高一层。`,
+    qiCost: cost,
+    qiPower: power,
+    successPreview: `${base.successPreview || "招式得手"} · 真气强化`,
+    recommendationWeight: Number(base.recommendationWeight || 0) + 2,
+  };
+}
+
 function movementDefinition(state, definition, actionId) {
   if (!String(actionId).startsWith("move_")) return null;
   const destination = String(actionId).slice(5);
@@ -391,7 +424,7 @@ function movementDefinition(state, definition, actionId) {
 }
 
 function internalAction(state, definition, actionId) {
-  return actionDefinition(definition, actionId) || movementDefinition(state, definition, actionId);
+  return actionDefinition(definition, actionId) || qiBoostDefinition(definition, actionId) || movementDefinition(state, definition, actionId);
 }
 
 function allowedInStage(action, stageId) {
@@ -422,6 +455,7 @@ function stableConditions(conditions) {
 }
 
 function causalKey(state, action, context) {
+  const causalActionId = String(action.id || "").replace(/__qi$/, "");
   const wounds = (state.wounds || [])
     .map((wound) => `${wound.id}:${wound.bodyPart}:${wound.severity}:${Number(Boolean(wound.stabilized))}`)
     .sort()
@@ -439,7 +473,7 @@ function causalKey(state, action, context) {
     state.battle.stageId,
     `round-${state.turn.round}`,
     `stage-round-${state.turn.stageRound}`,
-    action.id,
+    causalActionId,
     `positions-${stableConditions(state.positions)}`,
     `conditions-${stableConditions(state.battle.conditions)}`,
     `facts-${unique(context.knownFacts).sort().join(",")}`,
@@ -472,7 +506,11 @@ export function evaluateCombatAction(state, actionOrId, definition, suppliedCont
   if (state.turn.phase !== "player") return { available: false, reason: "敌方正在行动。", rating: "locked", ratingLabel: RATING_LABELS.locked };
   if (!allowedInStage(action, state.battle.stageId)) return { available: false, reason: "这个行动不属于眼前战局。", rating: "locked", ratingLabel: RATING_LABELS.locked };
   const energyCost = Math.max(0, Number(action.energyCost ?? 1));
-  if (energyCost > state.turn.energy) return { available: false, reason: `气机不足：需要${energyCost}点。`, rating: "locked", ratingLabel: RATING_LABELS.locked };
+  if (energyCost > state.turn.energy) return { available: false, reason: `行动不足：需要${energyCost}点。`, rating: "locked", ratingLabel: RATING_LABELS.locked };
+  const qiCost = Math.max(0, Number(action.qiCost || 0));
+  if (qiCost > Number(state.battle.participants.player.qi || 0)) {
+    return { available: false, reason: `真气不足：需要${qiCost}点。`, rating: "locked", ratingLabel: RATING_LABELS.locked };
+  }
   const context = contextFor(state, suppliedContext);
   const availability = action.availableWhen?.(state, context);
   if (availability === false || typeof availability === "string") {
@@ -521,7 +559,8 @@ export function evaluateCombatAction(state, actionOrId, definition, suppliedCont
     - (disadvantages.length ? 2 : 0)
     - injury.penalty
     + Number(action.modifier || 0);
-  const targetValue = 4 + Number(action.difficulty || 0);
+  const targetDefense = action.directCombat && !action.ignoreDefense ? Number(target?.defense || 0) : 0;
+  const targetValue = actionTargetValue(action.difficulty, targetDefense);
   const greatTarget = targetValue + 3;
   const forwardCount = forwardOutcomeCount(score, targetValue);
   let rating = forwardCount >= 8 ? "safe" : forwardCount >= 5 ? "viable" : "dangerous";
@@ -537,6 +576,8 @@ export function evaluateCombatAction(state, actionOrId, definition, suppliedCont
   if (disadvantages.length) reasons.push(`${disadvantages[0]}：不利`);
   if (injury.penalty) reasons.push(`相关伤势 -${injury.penalty}`);
   if (action.modifier) reasons.push(`行动修正 ${Number(action.modifier) > 0 ? "+" : ""}${Number(action.modifier)}`);
+  if (targetDefense) reasons.push(`目标防御 +${targetDefense}`);
+  if (qiCost) reasons.push(`真气 ${qiCost} · 威力 +${Number(action.qiPower || 0)}`);
   return {
     available: true,
     rating,
@@ -553,6 +594,7 @@ export function evaluateCombatAction(state, actionOrId, definition, suppliedCont
     disadvantageReasons: disadvantages,
     woundPenalty: injury.penalty,
     energyCost,
+    qiCost,
     check: {
       die: "1D10",
       modifier: score,
@@ -654,6 +696,8 @@ function reallocateAttribute(setup, targetAttribute) {
 
 function applyEffects(state, effects = []) {
   const impact = {
+    rawDamage: 0,
+    preventedDamage: 0,
     playerDamage: 0,
     playerHealing: 0,
     enemyDamage: 0,
@@ -665,7 +709,13 @@ function applyEffects(state, effects = []) {
   for (const effect of effects || []) {
     if (!effect) continue;
     if (effect.type === "damage") {
-      const damage = applyDamage(state, effect.targetId, effect.amount, effect.floor || 0);
+      const target = participant(state, effect.targetId);
+      const reduced = effect.ignoreReduction
+        ? { raw: Math.max(0, Number(effect.amount || 0)), final: Math.max(0, Number(effect.amount || 0)), prevented: 0 }
+        : applyDamageReduction(effect.amount, target?.reduction || 0, effect.penetration || 0);
+      const damage = applyDamage(state, effect.targetId, reduced.final, effect.floor || 0);
+      impact.rawDamage += reduced.raw;
+      impact.preventedDamage += reduced.prevented;
       if (effect.targetId === "player") impact.playerDamage += damage;
       else if (state.battle.participants.enemies[effect.targetId]) {
         impact.enemyDamage += damage;
@@ -733,6 +783,36 @@ function applyEffects(state, effects = []) {
   return impact;
 }
 
+function effectsForCombatFormula(action, tier, outcome, state, context) {
+  const effects = clone(outcome?.effects || []);
+  if (!action.formulaDamage || !action.targetId) return { effects, range: null, damage: null };
+  const range = calculateDamageRange({
+    attributes: context.attributes,
+    stageId: context.playerStage,
+    equipment: context.equipment,
+    kind: action.formulaDamage.kind || "melee",
+    techniquePower: Number(action.formulaDamage.techniquePower || 0),
+    qiBoost: Number(action.qiPower || 0),
+    weapon: action.formulaDamage.weapon || null,
+  });
+  const damage = damageForTier(range, tier);
+  const existingIndex = effects.findIndex((effect) => effect?.type === "damage" && effect.targetId === action.targetId);
+  if (damage > 0) {
+    const formulaEffect = {
+      type: "damage",
+      targetId: action.targetId,
+      amount: damage,
+      penetration: Number(action.formulaDamage.penetration ?? range.penetration ?? 0),
+      floor: existingIndex >= 0 ? Number(effects[existingIndex].floor || 0) : 0,
+    };
+    if (existingIndex >= 0) effects[existingIndex] = formulaEffect;
+    else effects.unshift(formulaEffect);
+  } else if (existingIndex >= 0) {
+    effects.splice(existingIndex, 1);
+  }
+  return { effects, range, damage };
+}
+
 function outcomeFor(action, tier, state, context) {
   if (typeof action.resolve === "function") return action.resolve(state, tier, context);
   return clone(action.outcomes?.[tier] || action.outcomes?.failure || { text: "这一手没有改变战局。", effects: [] });
@@ -740,6 +820,8 @@ function outcomeFor(action, tier, state, context) {
 
 function mergeImpact(first, second) {
   return {
+    rawDamage: Number(first?.rawDamage || 0) + Number(second?.rawDamage || 0),
+    preventedDamage: Number(first?.preventedDamage || 0) + Number(second?.preventedDamage || 0),
     playerDamage: Number(first?.playerDamage || 0) + Number(second?.playerDamage || 0),
     playerHealing: Number(first?.playerHealing || 0) + Number(second?.playerHealing || 0),
     enemyDamage: Number(first?.enemyDamage || 0) + Number(second?.enemyDamage || 0),
@@ -889,8 +971,10 @@ export function resolveCombatAction(state, actionId, definition, suppliedContext
   const context = contextFor(next, suppliedContext);
   const resolved = resolveCheck(next, action, evaluation, context);
   const outcome = outcomeFor(action, resolved.tier, next, context) || {};
-  const impact = applyEffects(next, outcome.effects || []);
+  const formula = effectsForCombatFormula(action, resolved.tier, outcome, next, context);
+  const impact = applyEffects(next, formula.effects);
   next.turn.energy = Math.max(0, next.turn.energy - Number(action.energyCost ?? 1));
+  next.battle.participants.player.qi = Math.max(0, Number(next.battle.participants.player.qi || 0) - Number(action.qiCost || 0));
   if (outcome.energy != null) next.turn.energy = Math.max(0, Number(outcome.energy));
   if (outcome.pendingOutcome) {
     next.pendingOutcome = {
@@ -910,6 +994,8 @@ export function resolveCombatAction(state, actionId, definition, suppliedContext
     actionId: action.id,
     intent: action.intent,
     energyCost: Number(action.energyCost ?? 1),
+    qiCost: Number(action.qiCost || 0),
+    damageRange: formula.range,
     position: action.type === "move" ? `${nodeName(state, definition, state.positions.player)}→${nodeName(next, definition, next.positions.player)}` : null,
     outcome: outcome.outcome || (outcome.pendingOutcome ? outcome.pendingOutcome.outcome : "player_action"),
     rating: resolved.evaluation.rating,
@@ -934,8 +1020,12 @@ export function resolveCombatAction(state, actionId, definition, suppliedContext
       check: resolved.check,
       impact: {
         ...impact,
+        damageRange: formula.range,
+        formulaDamage: formula.damage,
         playerHp: next.battle.participants.player.current,
         playerMaxHp: next.battle.participants.player.max,
+        playerQi: next.battle.participants.player.qi,
+        playerMaxQi: next.battle.participants.player.maxQi,
         enemyHp: (activeEnemies(next).find((entry) => entry.primary) || Object.values(next.battle.participants.enemies)[0])?.current || 0,
       },
       battle: clone(next.battle),
@@ -959,9 +1049,11 @@ function projectedActionState(state, action, evaluation, definition, context) {
   if (!evaluation.available) return { projected, outcome: null, tier: null };
   const tier = projectedTier(state, action, evaluation, context);
   const outcome = outcomeFor(action, tier, projected, context) || {};
-  applyEffects(projected, outcome.effects || []);
+  const formula = effectsForCombatFormula(action, tier, outcome, projected, context);
+  applyEffects(projected, formula.effects);
+  projected.battle.participants.player.qi = Math.max(0, Number(projected.battle.participants.player.qi || 0) - Number(action.qiCost || 0));
   if (outcome.pendingOutcome) projected.pendingOutcome = clone(outcome.pendingOutcome);
-  return { projected, outcome, tier };
+  return { projected, outcome: { ...outcome, effects: formula.effects, damageRange: formula.range }, tier };
 }
 
 function enemyHelpers(state, definition) {
@@ -982,9 +1074,10 @@ export function getEnemyIntents(state, definition, suppliedContext = {}) {
 
 function enemyForecast(state, definition, context) {
   const intents = getEnemyIntents(state, definition, context);
+  const reduction = Number(state.battle.participants.player.reduction || 0);
   const damage = intents.reduce((total, intent) => total + (intent.effects || [])
     .filter((effect) => effect.type === "damage" && effect.targetId === "player")
-    .reduce((subtotal, effect) => subtotal + Number(effect.amount || 0), 0), 0);
+    .reduce((subtotal, effect) => subtotal + applyDamageReduction(effect.amount, reduction, effect.penetration || 0).final, 0), 0);
   const poison = state.battle.participants.player.statuses.reduce((total, status) => total + Number(status.tickDamage || 0), 0);
   return {
     intents,
@@ -1018,11 +1111,14 @@ export function getAvailableCombatActions(state, definition, suppliedContext = {
   if (state.status !== "fighting" || state.pendingOutcome || state.turn.phase !== "player") return [];
   const stageId = state.battle.stageId;
   const defined = definition.actions.filter((action) => allowedInStage(action, stageId));
+  const qiBoosted = Number(state.battle.participants.player.maxQi || 0) > 0
+    ? defined.filter((action) => action.qiBoost && action.formulaDamage).map((action) => qiBoostDefinition(definition, `${action.id}__qi`))
+    : [];
   const moves = stageNodes(definition, state)
     .filter((node) => node.playerSelectable !== false && node.id !== state.positions.player)
     .map((node) => movementDefinition(state, definition, `move_${node.id}`))
     .filter(Boolean);
-  return [...defined, ...moves].map((action) => {
+  return [...defined, ...qiBoosted, ...moves].map((action) => {
     const evaluation = evaluateCombatAction(state, action, definition, suppliedContext);
     const context = contextFor(state, suppliedContext);
     const projected = projectedActionState(state, action, evaluation, definition, context);
@@ -1057,8 +1153,9 @@ export function getRecommendedCombatActions(state, definition, focusId = "defaul
     .sort((a, b) => b.score - a.score || a.index - b.index)
     .map(({ action }) => action)
     .filter((action) => {
-      if (seen.has(action.id)) return false;
-      seen.add(action.id);
+      const baseActionId = String(action.id || "").replace(/__qi$/, "");
+      if (seen.has(baseActionId)) return false;
+      seen.add(baseActionId);
       return true;
     })
     .slice(0, 3);
@@ -1073,6 +1170,50 @@ export function startEnemyPhase(state, definition, suppliedContext = {}) {
   next.turn.enemyCursor = 0;
   next.turn.actedEnemyIds = [];
   return { available: true, session: next };
+}
+
+function resolveEnemyIntentEffects(state, action) {
+  const effects = clone(action.effects || []);
+  const damaging = effects.some((effect) => effect?.type === "damage" && effect.targetId === "player");
+  if (!damaging || action.ignoreDefense) return { effects, check: null, tier: "success" };
+  const attacker = participant(state, action.unitId);
+  const player = state.battle.participants.player;
+  const modifier = Number(action.attackBonus ?? (2 + stageIndex(attacker?.stageId || "mortal") * 2));
+  const target = actionTargetValue(Number(action.difficulty || 0), Number(player.defense || 0));
+  const greatTarget = target + 3;
+  const causalKey = [
+    state.encounterId,
+    state.battle.stageId,
+    `enemy-${action.unitId || "unknown"}`,
+    `round-${state.turn.round}`,
+    action.id,
+    `defense-${Number(player.defense || 0)}`,
+  ].join("|");
+  const roll = rollCausalDie(state.setup.fateSeed, causalKey, 10);
+  const resolved = resolvedTier(roll, modifier, target, greatTarget);
+  const adjusted = effects.flatMap((effect) => {
+    if (effect.targetId !== "player") return [effect];
+    if (resolved.tier === "failure" && ["damage", "wound", "status"].includes(effect.type)) return [];
+    if (effect.type !== "damage") return [effect];
+    const maximum = Math.max(1, Number(effect.amount || 0));
+    const minimum = Math.max(1, Math.ceil(maximum / 2));
+    return [{ ...effect, amount: damageForTier({ min: minimum, max: maximum }, resolved.tier) }];
+  });
+  return {
+    effects: adjusted,
+    tier: resolved.tier,
+    check: {
+      die: "1D10",
+      roll,
+      modifier,
+      target,
+      greatTarget,
+      total: resolved.total,
+      tier: resolved.tier,
+      tierLabel: TIER_LABELS[resolved.tier],
+      causalKey,
+    },
+  };
 }
 
 function tickStatuses(state) {
@@ -1167,10 +1308,13 @@ export function resolveEnemyAction(state, definition) {
   }
   const next = clone(state);
   const action = clone(next.turn.enemyQueue[next.turn.enemyCursor]);
-  const impact = applyEffects(next, action.effects || []);
+  const enemyCheck = resolveEnemyIntentEffects(next, action);
+  const impact = applyEffects(next, enemyCheck.effects);
   next.turn.enemyCursor += 1;
   if (action.unitId) next.turn.actedEnemyIds.push(action.unitId);
-  const text = action.text || `${action.label || "敌招"}已经兑现。`;
+  const text = enemyCheck.tier === "failure"
+    ? `${action.label || "敌招"}落空，你的防御与身位把这一击让了过去。`
+    : action.text || `${action.label || "敌招"}已经兑现。`;
   next.battle.lastResult = text;
   next.history.push({
     round: next.turn.round,
@@ -1182,6 +1326,7 @@ export function resolveEnemyAction(state, definition) {
     intent: action.label,
     position: action.from && action.to ? `${nodeName(next, definition, action.from)}→${nodeName(next, definition, action.to)}` : null,
     impact,
+    check: enemyCheck.check,
     text,
   });
   if (next.battle.participants.player.current <= 0) finalizeDeath(next, definition, action.death || {});
@@ -1192,8 +1337,11 @@ export function resolveEnemyAction(state, definition) {
     action,
     impact: {
       ...impact,
+      check: enemyCheck.check,
       playerHp: next.battle.participants.player.current,
       playerMaxHp: next.battle.participants.player.max,
+      playerQi: next.battle.participants.player.qi,
+      playerMaxQi: next.battle.participants.player.maxQi,
       enemyHp: (activeEnemies(next).find((entry) => entry.primary) || Object.values(next.battle.participants.enemies)[0])?.current || 0,
     },
     text,

@@ -156,7 +156,7 @@ async function snapshot(label) {
       }));
     })(),
     routeNodeCount: document.querySelectorAll(".route-node").length,
-    dockCount: document.querySelectorAll(".dock-drawer").length,
+    dockCount: document.querySelectorAll(".utility-dock > *").length,
     narrativeHistoryCount: document.querySelectorAll(".narrative-entry").length,
     choiceConditionCount: document.querySelectorAll(".choice-condition").length,
     narrativeOverflow: (() => {
@@ -221,6 +221,41 @@ async function snapshot(label) {
         overflowY: overlay ? overlay.scrollHeight - overlay.clientHeight : 0,
       };
     })(),
+    characterView: (() => {
+      const overlay = document.querySelector(".character-screen");
+      const rect = overlay?.getBoundingClientRect();
+      const box = (selector) => {
+        const target = document.querySelector(selector)?.getBoundingClientRect();
+        return target ? [target.left, target.top, target.width, target.height] : [0, 0, 0, 0];
+      };
+      const slots = [...document.querySelectorAll(".character-equipment-slot")];
+      const bagSlots = [...document.querySelectorAll(".character-bag-item")];
+      return {
+        visible: Boolean(overlay),
+        rect: rect ? [rect.left, rect.top, rect.width, rect.height] : [0, 0, 0, 0],
+        topbarRect: box(".character-screen .inventory-topbar"),
+        leftRect: box(".character-left-panel"),
+        paperdollRect: box(".character-paperdoll"),
+        bagRect: box(".character-equipment-bag"),
+        name: document.querySelector(".character-profile-copy h1")?.textContent?.trim() || "",
+        realm: document.querySelector(".character-realm")?.textContent?.replace(/\\s+/g, " ").trim() || "",
+        health: document.querySelector(".vital-row.health")?.textContent?.replace(/\\s+/g, " ").trim() || "",
+        qi: document.querySelector(".vital-row.qi")?.textContent?.replace(/\\s+/g, " ").trim() || "",
+        attributes: [...document.querySelectorAll(".attribute-medallion")].map((entry) => entry.textContent.replace(/\\s+/g, " ").trim()),
+        defense: document.querySelector(".character-defense-row")?.textContent?.replace(/\\s+/g, " ").trim() || "",
+        equipmentSlots: slots.length,
+        equipmentSlotSizes: slots.map((entry) => {
+          const slotRect = entry.getBoundingClientRect();
+          return [Math.round(slotRect.width * 10) / 10, Math.round(slotRect.height * 10) / 10];
+        }),
+        bagSlots: bagSlots.length,
+        occupiedBagSlots: bagSlots.filter((entry) => !entry.classList.contains("empty")).length,
+        profileText: document.querySelector(".character-profile-copy")?.textContent?.replace(/\\s+/g, " ").trim() || "",
+        heroBackground: getComputedStyle(document.querySelector(".character-hero") || document.body).backgroundImage,
+        overflowX: overlay ? overlay.scrollWidth - overlay.clientWidth : 0,
+        overflowY: overlay ? overlay.scrollHeight - overlay.clientHeight : 0,
+      };
+    })(),
     openingActionScale: (() => {
       const shell = document.querySelector(".world-stage-shell")?.getBoundingClientRect();
       const action = document.querySelector(".opening-action-list .action-card")?.getBoundingClientRect();
@@ -260,8 +295,8 @@ const checkpoints = [];
 checkpoints.push(await snapshot("landing"));
 assert.equal(checkpoints.at(-1).title, "武道");
 assert.ok(checkpoints.at(-1).scrollWidth <= 1280);
-assert.match(await evaluate(`document.querySelector('script[type="module"]')?.src || ""`), /wudao-app\.mjs\?v=20260723\.4/);
-assert.match(await evaluate(`document.querySelector('link[rel="stylesheet"]')?.href || ""`), /styles\.css\?v=20260723\.4/);
+assert.match(await evaluate(`document.querySelector('script[type="module"]')?.src || ""`), /wudao-app\.mjs\?v=20260724\.1/);
+assert.match(await evaluate(`document.querySelector('link[rel="stylesheet"]')?.href || ""`), /styles\.css\?v=20260724\.1/);
 assert.match(checkpoints.at(-1).text, /大曜四百二十七年/);
 assert.doesNotMatch(checkpoints.at(-1).text, /现实|论坛|武道局|其他玩家|其它玩家|太虚命盘|归尘门|黑日|Demo|P0|P1|P2|测试|原型/);
 
@@ -464,7 +499,28 @@ assert.ok(landscapeTasks.scrollWidth <= 844);
 assert.equal(landscapeTasks.splitView, true);
 assert.equal(landscapeTasks.dockCount, 3);
 await screenshot("wudao-temple-encounters-landscape.png");
-assert.equal(await evaluate(`(() => { const drawer = document.querySelector(".character-panel"); drawer.querySelector("summary").click(); return drawer.open; })()`), true);
+await click("open-character");
+const landscapeCharacter = await snapshot("character-phone-landscape");
+assert.equal(landscapeCharacter.characterView.visible, true);
+assert.ok(Math.abs(landscapeCharacter.characterView.rect[2] - 844) < 2, JSON.stringify(landscapeCharacter.characterView));
+assert.ok(Math.abs(landscapeCharacter.characterView.rect[3] - 390) < 2, JSON.stringify(landscapeCharacter.characterView));
+assert.equal(landscapeCharacter.characterView.name, "陈司命");
+assert.match(landscapeCharacter.characterView.realm, /境界/);
+assert.match(landscapeCharacter.characterView.health, /气血/);
+assert.match(landscapeCharacter.characterView.qi, /真气/);
+assert.equal(landscapeCharacter.characterView.attributes.length, 5);
+assert.equal(landscapeCharacter.characterView.equipmentSlots, 9);
+assert.equal(new Set(landscapeCharacter.characterView.equipmentSlotSizes.map((entry) => entry.join("x"))).size, 1, JSON.stringify(landscapeCharacter.characterView.equipmentSlotSizes));
+assert.equal(landscapeCharacter.characterView.bagSlots, 24);
+assert.equal(landscapeCharacter.characterView.occupiedBagSlots, 12);
+assert.doesNotMatch(landscapeCharacter.characterView.profileText, /潜能|命灯/);
+assert.match(landscapeCharacter.characterView.heroBackground, /chen-siming-paperdoll/);
+assert.ok(landscapeCharacter.characterView.overflowX <= 1, JSON.stringify(landscapeCharacter.characterView));
+assert.ok(landscapeCharacter.characterView.overflowY <= 1, JSON.stringify(landscapeCharacter.characterView));
+await click("equip-character-item", "traveler_straw_hat");
+assert.match(await evaluate(`document.querySelector(".slot-head")?.getAttribute("aria-label") || ""`), /江行斗笠/);
+await screenshot("wudao-character-phone-landscape.png");
+await click("close-character");
 await click("open-inventory");
 const landscapeInventory = await snapshot("inventory-phone-landscape");
 assert.equal(landscapeInventory.inventoryView.visible, true);
@@ -477,7 +533,7 @@ assert.ok(landscapeInventory.scrollHeight <= 390);
 await screenshot("wudao-full-inventory-phone-landscape.png");
 await click("inventory-switch", "martial");
 await evaluate(`new Promise((resolve) => requestAnimationFrame(resolve))`);
-assert.equal(await evaluate(`document.querySelector(".martial-panel").open && !document.querySelector(".character-panel").open`), true);
+assert.equal(await evaluate(`document.querySelector(".martial-panel").open && !document.querySelector(".character-screen")`), true);
 await screenshot("wudao-temple-drawers-landscape.png");
 await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
 await click("temple-task", "traveler_relic");
@@ -890,7 +946,7 @@ if (!savedEntry) throw new Error("Missing local save after complete flow");
 const saved = JSON.parse(savedEntry[1]);
 assert.equal(saved.backgroundId, "mystery");
 assert.equal(saved.vowId, "path");
-assert.equal(saved.version, 5);
+assert.equal(saved.version, 6);
 assert.equal(saved.fateSeed, "seed-2");
 assert.ok(Array.isArray(saved.narrativeLog));
 assert.ok(saved.narrativeLog.length > 0 && saved.narrativeLog.length <= 64);
@@ -1001,7 +1057,34 @@ assert.equal(usedPillState.alchemyPills, 5);
 assert.match(await evaluate(`document.querySelector(".inventory-feedback")?.textContent || ""`), /回春丹 -1 · 伤势稳定/);
 await screenshot("wudao-full-inventory-used-pill.png");
 await click("close-inventory");
+await click("open-character");
+const characterReference = await snapshot("character-reference-1672x941");
+assert.equal(characterReference.characterView.visible, true);
+assert.ok(Math.abs(characterReference.characterView.topbarRect[3] - 68) < 2);
+assert.ok(Math.abs(characterReference.characterView.leftRect[2] - 513) < 5, JSON.stringify(characterReference.characterView));
+assert.ok(Math.abs(characterReference.characterView.paperdollRect[2] - 563) < 5, JSON.stringify(characterReference.characterView));
+assert.ok(Math.abs(characterReference.characterView.bagRect[2] - 595) < 5, JSON.stringify(characterReference.characterView));
+assert.equal(characterReference.characterView.equipmentSlots, 9);
+assert.equal(new Set(characterReference.characterView.equipmentSlotSizes.map((entry) => entry.join("x"))).size, 1, JSON.stringify(characterReference.characterView.equipmentSlotSizes));
+assert.equal(characterReference.characterView.bagSlots, 24);
+assert.match(characterReference.characterView.defense, /防御.*减伤/);
+assert.doesNotMatch(characterReference.characterView.profileText, /潜能|命灯/);
+assert.ok(characterReference.characterView.overflowX <= 1);
+assert.ok(characterReference.characterView.overflowY <= 1);
+await screenshot("wudao-character-reference-1672x941.png");
+await click("close-character");
 await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
+
+const versionFiveSave = structuredClone(saved);
+versionFiveSave.version = 5;
+delete versionFiveSave.equipment;
+delete versionFiveSave.characterVitals;
+await reloadWithSave(versionFiveSave);
+const migratedVersionSix = JSON.parse(await evaluate(`localStorage.getItem("wudao-high-martial-v1")`));
+assert.equal(migratedVersionSix.version, 6);
+assert.equal(migratedVersionSix.equipment.owned.length, 12);
+assert.equal(Object.keys(migratedVersionSix.equipment.slots).length, 9);
+assert.deepEqual(migratedVersionSix.characterVitals, { health: null, qi: null });
 
 const versionFourSave = structuredClone(saved);
 versionFourSave.version = 4;

@@ -1212,6 +1212,29 @@ svg {
   text-shadow: 0 0 8px rgba(240, 202, 125, 0.35);
 }
 
+.qi-cost {
+  margin-left: 5px;
+  color: #6db0bc;
+  font-family: var(--number);
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 500;
+}
+
+.energy-pool .qi-pool,
+.energy-pool .guard-pool {
+  margin-left: 5px;
+  color: #6db0bc;
+  font-family: var(--number);
+  font-size: 8px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.energy-pool .guard-pool {
+  color: var(--muted);
+}
+
 .turn-bar button {
   min-height: 34px;
   padding: 5px 9px;
