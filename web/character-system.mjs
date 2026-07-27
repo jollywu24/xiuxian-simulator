@@ -286,8 +286,8 @@ export function createCharacterVitals() {
 
 export function migrateCharacterVitals(value) {
   return {
-    health: Number.isFinite(Number(value?.health)) ? Math.max(0, Number(value.health)) : null,
-    qi: Number.isFinite(Number(value?.qi)) ? Math.max(0, Number(value.qi)) : null,
+    health: value?.health == null || !Number.isFinite(Number(value.health)) ? null : Math.max(0, Number(value.health)),
+    qi: value?.qi == null || !Number.isFinite(Number(value.qi)) ? null : Math.max(0, Number(value.qi)),
   };
 }
 
