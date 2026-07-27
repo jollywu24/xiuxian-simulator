@@ -50,8 +50,8 @@ import {
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs?v=20260724.2";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260724.2";
+} from "./wudao-core.mjs?v=20260724.3";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260724.3";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -81,7 +81,7 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260724.2";
+} from "./wudao-p0-core.mjs?v=20260724.3";
 import {
   M4_EVIDENCE,
   M4_METHOD,
@@ -100,7 +100,7 @@ import {
   resolveM4Training,
   resolveMoneyInquiry,
   resolveOldHouseChoice,
-} from "./wudao-p1-core.mjs?v=20260724.2";
+} from "./wudao-p1-core.mjs?v=20260724.3";
 import {
   advanceCombatLabCampaign,
   createCombatLabSession,
@@ -111,14 +111,14 @@ import {
   restartCombatLab,
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
-} from "./combat-lab-core.mjs?v=20260724.2";
+} from "./combat-lab-core.mjs?v=20260724.3";
 import {
   INVENTORY_CAPACITY,
   createInventoryBoard,
   formatSilver,
   getInventoryCategory,
   getInventoryUseState,
-} from "./inventory-core.mjs?v=20260724.2";
+} from "./inventory-core.mjs?v=20260724.3";
 import {
   EQUIPMENT_CAPACITY,
   EQUIPMENT_SLOTS,
@@ -131,7 +131,7 @@ import {
   migrateCharacterVitals,
   migrateEquipmentState,
   unequipEquipmentSlot,
-} from "./character-system.mjs?v=20260724.2";
+} from "./character-system.mjs?v=20260724.3";
 
 const STORAGE_KEY = "wudao-high-martial-v1";
 const app = document.querySelector("#app");
@@ -267,6 +267,15 @@ function loadState() {
       equipment: migrateEquipmentState(saved.equipment),
       characterVitals: migrateCharacterVitals(saved.characterVitals),
     };
+    const isDeathScreen = ["gameDeath", "shenDeath", "p0Death"].includes(saved.screen);
+    if (
+      saved.version === 6 &&
+      !isDeathScreen &&
+      Number(saved.characterVitals?.health) === 0 &&
+      Number(saved.characterVitals?.qi) === 0
+    ) {
+      migrated.characterVitals = createCharacterVitals();
+    }
     migrated.fateSeed = saved.fateSeed || legacyFateSeed(saved);
     if (migrated.p0.started && saved.p0?.items?.return_spring_pill === undefined) migrated.p0.items.return_spring_pill = Number(saved.alchemyPills || 0);
     if (saved.version === 2 && saved.shenChapterComplete && saved.fiveAnimalBook) {
