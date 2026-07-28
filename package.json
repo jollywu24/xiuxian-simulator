@@ -5,10 +5,14 @@
   "type": "module",
   "scripts": {
     "test": "node --test",
+    "verify": "node scripts/run-quality-gate.mjs",
     "validate:content": "node scripts/validate-p0-content.mjs",
+    "test:release": "node scripts/verify-release-assets.mjs",
     "smoke": "node scripts/run-browser-regression.mjs main",
+    "smoke:origins": "node scripts/run-browser-regression.mjs origins",
     "smoke:combat": "node scripts/run-browser-regression.mjs combat",
+    "smoke:online": "node scripts/run-browser-regression.mjs online",
     "test:browser": "node scripts/run-browser-regression.mjs all",
-    "serve": "python3 -m http.server 8080 --directory web"
+    "serve": "node scripts/serve-web.mjs"
   }
 }

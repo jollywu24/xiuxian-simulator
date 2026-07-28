@@ -3,6 +3,15 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import {
+  RELEASE_CONTRACT_VERSION,
+  RELEASE_CRITICAL_RESOURCES,
+} from "../scripts/release-contract.mjs";
+import {
+  collectRuntimeAssetReferences,
+  collectRuntimeCacheVersions,
+  verifyLocalRelease,
+} from "../scripts/verify-release-assets.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const webRoot = path.join(repositoryRoot, "web");
@@ -11,39 +20,18 @@ function read(relativePath) {
   return fs.readFileSync(path.join(repositoryRoot, relativePath), "utf8");
 }
 
-function sourceFiles(directory) {
-  return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-    const target = path.join(directory, entry.name);
-    if (entry.isDirectory()) return sourceFiles(target);
-    return [target];
-  });
-}
-
-test("runtime asset references resolve to published files", () => {
-  const sources = sourceFiles(webRoot).filter((file) => [".css", ".html", ".mjs"].includes(path.extname(file)));
-  const references = new Set();
-  for (const source of sources) {
-    const contents = fs.readFileSync(source, "utf8");
-    for (const match of contents.matchAll(/\.\/assets\/[^"'`()\s?]+\.(?:jpeg|jpg|png|svg|webp|woff2)/gi)) {
-      references.add(match[0]);
-    }
-  }
-  assert.ok(references.size >= 30, "expected the test to cover the current runtime asset set");
-  for (const reference of references) {
-    const target = path.join(webRoot, reference.replace(/^\.\//, ""));
-    assert.ok(fs.existsSync(target), `missing published asset: ${reference}`);
-    assert.ok(fs.statSync(target).size > 0, `empty published asset: ${reference}`);
-  }
+test("runtime and critical release resources resolve through one contract", () => {
+  const report = verifyLocalRelease(webRoot);
+  assert.equal(report.ok, true);
+  assert.equal(report.contractVersion, RELEASE_CONTRACT_VERSION);
+  assert.equal(report.criticalResources, RELEASE_CRITICAL_RESOURCES.length);
+  assert.ok(report.runtimeAssets >= 30);
+  assert.ok(collectRuntimeAssetReferences(webRoot).every((resource) => !resource.includes("/UI_Renderings/")));
 });
 
 test("runtime modules and entry assets share one cache version", () => {
-  const sources = sourceFiles(webRoot).filter((file) => [".html", ".mjs"].includes(path.extname(file)));
-  const versions = new Set();
-  for (const source of sources) {
-    const contents = fs.readFileSync(source, "utf8");
-    for (const match of contents.matchAll(/\?v=([0-9]+\.[0-9]+)/g)) versions.add(match[1]);
-  }
-  assert.equal(versions.size, 1, `mixed runtime cache versions: ${[...versions].join(", ")}`);
+  const versions = collectRuntimeCacheVersions(webRoot);
+  assert.equal(versions.length, 1, `mixed runtime cache versions: ${versions.join(", ")}`);
   const index = read("web/index.html");
   const [version] = versions;
   assert.match(index, new RegExp(`styles\\.css\\?v=${version.replace(".", "\\.")}`));
@@ -58,6 +46,10 @@ test("debug state interface is opt-in and exposes the stamped build", () => {
   assert.match(app, /get\("debug"\) !== "1"/);
   assert.match(app, /delete window\.WudaoDebug/);
   assert.match(app, /Object\.defineProperty\(window, "WudaoDebug"/);
+  assert.match(app, /DEBUG_PROTOCOL_VERSION = 1/);
+  assert.match(app, /status: debugStatus/);
+  assert.match(app, /commands,/);
+  assert.match(app, /dataset\.appReady = "true"/);
   assert.match(app, /buildSha: BUILD_SHA/);
 });
 
@@ -66,33 +58,28 @@ test("automated verification owns the browser and gates Pages deployment", () =>
   const deployment = read(".github/workflows/pages.yml");
   const packageJson = JSON.parse(read("package.json"));
 
+  assert.equal(packageJson.scripts.verify, "node scripts/run-quality-gate.mjs");
+  assert.equal(packageJson.scripts.serve, "node scripts/serve-web.mjs");
   assert.equal(packageJson.scripts["test:browser"], "node scripts/run-browser-regression.mjs all");
+  assert.equal(packageJson.scripts["smoke:online"], "node scripts/run-browser-regression.mjs online");
   assert.match(verification, /workflow_call:/);
   assert.match(verification, /fetch-depth: 2/);
-  assert.match(verification, /npm test/);
-  assert.match(verification, /npm run validate:content/);
-  assert.match(verification, /npm run test:browser/);
+  assert.match(verification, /npm run verify/);
   assert.match(deployment, /quality:\s*\n\s+uses: \.\/\.github\/workflows\/test-web\.yml/);
   assert.match(deployment, /deploy:\s*\n\s+needs: quality/);
+  assert.match(deployment, /node scripts\/smoke-deployed\.mjs/);
+  assert.match(deployment, /npm run smoke:online/);
 });
 
 test("published artifact is stamped and smoke-tests critical resources", () => {
   const deployment = read(".github/workflows/pages.yml");
-  const requiredPublishedResources = [
-    "styles.css",
-    "wudao-app.mjs",
-    "combat.html",
-    "assets/scenes/ruined-temple-stage-v3.webp",
-    "assets/character/chen-siming-paperdoll.png",
-    "assets/inventory/inventory-backdrop.png",
-    "assets/martial/martial-screen-backdrop.webp",
-  ];
+  const deploymentSmoke = read("scripts/smoke-deployed.mjs");
 
   assert.match(deployment, /data-build-sha=\\?"dev\\?"/);
   assert.match(deployment, /steps\.deployment\.outputs\.page_url/);
-  assert.match(deployment, /data-build-sha=\\?"\$\{SHORT_SHA\}\\?"/);
-  for (const resource of requiredPublishedResources) {
-    assert.ok(fs.existsSync(path.join(webRoot, resource)), `critical resource is absent locally: ${resource}`);
-    assert.ok(deployment.includes(resource), `post-deploy smoke omits: ${resource}`);
+  assert.match(deployment, /EXPECTED_BUILD_SHA: \$\{\{ steps\.build\.outputs\.short_sha \}\}/);
+  assert.match(deploymentSmoke, /RELEASE_CRITICAL_RESOURCES/);
+  for (const resource of RELEASE_CRITICAL_RESOURCES) {
+    assert.ok(fs.existsSync(path.join(webRoot, resource.path)), `critical resource is absent locally: ${resource.path}`);
   }
 });

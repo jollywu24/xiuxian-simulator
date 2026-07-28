@@ -27,19 +27,8 @@ jobs:
           chrome_bin="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
           test -n "$chrome_bin"
           echo "CHROME_BIN=$chrome_bin" >> "$GITHUB_ENV"
-      - name: Check JavaScript syntax
-        run: |
-          node --check web/wudao-app.mjs
-          node --check web/wudao-core.mjs
-          node --check web/wudao-p0-core.mjs
-          node --check web/combat-engine.mjs
-          node --check scripts/run-browser-regression.mjs
-      - name: Run rule and release tests
-        run: npm test
-      - name: Validate story content
-        run: npm run validate:content
-      - name: Run self-starting browser regression
-        run: npm run test:browser
+      - name: Run complete quality gate
+        run: npm run verify
       - name: Check patch whitespace
         shell: bash
         run: |

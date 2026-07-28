@@ -48,7 +48,7 @@
 - 战斗用语：伤害、防御、减伤、远程；不要重新使用“攻势、防守、护身、远手”等旧称；
 - 玩家可见的三种目标出身：世家旁支、市井子弟、身世成谜。
 
-目标设计与已发布实现必须分开陈述。出身系统的目标规格见 `docs/systems/11_ORIGIN_PROLOGUES.md`，实际可玩状态以 `web/wudao-core.mjs`、`web/wudao-app.mjs` 和测试为准，不得把设计文档中的待制作内容描述为已经上线。
+目标设计与已发布实现必须分开陈述。出身系统的现行规格见 `docs/systems/11_ORIGIN_PROLOGUES.md`，实际可玩状态以 `web/origin-core.mjs`、`web/wudao-app.mjs` 和测试为准，不得把设计文档中的待制作内容描述为已经上线。
 
 ## 3. 事实来源与冲突处理
 
@@ -167,6 +167,7 @@
 | --- | --- |
 | `web/index.html` | 正式网页入口和发布资源引用 |
 | `web/wudao-app.mjs` | 状态机、渲染、事件委托和系统编排 |
+| `web/origin-core.mjs` | 三出身、独立序章、旧ID迁移、任务结果与个人事件 |
 | `web/wudao-core.mjs` | 世界、人物建立与首章基础规则 |
 | `web/wudao-p0-core.mjs`、`web/wudao-p1-core.mjs` | 后续篇章和跨系统纯规则 |
 | `web/content/` | 内容目录、节点和静态事实 |
@@ -248,19 +249,24 @@
 
 ## 9. 验证
 
-基础验证：
+完整发布前验证：
+
+```bash
+npm run verify
+```
+
+局部诊断入口：
 
 ```bash
 npm test
 npm run validate:content
+npm run test:release
+npm run smoke
+npm run smoke:origins
+npm run smoke:combat
 ```
 
-浏览器流程：
-
-```bash
-node scripts/cdp-smoke.mjs 9225
-node scripts/cdp-combat-lab.mjs 9225
-```
+测试层级、自启动浏览器、覆盖矩阵和失败定位以`docs/TESTING.md`为事实源；本文件不维护脚本参数清单。
 
 验证范围按改动选择，但不能低于：
 
@@ -279,7 +285,7 @@ node scripts/cdp-combat-lab.mjs 9225
 ## 10. 发布与完成定义
 
 - `main` 是正式网页发布分支，推送后由 `.github/workflows/pages.yml` 部署 `web/`；
-- Pages 部署必须先通过 `.github/workflows/test-web.yml` 的规则、内容和自启动浏览器验证；部署后再验证线上构建号和关键资源；
+- Pages 部署必须先通过 `.github/workflows/test-web.yml` 的完整质量门禁；部署后再验证线上构建号、资源契约和真实浏览器启动，细则见 `docs/RELEASE.md`；
 - `?debug=1` 的 `window.WudaoDebug` 只服务自动回归，普通玩家入口不得注入该对象或出现调试控件；
 - 可选战斗预览会由发布流程挂到独立路径，不得替换正式根页面；
 - 每次完成修改并通过相应验证后，直接提交并推送当前发布分支，除非用户明确要求只保留本地；
@@ -309,6 +315,9 @@ node scripts/cdp-combat-lab.mjs 9225
 - 系统完成状态和下一优先级：`docs/SYSTEM_ROADMAP.md`；
 - 具体系统公式、字段或界面规格：`docs/systems/`；
 - 存档版本和迁移：代码、测试与 `docs/SAVE_ARCHITECTURE.md`；
+- 自动化测试与浏览器回归：`docs/TESTING.md`；
+- 调试状态协议：`docs/DEBUGGING.md`；
+- Pages、资源契约与线上冒烟：`docs/RELEASE.md`；
 - 新的长期设计／工程取舍：`docs/DECISION_LOG.md`；
 - 已交付的重要变化：`docs/CHANGELOG.md`；
 - 当前试玩能力和链接：`README.md`；

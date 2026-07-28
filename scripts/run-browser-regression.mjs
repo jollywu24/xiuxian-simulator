@@ -1,38 +1,26 @@
 import { spawn, spawnSync } from "node:child_process";
 import fs from "node:fs";
-import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
-import http from "node:http";
+import { mkdtemp, rm } from "node:fs/promises";
 import net from "node:net";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { createStaticWebServer, listen } from "./static-web-server.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const webRoot = path.join(repositoryRoot, "web");
 const suite = process.argv[2] || "all";
 const suites = {
   main: ["scripts/cdp-smoke.mjs"],
+  origins: ["scripts/cdp-origins.mjs"],
   combat: ["scripts/cdp-combat-lab.mjs"],
-  all: ["scripts/cdp-smoke.mjs", "scripts/cdp-combat-lab.mjs"],
+  online: ["scripts/cdp-online-smoke.mjs"],
+  all: ["scripts/cdp-smoke.mjs", "scripts/cdp-origins.mjs", "scripts/cdp-combat-lab.mjs"],
 };
 
 if (!suites[suite]) {
   throw new Error(`Unknown browser regression suite: ${suite}`);
 }
-
-const mimeTypes = new Map([
-  [".css", "text/css; charset=utf-8"],
-  [".html", "text/html; charset=utf-8"],
-  [".jpeg", "image/jpeg"],
-  [".jpg", "image/jpeg"],
-  [".js", "text/javascript; charset=utf-8"],
-  [".json", "application/json; charset=utf-8"],
-  [".mjs", "text/javascript; charset=utf-8"],
-  [".png", "image/png"],
-  [".svg", "image/svg+xml"],
-  [".webp", "image/webp"],
-  [".woff2", "font/woff2"],
-]);
 
 function resolveBrowserExecutable() {
   const explicit = process.env.CHROME_BIN?.trim();
@@ -84,36 +72,6 @@ async function reservePort() {
   await new Promise((resolve) => server.close(resolve));
   if (!port) throw new Error("Unable to reserve a local port.");
   return port;
-}
-
-function createStaticServer() {
-  return http.createServer(async (request, response) => {
-    try {
-      const requestUrl = new URL(request.url || "/", "http://127.0.0.1");
-      let pathname = decodeURIComponent(requestUrl.pathname);
-      if (pathname.endsWith("/")) pathname += "index.html";
-      const target = path.resolve(webRoot, `.${pathname}`);
-      const relative = path.relative(webRoot, target);
-      if (relative.startsWith("..") || path.isAbsolute(relative)) {
-        response.writeHead(403).end("Forbidden");
-        return;
-      }
-      const targetStat = await stat(target);
-      if (!targetStat.isFile()) {
-        response.writeHead(404).end("Not found");
-        return;
-      }
-      const body = request.method === "HEAD" ? null : await readFile(target);
-      response.writeHead(200, {
-        "cache-control": "no-store",
-        "content-length": targetStat.size,
-        "content-type": mimeTypes.get(path.extname(target).toLowerCase()) || "application/octet-stream",
-      });
-      response.end(body);
-    } catch {
-      response.writeHead(404).end("Not found");
-    }
-  });
 }
 
 async function waitForDevTools(port, timeoutMs = 15000) {
@@ -181,18 +139,21 @@ async function removeTemporaryProfile(profileDirectory) {
 }
 
 const browserExecutable = resolveBrowserExecutable();
-const sitePort = await reservePort();
+const externalSiteUrl = process.env.BROWSER_BASE_URL?.trim() || "";
+if (suite === "online" && !externalSiteUrl) {
+  throw new Error("BROWSER_BASE_URL is required for the online browser smoke.");
+}
+const sitePort = externalSiteUrl ? 0 : await reservePort();
 const devToolsPort = await reservePort();
 const profileDirectory = await mkdtemp(path.join(os.tmpdir(), "wudao-browser-regression-"));
-const server = createStaticServer();
+const server = externalSiteUrl ? null : createStaticWebServer(webRoot);
 let browser;
 
 try {
-  await new Promise((resolve, reject) => {
-    server.once("error", reject);
-    server.listen(sitePort, "127.0.0.1", resolve);
-  });
-  const siteUrl = `http://127.0.0.1:${sitePort}/`;
+  if (server) {
+    await listen(server, sitePort);
+  }
+  const siteUrl = externalSiteUrl || `http://127.0.0.1:${sitePort}/`;
   browser = spawn(browserExecutable, [
     "--headless=new",
     "--disable-background-networking",
@@ -219,11 +180,12 @@ try {
   process.stdout.write(`${JSON.stringify({
     ok: true,
     browser: path.basename(browserExecutable),
+    remote: Boolean(externalSiteUrl),
     siteUrl,
     suite,
   })}\n`);
 } finally {
   await stopBrowser(browser);
-  await new Promise((resolve) => server.close(resolve));
+  if (server) await new Promise((resolve) => server.close(resolve));
   await removeTemporaryProfile(profileDirectory);
 }

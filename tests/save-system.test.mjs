@@ -32,8 +32,8 @@ class MemoryStorage {
   }
 }
 
-const validState = (screen, version = 7) => ({ version, screen, name: "陈司命" });
-const supportsCurrentState = (value) => [2, 3, 4, 5, 6, 7].includes(value?.version) && Boolean(value?.screen);
+const validState = (screen, version = 8) => ({ version, screen, name: "陈司命" });
+const supportsCurrentState = (value) => [2, 3, 4, 5, 6, 7, 8].includes(value?.version) && Boolean(value?.screen);
 
 test("checksum detects truncated or altered save text", () => {
   const raw = JSON.stringify(validState("templeWake"));
@@ -73,7 +73,7 @@ test("browser storage restores and promotes backup when primary is corrupted", (
   const secondRaw = JSON.stringify(validState("ladyArrival"));
   storage.write(firstRaw, supportsCurrentState);
   storage.write(secondRaw, supportsCurrentState);
-  memory.setItem(SAVE_STORAGE_KEY, '{"version":7');
+  memory.setItem(SAVE_STORAGE_KEY, '{"version":8');
   memory.removeItem(`${SAVE_STORAGE_KEY}${SAVE_CHECKSUM_SUFFIX}`);
 
   const recovered = storage.read(supportsCurrentState);

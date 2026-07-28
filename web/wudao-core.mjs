@@ -1,3 +1,5 @@
+import { ORIGINS } from "./origin-core.mjs?v=20260728.7";
+
 export const WORLD_FACTS = [
   {
     id: "dynasty",
@@ -32,7 +34,7 @@ export const ATTRIBUTES = [
   { id: "fortune", name: "福缘", description: "宝物、人物与奇遇分支的运势。" },
 ];
 
-export const BACKGROUNDS = [
+const LEGACY_BACKGROUNDS = [
   {
     id: "clan",
     name: "世家旁支",
@@ -62,6 +64,8 @@ export const BACKGROUNDS = [
     cost: "部分名门初见时心存戒备",
   },
 ];
+
+export const BACKGROUNDS = ORIGINS;
 
 export const VOWS = [
   { id: "answer", name: "寻一个答案", title: "执念者", effect: "追查亲故与身世时，更容易锁定关键线索。" },

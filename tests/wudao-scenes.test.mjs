@@ -27,16 +27,18 @@ function state(overrides = {}) {
   };
 }
 
-test("six compressed environment assets anchor the first visual locations and combat bridge", () => {
-  assert.equal(SCENE_ASSET_PATHS.length, 6);
-  assert.equal(new Set(SCENE_ASSET_PATHS).size, 6);
+test("eight compressed environment assets include both authored origin openings", () => {
+  assert.equal(SCENE_ASSET_PATHS.length, 8);
+  assert.equal(new Set(SCENE_ASSET_PATHS).size, 8);
   assert.ok(SCENE_ASSET_PATHS.every((asset) => asset.startsWith("./assets/") && asset.endsWith(".webp")));
   assert.ok(SCENE_ASSET_PATHS.some((asset) => asset.endsWith("ruined-temple-stage-v3.webp")));
   assert.ok(SCENE_ASSET_PATHS.some((asset) => asset.endsWith("ruined-temple-lady-stage-v3.webp")));
+  assert.ok(SCENE_ASSET_PATHS.some((asset) => asset.endsWith("shen-west-courtyard-v1.webp")));
+  assert.ok(SCENE_ASSET_PATHS.some((asset) => asset.endsWith("qinhuai-fish-market-v1.webp")));
 });
 
 test("every visual scene exposes serializable, bounded and uniquely identified markers", () => {
-  for (const screen of ["templeTasks", "roadTrial", "shenArrival", "danObservation", "yanJinghongArrival", "wangBattle"]) {
+  for (const screen of ["shenOriginArrival", "streetOriginMarket", "templeTasks", "roadTrial", "shenArrival", "danObservation", "yanJinghongArrival", "wangBattle"]) {
     const scene = getScenePresentation(screen, state({ destinyRevealed: true, mindArt: "fish_leap_dragon_gate" }));
     assert.ok(scene?.image);
     assert.ok(scene.alt.length > 10);

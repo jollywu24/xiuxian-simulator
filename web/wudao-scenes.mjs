@@ -5,12 +5,15 @@ const ASSETS = {
   alley: "./assets/combat/jinling-rain-ambush.webp",
   shenGate: "./assets/scenes/shen-manor-side-gate.webp",
   danroom: "./assets/scenes/shen-alchemy-room.webp",
+  shenWestCourtyard: "./assets/origins/shen-west-courtyard-v1.webp",
+  fishMarket: "./assets/origins/qinhuai-fish-market-v1.webp",
 };
 
 const TEMPLE_SCREENS = new Set([
   "templeWake",
   "fateSight",
   "allocation",
+  "originTempleTask",
   "templeTasks",
   "ladyArrival",
   "ladyPressure",
@@ -36,7 +39,17 @@ const RIVER_SCREENS = new Set([
 ]);
 
 const M4_SHEN_GATE_SCREENS = new Set(["shenFuOffer", "dirtyMoneyChoice", "m4WorldEcho"]);
-const SHEN_GATE_SCREENS = new Set(["shenArrival", "shenJobs", ...M4_SHEN_GATE_SCREENS]);
+const SHEN_GATE_SCREENS = new Set([
+  "shenArrival",
+  "shenJobs",
+  "shenOriginReturn",
+  "shenOriginPlacement",
+  "streetOriginDelivery",
+  "streetOriginEntry",
+  ...M4_SHEN_GATE_SCREENS,
+]);
+const SHEN_ORIGIN_SCREENS = new Set(["shenOriginArrival", "shenOriginBriefing", "shenOriginPreparation", "shenOriginRoad"]);
+const STREET_ORIGIN_SCREENS = new Set(["streetOriginMarket", "streetOriginOffer", "streetOriginBargain", "streetOriginRoute"]);
 
 const DANROOM_SCREENS = new Set([
   "caoArrival",
@@ -467,7 +480,56 @@ function wangPresentation(screen, state) {
   };
 }
 
+function originPreludePresentation(screen, state) {
+  if (SHEN_ORIGIN_SCREENS.has(screen)) {
+    const leftCourtyard = screen === "shenOriginRoad";
+    return {
+      id: "shen_west_courtyard",
+      title: leftCourtyard ? "城南至东郊 · 雨路" : "城南族宅 · 西偏院",
+      image: ASSETS.shenWestCourtyard,
+      imageAspect: 5 / 4,
+      alt: "雨夜里狭窄的族宅西偏院，旧屋、腰牌与主宅灯火隔着一道月门",
+      summary: leftCourtyard
+        ? "门里的规矩已经留在身后，驿路、废窑和车辙会决定你以什么状态抵达东郊。"
+        : "西偏院的旧屋与主宅只隔一道月门；灯火照得到这里，名字和机会却未必。",
+      tone: "rain",
+      hotspots: [
+        { id: "side_room", label: "漏雨的偏房", detail: "屋里只有一张窄榻和抄旧的拳谱。旁支子弟的住处，不必为明日留太多位置。", x: 22, y: 45, state: "known" },
+        { id: "waist_token", label: "旁支旧腰牌", detail: "腰牌能开侧门，却不能让主宅记住你的名字。旧刻痕说明今夜的传唤绕过了寻常管事。", x: 49, y: 77, state: state.originKnowledge?.includes("waist_token_recut") ? "completed" : "special" },
+        { id: "moon_gate", label: "通往主宅的月门", detail: "月门后灯火通明。有人从那里递出一桩取物差事，也在等着看你能否原样带回。", x: 76, y: 45, state: "danger" },
+      ],
+      actors: screen === "shenOriginArrival" || screen === "shenOriginBriefing"
+        ? [{ id: "side_door_keeper", label: "侧门门房", detail: "他替主宅传话，也替西偏院记下谁在雨夜里应了门。", x: 75, y: 56, kind: "steward", state: "known" }]
+        : [],
+      player: { label: state.name || "陈司命", x: 38, y: 78, visible: false },
+    };
+  }
+
+  return {
+    id: "qinhuai_fish_market",
+    title: screen === "streetOriginRoute" ? "外港至东郊 · 雨路" : "秦淮外港 · 鱼市",
+    image: ASSETS.fishMarket,
+    imageAspect: 5 / 4,
+    alt: "雨夜收摊后的秦淮鱼市，鱼摊、牙人、码头和归路都浸在水光里",
+    summary: screen === "streetOriginRoute"
+      ? "河堤、货栈和船棚都能通向东郊；懂路的人真正挑选的是会不会被谁看见。"
+      : "最后的鱼贩正在收秤，牙人的灯却还亮着。鱼市收摊以后，消息才真正开价。",
+    tone: "rain",
+    hotspots: [
+      { id: "fish_stalls", label: "收摊的鱼篓", detail: "哪些船提前离港、哪些鱼不是本河所出，都能从空篓和余鳞里看出来。", x: 20, y: 65, state: state.originKnowledge?.includes("missing_night_boat") ? "completed" : "available" },
+      { id: "broker_awning", label: "牙人的灯", detail: "八百文只取一个油布包，价钱比事情本身更可疑。", x: 45, y: 48, state: "danger" },
+      { id: "river_steps", label: "外港石阶", detail: "河堤通东郊，货船通沈宅。这里的每一条近路，都属于一个收钱或收人情的人。", x: 70, y: 58, state: "special" },
+      { id: "old_fisher", label: "老渔人的船棚", detail: "替他压住一篓鱼，便能换一句身后有没有尾巴。", x: 86, y: 77, state: Number(state.originContacts?.old_fisher || 0) > 0 ? "completed" : "available" },
+    ],
+    actors: screen === "streetOriginMarket" || screen === "streetOriginOffer" || screen === "streetOriginBargain"
+      ? [{ id: "fish_broker", label: "鱼市牙人", detail: "他等的不是熟人，而是一个跑得快、没人替他追问来路的人。", x: 45, y: 55, kind: "broker", state: "unknown" }]
+      : [],
+    player: { label: state.name || "陈司命", x: 35, y: 83, visible: false },
+  };
+}
+
 export function getScenePresentation(screen, state = {}) {
+  if (SHEN_ORIGIN_SCREENS.has(screen) || STREET_ORIGIN_SCREENS.has(screen)) return originPreludePresentation(screen, state);
   if (TEMPLE_SCREENS.has(screen)) return templePresentation(screen, state);
   if (RIVER_SCREENS.has(screen)) return riverPresentation(screen, state);
   if (SHEN_GATE_SCREENS.has(screen)) return shenGatePresentation(screen, state);

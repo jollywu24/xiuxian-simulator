@@ -4,7 +4,7 @@
 
 状态：**第一阶段已完整接入运行时（2026-07-24）**。
 
-当前事实来源为`web/character-system.mjs`、`web/martial-system.mjs`、`web/combat-engine.mjs`与`web/combat-encounters.mjs`。人物五维、境界、当前携带武学、装备、伤势、敌方防御和减伤已经进入同一套判定；装备栏与当前气血／真气从版本6起保存，当前存档版本7新增完整武学状态。人物页的装备操作必须经过详情提示确认。旧的分档伤害字段仍作为非武器效果与剧情兼容数据保留，但凡标记`formulaDamage`的招式只由本文公式决定实际伤害。
+当前事实来源为`web/character-system.mjs`、`web/martial-system.mjs`、`web/combat-engine.mjs`与`web/combat-encounters.mjs`。人物五维、境界、当前携带武学、装备、伤势、敌方防御和减伤已经进入同一套判定；装备栏与当前气血／真气从版本6起保存，版本7新增完整武学状态，当前版本8继续保留这些字段并增加出身状态。人物页的装备操作必须经过详情提示确认。旧的分档伤害字段仍作为非武器效果与剧情兼容数据保留，但凡标记`formulaDamage`的招式只由本文公式决定实际伤害。
 
 本次统一只引入四个玩家必须理解的战斗量：
 

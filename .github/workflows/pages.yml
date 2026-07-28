@@ -58,32 +58,25 @@ jobs:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
-      - name: Smoke test published site
+      - name: Use Node.js 22
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Locate Chrome
         shell: bash
+        run: |
+          chrome_bin="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
+          test -n "$chrome_bin"
+          echo "CHROME_BIN=$chrome_bin" >> "$GITHUB_ENV"
+      - name: Verify deployed resource contract
+        working-directory: published
         env:
           PAGE_URL: ${{ steps.deployment.outputs.page_url }}
-          SHORT_SHA: ${{ steps.build.outputs.short_sha }}
-        run: |
-          base="${PAGE_URL%/}"
-          for attempt in $(seq 1 12); do
-            if html="$(curl --fail --silent --show-error --location "${base}/?build=${SHORT_SHA}")" \
-              && grep -Fq "data-build-sha=\"${SHORT_SHA}\"" <<< "$html"; then
-              break
-            fi
-            if [ "$attempt" -eq 12 ]; then
-              echo "Published HTML did not expose build ${SHORT_SHA}" >&2
-              exit 1
-            fi
-            sleep 3
-          done
-          for resource in \
-            styles.css \
-            wudao-app.mjs \
-            combat.html \
-            assets/scenes/ruined-temple-stage-v3.webp \
-            assets/character/chen-siming-paperdoll.png \
-            assets/inventory/inventory-backdrop.png \
-            assets/martial/martial-screen-backdrop.webp; do
-            curl --fail --silent --show-error --location --retry 4 --retry-delay 2 \
-              --output /dev/null "${base}/${resource}?build=${SHORT_SHA}"
-          done
+          EXPECTED_BUILD_SHA: ${{ steps.build.outputs.short_sha }}
+        run: node scripts/smoke-deployed.mjs
+      - name: Run deployed browser smoke
+        working-directory: published
+        env:
+          BROWSER_BASE_URL: ${{ steps.deployment.outputs.page_url }}
+          EXPECTED_BUILD_SHA: ${{ steps.build.outputs.short_sha }}
+        run: npm run smoke:online

@@ -11,6 +11,10 @@ if (!tab) throw new Error(`No browser page found on debugging port ${port}`);
 const pageOrigin = new URL(tab.url).origin;
 const testUrl = `${pageOrigin}/?seed=seed-2`;
 const storageId = { securityOrigin: pageOrigin, isLocalStorage: true };
+const entryHtml = fs.readFileSync(new URL("../web/index.html", import.meta.url), "utf8");
+const expectedCacheVersion = entryHtml.match(/wudao-app\.mjs\?v=([0-9]{8}\.[0-9]+)/)?.[1];
+if (!expectedCacheVersion) throw new Error("Unable to read the runtime cache version from web/index.html");
+const escapedCacheVersion = expectedCacheVersion.replace(".", "\\.");
 
 const socket = new WebSocket(tab.webSocketDebuggerUrl);
 let id = 0;
@@ -373,14 +377,29 @@ const checkpoints = [];
 checkpoints.push(await snapshot("landing"));
 assert.equal(checkpoints.at(-1).title, "武道");
 assert.ok(checkpoints.at(-1).scrollWidth <= 1280);
-assert.match(await evaluate(`document.querySelector('script[type="module"]')?.src || ""`), /wudao-app\.mjs\?v=20260728\.5/);
-assert.match(await evaluate(`document.querySelector('link[rel="stylesheet"]')?.href || ""`), /styles\.css\?v=20260728\.5/);
+assert.match(
+  await evaluate(`document.querySelector('script[type="module"]')?.src || ""`),
+  new RegExp(`wudao-app\\.mjs\\?v=${escapedCacheVersion}`),
+);
+assert.match(
+  await evaluate(`document.querySelector('link[rel="stylesheet"]')?.href || ""`),
+  new RegExp(`styles\\.css\\?v=${escapedCacheVersion}`),
+);
 assert.equal(await evaluate(`typeof window.WudaoDebug`), "undefined");
 assert.equal(await evaluate(`document.documentElement.dataset.buildSha`), "dev");
 assert.match(checkpoints.at(-1).text, /大曜四百二十七年/);
 assert.doesNotMatch(checkpoints.at(-1).text, /现实|论坛|武道局|其他玩家|其它玩家|太虚命盘|归尘门|黑日|Demo|P0|P1|P2|测试|原型/);
 
 await click("new-journey");
+assert.match(await text(), /这里的刀剑，不只决定胜负/);
+await click("enter-creation");
+assert.match(await text(), /这一夜以前，你怎样活着/);
+assert.equal(await evaluate(`document.querySelectorAll(".origin-choice-card").length`), 3);
+assert.doesNotMatch(await text(), /人物车卡|旧债|债务/);
+await click("select-background", "mystery");
+await click("to-vow");
+await click("select-vow", "path");
+await click("start-journey");
 assert.match(await text(), /你是被冷醒的/);
 assert.match(await text(), /夜雨/);
 assert.match(await text(), /亥时/);
@@ -817,6 +836,8 @@ await click("close-first-day");
 assert.match(await text(), /金龙会四堂回岛/);
 assert.match(await text(), /百舸争流大典/);
 await click("leave-shen-meeting");
+assert.match(await text(), /血书旧字/);
+await click("origin-personal-choice", "compare_old_hand");
 await click("shenfu-choice", "report");
 assert.match(await text(), /曹青好感\s*39/);
 assert.match(await text(), /沈福门路/);
@@ -1105,8 +1126,9 @@ const savedEntry = storedItems.entries.find(([key]) => key === "wudao-high-marti
 if (!savedEntry) throw new Error("Missing local save after complete flow");
 const saved = JSON.parse(savedEntry[1]);
 assert.equal(saved.backgroundId, "mystery");
+assert.equal(saved.originId, "mystery");
 assert.equal(saved.vowId, "path");
-assert.equal(saved.version, 7);
+assert.equal(saved.version, 8);
 assert.equal(saved.fateSeed, "seed-2");
 assert.ok(Array.isArray(saved.narrativeLog));
 assert.ok(saved.narrativeLog.length > 0 && saved.narrativeLog.length <= 64);
@@ -1296,7 +1318,7 @@ delete versionFiveSave.equipment;
 delete versionFiveSave.characterVitals;
 await reloadWithSave(versionFiveSave);
 const migratedVersionSeven = JSON.parse(await evaluate(`localStorage.getItem("wudao-high-martial-v1")`));
-assert.equal(migratedVersionSeven.version, 7);
+assert.equal(migratedVersionSeven.version, 8);
 assert.equal(migratedVersionSeven.equipment.owned.length, 12);
 assert.equal(Object.keys(migratedVersionSeven.equipment.slots).length, 9);
 assert.deepEqual(migratedVersionSeven.characterVitals, { health: null, qi: null });
@@ -1456,9 +1478,12 @@ await send("Page.navigate", { url: `${pageOrigin}/?debug=1&seed=debug-interface`
 await new Promise((resolve) => setTimeout(resolve, 650));
 const debugSnapshot = JSON.parse(await evaluate(`JSON.stringify(window.WudaoDebug?.snapshot())`));
 assert.equal(debugSnapshot.buildSha, "dev");
-assert.equal(debugSnapshot.saveVersion, 7);
+assert.equal(debugSnapshot.saveVersion, 8);
 assert.equal(debugSnapshot.screen, saved.screen);
-const debugTransition = JSON.parse(await evaluate(`JSON.stringify(window.WudaoDebug?.setScreen("templeWake"))`));
+const debugStatus = JSON.parse(await evaluate(`JSON.stringify(window.WudaoDebug?.status())`));
+assert.equal(debugStatus.protocolVersion, 1);
+assert.equal(debugStatus.ready, true);
+const debugTransition = JSON.parse(await evaluate(`JSON.stringify(window.WudaoDebug?.commands.setScreen("templeWake"))`));
 assert.equal(debugTransition.ok, true);
 assert.equal(debugTransition.snapshot.screen, "templeWake");
 assert.deepEqual(pageErrors, []);

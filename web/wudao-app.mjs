@@ -50,8 +50,8 @@ import {
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs?v=20260728.5";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260728.5";
+} from "./wudao-core.mjs?v=20260728.7";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260728.7";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -81,7 +81,7 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260728.5";
+} from "./wudao-p0-core.mjs?v=20260728.7";
 import {
   M4_EVIDENCE,
   M4_METHOD,
@@ -100,7 +100,7 @@ import {
   resolveM4Training,
   resolveMoneyInquiry,
   resolveOldHouseChoice,
-} from "./wudao-p1-core.mjs?v=20260728.5";
+} from "./wudao-p1-core.mjs?v=20260728.7";
 import {
   advanceCombatLabCampaign,
   createCombatLabSession,
@@ -111,14 +111,14 @@ import {
   restartCombatLab,
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
-} from "./combat-lab-core.mjs?v=20260728.5";
+} from "./combat-lab-core.mjs?v=20260728.7";
 import {
   INVENTORY_CAPACITY,
   createInventoryBoard,
   formatSilver,
   getInventoryCategory,
   getInventoryUseState,
-} from "./inventory-core.mjs?v=20260728.5";
+} from "./inventory-core.mjs?v=20260728.7";
 import {
   EQUIPMENT_CAPACITY,
   EQUIPMENT_SLOTS,
@@ -132,7 +132,7 @@ import {
   migrateCharacterVitals,
   migrateEquipmentState,
   unequipEquipmentSlot,
-} from "./character-system.mjs?v=20260728.5";
+} from "./character-system.mjs?v=20260728.7";
 import {
   MARTIAL_MASTERIES,
   breakthroughMartial,
@@ -152,12 +152,26 @@ import {
   trainMartial,
   unequipMartial,
   unlockedMartialNodes,
-} from "./martial-system.mjs?v=20260728.5";
-import { SAVE_STORAGE_KEY } from "./save-core.mjs?v=20260728.5";
-import { createSaveStorage } from "./save-storage.mjs?v=20260728.5";
+} from "./martial-system.mjs?v=20260728.7";
+import { SAVE_STORAGE_KEY } from "./save-core.mjs?v=20260728.7";
+import { createSaveStorage } from "./save-storage.mjs?v=20260728.7";
+import {
+  ORIGINS,
+  ORIGIN_LADY_INSIGHTS,
+  ORIGIN_PERSONAL_EVENTS,
+  ORIGIN_PROLOGUES,
+  ORIGIN_TEMPLE_CHOICES,
+  createOriginProgress,
+  getOrigin,
+  migrateOriginState,
+  resolveOriginPersonalEvent,
+  resolveOriginPrologueChoice,
+  resolveOriginTempleTask,
+} from "./origin-core.mjs?v=20260728.7";
 
 const app = document.querySelector("#app");
 const BUILD_SHA = document.documentElement.dataset.buildSha || "dev";
+const DEBUG_PROTOCOL_VERSION = 1;
 const COMBAT_ATTRIBUTE_NAMES = { constitution: "根骨", insight: "悟性", agility: "身法", strength: "力道", fortune: "福缘" };
 const COMBAT_STAGE_NAMES = { mortal: "未入门", body: "锻体", qi: "聚气", meridian: "通脉", master: "宗师" };
 const COMBAT_CHECK_LABELS = { great: "大成", success: "得手", costly: "得手有损", failure: "失手" };
@@ -191,10 +205,19 @@ function legacyFateSeed(saved) {
 
 function createInitialState() {
   return {
-    version: 7,
+    version: 8,
     screen: "landing",
     name: "陈司命",
-    backgroundId: "mystery",
+    originId: null,
+    backgroundId: null,
+    originPrologue: createOriginProgress(),
+    originKnowledge: [],
+    originAccess: [],
+    originContacts: {},
+    originExposure: 0,
+    originEchoes: [],
+    openingAttributePool: 3,
+    originSupplies: 0,
     vowId: "path",
     fateSeed: freshFateSeed(),
     destinyRevealed: false,
@@ -281,17 +304,19 @@ function createInitialState() {
 }
 
 function supportsStoredState(saved) {
-  return Boolean(saved && [2, 3, 4, 5, 6, 7].includes(saved.version) && saved.screen);
+  return Boolean(saved && [2, 3, 4, 5, 6, 7, 8].includes(saved.version) && saved.screen);
 }
 
 function loadState(raw) {
   try {
     const saved = JSON.parse(raw);
     if (!supportsStoredState(saved)) return null;
+    const origin = migrateOriginState(saved);
     const migrated = {
       ...createInitialState(),
       ...saved,
-      version: 7,
+      ...origin,
+      version: 8,
       p0: migrateP0State(saved.p0),
       m4: migrateM4State(saved.m4),
       equipment: migrateEquipmentState(saved.equipment),
@@ -357,6 +382,70 @@ function saveState() {
   state.martial.experience = Math.max(0, Number(state.potential || 0));
   writeStoredState(JSON.stringify(state));
   savedState = structuredClone(state);
+}
+
+function addUnique(target = [], values = []) {
+  return [...new Set([...(Array.isArray(target) ? target : []), ...(Array.isArray(values) ? values : [values])].filter(Boolean))];
+}
+
+function addOriginContact(contact) {
+  if (!Array.isArray(contact) || !contact[0]) return;
+  const [id, delta] = contact;
+  state.originContacts = {
+    ...(state.originContacts || {}),
+    [id]: Math.max(0, Number(state.originContacts?.[id] || 0) + Number(delta || 0)),
+  };
+}
+
+function beginOriginJourney() {
+  const origin = getOrigin(state.originId || state.backgroundId);
+  if (!origin) return;
+  state.originId = origin.id;
+  state.backgroundId = origin.id;
+  state.originPrologue = createOriginProgress(origin.id);
+  state.originKnowledge = [];
+  state.originAccess = [];
+  state.originContacts = {};
+  state.originExposure = 0;
+  state.originEchoes = [];
+  state.openingAttributePool = 3;
+  state.destinyRevealed = false;
+  state.inventory = [];
+  state.shenSilver = 0;
+  state.originSupplies = 0;
+  state.peaches = 3;
+  state.hungerLevel = 2;
+  state.templeOpening = createTempleOpeningState();
+  if (origin.id === "shen_branch") {
+    state.inventory = ["branch_waist_token", "copied_fist_manual"];
+    state.shenSilver = 2;
+    state.originSupplies = 1;
+    state.hungerLevel = 1;
+    state.originContacts = { side_door_keeper: 1 };
+  } else if (origin.id === "streetborn") {
+    state.inventory = ["fire_striker", "red_cord_sample"];
+    state.shenSilver = 0.2;
+    state.originSupplies = 2;
+    state.hungerLevel = 1;
+    state.originContacts = { fish_broker: 1 };
+  } else {
+    state.originContacts = { sun_buli_trace: 1 };
+  }
+  moveTo(origin.startScreen);
+}
+
+function applyOriginRuleResult(result) {
+  if (!result?.available) return false;
+  if (result.progress) state.originPrologue = result.progress;
+  state.shenSilver = Math.max(0, Number(state.shenSilver || 0) + Number(result.silverDelta || 0));
+  state.originSupplies = Math.max(0, Number(state.originSupplies || 0) + Number(result.suppliesDelta || 0));
+  state.originExposure = Math.max(0, Number(state.originExposure || 0) + Number(result.exposureDelta || 0));
+  state.originKnowledge = addUnique(state.originKnowledge, result.knowledgeIds || result.knowledgeId || []);
+  state.originAccess = addUnique(state.originAccess, result.accessIds || result.accessId || []);
+  if (result.factId) state.originKnowledge = addUnique(state.originKnowledge, result.factId);
+  if (result.echo) state.originEchoes = addUnique(state.originEchoes, result.echo);
+  addOriginContact(result.contact);
+  return true;
 }
 
 function clearState() {
@@ -1477,7 +1566,7 @@ function applyMartialState(next, feedback, tone = "gain") {
 }
 
 const TEMPLE_HUD_SCREENS = new Set([
-  "templeWake", "fateSight", "allocation", "templeTasks", "ladyArrival", "ladyPressure",
+  "templeWake", "fateSight", "allocation", "originTempleTask", "templeTasks", "ladyArrival", "ladyPressure",
   "ladyTest", "nightTalk", "gameDeath", "quietDeparture", "encounterReward", "mindArt",
 ]);
 
@@ -1522,6 +1611,15 @@ function gameShell(content) {
 
 function modeLabel() {
   const labels = {
+    shenOriginArrival: "城南族宅 · 西偏院",
+    shenOriginBriefing: "西偏院 · 雨夜传话",
+    shenOriginPreparation: "西偏院 · 出门以前",
+    shenOriginRoad: "城南至东郊 · 雨路",
+    streetOriginMarket: "秦淮外港 · 鱼市",
+    streetOriginOffer: "鱼棚灯下 · 一桩跑腿",
+    streetOriginBargain: "秦淮外港 · 价钱与退路",
+    streetOriginRoute: "外港至东郊 · 雨路",
+    originTempleTask: "金陵东郊 · 暗墙旧物",
     templeWake: "金陵东郊 · 无名破庙",
     fateSight: "金陵东郊 · 无名破庙",
     allocation: "金陵东郊 · 无名破庙",
@@ -1539,6 +1637,11 @@ function modeLabel() {
     quietDeparture: "天明 · 擦肩而过",
     shenArrival: "金陵东湖 · 沈家侧门",
     shenJobs: "沈家外院 · 营生分配",
+    shenOriginReturn: "沈家侧门 · 木匣交割",
+    shenOriginPlacement: "沈家外院 · 旁支去处",
+    streetOriginDelivery: "沈宅货门 · 红绳交货",
+    streetOriginEntry: "沈家外院 · 货路入门",
+    originPersonalEvent: "沈家夜里 · 来处回声",
     caoArrival: "沈家后院 · 炼药房",
     caoFate: "逆天改命 · 曹青奇遇",
     bloodDemand: "丹炉之前 · 取血炼药",
@@ -1616,11 +1719,11 @@ function renderLanding() {
   return setupShell(`
     <div class="title-lockup wudao-title">
       <div class="fate-ring"><span class="fate-glyph">武</span></div>
-      <p class="eyebrow">大曜四百二十七年 · 金陵东郊</p>
+      <p class="eyebrow">大曜四百二十七年 · 金陵</p>
       <h1>武道</h1>
-      <p class="subtitle">你在一座漏雨的破庙里冷醒。<br />火快灭了，庙外有狼，供桌上却摆着新鲜山桃。</p>
+      <p class="subtitle">金陵水陆交汇，门庭、帮会与官府各守一套规矩。<br />今夜的一场雨，会把三个不同来处的人引向同一座破庙。</p>
       <div class="button-row">
-        <button class="primary-button" data-action="new-journey">从雨夜醒来</button>
+        <button class="primary-button" data-action="new-journey">踏入金陵</button>
         ${savedState && savedState.screen !== "landing" ? `<button class="secondary-button" data-action="continue-journey">继续 · ${escapeHtml(savedState.name)}</button>` : ""}
       </div>
     </div>
@@ -1635,33 +1738,47 @@ function renderWorldIntro() {
     <div class="world-ledger">
       ${WORLD_FACTS.map((fact) => `<article class="world-fact"><span>${escapeHtml(fact.name)}</span><strong>${escapeHtml(fact.id === "dynasty" ? "城内有法，城外看刀" : fact.id === "jianghu" ? "门派、世家与帮会" : "一人之力，可镇一方")}</strong><p>${escapeHtml(fact.summary)}</p></article>`).join("")}
     </div>
-    <div class="notice-block"><strong>你所在之地</strong><br />金陵是东南水陆汇聚的大城。城外三十里，一座废弃山神庙正漏着雨；你的故事从那里开始。</div>
+    <div class="notice-block"><strong>你所在之地</strong><br />金陵是东南水陆汇聚的大城。有人生在高墙内，有人在码头讨生活，也有人醒来时连过去都已失去。</div>
     <div class="button-row"><button class="primary-button" data-action="enter-creation">选择此生来处</button></div>
   `);
 }
 
 function renderCharacterDraft() {
-  return setupShell(`
-    <p class="eyebrow">人物车卡 · 来处</p>
-    <h1 class="setup-title">你是谁，又欠江湖什么？</h1>
-    <p class="subtitle">出身既是第一份家底，也是最早追上你的债。</p>
-    <div class="origin-grid wudao-origin-grid">
-      ${BACKGROUNDS.map((item) => `
-        <button class="origin-card ${state.backgroundId === item.id ? "selected" : ""}" data-action="select-background" data-value="${item.id}">
-          <span class="origin-icon">${item.id === "mystery" ? "谜" : item.id === "clan" ? "门" : item.id === "common" ? "市" : "孤"}</span>
-          <strong>${escapeHtml(item.name)}</strong><p>${escapeHtml(item.summary)}</p>
-          <span class="origin-tag">所得：${escapeHtml(item.gain)}</span><span class="origin-cost">代价：${escapeHtml(item.cost)}</span>
-        </button>
-      `).join("")}
-    </div>
-    <div class="field-row wudao-name-field"><label for="hero-name">姓名</label><input id="hero-name" data-field="hero-name" maxlength="8" value="${escapeHtml(state.name)}" /></div>
-    <div class="button-row"><button class="primary-button" data-action="to-vow" ${state.backgroundId && state.name.trim() ? "" : "disabled"}>写下初心</button></div>
-  `);
+  const selected = getOrigin(state.originId || state.backgroundId);
+  return `
+    <main class="origin-selection-screen">
+      <header class="origin-selection-header">
+        <div><p class="eyebrow">金陵道 · 来处</p><h1>这一夜以前，你怎样活着？</h1></div>
+        <p>来处不会替你定下武艺，却会改变开场地点、手中之物、认识的人，以及你为何走进东郊破庙。</p>
+      </header>
+      <section class="origin-choice-grid" aria-label="选择来处">
+        ${ORIGINS.map((item) => `
+          <button class="origin-choice-card ${selected?.id === item.id ? "selected" : ""}" data-action="select-background" data-value="${item.id}" style="--origin-card-image:url('${item.cardImage}')">
+            <span class="origin-card-shade"></span>
+            <span class="origin-card-copy">
+              <small>${item.id === "shen_branch" ? "高墙之内" : item.id === "streetborn" ? "水陆之间" : "旧事之外"}</small>
+              <strong>${escapeHtml(item.name)}</strong>
+              <span>${escapeHtml(item.summary)}</span>
+            </span>
+          </button>
+        `).join("")}
+      </section>
+      <section class="origin-selected-detail ${selected ? "is-visible" : ""}">
+        ${selected ? `
+          <div><small>今夜身在</small><strong>${escapeHtml(selected.opening)}</strong></div>
+        ` : `<p>选中一个来处，看看今夜从哪里开始。</p>`}
+      </section>
+      <footer class="origin-selection-footer">
+        <label for="hero-name">姓名 <input id="hero-name" data-field="hero-name" maxlength="8" value="${escapeHtml(state.name)}" /></label>
+        <button class="primary-button" data-action="to-vow" ${selected && state.name.trim() ? "" : "disabled"}>记住这个名字</button>
+      </footer>
+    </main>
+  `;
 }
 
 function renderVow() {
   return setupShell(`
-    <p class="eyebrow">人物车卡 · 初心</p>
+    <p class="eyebrow">此生所求 · 初心</p>
     <h1 class="setup-title">江湖路远，你为何执剑？</h1>
     <p class="subtitle">初心不会替你赢，却会在某些人面前改变你能说的话。</p>
     <div class="action-list vow-list">
@@ -1672,7 +1789,7 @@ function renderVow() {
 
 function renderDestiny() {
   return setupShell(`
-    <p class="eyebrow">人物车卡 · 命格</p>
+    <p class="eyebrow">命灯初照 · 命格</p>
     <h1 class="setup-title">两盏命灯旁，浮出四个血字</h1>
     <div class="encounter-reveal">
       <div class="reveal-seal">逆<br />天<br />改<br />命</div>
@@ -1689,38 +1806,114 @@ function renderDestiny() {
 }
 
 function renderCharacterSheet() {
-  const background = getBackground(state.backgroundId);
+  const background = getOrigin(state.originId || state.backgroundId);
   const vow = getVow(state.vowId);
   return setupShell(`
-    <p class="eyebrow">人物车卡 · 已定</p>
+    <p class="eyebrow">姓名与初心 · 已定</p>
     <h1 class="setup-title">${escapeHtml(state.name)}</h1>
     <div class="birth-sheet">
       <div class="wudao-sheet-seal">${escapeHtml(state.name.slice(-2))}</div>
       <div class="birth-facts">
         <div><span>年龄</span><strong>十六</strong><p>初入金陵道</p></div>
-        <div><span>出身</span><strong>${escapeHtml(background?.name)}</strong><p>${escapeHtml(background?.cost)}</p></div>
+        <div><span>出身</span><strong>${escapeHtml(background?.name)}</strong><p>${escapeHtml(background?.opening)}</p></div>
         <div><span>初心</span><strong>${escapeHtml(vow?.title)}</strong><p>${escapeHtml(vow?.name)}</p></div>
         <div><span>武境</span><strong>未入门</strong><p>先从锻体开始</p></div>
-        <div><span>命格</span><strong>${DESTINY.name}</strong><p>见奇遇 · 改五维</p></div>
+        <div><span>命格</span><strong>尚未显现</strong><p>真正遇见死局时才会醒来</p></div>
         <div><span>命灯</span><strong>二</strong><p>两灯皆灭，此生终结</p></div>
       </div>
     </div>
-    <div class="notice-block"><strong>眼下处境</strong><br />你在金陵城外的破庙醒来。没有境界，没有师门，腹中空空；怀里的玉佩正散出最后一点暖意。</div>
-    <div class="button-row"><button class="primary-button" data-action="start-journey">睁开眼睛</button></div>
+    <div class="notice-block"><strong>今夜去处</strong><br />${escapeHtml(background?.opening || "金陵道")}。${escapeHtml(background?.undertone || "")}</div>
+    <div class="button-row"><button class="primary-button" data-action="start-journey">走进这一夜</button></div>
+  `);
+}
+
+function renderOriginPrologue() {
+  const originId = state.originId || state.backgroundId;
+  const node = ORIGIN_PROLOGUES[originId]?.[state.screen];
+  if (!node) return gameShell(`<div class="empty-state">雨路暂时断在这里。</div>`);
+  return gameShell(`
+    ${sceneHeader(node.kicker, node.title, node.text)}
+    <div class="origin-prologue-mark"><span>来处</span><strong>${escapeHtml(getOrigin(originId)?.name || "")}</strong><small>${escapeHtml(getOrigin(originId)?.taskName || "")}</small></div>
+    <div class="action-list">
+      ${node.choices.map((choice) => {
+        const unaffordable = choice.id === "buy_oilcloth"
+          ? Number(state.shenSilver || 0) < 0.2
+          : choice.id === "buy_rations" && Number(state.shenSilver || 0) < 0.3;
+        return actionCard({
+          action: "origin-prologue-choice",
+          value: choice.id,
+          title: choice.title,
+          description: choice.detail,
+          source: choice.meta,
+          meta: unaffordable ? "银钱不足" : "走向破庙",
+          kind: ["request_writ", "memorize_knot", "follow_cart_tracks"].includes(choice.id) ? "special" : "",
+          disabled: unaffordable,
+        });
+      }).join("")}
+    </div>
+  `);
+}
+
+function renderOriginTempleTask() {
+  const originId = state.originId || state.backgroundId;
+  const isShen = originId === "shen_branch";
+  const choices = ORIGIN_TEMPLE_CHOICES[originId] || [];
+  return gameShell(`
+    ${sceneHeader(
+      "东北角 · 暗墙夹层",
+      isShen ? "你先找到今夜必须带走的木匣" : "红绳压在一角湿灰下面",
+      isShen
+        ? "木匣封蜡还在，外层却沾着两种不同的泥。原样取回能交差，细看则能知道它来过哪里。"
+        : "油布包与样绳完全相合。你可以只做一个跑腿，也可以付出被人察觉的代价，先弄清自己正在送什么。",
+    )}
+    <div class="fate-clue-card">
+      <span>今夜差事</span>
+      <strong>${escapeHtml(getOrigin(originId)?.taskName || "")}</strong>
+      <p>成功、带代价的成功与失手都会让故事继续，但回到沈家以后得到的身份不会相同。</p>
+    </div>
+    <div class="action-list">
+      ${choices.map((choice, index) => actionCard({
+        action: "origin-temple-task",
+        value: choice.id,
+        title: choice.title,
+        description: choice.detail,
+        source: choice.meta,
+        meta: index === 0 ? "保全差事" : index === 1 ? "得到额外见闻" : "失去原样交差",
+        kind: index === 0 ? "special" : index === 2 ? "danger" : "",
+      })).join("")}
+    </div>
   `);
 }
 
 function renderTempleWake() {
   const opening = { ...createTempleOpeningState(), ...state.templeOpening };
+  const originId = state.originId || state.backgroundId;
+  const arrivedOnPurpose = originId && originId !== "mystery";
   const stable = canInspectTempleWall(opening);
   const hasActed = opening.actions.length > 0;
-  const remaining = TEMPLE_OPENING_ACTIONS.filter((item) => !opening.actions.includes(item.id));
+  const originOpeningCopy = {
+    tend_fire: arrivedOnPurpose
+      ? ["先替火堆挡住漏雨", "进庙以后，先留一盏能照见封条和脚印的火。", "火势"]
+      : null,
+    check_belongings: arrivedOnPurpose
+      ? ["复核差事与随身物", "确认信物、口粮和来时的交代都还贴身收着。", "来处"]
+      : null,
+    eat_peach: arrivedOnPurpose && Number(state.originSupplies || 0) > 0
+      ? ["咬一口随身粗粮", "雨路耗力，先压住空腹，再动墙后的东西。", "饥饿"]
+      : null,
+  };
+  const remaining = TEMPLE_OPENING_ACTIONS.filter((item) => !opening.actions.includes(item.id)).map((item) => {
+    const copy = originOpeningCopy[item.id];
+    return copy ? { ...item, title: copy[0], description: copy[1], source: copy[2], meta: item.id === "eat_peach" ? "粗粮 -1" : item.meta } : item;
+  });
   return gameShell(`
     ${hasActed ? "" : `<header class="scene-head opening-scene-head">
-      <h1 class="scene-title">你是被冷醒的</h1>
-      <p class="scene-subtitle"><span>雨从破瓦间漏下来。</span><span>冷风挟着狼嚎，钻进骨缝。</span><span>炭堆只剩一星将灭的红，</span><span>供桌上偏有一枚鲜桃。</span></p>
+      <h1 class="scene-title">${arrivedOnPurpose ? "你推开漏雨的庙门" : "你是被冷醒的"}</h1>
+      <p class="scene-subtitle">${arrivedOnPurpose
+        ? `<span>来路已经被雨洗暗。</span><span>你要找的东西藏在东北角。</span><span>炭堆只剩一星将灭的红，</span><span>供桌上偏有一枚鲜桃。</span>`
+        : `<span>雨从破瓦间漏下来。</span><span>冷风挟着狼嚎，钻进骨缝。</span><span>炭堆只剩一星将灭的红，</span><span>供桌上偏有一枚鲜桃。</span>`}</p>
     </header>
-    <div class="insight-whisper"><span>悟性</span><strong>东北角那片墙灰，比这场雨还新。</strong></div>`}
+    <div class="insight-whisper"><span>${arrivedOnPurpose ? "差事" : "悟性"}</span><strong>东北角那片墙灰，比这场雨还新。</strong></div>`}
     ${hasActed ? `<div class="narrative-next-heading"><span>接下来</span></div>` : ""}
     <div class="action-list opening-action-list">
       ${remaining.map((item) => actionCard({ action: "temple-opening", value: item.id, title: item.title, description: item.description, source: item.source, meta: item.meta, kind: item.id === "tend_fire" ? "special" : "" })).join("")}
@@ -1731,13 +1924,15 @@ function renderTempleWake() {
 
 function renderFateSight() {
   const forceCost = templeTaskCost("shen_promise", state.attributes);
+  const originId = state.originId || state.backgroundId;
+  const anchor = originId === "shen_branch" ? "腰牌背面的旧刻痕" : originId === "streetborn" ? "火镰擦出的青白火星" : "怀里的半块玉佩";
   return gameShell(`
     ${sceneHeader("东北角 · 补砌砖墙", "你看见了东西，却拿不到", "砖后藏着一枚旧铜钱。墙灰又厚又硬，以你现在的力道，火灭之前根本砸不开。")}
-    <div class="story-copy"><p>你把手掌贴上新砖。怀里的半块玉佩忽然发烫，三股微弱气力像水一样，从筋骨间退回掌心。</p><p>这不是凭空得来的神力。你只能把已有的三点余力，重新押在今夜最需要的地方。</p></div>
+    <div class="story-copy"><p>你把手掌贴上新砖。${escapeHtml(anchor)}忽然发热，两盏命灯在识海里一明一暗，三股微弱气力像水一样，从筋骨间退回掌心。</p><p>这不是凭空得来的神力。你只能把已有的三点余力，重新押在今夜最需要的地方。</p></div>
     <div class="fate-clue-card danger"><span>眼下算得出的结果</span><strong>徒手敲墙：约 ${Number(forceCost?.minutes || 240)} 分钟</strong><p>余火只够支撑片刻。继续蛮干，只会在拿到东西前失温倒下。</p></div>
     <div class="action-list">
       ${actionCard({ action: "force-temple-wall", title: "就这样用双手砸墙", description: "方法没有错，今夜的身体和时间却都不够。", source: `力道 ${Number(state.attributes.strength || 0)}`, meta: "火势不足", disabled: true })}
-      ${actionCard({ action: "use-destiny", title: "攥紧玉佩，改掉今夜的力道", description: "让三点余力离开原本的位置，再决定它们落进哪一项五维。", source: "半块家传玉佩", meta: "逆天改命", kind: "special" })}
+      ${actionCard({ action: "use-destiny", title: "引动命灯，改掉今夜的力道", description: "让三点余力离开原本的位置，再决定它们落进哪一项五维。", source: anchor, meta: "逆天改命", kind: "special" })}
     </div>
   `);
 }
@@ -1755,7 +1950,7 @@ function renderAllocation() {
     <div class="action-list">
       ${choices.map(([id, title, description]) => actionCard({ action: "allocate-jade", value: id, title, description, source: state.allocationId === id ? "已选" : "分配", meta: id === "strength" ? "破墙最优" : id === "balanced" ? "稳妥" : "赌奇遇", kind: state.allocationId === id ? "special" : "" })).join("")}
     </div>
-    <div class="button-row"><button class="primary-button" data-action="confirm-allocation">让玉佩安静下来</button></div>
+    <div class="button-row"><button class="primary-button" data-action="confirm-allocation">让命灯安静下来</button></div>
   `);
 }
 
@@ -1808,10 +2003,21 @@ function renderLadyArrival() {
 }
 
 function renderLadyPressure() {
+  const originInsight = ORIGIN_LADY_INSIGHTS[state.originId || state.backgroundId];
   return gameShell(`
     ${sceneHeader("因爱成恨", "她的掌风压灭了半边火苗", "你只否认了乞丐二字，她却像从这句话里听见了另一个人的声音。")}
     <div class="story-copy"><p>“不是乞丐？”她盯着你，怒意后面藏着被人抛下的狼狈，“这世上身份、誓言、夫妻情分，又有几样是真的？”</p></div>
-    <div class="action-list">${ladyChoices("pressure", "lady-pressure")}</div>
+    <div class="action-list">
+      ${originInsight && !state.originKnowledge.includes(originInsight.knowledge) ? actionCard({
+        action: "origin-lady-insight",
+        title: originInsight.title,
+        description: originInsight.detail,
+        source: originInsight.meta,
+        meta: "进入后续 · 额外见闻",
+        kind: "special",
+      }) : ""}
+      ${ladyChoices("pressure", "lady-pressure")}
+    </div>
   `);
 }
 
@@ -1886,11 +2092,23 @@ function renderRoadResult() {
 }
 
 function renderEnding() {
+  const originId = state.originId || state.backgroundId;
   const hasShenToken = state.completedTempleTasks.includes("shen_promise");
   const reachedShenByRiver = state.roadTrial === "dive";
-  const canEnterShen = hasShenToken && reachedShenByRiver;
+  const originEntry = originId === "shen_branch" || originId === "streetborn";
+  const canEnterShen = (hasShenToken || originEntry) && reachedShenByRiver;
+  const shenRouteTitle = originId === "shen_branch"
+    ? "带封药木匣返回族宅"
+    : originId === "streetborn"
+      ? "把红绳油布包送到沈宅货门"
+      : "持沈字铜钱前往沈家";
+  const shenRouteDescription = originId === "shen_branch"
+    ? "回西偏院交差，木匣状态会决定你被放进哪一份差事。"
+    : originId === "streetborn"
+      ? "兑现鱼市跑腿，把一趟货路换成沈家里的落脚处。"
+      : "沿紫金河抵达东湖，用老太爷旧诺换一份沈家营生。";
   const routes = [
-    ["shen", "持沈字铜钱前往沈家", "沿紫金河抵达东湖，用老太爷旧诺换一份沈家营生。", "沈家 · 外院"],
+    ["shen", shenRouteTitle, shenRouteDescription, "沈家 · 外院"],
     ["offering", "等到初一再回破庙", "按晴日、辰时与根骨条件，追索神秘贡品。", "破庙 · 地级奇遇"],
     ["linan", "沿漕帮水路去临安", "寻找龙青鱼留下的重逢条件，也踏入漕帮权争。", "漕帮 · 人物线"],
   ];
@@ -1906,7 +2124,19 @@ function renderEnding() {
       ${routes.map(([id, title, description, meta]) => actionCard({ action: "choose-route", value: id, title, description, source: state.nextRoute === id ? "已定" : "去路", meta, kind: state.nextRoute === id ? "special" : "" })).join("")}
     </div>
     ${state.nextRoute ? `<div class="notice-block"><strong>下一程已定</strong><br />晨雾散去后，你将沿这条路继续。</div>` : ""}
-    ${state.nextRoute === "shen" ? `<div class="action-list">${actionCard({ action: "start-shen-chapter", title: "持铜钱叩响沈家侧门", description: canEnterShen ? "你已顺紫金河抵达东湖，可以把破庙墙后的旧诺换成一份营生。" : !hasShenToken ? "你没有能让侧门开启的沈字铜钱。" : "官道路远，当前体力与干粮不足以在今日抵达沈家。", source: "金陵沈家", meta: canEnterShen ? "进入下一段" : !hasShenToken ? "缺少沈字铜钱" : "需要紫金河水路", kind: canEnterShen ? "special" : "", disabled: !canEnterShen })}</div>` : ""}
+    ${state.nextRoute === "shen" ? `<div class="action-list">${actionCard({
+      action: "start-shen-chapter",
+      title: originId === "shen_branch" ? "回西偏院交差" : originId === "streetborn" ? "去沈宅货门交货" : "持铜钱叩响沈家侧门",
+      description: canEnterShen
+        ? shenRouteDescription
+        : !reachedShenByRiver
+          ? "官道路远，当前体力与干粮不足以在今日抵达沈家。"
+          : "你还没有能让沈家任何一扇门开启的凭证。",
+      source: "金陵沈家",
+      meta: canEnterShen ? "进入下一段" : !reachedShenByRiver ? "需要紫金河水路" : "缺少入门凭证",
+      kind: canEnterShen ? "special" : "",
+      disabled: !canEnterShen,
+    })}</div>` : ""}
     <div class="button-row"><button class="secondary-button" data-action="restart">另起一世</button></div>
   `);
 }
@@ -2103,7 +2333,7 @@ function renderLegacyShenChapterEnding() {
     </div>
     <div class="next-hooks shen-next-hooks">
       <div><span>丹房内应</span><strong>木七只是一只手</strong><p>递出伏脉藤的人仍藏在沈家药路上。</p></div>
-      <div><span>血书旧债</span><strong>万鲤堂孙不离</strong><p>金龙会的人已经进城寻找半块玉佩。</p></div>
+      <div><span>血书追索</span><strong>万鲤堂孙不离</strong><p>金龙会的人已经进城寻找半块玉佩。</p></div>
       <div><span>初一将至</span><strong>破庙神秘贡品</strong><p>晴日、辰时和根骨条件仍在等待。</p></div>
     </div>
     <div class="notice-block"><strong>金陵篇继续</strong><br />你已从无名耗材变成沈家愿意记住的差事人，也第一次有能力决定下一场危机怎么发生。</div>
@@ -2119,6 +2349,98 @@ function shenRequirementText(job) {
     hasArithmetic: state.inventory.includes("arithmetic"),
   });
   return status.missing.map((id) => names[id] || id).join("、");
+}
+
+function renderShenOriginReturn() {
+  const taskState = state.originPrologue?.taskState;
+  const intact = taskState === "success";
+  const inspected = taskState === "costly_success";
+  return gameShell(`
+    ${sceneHeader(
+      "沈家侧门 · 天色将明",
+      intact ? "封药木匣原样回到了门内" : inspected ? "封条还在，你带回了不该知道的药气" : "木匣开过，管事一眼便看见断蜡",
+      intact
+        ? "门房验过双股药绳，第一次没有把你当成西偏院里随时可以换掉的人。"
+        : inspected
+          ? "差事算成，却有人会追问你为何能说出匣底换手留下的泥色。"
+          : "原样交差已经不可能。现在只能决定把真话卖给谁。",
+    )}
+    <div class="encounter-ledger">
+      <div><span>差事</span><strong>${intact ? "完好交回" : inspected ? "带代价完成" : "失手仍前行"}</strong><p>${escapeHtml(state.originEchoes.at(-1) || "")}</p></div>
+      <div><span>族中眼光</span><strong>暴露 ${Number(state.originExposure || 0)}</strong><p>知道得越多，越难继续被当成无关紧要的旁支。</p></div>
+    </div>
+    <div class="action-list">
+      ${actionCard({ action: "origin-return-choice", value: "hand_over", title: "照差事交给管事，不多说一句", description: "让木匣的状态替你说话。", source: "稳妥", meta: intact ? "门房信任 +1" : "保留去处", kind: intact ? "special" : "" })}
+      ${actionCard({ action: "origin-return-choice", value: "report_trace", title: "只说车辙与换手痕，不说自己猜到什么", description: "证明你有用，同时藏住真正的判断。", source: "见闻", meta: "暴露 +1" })}
+      ${actionCard({ action: "origin-return-choice", value: "keep_leverage", title: "留下夹层货签，交出其余东西", description: "手里多一张筹码，也多一项以后会被追查的隐瞒。", source: "危险", meta: "暴露 +2", kind: "danger" })}
+    </div>
+  `);
+}
+
+function renderShenOriginPlacement() {
+  const trusted = Number(state.originContacts?.side_door_keeper || 0) >= 2;
+  return gameShell(`
+    ${sceneHeader("沈家外院 · 辰时", "旁支的名字，终于被写进一份差事簿", "你仍分不到嫡脉的师父和月例，却不必再从四份明知做不了的粗活里证明自己无用。")}
+    <div class="world-ledger shen-world-ledger">
+      <article class="world-fact"><span>出身兑现</span><strong>${trusted ? "侧门愿替你作证" : "差事结果替你作证"}</strong><p>你直接得到后院药房的试用位置，但管事会继续盯着木匣留下的疑点。</p></article>
+      <article class="world-fact"><span>仍要支付的代价</span><strong>曹青的丹房</strong><p>旁支身份省去外院碰壁，却不能替你挡住真正的生死门槛。</p></article>
+    </div>
+    <div class="action-list">${actionCard({ action: "enter-origin-danroom", title: "拿着差事簿去后院药房", description: "你比来路不明的人多一扇门，也因此更早进入某些人的视线。", source: "世家旁支", meta: "进入曹青丹房", kind: "special" })}</div>
+  `);
+}
+
+function renderStreetOriginDelivery() {
+  const taskState = state.originPrologue?.taskState;
+  const intact = taskState === "success";
+  return gameShell(`
+    ${sceneHeader(
+      "沈宅货门 · 辰时",
+      intact ? "红绳对上了货门的暗号" : taskState === "costly_success" ? "包能交，线脚却瞒不过收货人" : "红绳已断，这趟跑腿换了价钱",
+      "牙人说的不是正门，也不是侧门。货门只认暗号、货签和谁能把一桩麻烦说成一门生意。",
+    )}
+    <div class="encounter-ledger">
+      <div><span>货物</span><strong>${intact ? "原样送达" : taskState === "costly_success" ? "带痕送达" : "拆包见证"}</strong><p>${escapeHtml(state.originEchoes.at(-1) || "")}</p></div>
+      <div><span>外港口风</span><strong>暴露 ${Number(state.originExposure || 0)}</strong><p>鱼市和沈宅都可能记住送货人的手脚。</p></div>
+    </div>
+    <div class="action-list">
+      ${actionCard({ action: "origin-delivery-choice", value: "deliver_plain", title: "交货、收钱，不替牙人传第二句话", description: "把这件事停在一趟跑腿上。", source: "稳妥", meta: intact ? "余款 +0.4两" : "余款折半", kind: intact ? "special" : "" })}
+      ${actionCard({ action: "origin-delivery-choice", value: "trade_knowledge", title: "用夹层药气换一个留在沈家的位置", description: "不问货是谁的，只证明自己能看见货路里的错处。", source: "门路", meta: "药房试用", kind: "special" })}
+      ${actionCard({ action: "origin-delivery-choice", value: "name_broker", title: "报出鱼市牙人与错误泊位", description: "把外港联系人交出去，换沈宅立即相信你。", source: "割断旧路", meta: "鱼市关系关闭", kind: "danger" })}
+    </div>
+  `);
+}
+
+function renderStreetOriginEntry() {
+  const cargoAccess = state.originAccess?.includes("shen_cargo_gate_password");
+  return gameShell(`
+    ${sceneHeader("沈家外院 · 货门之后", "一趟跑腿替你换来半个落脚处", "你不是沈家人，也没有旧诺。你靠的是认路、辨货与知道哪句话该停在门外。")}
+    <div class="world-ledger shen-world-ledger">
+      <article class="world-fact"><span>出身兑现</span><strong>${cargoAccess ? "货门暗号仍在你手里" : "收货人记住了你的用处"}</strong><p>沈家愿让你去后院药房试工；鱼市仍是一条可能回头的路。</p></article>
+      <article class="world-fact"><span>没有被抹平的差别</span><strong>你不是沈家子弟</strong><p>宅门规矩对你更陌生，货路与市井人脉却会给出旁支看不到的解法。</p></article>
+    </div>
+    <div class="action-list">${actionCard({ action: "enter-origin-danroom", title: "跟收货伙计去后院药房", description: "曹医师缺的是能做轻巧活、又没有靠山的人。", source: "市井子弟", meta: "进入曹青丹房", kind: "special" })}</div>
+  `);
+}
+
+function renderOriginPersonalEvent() {
+  const originId = state.originId || state.backgroundId;
+  const event = ORIGIN_PERSONAL_EVENTS[originId];
+  if (!event) return gameShell(`<div class="empty-state">今夜没有旧事来敲门。</div>`);
+  return gameShell(`
+    ${sceneHeader(event.kicker, event.title, event.text)}
+    <div class="origin-personal-event"><span>来处回声</span><strong>${escapeHtml(getOrigin(originId)?.name || "")}</strong><p>这不是额外奖赏，而是开场留下的人、物与疑点在沈家重新发生作用。</p></div>
+    <div class="action-list">
+      ${event.choices.map((choice, index) => actionCard({
+        action: "origin-personal-choice",
+        value: choice.id,
+        title: choice.title,
+        description: choice.detail,
+        source: choice.meta,
+        meta: "留下长期痕迹",
+        kind: index === 0 ? "special" : index === 2 ? "danger" : "",
+      })).join("")}
+    </div>
+  `);
 }
 
 function renderShenArrival() {
@@ -2147,10 +2469,39 @@ function renderShenJobs() {
   `);
 }
 
+function originPhaseNote(phase) {
+  const originId = state.originId || state.backgroundId;
+  const notes = {
+    cao: {
+      shen_branch: ["旁支腰牌", "曹青先看腰牌磨损，再看你本人。有人提前告诉他，西偏院会送来一个能取血的人。"],
+      streetborn: ["鱼市药气", "他在你袖口闻到油布包留下的苦香，却没有问货从哪一道门进来。"],
+      mystery: ["半块玉佩", "他的目光从你苍白的脸移到衣襟，像是认出玉佩断口，又立刻装作没看见。"],
+    },
+    blood: {
+      shen_branch: ["族中规矩", "旁支名册能记月例，却不会记一个药童被取了多少血。曹青正在利用这道空白。"],
+      streetborn: ["货路相连", "炉边药气与油布包夹层同源。鱼市跑腿、沈宅货门和这炉丹，本就是一条路。"],
+      mystery: ["旧字再现", "盛血木牌上的一笔旧字，与染血旧书背面的残画极像。写信的人熟悉这间丹房。"],
+    },
+    observation: {
+      shen_branch: ["看人换手", "你从木匣学到的不是药名，而是同一件东西经过不同人时会留下什么痕迹。"],
+      streetborn: ["看货辨序", "鱼市里辨鲜货的法子也能用在药材上：先看水色，再看哪味药最后沉底。"],
+      mystery: ["残忆闪回", "水声、药气与失血让一段模糊手势掠过脑海。你不记得人，却记得他最后一次换火。"],
+    },
+    meeting: {
+      shen_branch: ["旁谱座次", "你认得旁支该站的位置，也因此看出今夜少了一把本该有人坐的椅子。"],
+      streetborn: ["码头口风", "金龙会四堂的说法与鱼市货路对得上，唯独百舸争流的泊位数少了一处。"],
+      mystery: ["血书笔画", "名册上的旧字与血书残迹同出一手。写信的人曾以沈家人的身份坐进这里。"],
+    },
+  };
+  const note = notes[phase]?.[originId];
+  return note ? `<div class="origin-context-note"><span>${escapeHtml(getOrigin(originId)?.name || "")}</span><strong>${escapeHtml(note[0])}</strong><p>${escapeHtml(note[1])}</p></div>` : "";
+}
+
 function renderCaoArrival() {
   return gameShell(`
     ${sceneHeader("沈家后院 · 炼药房", "五名药童守着丹炉，没有一个人像能活过冬天", "他们面色惨白、眼眶发黑。穿灰黑长袍的曹医师枯瘦如柴，只看一眼，便说从未见过你这样孱弱却还活着的人。")}
     <div class="npc-reveal-card shen-npc-card"><div class="reveal-seal">曹<br />青</div><div><span>沈家客卿 · 医师</span><h2>下人传言：进他丹房的人很少活过三个月</h2><p>他不问铜钱怎么来的，只在估量你还能取几次血。</p></div></div>
+    ${originPhaseNote("cao")}
     <div class="action-list">${actionCard({ action: "inspect-cao-fate", title: "对曹医师发动逆天改命", description: "先看清这个人身上的固定奇遇，再决定该逃、该告发，还是该设法取信。", source: "唯一命格", meta: "看见三条因果", kind: "special" })}</div>
   `);
 }
@@ -2169,6 +2520,7 @@ function renderCaoFate() {
 function renderBloodDemand() {
   return gameShell(`
     ${sceneHeader("丹炉之前", "曹青要用你的血炼这一炉愈灵丹", "其他药童同时松了口气。反抗、拒绝或服从，逆天改命已经标出各自结果。")}
+    ${originPhaseNote("blood")}
     <div class="action-list">
       ${Object.values(BLOOD_CHOICES).map((choice) => {
         const result = resolveBloodChoice(choice.id, state.lives);
@@ -2183,6 +2535,7 @@ function renderDanObservation() {
   const insightReady = state.attributes.insight >= 3;
   return gameShell(`
     ${sceneHeader("沈家丹房 · 申时", "血已经倒进丹炉，你仍有一次让曹青记住你的机会", "手臂敷了止血药，身体虚弱。其他药童已经离开，曹青却没有阻止任何人旁观。")}
+    ${originPhaseNote("observation")}
     <div class="shen-investigation-meter"><span>当前悟性</span><strong>${state.attributes.insight}</strong><p>鱼跃龙门诀的“潜流于渊”会让与水相关的炼丹判定再加二。</p></div>
     ${!insightReady ? `<div class="action-list">${actionCard({ action: "reallocate-insight", title: "把玉佩三点全部转到悟性", description: "暂时放弃力道和身法，把唯一能调动的力量用于记住火候、药序与水量。", source: "逆天改命", meta: "悟性变为三", kind: "special" })}</div>` : ""}
     <div class="action-list">
@@ -2313,6 +2666,7 @@ function renderShenMeeting() {
       <article class="world-fact"><span>沈家密议</span><strong>金龙会四堂回岛</strong><p>万鲤、怒蛟、巨鲸、神龟四堂齐聚，沈家认为水路将有大事。</p></article>
       <article class="world-fact"><span>三个月后</span><strong>百舸争流大典</strong><p>漕帮让各路年轻武人同船竞渡，划船、护船与破坏对手皆在考校之内。</p></article>
     </div>
+    ${originPhaseNote("meeting")}
     <div class="notice-block"><strong>遥远门槛</strong><br />大典最普通的船夫也须炼骨。你连锻体都未踏入，但这条水路已第一次出现在眼前。</div>
     <div class="action-list">${actionCard({ action: "leave-shen-meeting", title: "依曹青吩咐退出内堂", description: "门外，先前把你当废物的沈福已经搬来椅子，笑得比谁都恭敬。", source: "沈家总管", meta: "十两见面礼", kind: "special" })}</div>
   `);
@@ -2476,6 +2830,7 @@ function renderAlchemyFailure() {
 function renderShenChapterEnding() {
   const success = state.alchemyPills === RETURN_SPRING_BREW.successPills;
   const tendency = state.shenTendency === "medicine" ? "丹医立足" : "水陆求道";
+  const origin = getOrigin(state.originId || state.backgroundId);
   return gameShell(`
     ${sceneHeader(success ? "东门药铺 · 丹香初成" : "金陵东门 · 路在眼前断开", success ? "六枚下品回春丹滚入木盘，曹青许你三丹换一门真正武功" : "你仍活着，却没有把这一次机缘走到炼丹炉前", success ? `这一程更偏向“${tendency}”。但你亲手得到的另一条路不会消失：紫金河仍认你的鱼竿，曹青也已经认你的丹。` : "安全可以保住药童身份，却换不来王五的杆法、曹青的指点或下一层武功承诺。")}
     <div class="wudao-ending-grid shen-ending-grid">
@@ -2485,6 +2840,7 @@ function renderShenChapterEnding() {
       <div><span>五维总点</span><strong>${shenAttributePool()}</strong><p>五禽一戏 +1 · 宝鱼力道 ${state.treasureFishShared ? "+1" : "未得"}</p></div>
     </div>
     <div class="next-hooks shen-next-hooks">
+      <div><span>来处留下的痕迹</span><strong>${escapeHtml(origin?.tag || "旧事")}</strong><p>${escapeHtml(state.originEchoes.slice(-2).join("；") || "这一程尚未留下新的来处回声。")}</p></div>
       <div><span>曹青承诺</span><strong>再掌握三种丹药</strong><p>达到回春丹的品质，便传一招真正武功。</p></div>
       <div><span>江湖大典</span><strong>三个月后 · 百舸争流</strong><p>炼骨才够当船夫；你已先得水路与杆法。</p></div>
       <div><span>血书来客</span><strong>万鲤堂 · 孙不离</strong><p>沈家密会只揭开了金龙会的第一层。</p></div>
@@ -3136,7 +3492,7 @@ function renderSevenKillHouse() {
     <div class="action-list">
       ${actionCard({ action: "m4-old-house", value: "search_drawer", title: "翻开刀匣下的暗层", description: "取得七杀刀拓痕，但翻找声会让门外的人知道屋里有人。", source: "七杀旧账 · 悟性", meta: "线索 +1 · 警觉 +1", kind: "special" })}
       ${actionCard({ action: "m4-old-house", value: "watch_door", title: "不碰刀匣，先看谁来收尾", description: "放弃最深的家族线索，换取毒蛇帮收货人的活证和更低警觉。", source: "藏锋 · 活证", meta: "收货牌 · 警觉下降" })}
-      ${actionCard({ action: "m4-old-house", value: "send_bai_message", title: "把拓纸位置写给白栀云", description: "让内宅的人取证，你守住门外；她是否回应取决于旧日救命关系与曹青短札。", source: "救命旧债 · 白栀云", meta: canMessage ? "内宅愿意接信" : "缺少担保", kind: "special", disabled: !canMessage })}
+      ${actionCard({ action: "m4-old-house", value: "send_bai_message", title: "把拓纸位置写给白栀云", description: "让内宅的人取证，你守住门外；她是否回应取决于旧日救命关系与曹青短札。", source: "救命之缘 · 白栀云", meta: canMessage ? "内宅愿意接信" : "缺少担保", kind: "special", disabled: !canMessage })}
     </div>
   `);
 }
@@ -3175,7 +3531,7 @@ function renderBaiReturn() {
     ${sceneHeader("旧住处 · 夜半拍门", "白栀云没有带侍女，只把七杀刀拓纸压在桌上", available ? "她记得病榻前欠下的命，也知道你已卷进沈家旧账。她不许你现在拔刀，只教三种卸力法：护经、沉胯、送力回桩。" : "她只问了七杀拓纸的来处，没有承诺替你担保。旧日关系与眼前物证还不足以让她把沈家武学交出来。")}
     <div class="encounter-ledger"><div><span>共同经历</span><strong>${state.p0.treatmentOutcome === "saved" ? "救命之恩" : "病榻旧识"}</strong><p>${escapeHtml(p0RelationLabel("bai_zhiyun"))}</p></div><div><span>眼前物证</span><strong>${state.m4.sevenKillClue ? "七杀刀拓痕" : "残缺暗账"}</strong><p>关系让她愿意承担什么，物证决定她相信什么</p></div></div>
     <div class="action-list">
-      ${actionCard({ action: "m4-bai-instruction", value: "receive", title: "请她把卸力三诀拆给你看", description: "白栀云不为它另立名目，只针对七杀刀势教你护经、沉胯与送力回桩。", source: "白栀云 · 救命旧债", meta: available ? M4_METHOD.name : "关系或物证不足", kind: "special", disabled: !available })}
+      ${actionCard({ action: "m4-bai-instruction", value: "receive", title: "请她把卸力三诀拆给你看", description: "白栀云不为它另立名目，只针对七杀刀势教你护经、沉胯与送力回桩。", source: "白栀云 · 救命之缘", meta: available ? M4_METHOD.name : "关系或物证不足", kind: "special", disabled: !available })}
       ${actionCard({ action: "m4-bai-instruction", value: "decline", title: "只问七杀旧事，不受她的武学", description: "保留距离，带着已有证据离开；不会得到下一场闭门试势的特殊解法。", source: "保持距离", meta: "仍可安全离城" })}
     </div>
   `);
@@ -3214,9 +3570,18 @@ const renderers = {
   vow: renderVow,
   destiny: renderDestiny,
   characterSheet: renderCharacterSheet,
+  shenOriginArrival: renderOriginPrologue,
+  shenOriginBriefing: renderOriginPrologue,
+  shenOriginPreparation: renderOriginPrologue,
+  shenOriginRoad: renderOriginPrologue,
+  streetOriginMarket: renderOriginPrologue,
+  streetOriginOffer: renderOriginPrologue,
+  streetOriginBargain: renderOriginPrologue,
+  streetOriginRoute: renderOriginPrologue,
   templeWake: renderTempleWake,
   fateSight: renderFateSight,
   allocation: renderAllocation,
+  originTempleTask: renderOriginTempleTask,
   templeTasks: renderTempleTasks,
   ladyArrival: renderLadyArrival,
   ladyPressure: renderLadyPressure,
@@ -3231,6 +3596,11 @@ const renderers = {
   ending: renderEnding,
   shenArrival: renderShenArrival,
   shenJobs: renderShenJobs,
+  shenOriginReturn: renderShenOriginReturn,
+  shenOriginPlacement: renderShenOriginPlacement,
+  streetOriginDelivery: renderStreetOriginDelivery,
+  streetOriginEntry: renderStreetOriginEntry,
+  originPersonalEvent: renderOriginPersonalEvent,
   caoArrival: renderCaoArrival,
   caoFate: renderCaoFate,
   bloodDemand: renderBloodDemand,
@@ -3323,6 +3693,7 @@ function render() {
   const characterFeedbackWasRendered = Boolean(pendingCharacterFeedback?.text);
   const martialFeedbackWasRendered = Boolean(pendingMartialFeedback?.text);
   app.innerHTML = renderer();
+  document.documentElement.dataset.appReady = "true";
   pendingSceneFeedback = null;
   pendingInventoryFeedback = null;
   pendingCharacterFeedback = null;
@@ -3900,7 +4271,7 @@ const handlers = {
   "new-journey": () => {
     clearState();
     state = createInitialState();
-    moveTo("templeWake");
+    moveTo("worldIntro");
   },
   "continue-journey": () => {
     state = savedState ? structuredClone(savedState) : createInitialState();
@@ -3908,7 +4279,8 @@ const handlers = {
   },
   "enter-creation": () => moveTo("characterDraft"),
   "select-background": (value) => {
-    if (!BACKGROUNDS.some((item) => item.id === value)) return;
+    if (!ORIGINS.some((item) => item.id === value)) return;
+    state.originId = value;
     state.backgroundId = value;
     refresh();
   },
@@ -3919,14 +4291,25 @@ const handlers = {
   "select-vow": (value) => {
     if (!VOWS.some((item) => item.id === value)) return;
     state.vowId = value;
-    moveTo("destiny");
+    moveTo("characterSheet");
   },
   "reveal-destiny": () => {
     state.destinyRevealed = true;
     refresh();
   },
   "confirm-destiny": () => moveTo("characterSheet"),
-  "start-journey": () => moveTo("templeWake"),
+  "start-journey": () => beginOriginJourney(),
+  "origin-prologue-choice": (value) => {
+    const result = resolveOriginPrologueChoice(
+      state.originId || state.backgroundId,
+      state.screen,
+      value,
+      { progress: state.originPrologue, silver: state.shenSilver },
+    );
+    if (!applyOriginRuleResult(result)) return;
+    track("origin_prologue_choice", { originId: state.originId, screen: state.screen, choice: value });
+    moveTo(result.nextScreen);
+  },
   "temple-opening": (value) => {
     if (state.screen !== "templeWake") return;
     const result = resolveTempleOpeningAction(state.templeOpening, value);
@@ -3939,11 +4322,21 @@ const handlers = {
     }
     if (value === "check_belongings") pendingSceneFeedback = { text: "行囊 · 已查明", tone: "notice", resource: "inventory" };
     if (value === "eat_peach") {
-      state.peaches = Math.max(0, Number(state.peaches || 0) - 1);
+      if ((state.originId || state.backgroundId) !== "mystery" && Number(state.originSupplies || 0) > 0) {
+        state.originSupplies = Math.max(0, Number(state.originSupplies || 0) - 1);
+      } else {
+        state.peaches = Math.max(0, Number(state.peaches || 0) - 1);
+      }
       state.hungerLevel = 0;
       pendingSceneFeedback = { text: "饥饿 · 暂缓", tone: "relief", resource: "hunger" };
     }
-    appendNarrativeOutcome(result.outcome);
+    appendNarrativeOutcome((state.originId || state.backgroundId) === "mystery"
+      ? result.outcome
+      : value === "tend_fire"
+        ? "你用碎瓦替余火挡住漏雨，潮木终于吐出一线稳定的光。"
+        : value === "check_belongings"
+          ? "信物、来时的交代和要取的东西都已重新在心里过了一遍。"
+          : "粗粮冷硬，却把雨路耗掉的力气补回了一点。");
     track("temple_opening_action", { action: value, stable: result.stable });
     refresh();
   },
@@ -3968,7 +4361,31 @@ const handlers = {
     state.attributes = allocateJadeBonus(value);
     refresh();
   },
-  "confirm-allocation": () => moveTo("templeTasks"),
+  "confirm-allocation": () => {
+    const originId = state.originId || state.backgroundId;
+    if (originId === "mystery") {
+      state.originPrologue = {
+        ...state.originPrologue,
+        completed: true,
+        nodeId: "templeTasks",
+        taskState: "success",
+        convergenceState: "temple_joined",
+      };
+      state.originKnowledge = addUnique(state.originKnowledge, "broken_memory_belongings");
+      state.originEchoes = addUnique(state.originEchoes, "在破庙确认半块玉佩与染血旧书");
+      moveTo("templeTasks");
+      return;
+    }
+    moveTo("originTempleTask");
+  },
+  "origin-temple-task": (value) => {
+    if (state.screen !== "originTempleTask") return;
+    const result = resolveOriginTempleTask(state.originId || state.backgroundId, value, state.originPrologue);
+    if (!applyOriginRuleResult(result)) return;
+    if (result.itemId && !state.inventory.includes(result.itemId)) state.inventory.push(result.itemId);
+    track("origin_temple_task", { originId: state.originId, choice: value, taskState: result.progress.taskState });
+    moveTo("templeTasks");
+  },
   "temple-task": (value) => {
     if (state.completedTempleTasks.includes(value) || value === "mysterious_offering") return;
     const encounter = getTempleEncounter(value);
@@ -4001,6 +4418,17 @@ const handlers = {
     state.ladyChoiceLog.push(value);
     if (choice.outcome === "death") return handleDeath(choice);
     state.ladyFavor = 20;
+    moveTo("ladyTest");
+  },
+  "origin-lady-insight": () => {
+    if (state.screen !== "ladyPressure") return;
+    const insight = ORIGIN_LADY_INSIGHTS[state.originId || state.backgroundId];
+    if (!insight || state.originKnowledge.includes(insight.knowledge)) return;
+    state.originKnowledge = addUnique(state.originKnowledge, insight.knowledge);
+    state.ladyFavor = Math.max(20, Number(state.ladyFavor || 0) + 5);
+    state.ladyChoiceLog.push(`origin:${state.originId}`);
+    state.originEchoes = addUnique(state.originEchoes, `破庙来客：${insight.title}`);
+    track("origin_lady_insight", { originId: state.originId, knowledge: insight.knowledge });
     moveTo("ladyTest");
   },
   "lady-test": (value) => {
@@ -4141,11 +4569,57 @@ const handlers = {
   },
   */
   "start-shen-chapter": () => {
-    if (state.screen !== "ending" || state.nextRoute !== "shen" || !state.completedTempleTasks.includes("shen_promise") || state.roadTrial !== "dive") return;
+    const originId = state.originId || state.backgroundId;
+    const hasEntry = originId !== "mystery" || state.completedTempleTasks.includes("shen_promise");
+    if (state.screen !== "ending" || state.nextRoute !== "shen" || !hasEntry || state.roadTrial !== "dive") return;
     state.shenChapterStarted = true;
     state.shenOriginalVersion = 2;
-    track("shen_original_started");
+    track("shen_original_started", { originId });
+    if (originId === "shen_branch") return moveTo("shenOriginReturn");
+    if (originId === "streetborn") return moveTo("streetOriginDelivery");
     moveTo("shenArrival");
+  },
+  "origin-return-choice": (value) => {
+    if (state.screen !== "shenOriginReturn" || !["hand_over", "report_trace", "keep_leverage"].includes(value)) return;
+    state.originPrologue = { ...state.originPrologue, returnComplete: true };
+    state.inventory = state.inventory.filter((id) => !["sealed_medicine_box", "opened_medicine_box"].includes(id));
+    if (value === "hand_over") addOriginContact(["side_door_keeper", 1]);
+    if (value === "report_trace") {
+      state.originExposure += 1;
+      state.originKnowledge = addUnique(state.originKnowledge, "reported_box_transfer_trace");
+    }
+    if (value === "keep_leverage") {
+      state.originExposure += 2;
+      state.originAccess = addUnique(state.originAccess, "medicine_cargo_leverage");
+    }
+    state.originEchoes = addUnique(state.originEchoes, {
+      hand_over: "把封药木匣交回族宅",
+      report_trace: "向管事报出木匣换手痕",
+      keep_leverage: "暗留木匣夹层货签",
+    }[value]);
+    moveTo("shenOriginPlacement");
+  },
+  "origin-delivery-choice": (value) => {
+    if (state.screen !== "streetOriginDelivery" || !["deliver_plain", "trade_knowledge", "name_broker"].includes(value)) return;
+    state.originPrologue = { ...state.originPrologue, returnComplete: true };
+    state.inventory = state.inventory.filter((id) => !["red_cord_package", "opened_red_cord_package"].includes(id));
+    if (value === "deliver_plain") state.shenSilver += state.originPrologue.taskState === "success" ? 0.4 : 0.2;
+    if (value === "trade_knowledge") state.originAccess = addUnique(state.originAccess, "shen_medicine_cargo_route");
+    if (value === "name_broker") {
+      state.originAccess = addUnique(state.originAccess, "fish_market_contact_closed");
+      state.originContacts = { ...(state.originContacts || {}), fish_broker: 0 };
+    }
+    state.originEchoes = addUnique(state.originEchoes, {
+      deliver_plain: "在沈宅货门完成鱼市跑腿",
+      trade_knowledge: "用包中药气换取药房试用",
+      name_broker: "报出鱼市牙人，割断原有货路",
+    }[value]);
+    moveTo("streetOriginEntry");
+  },
+  "enter-origin-danroom": () => {
+    if (!["shenOriginPlacement", "streetOriginEntry"].includes(state.screen)) return;
+    state.shenJob = "danroom";
+    moveTo("caoArrival");
   },
   "present-shen-token": () => {
     if (state.screen !== "shenArrival") return;
@@ -4333,6 +4807,14 @@ const handlers = {
   },
   "leave-shen-meeting": () => {
     if (state.screen !== "shenMeeting") return;
+    if (!state.originPrologue?.personalEventComplete) return moveTo("originPersonalEvent");
+    moveTo("shenFuChoice");
+  },
+  "origin-personal-choice": (value) => {
+    if (state.screen !== "originPersonalEvent") return;
+    const result = resolveOriginPersonalEvent(state.originId || state.backgroundId, value, state.originPrologue);
+    if (!applyOriginRuleResult(result)) return;
+    track("origin_personal_event", { originId: state.originId, choice: value });
     moveTo("shenFuChoice");
   },
   "shenfu-choice": (value) => {
@@ -4968,6 +5450,8 @@ function resetDebugUiState() {
 
 function debugSnapshot() {
   return {
+    protocolVersion: DEBUG_PROTOCOL_VERSION,
+    status: debugStatus(),
     buildSha: BUILD_SHA,
     saveVersion: state.version,
     screen: state.screen,
@@ -4978,6 +5462,26 @@ function debugSnapshot() {
       martial: martialUi.open,
     },
     state: structuredClone(state),
+  };
+}
+
+function debugStatus() {
+  return {
+    protocolVersion: DEBUG_PROTOCOL_VERSION,
+    ready: document.documentElement.dataset.appReady === "true" && app.childElementCount > 0,
+    buildSha: BUILD_SHA,
+    saveVersion: state.version,
+    screen: state.screen,
+    originId: state.originId || state.backgroundId || null,
+    viewport: {
+      width: window.innerWidth,
+      height: window.innerHeight,
+    },
+    overlays: {
+      inventory: inventoryUi.open,
+      character: characterUi.open,
+      martial: martialUi.open,
+    },
   };
 }
 
@@ -5002,8 +5506,7 @@ function installDebugInterface() {
     delete window.WudaoDebug;
     return;
   }
-  const api = Object.freeze({
-    snapshot: debugSnapshot,
+  const commands = Object.freeze({
     replaceState: replaceDebugState,
     patchState(patch) {
       if (!patch || typeof patch !== "object" || Array.isArray(patch)) {
@@ -5021,6 +5524,12 @@ function installDebugInterface() {
       render();
       return debugSnapshot();
     },
+  });
+  const api = Object.freeze({
+    protocolVersion: DEBUG_PROTOCOL_VERSION,
+    status: debugStatus,
+    snapshot: debugSnapshot,
+    commands,
   });
   Object.defineProperty(window, "WudaoDebug", {
     configurable: true,

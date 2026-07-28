@@ -1,0 +1,217 @@
+import assert from "node:assert/strict";
+
+const port = Number(process.argv[2] || 9225);
+const tabs = await (await fetch(`http://127.0.0.1:${port}/json`)).json();
+const tab = tabs.find((item) => item.type === "page" && /^https?:\/\/(127\.0\.0\.1|localhost)/.test(item.url));
+if (!tab) throw new Error(`No browser page found on debugging port ${port}`);
+
+const pageOrigin = new URL(tab.url).origin;
+const storageId = { securityOrigin: pageOrigin, isLocalStorage: true };
+const socket = new WebSocket(tab.webSocketDebuggerUrl);
+const pending = new Map();
+const pageErrors = [];
+let messageId = 0;
+
+socket.addEventListener("message", (event) => {
+  const message = JSON.parse(event.data);
+  if (message.method === "Runtime.exceptionThrown") {
+    pageErrors.push(message.params?.exceptionDetails?.exception?.description || "Unknown page exception");
+  }
+  if (!message.id || !pending.has(message.id)) return;
+  const operation = pending.get(message.id);
+  pending.delete(message.id);
+  if (message.error) operation.reject(new Error(message.error.message));
+  else operation.resolve(message.result);
+});
+
+await new Promise((resolve) => socket.addEventListener("open", resolve, { once: true }));
+
+function send(method, params = {}) {
+  return new Promise((resolve, reject) => {
+    const id = ++messageId;
+    pending.set(id, { resolve, reject });
+    socket.send(JSON.stringify({ id, method, params }));
+  });
+}
+
+async function evaluate(expression) {
+  const result = await send("Runtime.evaluate", { expression, awaitPromise: true, returnByValue: true });
+  if (result.exceptionDetails) throw new Error(result.exceptionDetails.exception?.description || "Page evaluation failed");
+  return result.result.value;
+}
+
+async function click(action, value = null) {
+  const selector = value === null
+    ? `[data-action="${action}"]`
+    : `[data-action="${action}"][data-value="${value}"]`;
+  return evaluate(`(() => {
+    const element = document.querySelector(${JSON.stringify(selector)});
+    if (!element) throw new Error(${JSON.stringify(`Missing element: ${selector}`)});
+    if (element.disabled) throw new Error(${JSON.stringify(`Disabled element: ${selector}`)});
+    element.click();
+    return document.querySelector("h1")?.textContent?.trim() || "";
+  })()`);
+}
+
+async function pageText() {
+  return evaluate(`document.querySelector("#app")?.innerText || ""`);
+}
+
+async function currentSave() {
+  return JSON.parse(await evaluate(`localStorage.getItem("wudao-high-martial-v1")`));
+}
+
+async function clearAndNavigate(seed) {
+  await send("Storage.clearDataForOrigin", { origin: pageOrigin, storageTypes: "local_storage" });
+  await send("Page.navigate", { url: `${pageOrigin}/?seed=${encodeURIComponent(seed)}` });
+  await new Promise((resolve) => setTimeout(resolve, 700));
+}
+
+async function writeSaveAndReload(save) {
+  for (const key of [
+    "wudao-high-martial-v1-checksum",
+    "wudao-high-martial-v1-backup",
+    "wudao-high-martial-v1-backup-checksum",
+  ]) {
+    await send("DOMStorage.removeDOMStorageItem", { storageId, key });
+  }
+  await send("DOMStorage.setDOMStorageItem", {
+    storageId,
+    key: "wudao-high-martial-v1",
+    value: JSON.stringify(save),
+  });
+  await send("Page.reload", { ignoreCache: false });
+  await new Promise((resolve) => setTimeout(resolve, 700));
+}
+
+async function createCharacter(originId) {
+  await click("new-journey");
+  await click("enter-creation");
+  assert.equal(await evaluate(`document.querySelectorAll(".origin-choice-card").length`), 3);
+  const selectionText = await pageText();
+  assert.doesNotMatch(selectionText, /人物车卡|旧债|债务|Demo|原型|随身之物|暗处风声/);
+  if (originId === "shen_branch") assert.doesNotMatch(selectionText, /沈家/);
+  await click("select-background", originId);
+  await click("to-vow");
+  await click("select-vow", "path");
+  await click("start-journey");
+}
+
+async function finishSharedTemple(originId, taskChoice) {
+  for (const action of ["tend_fire", "check_belongings", "eat_peach"]) await click("temple-opening", action);
+  await click("inspect-temple-wall");
+  await click("use-destiny");
+  await click("allocate-jade", "strength");
+  await click("confirm-allocation");
+  assert.match(await pageText(), originId === "shen_branch" ? /封药木匣/ : /红绳/);
+  await click("origin-temple-task", taskChoice);
+  await click("meet-lady");
+  await click("lady-choice", "deny_beggar");
+  assert.match(await pageText(), /因爱成恨/);
+  await click("origin-lady-insight");
+  await click("lady-test", "refuse");
+  await click("night-talk", "sincere");
+  await click("receive-mind-art");
+  await click("to-road-trial");
+  await click("road-trial", "dive");
+  await click("continue-road");
+  await click("choose-route", "shen");
+  await click("start-shen-chapter");
+}
+
+async function verifyPersonalEvent(originId, expectedTitle, firstChoice) {
+  const save = await currentSave();
+  save.screen = "shenMeeting";
+  save.shenMeetingSeen = true;
+  save.originPrologue.personalEventComplete = false;
+  await writeSaveAndReload(save);
+  await click("leave-shen-meeting");
+  assert.match(await pageText(), expectedTitle);
+  await click("origin-personal-choice", firstChoice);
+  const after = await currentSave();
+  assert.equal(after.screen, "shenFuChoice");
+  assert.equal(after.originPrologue.personalEventComplete, true);
+  assert.ok(after.originEchoes.length >= 2);
+}
+
+await send("Page.enable");
+await send("Runtime.enable");
+await send("DOMStorage.enable");
+await send("Network.clearBrowserCache");
+
+await send("Emulation.setDeviceMetricsOverride", { width: 844, height: 390, deviceScaleFactor: 1, mobile: true });
+await clearAndNavigate("origin-shen");
+await click("new-journey");
+await click("enter-creation");
+assert.ok(await evaluate(`document.documentElement.scrollWidth <= 844`));
+assert.equal(await evaluate(`document.querySelectorAll(".origin-choice-card").length`), 3);
+await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
+await clearAndNavigate("origin-shen");
+
+await createCharacter("shen_branch");
+assert.match(await pageText(), /有人在雨里点了你的名/);
+assert.match(await evaluate(`getComputedStyle(document.querySelector(".scene-canvas")).backgroundImage`), /shen-west-courtyard-v1\.webp/);
+await click("origin-prologue-choice", "study_token");
+await click("origin-prologue-choice", "request_writ");
+await click("origin-prologue-choice", "buy_oilcloth");
+await click("origin-prologue-choice", "follow_cart_tracks");
+assert.match(await pageText(), /你推开漏雨的庙门/);
+await finishSharedTemple("shen_branch", "inspect_box_seal");
+assert.match(await pageText(), /封条还在/);
+await click("origin-return-choice", "report_trace");
+assert.match(await pageText(), /旁支的名字/);
+await click("enter-origin-danroom");
+assert.match(await pageText(), /旁支腰牌/);
+let shenSave = await currentSave();
+assert.equal(shenSave.version, 8);
+assert.equal(shenSave.originId, "shen_branch");
+assert.equal(shenSave.originPrologue.taskState, "costly_success");
+assert.ok(shenSave.originAccess.includes("shen_side_door_writ"));
+assert.ok(shenSave.originKnowledge.includes("box_changed_hands"));
+await verifyPersonalEvent("shen_branch", /旁谱缺名/, "trace_missing_name");
+
+await clearAndNavigate("origin-street");
+await createCharacter("streetborn");
+assert.match(await pageText(), /鱼市收摊以后/);
+assert.match(await evaluate(`getComputedStyle(document.querySelector(".scene-canvas")).backgroundImage`), /qinhuai-fish-market-v1\.webp/);
+await click("origin-prologue-choice", "help_fisher");
+await click("origin-prologue-choice", "inspect_cargo_tag");
+await click("origin-prologue-choice", "take_advance");
+await click("origin-prologue-choice", "take_fisher_route");
+assert.match(await pageText(), /你推开漏雨的庙门/);
+await finishSharedTemple("streetborn", "open_package");
+assert.match(await pageText(), /红绳已断/);
+await click("origin-delivery-choice", "trade_knowledge");
+assert.match(await pageText(), /一趟跑腿替你换来/);
+await click("enter-origin-danroom");
+assert.match(await pageText(), /鱼市药气/);
+const streetSave = await currentSave();
+assert.equal(streetSave.originId, "streetborn");
+assert.equal(streetSave.originPrologue.taskState, "failed_forward");
+assert.ok(streetSave.originContacts.old_fisher >= 2);
+assert.ok(streetSave.originKnowledge.includes("package_contains_cargo_tokens"));
+assert.ok(streetSave.originAccess.includes("shen_medicine_cargo_route"));
+await verifyPersonalEvent("streetborn", /鱼市催信/, "answer_fish_market");
+
+const legacy = {
+  version: 7,
+  screen: "shenMeeting",
+  name: "陈司命",
+  backgroundId: "clan",
+  attributes: { constitution: 1, insight: 1, agility: 0, strength: 1, fortune: 0 },
+};
+await writeSaveAndReload(legacy);
+const migrated = await currentSave();
+assert.equal(migrated.version, 8);
+assert.equal(migrated.originId, "shen_branch");
+assert.equal(migrated.originPrologue.completed, true);
+assert.equal(migrated.screen, "shenMeeting");
+
+assert.deepEqual(pageErrors, []);
+process.stdout.write(`${JSON.stringify({
+  ok: true,
+  origins: ["shen_branch", "streetborn", "mystery"],
+  saveVersion: 8,
+  responsive: "844x390",
+})}\n`);
+socket.close();

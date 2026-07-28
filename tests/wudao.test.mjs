@@ -58,12 +58,14 @@ test("the first release establishes one self-contained high-martial world", () =
   assert.deepEqual(MARTIAL_STAGES.map((item) => item.id), ["mortal", "body", "breath", "meridian", "master"]);
 });
 
-test("character creation ties possessions and debts to the martial world", () => {
+test("character creation offers three in-world origins without fixing combat attributes", () => {
   assert.equal(ATTRIBUTES.length, 5);
-  assert.equal(BACKGROUNDS.length, 4);
+  assert.equal(BACKGROUNDS.length, 3);
   assert.equal(VOWS.length, 5);
-  assert.ok(BACKGROUNDS.some((item) => item.id === "mystery" && /玉佩/.test(item.gain)));
-  assert.ok(BACKGROUNDS.every((item) => item.gain && item.cost));
+  assert.deepEqual(BACKGROUNDS.map((item) => item.id), ["shen_branch", "streetborn", "mystery"]);
+  assert.deepEqual(BACKGROUNDS.map((item) => item.name), ["世家旁支", "市井子弟", "身世成谜"]);
+  assert.ok(BACKGROUNDS.some((item) => item.id === "mystery" && /玉佩/.test(item.belongings)));
+  assert.ok(BACKGROUNDS.every((item) => item.opening && item.taskId));
   assert.equal(DESTINY.name, "逆天改命");
   assert.match(DESTINY.cost, /五维基础属性全部归零/);
 });
