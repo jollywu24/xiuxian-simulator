@@ -50,8 +50,8 @@ import {
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs?v=20260728.1";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260728.1";
+} from "./wudao-core.mjs?v=20260728.2";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260728.2";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -81,7 +81,7 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260728.1";
+} from "./wudao-p0-core.mjs?v=20260728.2";
 import {
   M4_EVIDENCE,
   M4_METHOD,
@@ -100,7 +100,7 @@ import {
   resolveM4Training,
   resolveMoneyInquiry,
   resolveOldHouseChoice,
-} from "./wudao-p1-core.mjs?v=20260728.1";
+} from "./wudao-p1-core.mjs?v=20260728.2";
 import {
   advanceCombatLabCampaign,
   createCombatLabSession,
@@ -111,14 +111,14 @@ import {
   restartCombatLab,
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
-} from "./combat-lab-core.mjs?v=20260728.1";
+} from "./combat-lab-core.mjs?v=20260728.2";
 import {
   INVENTORY_CAPACITY,
   createInventoryBoard,
   formatSilver,
   getInventoryCategory,
   getInventoryUseState,
-} from "./inventory-core.mjs?v=20260728.1";
+} from "./inventory-core.mjs?v=20260728.2";
 import {
   EQUIPMENT_CAPACITY,
   EQUIPMENT_SLOTS,
@@ -132,7 +132,7 @@ import {
   migrateCharacterVitals,
   migrateEquipmentState,
   unequipEquipmentSlot,
-} from "./character-system.mjs?v=20260728.1";
+} from "./character-system.mjs?v=20260728.2";
 import {
   MARTIAL_MASTERIES,
   breakthroughMartial,
@@ -152,7 +152,7 @@ import {
   trainMartial,
   unequipMartial,
   unlockedMartialNodes,
-} from "./martial-system.mjs?v=20260728.1";
+} from "./martial-system.mjs?v=20260728.2";
 
 const STORAGE_KEY = "wudao-high-martial-v1";
 const app = document.querySelector("#app");
@@ -1253,7 +1253,18 @@ function martialNodeHtml(definition, learned, entry) {
 function martialSelectedDetailHtml(board) {
   const definition = board.selected;
   if (!definition) {
-    return `<div class="martial-empty-detail"><span>武</span><strong>此类尚无传承</strong><p>江湖很大。拜师、救人、夺谱或亲历奇遇，都会把新的本事写进这里。</p></div>`;
+    return `
+      <div class="martial-empty-detail">
+        <header class="martial-empty-detail-head">
+          <span class="martial-empty-detail-icon">${martialIconHtml(null)}</span>
+          <div><small>武学录</small><strong>尚无可观之法</strong></div>
+        </header>
+        <section class="martial-empty-detail-copy">
+          <span>未得传承</span>
+          <p>待你从师门、故人或奇遇中得来真传，此处才会记下招路、修为与临阵用法。</p>
+        </section>
+      </div>
+    `;
   }
   const learned = state.martial.learned[definition.id] || { mastery: "unlearned", progress: 0, firstUseNodes: [] };
   const mastery = getMartialMastery(learned.mastery);
@@ -1390,7 +1401,13 @@ function martialScreenHtml() {
           ${board.category.id === "technique" ? `<nav class="martial-subtype-tabs" aria-label="招式门类">${board.subtypes.map((subtype) => `<button type="button" class="${subtype.id === board.subtype.id ? "selected" : ""}" data-action="martial-subtype" data-value="${escapeHtml(subtype.id)}">${escapeHtml(subtype.name)}</button>`).join("")}</nav>` : ""}
           <div class="martial-list ${board.items.length > 5 ? "has-more" : ""}">
             ${board.items.map((entry) => martialListItemHtml(entry, entry.id === board.selectedId)).join("")}
-            ${board.items.length ? "" : `<div class="martial-list-empty"><span>${escapeHtml(board.category.glyph)}</span><p>尚未得到这一类传承。</p></div>`}
+            ${board.items.length ? "" : `
+              <div class="martial-list-empty">
+                <span class="martial-list-empty-seal">${martialIconHtml(null)}</span>
+                <strong>尚无此类传承</strong>
+                <p>师门、故人或奇遇所得，都会录在这里。</p>
+              </div>
+            `}
           </div>
         </aside>
         <section class="martial-loadout" aria-label="当前携带武学">

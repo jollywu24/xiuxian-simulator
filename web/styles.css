@@ -10377,9 +10377,52 @@ body[data-martial-open="true"] {
 }
 
 .martial-list-empty {
+  position: relative;
+  display: grid;
+  gap: 0.7cqw;
   min-height: 18cqw;
-  border: 1px solid rgba(157, 107, 51, 0.28);
-  background: rgba(2, 7, 7, 0.38);
+  padding: 2.2cqw;
+  color: #7c7466;
+  border: 0;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(160, 113, 54, 0.08), transparent 42%),
+    linear-gradient(90deg, transparent, rgba(142, 96, 45, 0.14) 50%, transparent) 50% 0 / 100% 1px no-repeat;
+  align-content: center;
+  justify-items: center;
+  text-align: center;
+}
+
+.martial-list-empty::after {
+  width: min(16cqw, 74%);
+  height: 1px;
+  content: "";
+  background: linear-gradient(90deg, transparent, rgba(172, 119, 55, 0.36), transparent);
+}
+
+.martial-list-empty > .martial-list-empty-seal {
+  display: block;
+  width: 5.2cqw;
+  height: 5.2cqw;
+  overflow: hidden;
+  border: 1px solid rgba(151, 104, 51, 0.42);
+  border-radius: 50%;
+  background: #050708;
+  opacity: 0.62;
+}
+
+.martial-list-empty > strong {
+  color: #aaa08a;
+  font-family: var(--font-display);
+  font-size: 1.25cqw;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+}
+
+.martial-list-empty > p {
+  margin: 0;
+  color: #675f53;
+  font-size: 0.72cqw;
+  line-height: 1.7;
 }
 
 .martial-loadout {
@@ -10578,6 +10621,78 @@ body[data-martial-open="true"] {
   gap: 0.7cqw;
   min-height: 100%;
   padding: 1.25cqw 1.7cqw 1.1cqw;
+}
+
+.martial-empty-detail {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 1.7cqw;
+  min-height: 100%;
+  padding: 1.25cqw 1.7cqw 1.1cqw;
+  color: #777e79;
+  place-items: stretch;
+  align-content: start;
+  text-align: left;
+}
+
+.martial-empty-detail-head {
+  display: grid;
+  grid-template-columns: 6.65cqw minmax(0, 1fr);
+  gap: 1.1cqw;
+  align-items: center;
+}
+
+.martial-empty-detail-head > .martial-empty-detail-icon {
+  display: block;
+  width: 6.65cqw;
+  height: 6.65cqw;
+  overflow: hidden;
+  border: 1px solid rgba(151, 104, 51, 0.44);
+  border-radius: 50%;
+  background: #050708;
+  opacity: 0.7;
+}
+
+.martial-empty-detail-head small {
+  display: block;
+  margin-bottom: 0.45cqw;
+  color: #9c7544;
+  font-family: var(--font-display);
+  font-size: 0.86cqw;
+  letter-spacing: 0.12em;
+}
+
+.martial-empty-detail-head strong {
+  display: block;
+  color: #b9b3a1;
+  font-family: var(--font-display);
+  font-size: 2.05cqw;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+}
+
+.martial-empty-detail-copy {
+  display: grid;
+  min-height: 13cqw;
+  padding: 1.35cqw 0.35cqw;
+  border-top: 1px solid rgba(151, 104, 51, 0.3);
+  border-bottom: 1px solid rgba(151, 104, 51, 0.18);
+  align-content: center;
+}
+
+.martial-empty-detail-copy > span {
+  color: #b98a4e;
+  font-family: var(--font-display);
+  font-size: 1.05cqw;
+  letter-spacing: 0.12em;
+}
+
+.martial-empty-detail-copy > p {
+  width: min(31cqw, 92%);
+  margin: 0.75cqw 0 0;
+  color: #777e79;
+  font-size: 0.72cqw;
+  line-height: 1.8;
 }
 
 .martial-detail-card::before {
@@ -10884,6 +10999,30 @@ body[data-martial-open="true"] {
 
   .martial-detail-card {
     padding-inline: 1.2cqw;
+  }
+}
+
+@media (orientation: landscape) and (min-height: 501px) and (max-height: 760px) {
+  .martial-slot-grid {
+    inset:
+      clamp(44px, 7vh, 60px)
+      clamp(20px, 2.9cqw, 38px)
+      clamp(58px, 10vh, 76px);
+    grid-template-columns:
+      clamp(78px, 8.9cqw, 116px)
+      clamp(78px, 8.9cqw, 116px);
+    grid-template-rows: repeat(3, clamp(104px, calc((100vh - 206px) / 3), 152px));
+    align-content: space-between;
+  }
+
+  .martial-slot {
+    width: clamp(78px, 8.9cqw, 116px);
+    height: clamp(104px, calc((100vh - 206px) / 3), 152px);
+  }
+
+  .martial-slot > span {
+    width: clamp(52px, 6.2cqw, 80px);
+    height: clamp(52px, 6.2cqw, 80px);
   }
 }
 

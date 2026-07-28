@@ -291,6 +291,15 @@ async function snapshot(label) {
           const box = entry.getBoundingClientRect();
           return [Math.round(box.width), Math.round(box.height)];
         }),
+        slotRects: [...document.querySelectorAll(".martial-slot")].map((entry) => {
+          const slotBox = entry.getBoundingClientRect();
+          return [
+            Math.round(slotBox.left * 10) / 10,
+            Math.round(slotBox.top * 10) / 10,
+            Math.round(slotBox.width * 10) / 10,
+            Math.round(slotBox.height * 10) / 10,
+          ];
+        }),
         backdrop: overlay ? getComputedStyle(overlay).backgroundImage : "",
         emblemBackground: getComputedStyle(document.querySelector(".martial-emblem") || document.body).backgroundImage,
         libraryTitle: document.querySelector(".martial-library-title")?.textContent?.trim() || "",
@@ -305,6 +314,9 @@ async function snapshot(label) {
         progress: document.querySelector(".martial-cultivation header strong")?.textContent?.replace(/\\s+/g, " ").trim() || "",
         equipAction: document.querySelector(".martial-loadout-action [data-action='equip-martial'], .martial-loadout-action [data-action='confirm-replace-martial']")?.textContent?.trim() || "",
         trainDisabled: Boolean(document.querySelector("[data-action='train-martial']")?.disabled),
+        emptyListTitle: document.querySelector(".martial-list-empty > strong")?.textContent?.trim() || "",
+        emptyDetailTitle: document.querySelector(".martial-empty-detail-head strong")?.textContent?.trim() || "",
+        hasLegacyEmptyGlyph: Boolean(document.querySelector(".martial-empty-detail > span")),
         overflowX: overlay ? overlay.scrollWidth - overlay.clientWidth : 0,
         overflowY: overlay ? overlay.scrollHeight - overlay.clientHeight : 0,
       };
@@ -348,8 +360,8 @@ const checkpoints = [];
 checkpoints.push(await snapshot("landing"));
 assert.equal(checkpoints.at(-1).title, "武道");
 assert.ok(checkpoints.at(-1).scrollWidth <= 1280);
-assert.match(await evaluate(`document.querySelector('script[type="module"]')?.src || ""`), /wudao-app\.mjs\?v=20260728\.1/);
-assert.match(await evaluate(`document.querySelector('link[rel="stylesheet"]')?.href || ""`), /styles\.css\?v=20260728\.1/);
+assert.match(await evaluate(`document.querySelector('script[type="module"]')?.src || ""`), /wudao-app\.mjs\?v=20260728\.2/);
+assert.match(await evaluate(`document.querySelector('link[rel="stylesheet"]')?.href || ""`), /styles\.css\?v=20260728\.2/);
 assert.match(checkpoints.at(-1).text, /大曜四百二十七年/);
 assert.doesNotMatch(checkpoints.at(-1).text, /现实|论坛|武道局|其他玩家|其它玩家|太虚命盘|归尘门|黑日|Demo|P0|P1|P2|测试|原型/);
 
@@ -615,11 +627,35 @@ assert.ok(Math.abs(emptyMartialLandscape.martialView.rect[2] - 844) < 2, JSON.st
 assert.ok(Math.abs(emptyMartialLandscape.martialView.rect[3] - 390) < 2, JSON.stringify(emptyMartialLandscape.martialView));
 assert.equal(emptyMartialLandscape.martialView.categories, 4);
 assert.equal(emptyMartialLandscape.martialView.loadoutSlots, 6);
+assert.equal(emptyMartialLandscape.martialView.emptyListTitle, "尚无此类传承");
+assert.equal(emptyMartialLandscape.martialView.emptyDetailTitle, "尚无可观之法");
+assert.equal(emptyMartialLandscape.martialView.hasLegacyEmptyGlyph, false);
 assert.ok(emptyMartialLandscape.martialView.overflowX <= 1);
 assert.ok(emptyMartialLandscape.martialView.overflowY <= 1);
 assert.ok(emptyMartialLandscape.scrollWidth <= 844);
 assert.ok(emptyMartialLandscape.scrollHeight <= 390);
 await screenshot("wudao-martial-empty-phone-landscape.png");
+await send("Emulation.setDeviceMetricsOverride", { width: 1272, height: 660, deviceScaleFactor: 1, mobile: false });
+const emptyMartialMediumLandscape = await snapshot("martial-empty-medium-landscape");
+const emptyMartialRows = [
+  emptyMartialMediumLandscape.martialView.slotRects.slice(0, 2),
+  emptyMartialMediumLandscape.martialView.slotRects.slice(2, 4),
+  emptyMartialMediumLandscape.martialView.slotRects.slice(4, 6),
+];
+assert.equal(emptyMartialMediumLandscape.martialView.emptyListTitle, "尚无此类传承");
+assert.equal(emptyMartialMediumLandscape.martialView.emptyDetailTitle, "尚无可观之法");
+assert.equal(new Set(emptyMartialMediumLandscape.martialView.slotSizes.map((entry) => entry.join("x"))).size, 1);
+assert.ok(
+  emptyMartialRows[1][0][1] - (emptyMartialRows[0][0][1] + emptyMartialRows[0][0][3]) >= 10,
+  JSON.stringify(emptyMartialMediumLandscape.martialView.slotRects),
+);
+assert.ok(
+  emptyMartialRows[2][0][1] - (emptyMartialRows[1][0][1] + emptyMartialRows[1][0][3]) >= 10,
+  JSON.stringify(emptyMartialMediumLandscape.martialView.slotRects),
+);
+assert.ok(emptyMartialMediumLandscape.martialView.overflowX <= 1);
+assert.ok(emptyMartialMediumLandscape.martialView.overflowY <= 1);
+await screenshot("wudao-martial-empty-medium-landscape.png");
 await click("close-martial");
 await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
 await click("temple-task", "traveler_relic");
