@@ -286,6 +286,15 @@ async function snapshot(label) {
         listRect: box(".martial-library"),
         loadoutRect: box(".martial-loadout"),
         detailRect: box(".martial-detail"),
+        figureRect: box(".martial-figure"),
+        slotSizes: [...document.querySelectorAll(".martial-slot")].map((entry) => {
+          const box = entry.getBoundingClientRect();
+          return [Math.round(box.width), Math.round(box.height)];
+        }),
+        backdrop: overlay ? getComputedStyle(overlay).backgroundImage : "",
+        emblemBackground: getComputedStyle(document.querySelector(".martial-emblem") || document.body).backgroundImage,
+        libraryTitle: document.querySelector(".martial-library-title")?.textContent?.trim() || "",
+        silver: document.querySelector(".martial-silver")?.textContent?.replace(/\\s+/g, " ").trim() || "",
         categories: document.querySelectorAll(".martial-category-tabs button").length,
         subtypes: document.querySelectorAll(".martial-subtype-tabs button").length,
         listItems: document.querySelectorAll(".martial-list-item").length,
@@ -293,7 +302,7 @@ async function snapshot(label) {
         selected: document.querySelector(".martial-list-item.selected")?.dataset.value || "",
         selectedName: document.querySelector(".martial-detail h1")?.textContent?.trim() || "",
         mastery: document.querySelector(".martial-detail-head p")?.textContent?.replace(/\\s+/g, " ").trim() || "",
-        progress: document.querySelector(".martial-training header strong")?.textContent?.replace(/\\s+/g, " ").trim() || "",
+        progress: document.querySelector(".martial-cultivation header strong")?.textContent?.replace(/\\s+/g, " ").trim() || "",
         equipAction: document.querySelector(".martial-loadout-action [data-action='equip-martial'], .martial-loadout-action [data-action='confirm-replace-martial']")?.textContent?.trim() || "",
         trainDisabled: Boolean(document.querySelector("[data-action='train-martial']")?.disabled),
         overflowX: overlay ? overlay.scrollWidth - overlay.clientWidth : 0,
@@ -339,8 +348,8 @@ const checkpoints = [];
 checkpoints.push(await snapshot("landing"));
 assert.equal(checkpoints.at(-1).title, "武道");
 assert.ok(checkpoints.at(-1).scrollWidth <= 1280);
-assert.match(await evaluate(`document.querySelector('script[type="module"]')?.src || ""`), /wudao-app\.mjs\?v=20260727\.5/);
-assert.match(await evaluate(`document.querySelector('link[rel="stylesheet"]')?.href || ""`), /styles\.css\?v=20260727\.5/);
+assert.match(await evaluate(`document.querySelector('script[type="module"]')?.src || ""`), /wudao-app\.mjs\?v=20260728\.1/);
+assert.match(await evaluate(`document.querySelector('link[rel="stylesheet"]')?.href || ""`), /styles\.css\?v=20260728\.1/);
 assert.match(checkpoints.at(-1).text, /大曜四百二十七年/);
 assert.doesNotMatch(checkpoints.at(-1).text, /现实|论坛|武道局|其他玩家|其它玩家|太虚命盘|归尘门|黑日|Demo|P0|P1|P2|测试|原型/);
 
@@ -1172,6 +1181,15 @@ assert.equal(martialReference.martialView.visible, true);
 assert.equal(martialReference.martialView.categories, 4);
 assert.equal(martialReference.martialView.loadoutSlots, 6);
 assert.ok(martialReference.martialView.listItems >= 1);
+assert.equal(martialReference.martialView.libraryTitle, "所学武学");
+assert.match(martialReference.martialView.silver, /银两/);
+assert.match(martialReference.martialView.backdrop, /martial-screen-backdrop\.webp/);
+assert.match(martialReference.martialView.emblemBackground, /martial-emblem-atlas\.webp/);
+assert.ok(Math.abs(martialReference.martialView.listRect[2] / 1672 - 0.314) < 0.01, JSON.stringify(martialReference.martialView));
+assert.ok(Math.abs(martialReference.martialView.loadoutRect[2] / 1672 - 0.36) < 0.01, JSON.stringify(martialReference.martialView));
+assert.ok(Math.abs(martialReference.martialView.detailRect[2] / 1672 - 0.326) < 0.01, JSON.stringify(martialReference.martialView));
+assert.ok(martialReference.martialView.figureRect[2] > 590 && martialReference.martialView.figureRect[3] > 860, JSON.stringify(martialReference.martialView));
+assert.equal(new Set(martialReference.martialView.slotSizes.map((entry) => entry.join("x"))).size, 1, JSON.stringify(martialReference.martialView.slotSizes));
 assert.ok(martialReference.martialView.overflowX <= 1);
 assert.ok(martialReference.martialView.overflowY <= 1);
 assert.match(martialReference.martialView.mastery, /入门|熟练|精通|圆满/);
