@@ -50,8 +50,8 @@ import {
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs?v=20260728.3";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260728.3";
+} from "./wudao-core.mjs?v=20260728.4";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260728.4";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -81,7 +81,7 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260728.3";
+} from "./wudao-p0-core.mjs?v=20260728.4";
 import {
   M4_EVIDENCE,
   M4_METHOD,
@@ -100,7 +100,7 @@ import {
   resolveM4Training,
   resolveMoneyInquiry,
   resolveOldHouseChoice,
-} from "./wudao-p1-core.mjs?v=20260728.3";
+} from "./wudao-p1-core.mjs?v=20260728.4";
 import {
   advanceCombatLabCampaign,
   createCombatLabSession,
@@ -111,14 +111,14 @@ import {
   restartCombatLab,
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
-} from "./combat-lab-core.mjs?v=20260728.3";
+} from "./combat-lab-core.mjs?v=20260728.4";
 import {
   INVENTORY_CAPACITY,
   createInventoryBoard,
   formatSilver,
   getInventoryCategory,
   getInventoryUseState,
-} from "./inventory-core.mjs?v=20260728.3";
+} from "./inventory-core.mjs?v=20260728.4";
 import {
   EQUIPMENT_CAPACITY,
   EQUIPMENT_SLOTS,
@@ -132,7 +132,7 @@ import {
   migrateCharacterVitals,
   migrateEquipmentState,
   unequipEquipmentSlot,
-} from "./character-system.mjs?v=20260728.3";
+} from "./character-system.mjs?v=20260728.4";
 import {
   MARTIAL_MASTERIES,
   breakthroughMartial,
@@ -152,9 +152,10 @@ import {
   trainMartial,
   unequipMartial,
   unlockedMartialNodes,
-} from "./martial-system.mjs?v=20260728.3";
+} from "./martial-system.mjs?v=20260728.4";
+import { SAVE_STORAGE_KEY } from "./save-core.mjs?v=20260728.4";
+import { createSaveStorage } from "./save-storage.mjs?v=20260728.4";
 
-const STORAGE_KEY = "wudao-high-martial-v1";
 const app = document.querySelector("#app");
 const COMBAT_ATTRIBUTE_NAMES = { constitution: "根骨", insight: "悟性", agility: "身法", strength: "力道", fortune: "福缘" };
 const COMBAT_STAGE_NAMES = { mortal: "未入门", body: "锻体", qi: "聚气", meridian: "通脉", master: "宗师" };
@@ -278,10 +279,14 @@ function createInitialState() {
   };
 }
 
-function loadState() {
+function supportsStoredState(saved) {
+  return Boolean(saved && [2, 3, 4, 5, 6, 7].includes(saved.version) && saved.screen);
+}
+
+function loadState(raw) {
   try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (!saved || ![2, 3, 4, 5, 6, 7].includes(saved.version) || !saved.screen) return null;
+    const saved = JSON.parse(raw);
+    if (!supportsStoredState(saved)) return null;
     const migrated = {
       ...createInitialState(),
       ...saved,
@@ -315,16 +320,33 @@ function loadState() {
   }
 }
 
-let storedVersionBeforeMigration = null;
+const saveStorage = createSaveStorage({ key: SAVE_STORAGE_KEY });
+let storedSave = null;
 try {
-  storedVersionBeforeMigration = Number(JSON.parse(localStorage.getItem(STORAGE_KEY) || "null")?.version || 0);
-} catch {
-  storedVersionBeforeMigration = null;
+  storedSave = await Promise.resolve(saveStorage.read(supportsStoredState));
+  if (storedSave?.recovered) console.warn("Recovered the journey from its previous valid record.");
+} catch (error) {
+  console.error("Unable to read the journey record.", error);
 }
-let savedState = loadState();
+const storedVersionBeforeMigration = Number(storedSave?.value?.version || 0) || null;
+let savedState = loadState(storedSave?.raw);
 let state = savedState || createInitialState();
+
+function reportSaveFailure(error) {
+  console.error("Unable to preserve the journey record.", error);
+}
+
+function writeStoredState(raw) {
+  try {
+    const operation = saveStorage.write(raw, supportsStoredState);
+    Promise.resolve(operation).catch(reportSaveFailure);
+  } catch (error) {
+    reportSaveFailure(error);
+  }
+}
+
 if (savedState && storedVersionBeforeMigration !== state.version) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  writeStoredState(JSON.stringify(state));
   savedState = structuredClone(state);
 }
 
@@ -332,12 +354,16 @@ function saveState() {
   if (state.screen === "landing") return;
   state.martial = migrateMartialState(state.martial, state);
   state.martial.experience = Math.max(0, Number(state.potential || 0));
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  writeStoredState(JSON.stringify(state));
   savedState = structuredClone(state);
 }
 
 function clearState() {
-  localStorage.removeItem(STORAGE_KEY);
+  try {
+    Promise.resolve(saveStorage.clear()).catch(reportSaveFailure);
+  } catch (error) {
+    reportSaveFailure(error);
+  }
   savedState = null;
 }
 
@@ -4997,6 +5023,10 @@ window.addEventListener("resize", () => {
     const marker = app.querySelector(".scene-canvas :is(.scene-hotspot, .scene-actor).selected");
     if (panel && marker) positionSceneInspectionLine(marker, panel);
   });
+});
+
+window.addEventListener("pagehide", () => {
+  Promise.resolve(saveStorage.flush()).catch(reportSaveFailure);
 });
 
 render();

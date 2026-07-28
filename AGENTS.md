@@ -128,6 +128,9 @@
 | `web/content/p0/` | 第三十至五十四章的目录与事件节点 |
 | `web/wudao-p1-core.mjs` | 曹青离场、钱匣、追踪、沈福结局、白栀云授武与江湖留痕纯规则 |
 | `web/content/p1/` | 第五十五至六十八章第一条闭环的局面盒、解法矩阵、节点与证据目录 |
+| `web/save-core.mjs` | 存档校验、JSON解析、主档与备份选择纯规则 |
+| `web/save-storage.mjs` | 浏览器主备记录、校验值、坏档恢复与桌面桥接适配 |
+| `desktop/save-file-store.mjs` | 桌面端`save-1.json`／`.bak`原子文件写入与恢复 |
 | `web/wudao-app.mjs` | 状态机、渲染、事件委托与本地存档 |
 | `web/wudao-scenes.mjs` | 2D场景物件、人物站位和已知路线视图 |
 | `web/assets/scenes/` | 破庙、紫金河、沈家侧门和丹房背景图；破庙舞台与人物变体使用1280×1000的5:4规格 |
@@ -144,6 +147,7 @@
 | `tests/combat-engine.test.mjs` | 通用战斗引擎与王卓首领战规则测试 |
 | `tests/combat-lab.test.mjs` | 独立战斗入口适配与战役承接测试 |
 | `tests/wudao-scenes.test.mjs` | 场景揭示、物件状态与路线开放测试 |
+| `tests/save-system.test.mjs` | 旧档兼容、校验、主备轮换、坏档恢复与桌面原子文件测试 |
 | `scripts/cdp-smoke.mjs` | 桌面和手机完整浏览器流程 |
 | `scripts/cdp-combat-lab.mjs` | 独立战斗入口桌面、手机与双遭遇浏览器流程 |
 | `scripts/validate-p0-content.mjs` | 内容目录、坏跳转与首次兑现校验 |
@@ -186,7 +190,7 @@
 
 ## 8. 状态与存档
 
-存档键为 `wudao-high-martial-v1`，当前状态 `version` 为 `7`。旧版 `version: 2`、`version: 3`、`version: 4`、`version: 5`、`version: 6` 存档会迁移；已取得五禽秘籍的版本2存档会回到秘籍结算页继续新流程。
+存档键为 `wudao-high-martial-v1`，当前状态 `version` 为 `7`。浏览器另保存`-checksum`、`-backup`与`-backup-checksum`三条记录；主档无效时必须回退上一份有效备份并重建主档。旧版无校验存档仍可读取。桌面端使用`save-1.json`与`save-1.bak`，写入必须经过同目录临时文件、刷盘和串行替换。旧版 `version: 2`、`version: 3`、`version: 4`、`version: 5`、`version: 6` 存档会迁移；已取得五禽秘籍的版本2存档会回到秘籍结算页继续新流程。
 
 `createInitialState()` 是状态事实来源，关键字段包括：
 

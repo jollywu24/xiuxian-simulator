@@ -46,6 +46,13 @@ async function evaluate(expression) {
 }
 
 async function writeSave(value) {
+  for (const key of [
+    "wudao-high-martial-v1-checksum",
+    "wudao-high-martial-v1-backup",
+    "wudao-high-martial-v1-backup-checksum",
+  ]) {
+    await send("DOMStorage.removeDOMStorageItem", { storageId, key });
+  }
   await send("DOMStorage.setDOMStorageItem", { storageId, key: "wudao-high-martial-v1", value: JSON.stringify(value) });
 }
 
@@ -366,8 +373,8 @@ const checkpoints = [];
 checkpoints.push(await snapshot("landing"));
 assert.equal(checkpoints.at(-1).title, "武道");
 assert.ok(checkpoints.at(-1).scrollWidth <= 1280);
-assert.match(await evaluate(`document.querySelector('script[type="module"]')?.src || ""`), /wudao-app\.mjs\?v=20260728\.3/);
-assert.match(await evaluate(`document.querySelector('link[rel="stylesheet"]')?.href || ""`), /styles\.css\?v=20260728\.3/);
+assert.match(await evaluate(`document.querySelector('script[type="module"]')?.src || ""`), /wudao-app\.mjs\?v=20260728\.4/);
+assert.match(await evaluate(`document.querySelector('link[rel="stylesheet"]')?.href || ""`), /styles\.css\?v=20260728\.4/);
 assert.match(checkpoints.at(-1).text, /大曜四百二十七年/);
 assert.doesNotMatch(checkpoints.at(-1).text, /现实|论坛|武道局|其他玩家|其它玩家|太虚命盘|归尘门|黑日|Demo|P0|P1|P2|测试|原型/);
 
@@ -1414,11 +1421,34 @@ assert.match(await text(), /破庙供桌只剩干涸桃汁/);
 
 await reloadWithSave(saved);
 
+await send("DOMStorage.setDOMStorageItem", {
+  storageId,
+  key: "wudao-high-martial-v1-backup",
+  value: JSON.stringify(saved),
+});
+await send("DOMStorage.removeDOMStorageItem", {
+  storageId,
+  key: "wudao-high-martial-v1-backup-checksum",
+});
+await send("DOMStorage.setDOMStorageItem", {
+  storageId,
+  key: "wudao-high-martial-v1",
+  value: '{"version":7',
+});
+await send("DOMStorage.removeDOMStorageItem", {
+  storageId,
+  key: "wudao-high-martial-v1-checksum",
+});
 await send("Page.reload", { ignoreCache: false });
-await new Promise((resolve) => setTimeout(resolve, 250));
+await new Promise((resolve) => setTimeout(resolve, 650));
 assert.match(await text(), /江湖留痕/);
 assert.match(await text(), /七道刀痕已经入册/);
 assert.match(await text(), /白栀云的卸力三诀/);
+const recoveredItems = await send("DOMStorage.getDOMStorageItems", { storageId });
+const recoveredPrimary = recoveredItems.entries.find(([key]) => key === "wudao-high-martial-v1");
+const recoveredChecksum = recoveredItems.entries.find(([key]) => key === "wudao-high-martial-v1-checksum");
+assert.equal(JSON.parse(recoveredPrimary?.[1] || "null")?.screen, saved.screen);
+assert.match(recoveredChecksum?.[1] || "", /^fnv1a32:[0-9a-f]{8}$/);
 assert.deepEqual(pageErrors, []);
 
 process.stdout.write(`${JSON.stringify({ ok: true, checkpoints, saved: {
