@@ -300,6 +300,12 @@ async function snapshot(label) {
             Math.round(slotBox.height * 10) / 10,
           ];
         }),
+        slotIconSizes: [...document.querySelectorAll(".martial-slot > span")].map((entry) => {
+          const iconBox = entry.getBoundingClientRect();
+          return [Math.round(iconBox.width * 10) / 10, Math.round(iconBox.height * 10) / 10];
+        }),
+        slotEmblemTransforms: [...document.querySelectorAll(".martial-slot > span > .martial-emblem")]
+          .map((entry) => getComputedStyle(entry).transform),
         backdrop: overlay ? getComputedStyle(overlay).backgroundImage : "",
         emblemBackground: getComputedStyle(document.querySelector(".martial-emblem") || document.body).backgroundImage,
         libraryTitle: document.querySelector(".martial-library-title")?.textContent?.trim() || "",
@@ -360,8 +366,8 @@ const checkpoints = [];
 checkpoints.push(await snapshot("landing"));
 assert.equal(checkpoints.at(-1).title, "武道");
 assert.ok(checkpoints.at(-1).scrollWidth <= 1280);
-assert.match(await evaluate(`document.querySelector('script[type="module"]')?.src || ""`), /wudao-app\.mjs\?v=20260728\.2/);
-assert.match(await evaluate(`document.querySelector('link[rel="stylesheet"]')?.href || ""`), /styles\.css\?v=20260728\.2/);
+assert.match(await evaluate(`document.querySelector('script[type="module"]')?.src || ""`), /wudao-app\.mjs\?v=20260728\.3/);
+assert.match(await evaluate(`document.querySelector('link[rel="stylesheet"]')?.href || ""`), /styles\.css\?v=20260728\.3/);
 assert.match(checkpoints.at(-1).text, /大曜四百二十七年/);
 assert.doesNotMatch(checkpoints.at(-1).text, /现实|论坛|武道局|其他玩家|其它玩家|太虚命盘|归尘门|黑日|Demo|P0|P1|P2|测试|原型/);
 
@@ -645,6 +651,19 @@ const emptyMartialRows = [
 assert.equal(emptyMartialMediumLandscape.martialView.emptyListTitle, "尚无此类传承");
 assert.equal(emptyMartialMediumLandscape.martialView.emptyDetailTitle, "尚无可观之法");
 assert.equal(new Set(emptyMartialMediumLandscape.martialView.slotSizes.map((entry) => entry.join("x"))).size, 1);
+assert.equal(new Set(emptyMartialMediumLandscape.martialView.slotIconSizes.map((entry) => entry.join("x"))).size, 1);
+assert.ok(
+  Math.abs(
+    emptyMartialMediumLandscape.martialView.slotIconSizes[0][0]
+      / emptyMartialMediumLandscape.martialView.slotSizes[0][0]
+      - 0.72,
+  ) < 0.02,
+  JSON.stringify(emptyMartialMediumLandscape.martialView),
+);
+assert.ok(
+  emptyMartialMediumLandscape.martialView.slotEmblemTransforms.every((entry) => entry.includes("1.22")),
+  JSON.stringify(emptyMartialMediumLandscape.martialView.slotEmblemTransforms),
+);
 assert.ok(
   emptyMartialRows[1][0][1] - (emptyMartialRows[0][0][1] + emptyMartialRows[0][0][3]) >= 10,
   JSON.stringify(emptyMartialMediumLandscape.martialView.slotRects),

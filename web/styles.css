@@ -11548,6 +11548,19 @@ body[data-martial-open="true"] {
   }
 }
 
+.martial-slot > span {
+  width: 82%;
+  height: auto;
+  aspect-ratio: 1;
+  border-color: transparent;
+  background: transparent;
+}
+
+.martial-slot > span > .martial-emblem {
+  transform: scale(1.22);
+  transform-origin: center;
+}
+
 .p0-combat-layout {
   display: grid;
   gap: 12px;
