@@ -1,0 +1,48 @@
+name: Verify Web Game
+
+on:
+  workflow_call:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Use Node.js 22
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Locate Chrome
+        shell: bash
+        run: |
+          chrome_bin="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
+          test -n "$chrome_bin"
+          echo "CHROME_BIN=$chrome_bin" >> "$GITHUB_ENV"
+      - name: Check JavaScript syntax
+        run: |
+          node --check web/wudao-app.mjs
+          node --check web/wudao-core.mjs
+          node --check web/wudao-p0-core.mjs
+          node --check web/combat-engine.mjs
+          node --check scripts/run-browser-regression.mjs
+      - name: Run rule and release tests
+        run: npm test
+      - name: Validate story content
+        run: npm run validate:content
+      - name: Run self-starting browser regression
+        run: npm run test:browser
+      - name: Check patch whitespace
+        shell: bash
+        run: |
+          if git rev-parse HEAD^ >/dev/null 2>&1; then
+            git diff --check HEAD^ HEAD
+          else
+            git show --check --oneline HEAD
+          fi

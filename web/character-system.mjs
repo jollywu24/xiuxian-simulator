@@ -1,7 +1,7 @@
 import {
   getMartialCombatBonuses,
   heartMasteryQiBonus,
-} from "./martial-system.mjs?v=20260728.4";
+} from "./martial-system.mjs?v=20260728.5";
 
 export const CHARACTER_SAVE_VERSION = 2;
 

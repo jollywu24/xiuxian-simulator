@@ -373,8 +373,10 @@ const checkpoints = [];
 checkpoints.push(await snapshot("landing"));
 assert.equal(checkpoints.at(-1).title, "武道");
 assert.ok(checkpoints.at(-1).scrollWidth <= 1280);
-assert.match(await evaluate(`document.querySelector('script[type="module"]')?.src || ""`), /wudao-app\.mjs\?v=20260728\.4/);
-assert.match(await evaluate(`document.querySelector('link[rel="stylesheet"]')?.href || ""`), /styles\.css\?v=20260728\.4/);
+assert.match(await evaluate(`document.querySelector('script[type="module"]')?.src || ""`), /wudao-app\.mjs\?v=20260728\.5/);
+assert.match(await evaluate(`document.querySelector('link[rel="stylesheet"]')?.href || ""`), /styles\.css\?v=20260728\.5/);
+assert.equal(await evaluate(`typeof window.WudaoDebug`), "undefined");
+assert.equal(await evaluate(`document.documentElement.dataset.buildSha`), "dev");
 assert.match(checkpoints.at(-1).text, /大曜四百二十七年/);
 assert.doesNotMatch(checkpoints.at(-1).text, /现实|论坛|武道局|其他玩家|其它玩家|太虚命盘|归尘门|黑日|Demo|P0|P1|P2|测试|原型/);
 
@@ -1449,6 +1451,16 @@ const recoveredPrimary = recoveredItems.entries.find(([key]) => key === "wudao-h
 const recoveredChecksum = recoveredItems.entries.find(([key]) => key === "wudao-high-martial-v1-checksum");
 assert.equal(JSON.parse(recoveredPrimary?.[1] || "null")?.screen, saved.screen);
 assert.match(recoveredChecksum?.[1] || "", /^fnv1a32:[0-9a-f]{8}$/);
+
+await send("Page.navigate", { url: `${pageOrigin}/?debug=1&seed=debug-interface` });
+await new Promise((resolve) => setTimeout(resolve, 650));
+const debugSnapshot = JSON.parse(await evaluate(`JSON.stringify(window.WudaoDebug?.snapshot())`));
+assert.equal(debugSnapshot.buildSha, "dev");
+assert.equal(debugSnapshot.saveVersion, 7);
+assert.equal(debugSnapshot.screen, saved.screen);
+const debugTransition = JSON.parse(await evaluate(`JSON.stringify(window.WudaoDebug?.setScreen("templeWake"))`));
+assert.equal(debugTransition.ok, true);
+assert.equal(debugTransition.snapshot.screen, "templeWake");
 assert.deepEqual(pageErrors, []);
 
 process.stdout.write(`${JSON.stringify({ ok: true, checkpoints, saved: {

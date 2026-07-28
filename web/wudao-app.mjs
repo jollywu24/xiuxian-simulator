@@ -50,8 +50,8 @@ import {
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs?v=20260728.4";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260728.4";
+} from "./wudao-core.mjs?v=20260728.5";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260728.5";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -81,7 +81,7 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260728.4";
+} from "./wudao-p0-core.mjs?v=20260728.5";
 import {
   M4_EVIDENCE,
   M4_METHOD,
@@ -100,7 +100,7 @@ import {
   resolveM4Training,
   resolveMoneyInquiry,
   resolveOldHouseChoice,
-} from "./wudao-p1-core.mjs?v=20260728.4";
+} from "./wudao-p1-core.mjs?v=20260728.5";
 import {
   advanceCombatLabCampaign,
   createCombatLabSession,
@@ -111,14 +111,14 @@ import {
   restartCombatLab,
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
-} from "./combat-lab-core.mjs?v=20260728.4";
+} from "./combat-lab-core.mjs?v=20260728.5";
 import {
   INVENTORY_CAPACITY,
   createInventoryBoard,
   formatSilver,
   getInventoryCategory,
   getInventoryUseState,
-} from "./inventory-core.mjs?v=20260728.4";
+} from "./inventory-core.mjs?v=20260728.5";
 import {
   EQUIPMENT_CAPACITY,
   EQUIPMENT_SLOTS,
@@ -132,7 +132,7 @@ import {
   migrateCharacterVitals,
   migrateEquipmentState,
   unequipEquipmentSlot,
-} from "./character-system.mjs?v=20260728.4";
+} from "./character-system.mjs?v=20260728.5";
 import {
   MARTIAL_MASTERIES,
   breakthroughMartial,
@@ -152,11 +152,12 @@ import {
   trainMartial,
   unequipMartial,
   unlockedMartialNodes,
-} from "./martial-system.mjs?v=20260728.4";
-import { SAVE_STORAGE_KEY } from "./save-core.mjs?v=20260728.4";
-import { createSaveStorage } from "./save-storage.mjs?v=20260728.4";
+} from "./martial-system.mjs?v=20260728.5";
+import { SAVE_STORAGE_KEY } from "./save-core.mjs?v=20260728.5";
+import { createSaveStorage } from "./save-storage.mjs?v=20260728.5";
 
 const app = document.querySelector("#app");
+const BUILD_SHA = document.documentElement.dataset.buildSha || "dev";
 const COMBAT_ATTRIBUTE_NAMES = { constitution: "根骨", insight: "悟性", agility: "身法", strength: "力道", fortune: "福缘" };
 const COMBAT_STAGE_NAMES = { mortal: "未入门", body: "锻体", qi: "聚气", meridian: "通脉", master: "宗师" };
 const COMBAT_CHECK_LABELS = { great: "大成", success: "得手", costly: "得手有损", failure: "失手" };
@@ -4955,6 +4956,79 @@ const handlers = {
   },
 };
 
+function resetDebugUiState() {
+  pendingSceneFeedback = null;
+  pendingInventoryFeedback = null;
+  pendingCharacterFeedback = null;
+  pendingMartialFeedback = null;
+  Object.assign(inventoryUi, { open: false, category: "all", selectedId: null });
+  Object.assign(characterUi, { open: false, section: "body", category: "all", selectedId: null, selectedSlot: null });
+  Object.assign(martialUi, { open: false, category: "heart", subtype: "all", selectedId: null, replacing: false, nodeId: null });
+}
+
+function debugSnapshot() {
+  return {
+    buildSha: BUILD_SHA,
+    saveVersion: state.version,
+    screen: state.screen,
+    fateSeed: state.fateSeed,
+    overlays: {
+      inventory: inventoryUi.open,
+      character: characterUi.open,
+      martial: martialUi.open,
+    },
+    state: structuredClone(state),
+  };
+}
+
+function replaceDebugState(candidate) {
+  if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) {
+    return { ok: false, reason: "state_must_be_an_object" };
+  }
+  if (!Object.hasOwn(renderers, candidate.screen)) {
+    return { ok: false, reason: "unknown_screen" };
+  }
+  const nextState = loadState(JSON.stringify(candidate));
+  if (!nextState) return { ok: false, reason: "unsupported_state" };
+  state = nextState;
+  resetDebugUiState();
+  saveState();
+  render();
+  return { ok: true, snapshot: debugSnapshot() };
+}
+
+function installDebugInterface() {
+  if (new URLSearchParams(window.location.search).get("debug") !== "1") {
+    delete window.WudaoDebug;
+    return;
+  }
+  const api = Object.freeze({
+    snapshot: debugSnapshot,
+    replaceState: replaceDebugState,
+    patchState(patch) {
+      if (!patch || typeof patch !== "object" || Array.isArray(patch)) {
+        return { ok: false, reason: "patch_must_be_an_object" };
+      }
+      return replaceDebugState({ ...structuredClone(state), ...structuredClone(patch) });
+    },
+    setScreen(screen) {
+      return replaceDebugState({ ...structuredClone(state), screen });
+    },
+    resetJourney() {
+      clearState();
+      state = createInitialState();
+      resetDebugUiState();
+      render();
+      return debugSnapshot();
+    },
+  });
+  Object.defineProperty(window, "WudaoDebug", {
+    configurable: true,
+    enumerable: false,
+    value: api,
+  });
+}
+
 app.addEventListener("click", (event) => {
   const target = event.target.closest("[data-action]");
   if (!target) {
@@ -5029,4 +5103,5 @@ window.addEventListener("pagehide", () => {
   Promise.resolve(saveStorage.flush()).catch(reportSaveFailure);
 });
 
+installDebugInterface();
 render();

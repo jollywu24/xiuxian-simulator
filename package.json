@@ -6,7 +6,9 @@
   "scripts": {
     "test": "node --test",
     "validate:content": "node scripts/validate-p0-content.mjs",
-    "smoke:combat": "node scripts/cdp-combat-lab.mjs 9225",
+    "smoke": "node scripts/run-browser-regression.mjs main",
+    "smoke:combat": "node scripts/run-browser-regression.mjs combat",
+    "test:browser": "node scripts/run-browser-regression.mjs all",
     "serve": "python3 -m http.server 8080 --directory web"
   }
 }

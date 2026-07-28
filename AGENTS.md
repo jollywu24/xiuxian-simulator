@@ -56,11 +56,14 @@
 | --- | --- |
 | 当前运行行为、状态版本、缓存版本 | `web/` 中实际加载的代码 |
 | 规则是否成立、旧档是否兼容 | `tests/` |
+| 当前开发入口、代码导航、文档去向 | `PROJECT_CONTEXT.md` |
 | 人物、事件顺序、揭示边界 | `docs/STORY_BIBLE.md` |
 | 产品体验与系统总边界 | `docs/GAME_DESIGN.md` |
 | 当前优先级、已完成与待制作 | `docs/SYSTEM_ROADMAP.md` |
 | 单个系统的规则与验收 | `docs/systems/` |
 | 存档与桌面迁移 | `docs/SAVE_ARCHITECTURE.md` |
+| 已确认决定的原因与取舍 | `docs/DECISION_LOG.md` |
+| 已经交付的重要变化 | `docs/CHANGELOG.md` |
 | 公开试玩说明 | `README.md` |
 | 当前用户明确指定的阶段目标 | 对应 `/goal` 或用户当前要求 |
 
@@ -276,6 +279,8 @@ node scripts/cdp-combat-lab.mjs 9225
 ## 10. 发布与完成定义
 
 - `main` 是正式网页发布分支，推送后由 `.github/workflows/pages.yml` 部署 `web/`；
+- Pages 部署必须先通过 `.github/workflows/test-web.yml` 的规则、内容和自启动浏览器验证；部署后再验证线上构建号和关键资源；
+- `?debug=1` 的 `window.WudaoDebug` 只服务自动回归，普通玩家入口不得注入该对象或出现调试控件；
 - 可选战斗预览会由发布流程挂到独立路径，不得替换正式根页面；
 - 每次完成修改并通过相应验证后，直接提交并推送当前发布分支，除非用户明确要求只保留本地；
 - 只暂存本次范围内的文件，不把无关截图、日志、浏览器配置或用户素材带入提交；
@@ -300,9 +305,12 @@ node scripts/cdp-combat-lab.mjs 9225
 只有长期规则变化时才修改 `AGENTS.md`。以下变化应更新各自事实源，而不是继续扩充本文：
 
 - 新剧情、人物或揭示顺序：`docs/STORY_BIBLE.md`；
+- 当前开发导航或文档去向：`PROJECT_CONTEXT.md`；
 - 系统完成状态和下一优先级：`docs/SYSTEM_ROADMAP.md`；
 - 具体系统公式、字段或界面规格：`docs/systems/`；
 - 存档版本和迁移：代码、测试与 `docs/SAVE_ARCHITECTURE.md`；
+- 新的长期设计／工程取舍：`docs/DECISION_LOG.md`；
+- 已交付的重要变化：`docs/CHANGELOG.md`；
 - 当前试玩能力和链接：`README.md`；
 - 单次施工范围：当前 `/goal`。
 

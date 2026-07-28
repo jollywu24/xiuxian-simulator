@@ -15,7 +15,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  quality:
+    uses: ./.github/workflows/test-web.yml
+
   deploy:
+    needs: quality
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -37,6 +41,14 @@ jobs:
         run: |
           mkdir -p published/web/combat-lab
           cp -R combat-preview/web/. published/web/combat-lab/
+      - name: Stamp published build
+        id: build
+        shell: bash
+        run: |
+          short_sha="${GITHUB_SHA:0:7}"
+          sed -i "s/data-build-sha=\"dev\"/data-build-sha=\"${short_sha}\"/" published/web/index.html
+          grep -F "data-build-sha=\"${short_sha}\"" published/web/index.html
+          echo "short_sha=${short_sha}" >> "$GITHUB_OUTPUT"
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload static site
@@ -46,3 +58,32 @@ jobs:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
+      - name: Smoke test published site
+        shell: bash
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+          SHORT_SHA: ${{ steps.build.outputs.short_sha }}
+        run: |
+          base="${PAGE_URL%/}"
+          for attempt in $(seq 1 12); do
+            if html="$(curl --fail --silent --show-error --location "${base}/?build=${SHORT_SHA}")" \
+              && grep -Fq "data-build-sha=\"${SHORT_SHA}\"" <<< "$html"; then
+              break
+            fi
+            if [ "$attempt" -eq 12 ]; then
+              echo "Published HTML did not expose build ${SHORT_SHA}" >&2
+              exit 1
+            fi
+            sleep 3
+          done
+          for resource in \
+            styles.css \
+            wudao-app.mjs \
+            combat.html \
+            assets/scenes/ruined-temple-stage-v3.webp \
+            assets/character/chen-siming-paperdoll.png \
+            assets/inventory/inventory-backdrop.png \
+            assets/martial/martial-screen-backdrop.webp; do
+            curl --fail --silent --show-error --location --retry 4 --retry-delay 2 \
+              --output /dev/null "${base}/${resource}?build=${SHORT_SHA}"
+          done

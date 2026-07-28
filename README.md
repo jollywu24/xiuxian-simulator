@@ -10,7 +10,7 @@
 
 [打开《武道》高武江湖](https://jollywu24.github.io/xiuxian-simulator/)
 
-支持手机竖屏与横屏、触控、数字键选择和本地进度保存。`main` 分支更新后由 GitHub Pages 自动发布。
+支持手机竖屏与横屏、触控、数字键选择和本地进度保存。`main` 分支更新后会先通过规则、内容和自启动浏览器回归，再由 GitHub Pages 自动发布；部署完成后继续检查线上构建号与关键资源。
 
 战斗模块在 `codex/combat-lab` 分支持续开发，发布流程会把它挂到独立的[东门雨夜演武入口](https://jollywu24.github.io/xiuxian-simulator/combat-lab/combat.html)，不会替换正式根页面。
 
@@ -79,18 +79,29 @@ npm run serve
 
 [手机打开战斗演武](https://jollywu24.github.io/xiuxian-simulator/combat.html)
 
-已有调试浏览器运行在 `9225` 端口时，可执行 `npm run smoke:combat` 检查桌面、手机竖屏、手机横屏、雨巷完整流程、柳巷转场、同伴协作、河岸多敌、援弩、致命伤处理、环境热点、死亡和回照流程。
+执行 `npm run smoke:combat` 会自行启动本地服务和无头 Chrome／Edge，检查桌面、手机竖屏、手机横屏、雨巷完整流程、柳巷转场、同伴协作、河岸多敌、援弩、致命伤处理、环境热点、死亡和回照流程，无需提前打开调试浏览器。
 
 ## 验证
 
 ```bash
 npm test
 npm run validate:content
+npm run test:browser
 ```
 
-当前共有152项规则测试。内容校验会检查四个篇章、37个事件节点、坏跳转、重复目录ID、核心解法数量和内容变体上限。浏览器存档保留原主键并增加主档校验、上一份有效备份和坏档自动恢复；未来桌面版已经具备原子文件存档器，详细边界见[`docs/SAVE_ARCHITECTURE.md`](docs/SAVE_ARCHITECTURE.md)。
+规则测试同时覆盖纯规则、存档、发布资源和工作流契约。内容校验会检查篇章、事件节点、坏跳转、重复目录ID、核心解法数量和内容变体上限。`npm run test:browser` 会自动托管静态页面与浏览器，连续执行正篇和战斗两套深回归。浏览器存档保留原主键并增加主档校验、上一份有效备份和坏档自动恢复；未来桌面版已经具备原子文件存档器，详细边界见[`docs/SAVE_ARCHITECTURE.md`](docs/SAVE_ARCHITECTURE.md)。
 
-浏览器完整流程脚本位于 `scripts/cdp-smoke.mjs`。它覆盖雨夜破庙的三个生存动作、暗墙阻碍、命格首次觉醒、全屏行囊的分类／容量／详情／使用、全屏人物页的九槽／装备分类／穿戴卸下、全屏武学页的分类／节点／研习／卸下与重新携带、固定奇遇、一次死亡回照、龙青鱼主线、沈家求职、曹青死局、丹房日常、钓鱼与首炉六丹，并继续走完三夫人诊断救治、固定因果骰参与的春风针夜战、一次随机失手继续推进、雨中追查、假回报反制、拜师选桩、锻体突破、八月十五赶路、灵猴关系、神猿水洞、曹青离场、不义之财、秦淮追踪、七杀旧宅、沈福结局、白栀云授武和章末江湖留痕；同时检查版本2／3／4／5／6迁移到版本7、终章恢复、1672×941视觉标尺、1280×720桌面、1280×622与1024×498矮横屏、390×844竖屏、844×390手机横屏和页面运行异常。
+统一启动器位于 `scripts/run-browser-regression.mjs`，正篇和战斗深流程分别位于 `scripts/cdp-smoke.mjs` 与 `scripts/cdp-combat-lab.mjs`。正篇覆盖雨夜破庙的三个生存动作、暗墙阻碍、命格首次觉醒、全屏行囊、人物装备、武学、固定奇遇、死亡回照、龙青鱼主线、沈家求职、曹青死局、丹房日常、钓鱼与炼丹，并继续走完三夫人诊断救治、固定因果骰战斗、追查反制、拜师锻体、灵猴遗迹、不义之财、秦淮追踪、沈福结局、白栀云授武和章末江湖留痕；同时检查旧档迁移、终章恢复、桌面、手机竖屏、手机横屏和页面运行异常。
+
+## 文档导航
+
+- [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md)：当前开发入口、代码导航和文档职责；
+- [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md)：产品体验与系统边界；
+- [`docs/STORY_BIBLE.md`](docs/STORY_BIBLE.md)：剧情、人设、揭示顺序和连续性；
+- [`docs/SYSTEM_ROADMAP.md`](docs/SYSTEM_ROADMAP.md)：已完成、待制作、依赖与优先级；
+- [`docs/systems/`](docs/systems/)：单个系统的现行规格与验收；
+- [`docs/DECISION_LOG.md`](docs/DECISION_LOG.md)：重要决定的原因与取舍；
+- [`docs/CHANGELOG.md`](docs/CHANGELOG.md)：已经交付的重要变更。
 
 ## 主要文件
 
@@ -125,7 +136,11 @@ npm run validate:content
 - `tests/combat-engine.test.mjs`：通用战斗、王卓战、毒伤、增援、机关、结局和命灯回照测试；
 - `tests/combat-lab.test.mjs`：雨巷规则、统一适配层与连续战役测试；
 - `scripts/validate-p0-content.mjs`：内容目录和跳转校验；
+- `scripts/run-browser-regression.mjs`：自动启动本地服务、浏览器和两套回归流程；
 - `scripts/cdp-smoke.mjs`：完整浏览器流程；
+- `tests/release-infrastructure.test.mjs`：发布资源、缓存版本、调试接口和工作流契约；
+- `.github/workflows/test-web.yml`：规则、内容与自启动浏览器自动验证；
+- `.github/workflows/pages.yml`：质量门禁、构建标识、Pages部署和线上冒烟；
 - `docs/GAME_DESIGN.md`：世界结构、系统边界与后续内容设计。
 - `docs/STORY_BIBLE.md`：当前完整剧情，以及原著第30—127章的后续篇章、人物弧光、分支后果与单世界改编参考。
 - `docs/SYSTEM_ROADMAP.md`：完整游戏仍需制作的系统、依赖、优先级和剧情里程碑。
