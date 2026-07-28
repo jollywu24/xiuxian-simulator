@@ -68,6 +68,7 @@ test("automated verification owns the browser and gates Pages deployment", () =>
 
   assert.equal(packageJson.scripts["test:browser"], "node scripts/run-browser-regression.mjs all");
   assert.match(verification, /workflow_call:/);
+  assert.match(verification, /fetch-depth: 2/);
   assert.match(verification, /npm test/);
   assert.match(verification, /npm run validate:content/);
   assert.match(verification, /npm run test:browser/);
