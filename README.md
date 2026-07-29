@@ -161,6 +161,7 @@ npm run verify
 - `docs/JIANYIN_XIAZONGLU_DESIGN_REFERENCE.md`：《剑隐侠踪录》的车卡、武学组合、五人战斗、奇遇、世界与百业拆解，以及测试阶段风险和本项目适配建议。
 - `docs/PKUXKX_DESIGN_REFERENCE.md`：《北大侠客行》的房间与动词、武学激发、门派师承、情节谜题、死亡和长期MUD生态拆解，以及单人文字冒险适配建议。
 - `docs/YANYU_JIANGHU_DESIGN_REFERENCE.md`：《烟雨江湖》的地域探索、任务条件网、门派师承、武学三件套、四人阵型、伙伴、生活技艺和长线运营拆解，以及本项目的采用／改造／舍弃建议。
+- `docs/YANYU_JIANGHU_MARTIAL_DESIGN_REFERENCE.md`：《烟雨江湖》武学分类、单本结构、十重三境、修为资质、真元与调息、三件套、师承、传功、精进和代表武学的专项拆解。
 - `docs/HEROES_ADVENTURE_DESIGN_REFERENCE.md`：《大侠立志传》的条件江湖、人物权限、门派身份、非战斗动词、武学成长、时间、家园和多周目拆解，以及当前项目的采用／改造／舍弃建议。
 - `docs/LEGEND_OF_MORTAL_DESIGN_REFERENCE.md`：《活侠传》的低位主角、门派日常、人格、心相、关系、天命随机、失败叙事、嘴攻、战役与个人传奇拆解，以及当前项目的采用／改造／舍弃建议。
 
