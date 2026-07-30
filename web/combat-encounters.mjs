@@ -16,10 +16,10 @@ export const WANG_ZHUO_DEFAULTS = Object.freeze({
     reduction: 0,
   },
   skills: {
-    spring_rain_needles: { stage: "skilled", progress: 60 },
-    fish_leap_art: { stage: "skilled", progress: 60 },
-    fishing_rod_method: { stage: "learned", progress: 20 },
-    sea_stilling_stake: { stage: "learned", progress: 20 },
+    spring_rain_needles: { stage: "skilled", progress: 60, nodes: ["seal_wrist", "observe_meridians", "seal_acupoint"] },
+    fish_leap_art: { stage: "skilled", progress: 60, nodes: ["carp_in_current", "under_current"] },
+    fishing_rod_method: { stage: "learned", progress: 20, nodes: ["sweep_water"] },
+    sea_stilling_stake: { stage: "learned", progress: 20, nodes: ["still_wave"] },
   },
   relationships: {
     yan_jinghong: { favor: 48, trust: 58, debt: 0, suspicion: 0 },
@@ -49,7 +49,7 @@ export const RAIN_AMBUSH_DEFAULTS = Object.freeze({
     reduction: 0,
   },
   skills: {
-    spring_rain_needles: { stage: "skilled", progress: 60 },
+    spring_rain_needles: { stage: "skilled", progress: 60, nodes: ["seal_wrist", "observe_meridians", "seal_acupoint"] },
   },
   relationships: {},
   items: {},
@@ -81,6 +81,11 @@ function hasLearnedSkill(context, skillId) {
   const skill = context.skills?.[skillId];
   const stage = typeof skill === "string" ? skill : skill?.stage;
   return ["learned", "entered", "skilled", "mastered"].includes(stage);
+}
+
+function hasSkillNode(context, skillId, nodeId) {
+  const skill = context.skills?.[skillId];
+  return Array.isArray(skill?.nodes) && skill.nodes.includes(nodeId);
 }
 
 function enemyHasStatus(state, enemyId, statusId) {
@@ -781,7 +786,10 @@ export const WANG_ZHUO_ENCOUNTER = Object.freeze({
       riskPreview: "失手会让王卓抢进适中距离",
       focusIds: ["default", "target:wang_zhuo"],
       recommendationWeight: 32,
-      advantages: (state) => hasFact(state, "wang_chain_blade") ? "命灯已照见袖底回链" : null,
+      advantages: (state, context) => [
+        hasFact(state, "wang_chain_blade") ? "命灯已照见袖底回链" : null,
+        hasSkillNode(context, "spring_rain_needles", "observe_meridians") ? "观脉先辨出左腕与肩井的换劲关系" : null,
+      ].filter(Boolean),
       outcomes: {
         great: { text: "你看见锁链每次折返前左腕都会停半息，连肩井落点也一并记下。", effects: [{ type: "condition", key: "weakPoint", value: true }, { type: "fact", factId: "wang_chain_blade" }, { type: "status", targetId: "wang_zhuo", status: { id: "off_balance", label: "换劲受阻", duration: 1 } }] },
         success: { text: "锁链刀再快，也必须从左腕换劲；你终于看清那一处停顿。", effects: [{ type: "condition", key: "weakPoint", value: true }, { type: "fact", factId: "wang_chain_blade" }] },
@@ -803,6 +811,8 @@ export const WANG_ZHUO_ENCOUNTER = Object.freeze({
       skillId: "spring_rain_needles",
       skillName: "春风化雨针",
       masteryRequired: "learned",
+      martialNodeId: "seal_wrist",
+      martialNodeName: "封腕",
       difficulty: 5,
       energyCost: 2,
       targetId: "wang_zhuo",
@@ -841,6 +851,8 @@ export const WANG_ZHUO_ENCOUNTER = Object.freeze({
       attribute: "strength",
       skillId: "fishing_rod_method",
       skillName: "打鱼杆法",
+      martialNodeId: "sweep_water",
+      martialNodeName: "抄水拍鱼",
       difficulty: 3,
       energyCost: 2,
       targetId: "poison_blade",
@@ -874,6 +886,8 @@ export const WANG_ZHUO_ENCOUNTER = Object.freeze({
       attribute: "constitution",
       skillId: "sea_stilling_stake",
       skillName: "沧澜定海桩",
+      martialNodeId: "still_wave",
+      martialNodeName: "定浪沉身",
       difficulty: 3,
       energyCost: 2,
       ignoreStage: true,
@@ -881,7 +895,10 @@ export const WANG_ZHUO_ENCOUNTER = Object.freeze({
       riskPreview: "苦成会替同伴承受轻伤",
       focusIds: ["default", "wet_bank", "ally:yan_jinghong"],
       recommendationWeight: 27,
-      advantages: (state) => ["wet_stones", "shallow_water"].includes(state.positions.player) ? "桩功正适合水边立足" : null,
+      advantages: (state, context) => [
+        ["wet_stones", "shallow_water"].includes(state.positions.player) ? "桩功正适合水边立足" : null,
+        hasSkillNode(context, "fish_leap_art", "carp_in_current") ? "鱼跃龙门诀与定海桩在水边相合" : null,
+      ].filter(Boolean),
       outcomes: {
         great: { text: "桩架沉入湿石，你同时封住锁链与毒刃靠近燕惊鸿的路线。", effects: [{ type: "condition", key: "steadyFooting", value: true }, { type: "condition", key: "allyGuard", value: true }, { type: "condition", key: "allyEngaged", value: true }, { type: "relationship", relationId: "yan_jinghong", field: "trust", amount: 2 }] },
         success: { text: "你在湿石上稳住下盘，下一轮不再受地形与夹击所制。", effects: [{ type: "condition", key: "steadyFooting", value: true }, { type: "condition", key: "allyGuard", value: true }] },
@@ -1072,6 +1089,8 @@ export const WANG_ZHUO_ENCOUNTER = Object.freeze({
       skillId: "spring_rain_needles",
       skillName: "春风化雨针",
       masteryRequired: "skilled",
+      martialNodeId: "seal_acupoint",
+      martialNodeName: "封穴",
       difficulty: 5,
       energyCost: 3,
       targetId: "wang_zhuo",
@@ -1103,6 +1122,8 @@ export const WANG_ZHUO_ENCOUNTER = Object.freeze({
       attribute: "insight",
       skillId: "spring_rain_needles",
       skillName: "春风化雨针",
+      martialNodeId: "seal_wrist",
+      martialNodeName: "封腕",
       difficulty: 4,
       energyCost: 3,
       targetId: "wang_zhuo",
@@ -1153,6 +1174,8 @@ export const WANG_ZHUO_ENCOUNTER = Object.freeze({
       attribute: "agility",
       skillId: "fish_leap_art",
       skillName: "鱼跃龙门诀",
+      martialNodeId: "carp_in_current",
+      martialNodeName: "江鲤行波",
       difficulty: 4,
       energyCost: 3,
       ignoreStage: true,
@@ -1178,6 +1201,8 @@ export const WANG_ZHUO_ENCOUNTER = Object.freeze({
       attribute: "agility",
       skillId: "fish_leap_art",
       skillName: "鱼跃龙门诀",
+      martialNodeId: "carp_in_current",
+      martialNodeName: "江鲤行波",
       difficulty: 3,
       energyCost: 3,
       ignoreStage: true,
@@ -1586,7 +1611,10 @@ export const RAIN_AMBUSH_ENCOUNTER = Object.freeze({
       id: "observe", stageIds: ["rain_ambush"], icon: "eye", verb: "观察", objectId: "night_assailant", objectName: "刀客左袖", intent: "识招",
       title: "让开半步，只看肩、胯与袖口", description: "放弃抢攻，用一息看清真正杀招。", attribute: "insight", difficulty: 3, energyCost: 1, ignoreStage: true,
       successPreview: "看破藏在左袖的短刃", riskPreview: "失手会被刀锋擦伤", focusIds: ["default", "target:night_assailant"], recommendationWeight: 32,
-      advantages: (state) => hasFact(state, "left_sleeve_blade") ? "命灯已经照见左袖暗刃" : null,
+      advantages: (state, context) => [
+        hasFact(state, "left_sleeve_blade") ? "命灯已经照见左袖暗刃" : null,
+        hasSkillNode(context, "spring_rain_needles", "observe_meridians") ? "观脉让肩、胯与袖口的发力先后更加分明" : null,
+      ].filter(Boolean),
       outcomes: {
         great: { text: "你没有追右手刀光，还抢在换步前看清左袖短刃。", effects: [{ type: "condition", key: "observedFeint", value: true }, { type: "fact", factId: "left_sleeve_blade" }, { type: "status", targetId: "night_assailant", status: { id: "read_feint", label: "虚招看破", duration: 1 } }] },
         success: { text: "你让开半步，终于看见左袖短刃才是真正杀招。", effects: [{ type: "condition", key: "observedFeint", value: true }, { type: "fact", factId: "left_sleeve_blade" }] },
@@ -1608,7 +1636,7 @@ export const RAIN_AMBUSH_ENCOUNTER = Object.freeze({
     },
     {
       id: "needle_wrist", stageIds: ["rain_ambush"], icon: "needles", verb: "出针", objectId: "weapon_wrist", objectName: "持刀手腕", intent: "夺械",
-      title: "春风针·封腕", description: "银针先取持刀手腕；未知暗招仍可能致命。", attribute: "agility", skillId: "spring_rain_needles", skillName: "春风化雨针", masteryRequired: "learned", difficulty: 4, energyCost: 2, targetId: "night_assailant", directCombat: true,
+      title: "春风针·封腕", description: "银针先取持刀手腕；未知暗招仍可能致命。", attribute: "agility", skillId: "spring_rain_needles", skillName: "春风化雨针", masteryRequired: "learned", martialNodeId: "seal_wrist", martialNodeName: "封腕", difficulty: 4, energyCost: 2, targetId: "night_assailant", directCombat: true,
       formulaDamage: { kind: "ranged", weapon: { min: 3, max: 6, powerAttribute: "agility", penetration: 1 } },
       qiBoost: { cost: 1, power: 2 },
       successPreview: "刀客气血 -3～6并迟滞刀路", riskPreview: "未看破后手时可能踏进死局", focusIds: ["default", "target:night_assailant"], recommendationWeight: 18,
@@ -1624,14 +1652,14 @@ export const RAIN_AMBUSH_ENCOUNTER = Object.freeze({
     },
     {
       id: "seal", stageIds: ["rain_ambush"], icon: "needles", verb: "封穴", objectId: "assailant_meridians", objectName: "肩井与曲池", intent: "制伏",
-      title: "春风针·封穴留命", description: "必须先看破暗招，并把刀客气血压到一半以下。", attribute: "insight", skillId: "spring_rain_needles", skillName: "春风化雨针", masteryRequired: "learned", difficulty: 4, energyCost: 3, targetId: "night_assailant", directCombat: true,
+      title: "春风针·封穴留命", description: "必须先看破暗招，并把刀客气血压到一半以下。", attribute: "insight", skillId: "spring_rain_needles", skillName: "春风化雨针", masteryRequired: "skilled", martialNodeId: "seal_acupoint", martialNodeName: "封穴", difficulty: 4, energyCost: 3, targetId: "night_assailant", directCombat: true,
       successPreview: "刀客气血压至1并留下活口", riskPreview: "失手会承受左袖回锋", focusIds: ["target:night_assailant"], recommendationWeight: 40,
       availableWhen: (state) => !rainOpening(state) ? "必须先看破或迟滞左袖杀招。" : enemy(state, "night_assailant").current > 9 ? "刀客气血仍足，封穴窗口尚未形成。" : true,
       advantages: rainDirectAdvantages, disadvantages: rainDirectDisadvantages, resolve: rainSubdueOutcome,
     },
     {
       id: "kill", stageIds: ["rain_ambush"], icon: "needles", verb: "穿喉", objectId: "assailant_throat", objectName: "刀客咽喉", intent: "杀死",
-      title: "春风针·穿喉", description: "必须先看破暗招，并把刀客气血压到一半以下。", attribute: "insight", skillId: "spring_rain_needles", skillName: "春风化雨针", masteryRequired: "learned", difficulty: 3, energyCost: 3, targetId: "night_assailant", directCombat: true,
+      title: "春风针·穿喉", description: "必须先看破暗招，并把刀客气血压到一半以下。", attribute: "insight", skillId: "spring_rain_needles", skillName: "春风化雨针", masteryRequired: "learned", martialNodeId: "seal_wrist", martialNodeName: "封腕", difficulty: 3, energyCost: 3, targetId: "night_assailant", directCombat: true,
       successPreview: "刀客气血归零并留下尸证", riskPreview: "永远失去口供并提高警戒", focusIds: ["target:night_assailant"], recommendationWeight: 38,
       availableWhen: (state) => !rainOpening(state) ? "必须先看破或迟滞左袖杀招。" : enemy(state, "night_assailant").current > 9 ? "刀客气血仍足，杀针无法一击收束。" : true,
       advantages: rainDirectAdvantages, disadvantages: rainDirectDisadvantages, resolve: rainKillOutcome,

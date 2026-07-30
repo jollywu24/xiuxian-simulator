@@ -50,8 +50,8 @@ import {
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs?v=20260728.7";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260728.7";
+} from "./wudao-core.mjs?v=20260730.1";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260730.1";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -81,7 +81,7 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260728.7";
+} from "./wudao-p0-core.mjs?v=20260730.1";
 import {
   M4_EVIDENCE,
   M4_METHOD,
@@ -100,7 +100,7 @@ import {
   resolveM4Training,
   resolveMoneyInquiry,
   resolveOldHouseChoice,
-} from "./wudao-p1-core.mjs?v=20260728.7";
+} from "./wudao-p1-core.mjs?v=20260730.1";
 import {
   advanceCombatLabCampaign,
   createCombatLabSession,
@@ -111,14 +111,14 @@ import {
   restartCombatLab,
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
-} from "./combat-lab-core.mjs?v=20260728.7";
+} from "./combat-lab-core.mjs?v=20260730.1";
 import {
   INVENTORY_CAPACITY,
   createInventoryBoard,
   formatSilver,
   getInventoryCategory,
   getInventoryUseState,
-} from "./inventory-core.mjs?v=20260728.7";
+} from "./inventory-core.mjs?v=20260730.1";
 import {
   EQUIPMENT_CAPACITY,
   EQUIPMENT_SLOTS,
@@ -132,7 +132,7 @@ import {
   migrateCharacterVitals,
   migrateEquipmentState,
   unequipEquipmentSlot,
-} from "./character-system.mjs?v=20260728.7";
+} from "./character-system.mjs?v=20260730.1";
 import {
   MARTIAL_MASTERIES,
   breakthroughMartial,
@@ -144,17 +144,19 @@ import {
   getMartialDefinition,
   getMartialGrade,
   getMartialMastery,
+  getMartialSynergy,
   getTechniqueSubtype,
   martialIsCarried,
   martialSkillsForCombat,
   martialWeaponRequirements,
   migrateMartialState,
+  recordMartialUse,
   trainMartial,
   unequipMartial,
   unlockedMartialNodes,
-} from "./martial-system.mjs?v=20260728.7";
-import { SAVE_STORAGE_KEY } from "./save-core.mjs?v=20260728.7";
-import { createSaveStorage } from "./save-storage.mjs?v=20260728.7";
+} from "./martial-system.mjs?v=20260730.1";
+import { SAVE_STORAGE_KEY } from "./save-core.mjs?v=20260730.1";
+import { createSaveStorage } from "./save-storage.mjs?v=20260730.1";
 import {
   ORIGINS,
   ORIGIN_LADY_INSIGHTS,
@@ -167,7 +169,7 @@ import {
   resolveOriginPersonalEvent,
   resolveOriginPrologueChoice,
   resolveOriginTempleTask,
-} from "./origin-core.mjs?v=20260728.7";
+} from "./origin-core.mjs?v=20260730.1";
 
 const app = document.querySelector("#app");
 const BUILD_SHA = document.documentElement.dataset.buildSha || "dev";
@@ -1355,13 +1357,14 @@ function martialNodeHtml(definition, learned, entry) {
   const nodeOrder = getMartialMastery(entry.stage).order;
   const unlocked = nodeOrder <= currentOrder;
   const stageLocked = entry.requiresStage && martialStageIndex() < Number({ qi: 2, meridian: 3, master: 4 }[entry.requiresStage] || 0);
+  const practiced = learned?.firstUseNodes?.includes(`node:${entry.id}`);
   const kindLabel = entry.kind === "active" ? "主动" : "被动";
   return `
-    <button type="button" class="martial-node ${unlocked && !stageLocked ? "unlocked" : "locked"}" data-action="martial-node-detail" data-value="${escapeHtml(entry.id)}" aria-label="${escapeHtml(`${entry.name}，${unlocked && !stageLocked ? "已解锁" : "未解锁"}`)}">
+    <button type="button" class="martial-node ${unlocked && !stageLocked ? "unlocked" : "locked"} ${practiced ? "practiced" : ""}" data-action="martial-node-detail" data-value="${escapeHtml(entry.id)}" aria-label="${escapeHtml(`${entry.name}，${unlocked && !stageLocked ? practiced ? "已经用过" : "已解锁" : "未解锁"}`)}">
       <span class="martial-node-kind">${escapeHtml(kindLabel)} · ${escapeHtml(entry.name)}</span>
       <span class="martial-node-art">${martialIconHtml(definition)}</span>
       <strong>${escapeHtml(entry.name)}</strong>
-      <small>${escapeHtml(stageLocked ? "尚未聚气" : unlocked ? "已解锁" : `${getMartialMastery(entry.stage).name}解锁`)}</small>
+      <small>${escapeHtml(stageLocked ? "尚未聚气" : unlocked ? practiced ? "已在局中用过" : "已解锁" : `${getMartialMastery(entry.stage).name}解锁`)}</small>
     </button>
   `;
 }
@@ -1391,8 +1394,14 @@ function martialSelectedDetailHtml(board) {
   const hasEmpty = compatible.some((slotId) => !state.martial.loadout[slotId]);
   const weaponFailure = martialWeaponRequirements(state.martial, state.equipment)[definition.id];
   const breakthrough = getMartialBreakthroughBoard(definition.id, state.martial, state);
+  const synergy = getMartialSynergy(state.martial, definition.id);
   const metrics = martialDetailMetrics(definition, learned);
   const progress = Math.max(0, Math.min(100, Number(learned.progress || 0)));
+  const firstUseRecord = definition.firstUse
+    ? `use:${definition.firstUse.kind}:${definition.firstUse.sceneId}:${definition.firstUse.useId}`
+    : null;
+  const firstUseComplete = Boolean(firstUseRecord && learned.firstUseNodes?.includes(firstUseRecord))
+    || Boolean(learned.firstUseNodes?.some((entry) => !String(entry).startsWith("scene:")));
   const nextNode = definition.nodes.find((entry) => getMartialMastery(entry.stage).order > mastery.order);
   const inCombat = ["firstNeedleAmbush", "wangBattle"].includes(state.screen)
     && [state.p0?.battle, state.p0?.wangBattle].some((battle) => battle?.status === "fighting");
@@ -1422,6 +1431,9 @@ function martialSelectedDetailHtml(board) {
         </div>
         ${weaponFailure ? `<div class="martial-requirement">${escapeHtml(weaponFailure)}</div>` : ""}
         <p class="martial-summary">${escapeHtml(definition.summary)}</p>
+        ${definition.question ? `<div class="martial-question"><span>临阵所长</span><p>${escapeHtml(definition.question)}</p></div>` : ""}
+        ${definition.firstUse ? `<div class="martial-first-use ${firstUseComplete ? "complete" : "pending"}"><span>${firstUseComplete ? "已有实证" : "初试所在"}</span><strong>${escapeHtml(definition.firstUse.label)}</strong></div>` : ""}
+        ${synergy ? `<div class="martial-synergy ${synergy.active ? "active" : synergy.learned ? "ready" : "unknown"}"><span>${synergy.active ? "配套生效" : synergy.learned ? "可与之配套" : "配套尚未习得"}</span><strong>${escapeHtml(synergy.name)} · ${escapeHtml(synergy.counterpartName)}</strong><p>${escapeHtml(synergy.description)}</p></div>` : ""}
         ${definition.category === "heart" && martialStageIndex() < 2 ? `<div class="martial-qi-lock"><span>尚未聚气</span><strong>当前仅生效呼吸、身体与场景被动。</strong></div>` : ""}
       </section>
       <section class="martial-node-section">
@@ -1563,6 +1575,41 @@ function applyMartialState(next, feedback, tone = "gain") {
   state.characterVitals.health = Math.min(after.maxHealth, before.health);
   state.characterVitals.qi = after.maxQi > 0 ? Math.min(after.maxQi, before.qi) : 0;
   pendingMartialFeedback = { text: feedback, tone };
+}
+
+function commitMartialUse(use, { narrate = true } = {}) {
+  const martialState = {
+    ...state.martial,
+    experience: Math.max(0, Number(state.potential || 0)),
+  };
+  const result = recordMartialUse(martialState, use);
+  if (!result.available || !result.recorded) return result;
+  state.martial = result.state;
+  state.potential = Math.max(0, Number(result.state.experience || state.potential || 0));
+  syncLegacyActiveMartial();
+  if (narrate) appendNarrativeOutcome(result.reason);
+  track("martial_use_recorded", {
+    martialId: use.martialId,
+    useId: use.useId,
+    sceneId: use.sceneId,
+    kind: use.kind,
+    progressGain: result.progressGain,
+  });
+  return result;
+}
+
+function commitCombatMartialUse(resolved, session) {
+  const evaluation = resolved?.result?.evaluation;
+  const action = evaluation?.action;
+  if (!evaluation?.skillId || !action?.id) return null;
+  return commitMartialUse({
+    martialId: evaluation.skillId,
+    useId: String(action.id).replace(/__qi$/, ""),
+    sceneId: session?.encounterId || session?.battle?.id || state.screen,
+    kind: "combat",
+    nodeId: action.martialNodeId || null,
+    sudden: true,
+  });
 }
 
 const TEMPLE_HUD_SCREENS = new Set([
@@ -4459,6 +4506,15 @@ const handlers = {
     state.roadTrial = value;
     state.roadTrialResult = result;
     state.potential += result.potential;
+    if (value === "dive") {
+      commitMartialUse({
+        martialId: "fish_leap_art",
+        useId: "water_travel",
+        sceneId: "purple_gold_river",
+        kind: "travel",
+        nodeId: "carp_in_current",
+      });
+    }
     track("road_trial", { choice: value });
     moveTo("roadResult");
   },
@@ -4946,6 +5002,14 @@ const handlers = {
     state.fiveAnimalProgress = Math.max(state.fiveAnimalProgress, 14);
     state.shenFocus.martial += 1;
     if (!state.skills.includes("fishing_rod_method")) state.skills.push("fishing_rod_method");
+    state.martial = migrateMartialState(state.martial, state);
+    commitMartialUse({
+      martialId: "fishing_rod_method",
+      useId: "fish",
+      sceneId: "wang_teaching",
+      kind: "training",
+      nodeId: "sweep_water",
+    });
     track("fishing_rod_learned");
     moveTo("caoReturn");
   },
@@ -5089,6 +5153,8 @@ const handlers = {
     state.p0 = grantSpringRainNeedles(state.p0).state;
     state.p0.activeMartial.foundation = state.mindArt || null;
     if (!state.skills.includes("spring_rain_needles")) state.skills.push("spring_rain_needles");
+    state.martial = migrateMartialState(state.martial, state);
+    syncLegacyActiveMartial();
     state.p0.battle = createP0CombatSession();
     state.p0.checkpoint = null;
     state.p0.checkpoint = structuredClone(state.p0);
@@ -5102,6 +5168,7 @@ const handlers = {
     if (!result?.available) return;
     let next = result.session;
     appendNarrativeOutcome(combatOutcomeText(result.result));
+    commitCombatMartialUse(result, next);
     if (next.turn.energy === 0 && next.turn.phase === "player") {
       const enemyPhase = resolveFullEnemyPhase(next);
       next = enemyPhase.session;
@@ -5237,6 +5304,7 @@ const handlers = {
     if (!result?.available) return;
     let next = result.session;
     appendNarrativeOutcome(combatOutcomeText(result.result));
+    commitCombatMartialUse(result, next);
     if (next.turn.energy === 0 && next.turn.phase === "player") {
       const enemyPhase = resolveFullEnemyPhase(next);
       next = enemyPhase.session;
@@ -5272,6 +5340,15 @@ const handlers = {
     const result = resolveMidAutumnTravel(value, state.p0, { hasWaterMindArt: state.mindArt === MIND_ART.id });
     if (!result?.available) return;
     state.p0 = result.state;
+    if (value === "water") {
+      commitMartialUse({
+        martialId: "fish_leap_art",
+        useId: "water_travel",
+        sceneId: "mid_autumn_water_route",
+        kind: "travel",
+        nodeId: "carp_in_current",
+      });
+    }
     track("mid_autumn_travel", { route: value, outcome: result.outcome });
     if (!result.onTime) {
       state.p0.missedReason = "travel";

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   MARTIAL_CATEGORIES,
+  MARTIAL_CATALOG_ISSUES,
   MARTIAL_DEFINITIONS,
   MARTIAL_GRADES,
   MARTIAL_MASTERIES,
@@ -15,12 +16,15 @@ import {
   getMartialBoard,
   getMartialBreakthroughBoard,
   getMartialCombatBonuses,
+  getMartialSynergy,
   hasMartialNarrativeUse,
   heartMasteryQiBonus,
+  martialNodeIsUnlocked,
   martialIsCarried,
   martialSkillsForCombat,
   martialWeaponRequirements,
   migrateMartialState,
+  recordMartialUse,
   trainMartial,
   unequipMartial,
 } from "../web/martial-system.mjs";
@@ -143,7 +147,11 @@ test("卸下只改变携带状态，已学武学和非战斗知识仍保留", ()
 test("战斗只读取携带武学，且未满足兵器要求时给出明确缺口", () => {
   const state = learnedState("spring_rain_needles", "skilled", 60);
   state.loadout.technique1 = "spring_rain_needles";
-  assert.deepEqual(martialSkillsForCombat(state).spring_rain_needles, { stage: "skilled", progress: 60 });
+  assert.deepEqual(martialSkillsForCombat(state).spring_rain_needles, {
+    stage: "skilled",
+    progress: 60,
+    nodes: ["seal_wrist", "observe_meridians", "seal_acupoint"],
+  });
   assert.equal(martialWeaponRequirements(state, { slots: { rangedMain: null } }).spring_rain_needles, "需要：针");
   assert.equal(martialWeaponRequirements(state, { slots: { rangedMain: "spring_rain_needle_case" } }).spring_rain_needles, undefined);
   state.loadout.technique1 = null;
@@ -174,4 +182,105 @@ test("武学界面按分类与招式子类过滤，并返回六个携带位置",
   assert.deepEqual(hiddenWeapons.items.map((entry) => entry.id), ["spring_rain_needles"]);
   assert.equal(allTechniques.slots.length, 6);
   assert.deepEqual(compatibleMartialSlots("fish_leap_art"), ["heart"]);
+});
+
+test("武学目录要求传承来源、玩家问题、首次兑现和场外用途齐全", () => {
+  assert.deepEqual(MARTIAL_CATALOG_ISSUES, []);
+  const learnable = MARTIAL_DEFINITIONS.filter((entry) => entry.learnable !== false);
+  assert.equal(learnable.every((entry) => entry.question && entry.source && entry.firstUse?.sceneId), true);
+  assert.equal(learnable.every((entry) => entry.narrativeUses.length > 0), true);
+});
+
+test("造诣节点决定可用领悟，首次在一场局面用武只增加一次修为", () => {
+  const state = learnedState("spring_rain_needles", "skilled", 60);
+  state.loadout.technique1 = "spring_rain_needles";
+  assert.equal(martialNodeIsUnlocked("spring_rain_needles", "seal_acupoint", state), true);
+  assert.equal(martialNodeIsUnlocked("spring_rain_needles", "needle_follows_mind", state), false);
+
+  const first = recordMartialUse(state, {
+    martialId: "spring_rain_needles",
+    useId: "needle_wrist",
+    sceneId: "rain_ambush",
+    kind: "combat",
+    nodeId: "seal_wrist",
+    sudden: true,
+  });
+  assert.equal(first.recorded, true);
+  assert.equal(first.progressGain, 10);
+  assert.equal(first.state.learned.spring_rain_needles.progress, 70);
+  assert.equal(first.state.learned.spring_rain_needles.firstUseNodes.includes("node:seal_wrist"), true);
+
+  const repeated = recordMartialUse(first.state, {
+    martialId: "spring_rain_needles",
+    useId: "needle_wrist",
+    sceneId: "rain_ambush",
+    kind: "combat",
+    nodeId: "seal_wrist",
+    sudden: true,
+  });
+  assert.equal(repeated.recorded, false);
+  assert.equal(repeated.progressGain, 0);
+  assert.equal(repeated.state.learned.spring_rain_needles.progress, 70);
+
+  const secondAction = recordMartialUse(repeated.state, {
+    martialId: "spring_rain_needles",
+    useId: "seal",
+    sceneId: "rain_ambush",
+    kind: "combat",
+    nodeId: "seal_acupoint",
+    sudden: true,
+  });
+  assert.equal(secondAction.recorded, true);
+  assert.equal(secondAction.firstSceneUse, false);
+  assert.equal(secondAction.progressGain, 0);
+});
+
+test("场外用法必须属于武学目录，突发局面只读取携带武学", () => {
+  const state = learnedState("fish_leap_art", "beginner", 0);
+  const notCarried = recordMartialUse(state, {
+    martialId: "fish_leap_art",
+    useId: "water_travel",
+    sceneId: "flooded_causeway",
+    kind: "travel",
+    nodeId: "carp_in_current",
+    sudden: true,
+  });
+  assert.equal(notCarried.available, false);
+  state.loadout.heart = "fish_leap_art";
+  const invalid = recordMartialUse(state, {
+    martialId: "fish_leap_art",
+    useId: "forge_sword",
+    sceneId: "flooded_causeway",
+    kind: "travel",
+  });
+  assert.equal(invalid.available, false);
+  const valid = recordMartialUse(state, {
+    martialId: "fish_leap_art",
+    useId: "water_travel",
+    sceneId: "flooded_causeway",
+    kind: "travel",
+    nodeId: "carp_in_current",
+    sudden: true,
+  });
+  assert.equal(valid.available, true);
+  assert.equal(valid.progressGain, 10);
+});
+
+test("鱼跃龙门诀与定海桩只有同时携带时激活唯一临水配套", () => {
+  const state = learnedState("fish_leap_art", "skilled");
+  state.known.push("sea_stilling_stake");
+  state.learned.sea_stilling_stake = {
+    mastery: "beginner",
+    progress: 0,
+    unlockedNodes: [],
+    firstUseNodes: [],
+    gradeOverride: null,
+  };
+  state.loadout.heart = "fish_leap_art";
+  const ready = getMartialSynergy(state, "fish_leap_art");
+  assert.equal(ready.learned, true);
+  assert.equal(ready.active, false);
+  state.loadout.body = "sea_stilling_stake";
+  assert.equal(getMartialSynergy(state, "fish_leap_art").active, true);
+  assert.equal(getMartialSynergy(state, "sea_stilling_stake").active, true);
 });

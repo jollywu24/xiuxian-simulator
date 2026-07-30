@@ -1,10 +1,10 @@
-import { rollCausalDie } from "./wudao-p0-core.mjs?v=20260728.7";
+import { rollCausalDie } from "./wudao-p0-core.mjs?v=20260730.1";
 import {
   actionTargetValue,
   applyDamageReduction,
   calculateDamageRange,
   damageForTier,
-} from "./character-system.mjs?v=20260728.7";
+} from "./character-system.mjs?v=20260730.1";
 
 export const COMBAT_MAX_ENERGY = 3;
 
@@ -87,6 +87,8 @@ function skillMastery(skill) {
     rank,
     bonus: Math.max(0, rank),
     stage,
+    nodes: Array.isArray(skill?.nodes) ? [...new Set(skill.nodes.filter(Boolean))] : [],
+    tracksNodes: Array.isArray(skill?.nodes),
   };
 }
 
@@ -525,6 +527,14 @@ export function evaluateCombatAction(state, actionOrId, definition, suppliedCont
   if (action.skillId && (!mastery.available || mastery.rank < requiredMastery)) {
     return { available: false, reason: `尚未真正掌握${action.skillName || "这门武学"}。`, rating: "locked", ratingLabel: RATING_LABELS.locked };
   }
+  if (action.martialNodeId && mastery.tracksNodes && !mastery.nodes.includes(action.martialNodeId)) {
+    return {
+      available: false,
+      reason: `需要领悟：${action.martialNodeName || "对应武学节点"}。`,
+      rating: "locked",
+      ratingLabel: RATING_LABELS.locked,
+    };
+  }
   const target = action.targetId ? participant(state, action.targetId) : activeEnemies(state).find((entry) => entry.primary) || activeEnemies(state)[0];
   const stage = stageModifier(context.playerStage || "mortal", target?.stageId, action.ignoreStage);
   const nonConfrontational = ["识招", "借势", "脱身", "护人", "同伴", "疗伤", "改命", "身位"].includes(action.intent);
@@ -575,6 +585,7 @@ export function evaluateCombatAction(state, actionOrId, definition, suppliedCont
   const previewTier = fatal ? "failure" : resolvedTier(previewRoll, score, targetValue, greatTarget).tier;
   const reasons = [`${ATTRIBUTE_LABELS[action.attribute] || action.attribute} ${attributeValue}`];
   if (action.skillId) reasons.push(`${action.skillName || action.skillId}${mastery.bonus ? ` +${mastery.bonus}` : " 入门"}`);
+  if (action.martialNodeId) reasons.push(`领悟：${action.martialNodeName || action.martialNodeId}`);
   if (stage.label) reasons.push(stage.label);
   if (advantages.length) reasons.push(`${advantages[0]}：有利`);
   if (disadvantages.length) reasons.push(`${disadvantages[0]}：不利`);

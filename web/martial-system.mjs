@@ -1,4 +1,4 @@
-export const MARTIAL_SAVE_VERSION = 1;
+export const MARTIAL_SAVE_VERSION = 2;
 
 export const MARTIAL_CATEGORIES = Object.freeze([
   { id: "heart", name: "心法", glyph: "心" },
@@ -67,6 +67,9 @@ function martial(config) {
   return Object.freeze({
     subtype: null,
     tags: [],
+    question: "",
+    firstUse: null,
+    synergy: null,
     weaponRequirement: null,
     damage: null,
     metrics: {},
@@ -87,6 +90,13 @@ export const MARTIAL_DEFINITIONS = Object.freeze([
     icon: "fish",
     source: "龙青鱼以江鲤行波图灌顶所授",
     summary: "借水势调息行身，先能闭气逆流，聚气以后才可借流催劲。",
+    question: "临水、高差或急流挡路时，怎样借水势改变距离并保住呼吸？",
+    firstUse: { kind: "travel", sceneId: "purple_gold_river", useId: "water_travel", label: "紫金河水路初试" },
+    synergy: {
+      with: "sea_stilling_stake",
+      name: "行波定海",
+      description: "鱼跃龙门诀负责借流换位，沧澜定海桩负责落脚定身；临水行动更稳，但两门武学拆开仍各自可用。",
+    },
     tags: ["水意", "调息", "临水", "龙青鱼"],
     metrics: {
       body: [
@@ -117,6 +127,8 @@ export const MARTIAL_DEFINITIONS = Object.freeze([
     icon: "needles",
     source: "白栀云因救命之恩传下的医针与杀针",
     summary: "以悟性辨脉，以银针封腕、封穴；同一门针法既可救人，也可取命。",
+    question: "怎样在中远距封住持械手，并在杀人、留命与救治之间作出选择？",
+    firstUse: { kind: "combat", sceneId: "rain_ambush", useId: "needle_wrist", label: "雨巷第一次出针" },
     tags: ["暗器", "医术", "点穴", "白栀云"],
     weaponRequirement: {
       label: "针",
@@ -134,7 +146,7 @@ export const MARTIAL_DEFINITIONS = Object.freeze([
     nodes: [
       node("seal_wrist", "封腕", "beginner", "active", "中远距出针，截断持械手的发力。"),
       node("observe_meridians", "观脉", "skilled", "passive", "首次观察目标时揭示一处可封穴的经脉破绽。"),
-      node("seal_acupoint", "封穴", "expert", "active", "看破破绽后封住肩井与曲池，制伏而不杀。"),
+      node("seal_acupoint", "封穴", "skilled", "active", "看破破绽后封住肩井与曲池，制伏而不杀。"),
       node("needle_follows_mind", "针随心走", "perfect", "passive", "医治或点穴得手有损时，可以选择保全目标或保全自身位置。"),
     ],
     narrativeUses: ["stop_bleeding", "diagnose_meridian", "wake_unconscious", "disable_silently"],
@@ -148,6 +160,8 @@ export const MARTIAL_DEFINITIONS = Object.freeze([
     icon: "rod",
     source: "紫金河老渔王五所授",
     summary: "伤害不算高，却能在中距扫腿、缠兵，也能探路、打捞和触动远物。",
+    question: "没有名门杀招时，怎样用一根长杆守住中距并利用水岸杂物？",
+    firstUse: { kind: "training", sceneId: "wang_teaching", useId: "fish", label: "王五河边试杆" },
     tags: ["枪棍", "水路", "控距", "王五"],
     weaponRequirement: {
       label: "枪棍",
@@ -176,6 +190,8 @@ export const MARTIAL_DEFINITIONS = Object.freeze([
     icon: "animals",
     source: "曹青为调养失血之身传下的导引法",
     summary: "以虎、熊、鹤、猿、鹿五戏调养筋骨，承药疗伤，并为锻体打下身体底子。",
+    question: "身体亏空、药力难承时，怎样先把筋骨调到能够继续习武？",
+    firstUse: { kind: "training", sceneId: "shen_daily_practice", useId: "recover", label: "沈家外院第一次导引" },
     tags: ["导引", "调养", "承药", "曹青"],
     bodyBonuses: { health: 2 },
     nodes: [
@@ -194,6 +210,8 @@ export const MARTIAL_DEFINITIONS = Object.freeze([
     icon: "deadwood",
     source: "曹青门下的耐伤承药桩功",
     summary: "收紧呼吸、护住经络，在负伤和药毒之间保住身体不乱。",
+    question: "带伤、服药或中毒时，怎样先压住身体崩坏再争下一步？",
+    firstUse: { kind: "training", sceneId: "stake_training", useId: "endure_wound", label: "带伤立枯木桩" },
     tags: ["桩功", "耐伤", "抗毒", "曹青"],
     bodyBonuses: { health: 4, woundedReduction: 1 },
     nodes: [
@@ -212,6 +230,8 @@ export const MARTIAL_DEFINITIONS = Object.freeze([
     icon: "waves",
     source: "曹青门下的临水定身桩功",
     summary: "沉胯定足，借水意稳定重心，擅长抗冲击、守位与临水行气。",
+    question: "湿地、冲撞或护人局面里，怎样守住脚下位置不被逼退？",
+    firstUse: { kind: "training", sceneId: "stake_training", useId: "hold_ground", label: "水边第一次定桩" },
     tags: ["桩功", "临水", "定身", "曹青"],
     bodyBonuses: { defense: 1 },
     nodes: [
@@ -230,6 +250,7 @@ export const MARTIAL_DEFINITIONS = Object.freeze([
     icon: "ape",
     source: "灵猴水洞石壁上的残缺发力轨迹",
     summary: "只记下了一段挥棒轮廓，尚不足以练成完整的金刚斗猿桩。",
+    question: "这段残缺发力轨迹究竟缺了哪一节传承？",
     tags: ["残势", "桩功", "灵猴", "未完传承"],
     learnable: false,
     nodes: [
@@ -445,6 +466,10 @@ export function unlockedMartialNodes(martialId, state) {
   return definition.nodes.filter((entryNode) => getMartialMastery(entryNode.stage).order <= mastery.order);
 }
 
+export function martialNodeIsUnlocked(martialId, nodeId, state) {
+  return unlockedMartialNodes(martialId, state).some((entry) => entry.id === nodeId);
+}
+
 function nextMastery(current) {
   const index = MASTERY_SEQUENCE.indexOf(masteryId(current));
   return index < 0 || index >= MASTERY_SEQUENCE.length - 1 ? null : MASTERY_SEQUENCE[index + 1];
@@ -589,9 +614,110 @@ export function martialSkillsForCombat(state) {
     result[martialId] = {
       stage: mastery.combatStage,
       progress: Number(learned.progress || 0),
+      nodes: unlockedMartialNodes(martialId, state).map((entry) => entry.id),
     };
   }
   return result;
+}
+
+export function recordMartialUse(state, {
+  martialId,
+  useId,
+  sceneId,
+  kind = "narrative",
+  nodeId = null,
+  sudden = false,
+} = {}) {
+  const next = migrateMartialState(state);
+  const definition = getMartialDefinition(martialId);
+  const learned = next.learned[martialId];
+  if (!definition || !learned || getMartialMastery(learned.mastery).order < MARTIAL_MASTERIES.beginner.order) {
+    return { available: false, recorded: false, reason: "这门武学尚未真正入门。", state: next };
+  }
+  if (sudden && !martialIsCarried(next, martialId)) {
+    return { available: false, recorded: false, reason: "突发局面里只能立即调用当前携带的武学。", state: next };
+  }
+  if (!useId || !sceneId) {
+    return { available: false, recorded: false, reason: "武学兑现缺少稳定的场景或行动记录。", state: next };
+  }
+  if (nodeId && !martialNodeIsUnlocked(martialId, nodeId, next)) {
+    const nodeDefinition = definition.nodes.find((entry) => entry.id === nodeId);
+    return {
+      available: false,
+      recorded: false,
+      reason: nodeDefinition ? `${nodeDefinition.name}尚未解锁。` : "对应武学领悟尚未解锁。",
+      state: next,
+    };
+  }
+  if (kind !== "combat" && !definition.narrativeUses.includes(useId)) {
+    return { available: false, recorded: false, reason: "这门武学没有对应的场外用途。", state: next };
+  }
+
+  const recordId = `use:${kind}:${sceneId}:${useId}`;
+  const sceneRecordId = `scene:${kind}:${sceneId}`;
+  if (learned.firstUseNodes.includes(recordId)) {
+    return {
+      available: true,
+      recorded: false,
+      firstSceneUse: false,
+      progressGain: 0,
+      reason: "这次用法已经记入武学经历。",
+      state: next,
+    };
+  }
+
+  const firstSceneUse = !learned.firstUseNodes.includes(sceneRecordId);
+  learned.firstUseNodes.push(recordId);
+  if (firstSceneUse) learned.firstUseNodes.push(sceneRecordId);
+  if (nodeId && !learned.firstUseNodes.includes(`node:${nodeId}`)) learned.firstUseNodes.push(`node:${nodeId}`);
+  learned.firstUseNodes = [...new Set(learned.firstUseNodes)];
+
+  const canGainProgress = firstSceneUse
+    && learned.mastery !== "perfect"
+    && Number(learned.progress || 0) < 100;
+  const progressGain = canGainProgress ? Math.min(10, 100 - Number(learned.progress || 0)) : 0;
+  learned.progress = Math.min(100, Number(learned.progress || 0) + progressGain);
+  next.learned[martialId] = learned;
+
+  const progressText = progressGain
+    ? `，修为提高${progressGain}点${learned.progress >= 100 ? "，已经可以查看下一步突破条件" : ""}`
+    : "";
+  return {
+    available: true,
+    recorded: true,
+    firstSceneUse,
+    progressGain,
+    reason: `${definition.name}在这场局面里留下了一次真实用法${progressText}。`,
+    state: next,
+  };
+}
+
+export function getMartialSynergy(state, martialId) {
+  const definition = getMartialDefinition(martialId);
+  if (!definition) return null;
+  const direct = definition.synergy
+    ? { ...definition.synergy, ownerId: definition.id, partnerId: definition.synergy.with }
+    : null;
+  const reverseDefinition = direct
+    ? null
+    : MARTIAL_DEFINITIONS.find((entry) => entry.synergy?.with === martialId);
+  const synergy = direct || (reverseDefinition ? {
+    ...reverseDefinition.synergy,
+    ownerId: reverseDefinition.id,
+    partnerId: martialId,
+  } : null);
+  if (!synergy) return null;
+  const counterpartId = synergy.ownerId === martialId ? synergy.partnerId : synergy.ownerId;
+  const counterpart = getMartialDefinition(counterpartId);
+  const learned = state?.learned?.[counterpartId];
+  return {
+    name: synergy.name,
+    description: synergy.description,
+    counterpartId,
+    counterpartName: counterpart?.name || "未知武学",
+    learned: getMartialMastery(learned?.mastery).order >= MARTIAL_MASTERIES.beginner.order,
+    active: martialIsCarried(state, martialId) && martialIsCarried(state, counterpartId),
+  };
 }
 
 export function martialWeaponRequirements(state, equipment = {}) {
@@ -671,3 +797,39 @@ export function hasMartialNarrativeUse(state, useId, { sudden = false } = {}) {
     return getMartialDefinition(id)?.narrativeUses.includes(useId);
   });
 }
+
+export function validateMartialCatalog(definitions = MARTIAL_DEFINITIONS) {
+  const issues = [];
+  const ids = new Set(definitions.map((entry) => entry.id));
+  for (const definition of definitions) {
+    if (!definition.id || !definition.name) issues.push("武学目录存在缺少稳定ID或名称的条目。");
+    if (!MARTIAL_CATEGORIES.some((entry) => entry.id === definition.category)) {
+      issues.push(`${definition.name || definition.id}使用了未知分类。`);
+    }
+    const nodeIds = definition.nodes.map((entry) => entry.id);
+    if (new Set(nodeIds).size !== nodeIds.length) issues.push(`${definition.name}存在重复领悟节点ID。`);
+    for (const entry of definition.nodes) {
+      if (!MARTIAL_MASTERIES[entry.stage]) issues.push(`${definition.name}的${entry.name}使用了未知造诣。`);
+    }
+    if (definition.learnable === false) continue;
+    if (!definition.question) issues.push(`${definition.name}没有声明要解决的玩家问题。`);
+    if (!definition.source) issues.push(`${definition.name}没有传承来源。`);
+    if (!definition.firstUse?.sceneId || !definition.firstUse?.useId || !definition.firstUse?.kind) {
+      issues.push(`${definition.name}没有声明首次兑现节点。`);
+    }
+    if (!definition.nodes.length) issues.push(`${definition.name}没有领悟节点。`);
+    if (!definition.nodes.some((entry) => ["active", "passive"].includes(entry.kind))) {
+      issues.push(`${definition.name}没有主动或被动规则。`);
+    }
+    if (!definition.narrativeUses.length) issues.push(`${definition.name}没有场外用途。`);
+    if (definition.synergy && (!ids.has(definition.synergy.with) || definition.synergy.with === definition.id)) {
+      issues.push(`${definition.name}的配套武学无效。`);
+    }
+    if (definition.category === "movement" && !definition.narrativeUses.some((id) => /travel|route|escape|pursuit|climb|cross/.test(id))) {
+      issues.push(`${definition.name}没有改变追逐、脱身或路线。`);
+    }
+  }
+  return issues;
+}
+
+export const MARTIAL_CATALOG_ISSUES = Object.freeze(validateMartialCatalog());

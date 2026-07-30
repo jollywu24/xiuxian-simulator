@@ -172,6 +172,12 @@ test("武学熟练、境界差、优势和夹击只进入一次行动公式", ()
   unknown.setup.skills.spring_rain_needles.stage = "known";
   assert.equal(evaluateCombatAction(unknown, "needle_wang", WANG_ZHUO_ENCOUNTER).available, false);
 
+  const nodeLocked = structuredClone(base);
+  nodeLocked.setup.skills.spring_rain_needles.nodes = [];
+  const nodeLockedEvaluation = evaluateCombatAction(nodeLocked, "needle_wang", WANG_ZHUO_ENCOUNTER);
+  assert.equal(nodeLockedEvaluation.available, false);
+  assert.match(nodeLockedEvaluation.reason, /需要领悟：封腕/);
+
   const namedOnly = enterRiver({ skills: { fish_leap_art: { stage: "known" } } });
   assert.equal(evaluateCombatAction(namedOnly, "cut_skiff_loose", WANG_ZHUO_ENCOUNTER).advantage, false);
 });

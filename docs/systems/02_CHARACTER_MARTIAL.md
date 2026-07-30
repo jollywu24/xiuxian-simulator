@@ -7,8 +7,8 @@
 | 适用产品 | 《大曜江湖》纯高武、单人叙事版本 |
 | 文档性质 | 武学系统运行规格、内容接入规范与验收依据 |
 | 已确认范围 | 分类、品阶、修为、携带、招式节点、真气催动、战斗接入、武学界面 |
-| 当前运行时 | 存档版本8；统一目录、阅历研习、条件突破、六个携带位、全屏武学页、装备条件、人物派生与战斗接入均已完成 |
-| 相关文档 | [SYS-03 战斗、伤势与死亡](03_COMBAT_INJURY_DEATH.md)、[SYS-09 装备系统与统一战斗公式](09_EQUIPMENT_COMBAT_FORMULA.md)、[系统路线图](../SYSTEM_ROADMAP.md) |
+| 当前运行时 | 主存档版本8、武学子状态版本2；统一目录、阅历研习、条件突破、节点门禁、首次兑现、六个携带位、全屏武学页、装备条件、人物派生与战斗接入均已完成 |
+| 相关文档 | [《烟雨江湖》武学设计拆解](../YANYU_JIANGHU_MARTIAL_DESIGN_REFERENCE.md)、[SYS-03 战斗、伤势与死亡](03_COMBAT_INJURY_DEATH.md)、[SYS-09 装备系统与统一战斗公式](09_EQUIPMENT_COMBAT_FORMULA.md)、[系统路线图](../SYSTEM_ROADMAP.md) |
 | 界面基准 | [招式界面效果图](../../web/assets/UI_Renderings/武学效果图-v5.png)、[心法界面效果图](../../web/assets/UI_Renderings/武学-心法效果图-v1.png) |
 
 本文既描述当前已经落地的通用武学系统，也约束后续武学内容。首次聚气、完整轻功传承和更高品阶晋升仍须随正文取得来源后再增加内容，但不再需要另建一套系统。
@@ -22,7 +22,10 @@
 - 研习固定消耗四十阅历、增加十点修为；修为满百后逐项显示突破条件，研习和突破均无随机失败；
 - 锻体携带已经进入气血、防御与减伤，心法造诣在聚气后进入真气上限，招式携带和兵器条件已经进入战斗可用性；
 - 玩家仍处于锻体时不显示真气，鱼跃龙门诀的真气节点明确锁到聚气以后；
-- 版本2至版本6存档先完成版本7武学迁移，再进入版本8出身迁移，并保留既有武学、修为、携带状态、阅历与剧情所得。
+- 武学目录新增“临阵所长、首次兑现、唯一配套”契约；首次在一场战斗、旅行或训练中实际用武会留下稳定记录并提高十点修为，同场重复使用不会重复领取；
+- 战斗动作可绑定具体领悟节点，只有造诣已经解锁该节点时才可执行；节点详情会标明“已解锁”或“已在局中用过”；
+- 鱼跃龙门诀与沧澜定海桩形成首个有限配套“行波定海”，两门同时携带时强化临水立足，但拆开仍各自可用；
+- 版本2至版本7存档会依次完成武学和出身迁移，并保留既有武学、修为、携带状态、阅历与剧情所得。
 
 ---
 
@@ -66,6 +69,25 @@
 - 不让福缘稳定增加命中或伤害；
 - 不允许读档刷新研习结果、突破结果或战斗骰点；
 - 不把“潜能、修为、熟练、境界、品阶”混成同一个成长数字。
+
+### 1.3 《烟雨江湖》拆解后的正式采用项
+
+参考拆解只用于确认结构，不复制原作武学名称、门派、数值或长期运营方式。以下决定已经成为本系统正式规则：
+
+| 参考结构 | 本项目采用方式 | 当前落地 |
+| --- | --- | --- |
+| 套路、内功、轻功正交分工 | 改为招式、心法、轻功，并保留独立锻体 | 四类目录与六个携带位已运行 |
+| 一本武学逐步解锁招式 | 造诣解锁少量主动／被动节点，战斗动作直接读取节点 | 战斗动作支持`martialNodeId`门禁 |
+| 武学来自人物与事件 | 每门可学武学必须登记传承来源、首次兑现局面与玩家为此承担的关系／事件后果 | 目录校验会拒绝缺来源或首次兑现的条目 |
+| 轻功同时改变地图 | 每门轻功至少改变一条追逐、脱身或路线，不允许只有身法常驻加值 | 已进入目录校验；首门轻功随正文来源制作 |
+| 主动与被动共同构成武学 | 节点改变行动、条件、距离、伤势、资源或结果，不只增加百分比 | 当前针法、心法和桩功已按节点拆分 |
+| 属性影响招式 | 招式显式声明属性，界面和检定展示最终依据 | 已接入统一战斗公式 |
+| 指定配套联动 | 每门最多一个强配套；未配套仍可独立使用 | 首个样板为“行波定海” |
+| 一套路一内功一轻功 | 改为一心法、三招式、一轻功、一锻体 | 已运行 |
+| 高低品阶纵向替换 | 品阶决定规则上限，低品阶依靠低消耗、环境与场外用途长期保值 | 打鱼杆法是首个粗浅样板 |
+| 使用与领悟推动成长 | 每个场景第一次实际兑现可提高修为，稳定ID保证幂等 | 战斗、紫金河水路、王五试杆已接入 |
+
+明确不采用的部分仍包括：十重三境、突破等待、六类累计修为、固定武学资质、真元再折算内力点、有损传功、门派贡献日常、通用精进点和以数百本同质武学填量。
 
 ---
 
@@ -879,11 +901,13 @@ firstPayoff: {
 | 造诣 | 节点 | 类型 |
 | --- | --- | --- |
 | 入门 | 封腕 | 主动 |
-| 熟练 | 观脉 | 被动 |
-| 精通 | 封穴 | 条件主动 |
+| 熟练 | 观脉、封穴 | 条件被动、条件主动 |
+| 精通 | 针路深化由后续师承事件补足，不预填纯数值节点 | 待正文 |
 | 圆满 | 针随心走 | 标志被动 |
 
 “穿喉”不是独立升级按钮。它是对已看破致命部位、明确选择杀人且满足距离的结果分支。
+
+首轮传承直接达到熟练，因此雨巷夜战必须同时开放封腕、观脉和“看破后封穴留命”。这是一项为现有剧情服务的明确例外，不把封穴拖到玩家已经错过第一次非杀选择之后。
 
 ### 14.3 打鱼杆法
 
@@ -1059,10 +1083,14 @@ firstPayoff: {
   category: "technique",
   subtype: "hidden_weapon",
   grade: "superior",
+  question: "怎样在中远距封住持械手，并在杀人、留命与救治之间作出选择？",
   tags: ["needle", "medical", "acupoint", "bai_zhiyun"],
-  source: {
-    characterId: "bai_zhiyun",
-    nodeId: "needle_inheritance"
+  source: "白栀云因救命之恩传下的医针与杀针",
+  firstUse: {
+    kind: "combat",
+    sceneId: "rain_ambush",
+    useId: "needle_wrist",
+    label: "雨巷第一次出针"
   },
   learnRequirements: [
     { type: "relationship", id: "bai_zhiyun_life_debt", min: 1 }
@@ -1070,7 +1098,7 @@ firstPayoff: {
   masteryNodes: [
     { id: "seal_wrist", stage: "beginner", kind: "active" },
     { id: "observe_meridians", stage: "skilled", kind: "passive" },
-    { id: "seal_acupoint", stage: "expert", kind: "active" },
+    { id: "seal_acupoint", stage: "skilled", kind: "active" },
     { id: "needle_follows_mind", stage: "perfect", kind: "passive" }
   ],
   actions: ["seal_wrist", "seal_acupoint"],
@@ -1080,10 +1108,7 @@ firstPayoff: {
     "diagnose_meridian",
     "wake_unconscious"
   ],
-  firstPayoff: {
-    withinScenes: 1,
-    nodeId: "first_needle_ambush"
-  }
+  synergy: null
 }
 ```
 
@@ -1091,6 +1116,7 @@ firstPayoff: {
 
 ```js
 martial: {
+  version: 2,
   experience: 1680,
   known: ["spring_rain_needles"],
   inheritances: ["spring_rain_needles"],
@@ -1099,17 +1125,19 @@ martial: {
       mastery: "skilled",
       progress: 60,
       unlockedNodes: ["seal_wrist", "observe_meridians"],
-      firstUseNodes: ["first_needle_ambush"],
+      firstUseNodes: [
+        "use:combat:rain_ambush:needle_wrist",
+        "scene:combat:rain_ambush",
+        "node:seal_wrist"
+      ],
       gradeOverride: null
     }
   },
   loadout: {
-    heart: "fish_leaps_dragon_gate",
-    techniques: [
-      "spring_rain_needles",
-      "fishing_rod_method",
-      null
-    ],
+    heart: "fish_leap_art",
+    technique1: "spring_wind_needles",
+    technique2: "fishing_rod_method",
+    technique3: null,
     movement: null,
     body: "sea_stilling_stake"
   },
@@ -1124,6 +1152,8 @@ martial: {
 - 不把计算后的伤害、命中、防御写入存档；
 - `unlockedNodes`必须能由造诣和特殊事件重新校验；
 - 奖励、研习和首次使用均需稳定ID，重复执行保持幂等；
+- `firstUseNodes`兼容旧档名称，但新记录统一使用`use:{kind}:{sceneId}:{useId}`、`scene:{kind}:{sceneId}`和`node:{nodeId}`三类稳定标记；
+- 同一武学在同一场景第一次实际使用最多增加10修为；同场换招可以记入经历，但不重复增加修为；
 - 所有状态保持JSON可序列化；
 - 玩家姓名、武学自定义名等动态文本必须经过`escapeHtml()`；
 - 内部英文ID不能直接显示给玩家。
@@ -1136,10 +1166,12 @@ martial: {
 
 ```js
 getMartialDefinition(martialId)
+validateMartialCatalog()
 getKnownMartials(state, filters)
 getMartialMastery(martialId, state)
 getMasteryModifier(martialId, state)
 getUnlockedMartialNodes(martialId, state)
+martialNodeIsUnlocked(martialId, nodeId, state)
 getNextMasteryNode(martialId, state)
 getMartialTrainingPreview(martialId, state, context)
 trainMartial(martialId, state, context)
@@ -1151,6 +1183,8 @@ equipMartial(martialId, slotId, state)
 unequipMartial(slotId, state)
 getAvailableMartialActions(context, state)
 getMartialNarrativeUses(context, state)
+recordMartialUse(state, { martialId, useId, sceneId, kind, nodeId, sudden })
+getMartialSynergy(state, martialId)
 getHeartMethodEffects(state, context)
 getMaxQi(state)
 getQiVariants(actionId, context, state)
@@ -1163,7 +1197,7 @@ getMartialDetailView(martialId, state, context)
 
 ## 18. 存档迁移
 
-当前存档版本为6，已有：
+当前主存档版本为8，武学子状态版本为2。版本7已经完成旧武学字段迁移，版本2只在既有武学条目中增加可幂等累积的实际使用记录，不改变主存档键。
 
 ```text
 state.potential
@@ -1175,7 +1209,7 @@ state.p0.activeMartial.foundation / technique / stance
 state.p0.stakeId
 ```
 
-引入完整武学系统时必须提升存档版本，并执行一次性迁移：
+完整武学系统已经执行以下迁移：
 
 | 旧字段 | 新位置 |
 | --- | --- |
@@ -1185,7 +1219,7 @@ state.p0.stakeId
 | `fiveAnimalLevel/progress` | 《五禽戏》的造诣与修为 |
 | `p0.skills.spring_rain_needles` | 《春风化雨针》的掌握状态 |
 | `activeMartial.foundation` | `loadout.heart` |
-| `activeMartial.technique` | `loadout.techniques[0]` |
+| `activeMartial.technique` | `loadout.technique1` |
 | `activeMartial.stance` | `loadout.body` |
 | `stakeId` | 对应锻体传承与已完成突破记录 |
 
@@ -1199,6 +1233,8 @@ state.p0.stakeId
 - 空缺的轻功和招式位安全保留为空；
 - 迁移前后战斗存档可以继续；
 - 旧版回照节点不能重复发放武学或阅历。
+- 旧`firstUseNodes`原样保留；新增稳定记录与旧标记可以并存，不用空数组覆盖旧实战经历；
+- 缺少武学子状态版本的旧档读取后自动归一为版本2。
 
 ---
 
@@ -1255,6 +1291,9 @@ state.p0.stakeId
 - 桩功、导引、横练只作为锻体标签；
 - 品阶只能使用粗浅、寻常、上乘、绝学、镇派；
 - 效果图示意名称不会自动进入剧情目录。
+- 每门可学武学必须声明临阵所长、传承来源、首次兑现和至少一项场外用途；
+- 轻功若没有改变追逐、脱身或路线，目录校验必须失败；
+- 配套武学只能指向一门有效传承，不能指向自身。
 
 ### 20.2 研习与突破
 
@@ -1264,6 +1303,8 @@ state.p0.stakeId
 - 研习与突破没有随机失败；
 - 品阶不会为通用研习增加隐藏倍率；
 - 首次实战奖励不能通过读档重复领取；
+- 同一武学在同一场景更换动作不会重复增加修为；
+- 实际用过的节点会留下`node:{nodeId}`记录，旧档已有首次使用记录不会丢失；
 - 圆满不再增加第三点通用熟练修正。
 
 ### 20.3 携带
@@ -1280,6 +1321,7 @@ state.p0.stakeId
 ### 20.4 战斗
 
 - 武学熟练修正正确进入唯一行动公式；
+- 战斗动作绑定具体领悟节点后，节点未解锁时保留动作并明确显示“需要领悟”；
 - 当前伤害由武器、招式、属性、境界和催动推导；
 - 管理页的基础命中不错误加入具体敌人防御；
 - 近距／中距／远距和近战／远程不混用；
@@ -1289,6 +1331,7 @@ state.p0.stakeId
 - 聚气角色真气跨战斗保存；
 - 真气不足只禁用催动，不禁用常式；
 - 敌人真气催动有公开意图和资源约束。
+- “行波定海”只在鱼跃龙门诀与定海桩同时携带时生效；拆开后两门武学仍可单独使用；
 
 ### 20.5 叙事
 
@@ -1296,6 +1339,7 @@ state.p0.stakeId
 - 武学的战斗外用途由按钮或条件产生实际结果；
 - 获得、研习、突破和首次使用均幂等；
 - 武学来源人物、势力和事件可追溯；
+- 首次兑现、重复使用和修为增加会紧随行动结果写入叙事信息流；
 - 关键选项直接显示相关武学与造诣；
 - 玩家界面不显示内部ID、旧分类或产品术语。
 

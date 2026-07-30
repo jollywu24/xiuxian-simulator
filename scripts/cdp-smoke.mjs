@@ -1286,16 +1286,21 @@ const techniqueReference = await snapshot("martial-technique-reference-1672x941"
 assert.equal(techniqueReference.martialView.subtypes, 6);
 assert.equal(techniqueReference.martialView.listItems, 1);
 assert.equal(techniqueReference.martialView.selectedName, "春风化雨针");
-assert.match(techniqueReference.martialView.progress, /熟练 · 60／100/);
+assert.match(techniqueReference.martialView.progress, /熟练 · 70／100/);
 await click("martial-node-detail", "seal_wrist");
 assert.match(await evaluate(`document.querySelector(".martial-node-tip")?.innerText || ""`), /主动 · 入门.*封腕/s);
+assert.match(await evaluate(`document.querySelector('.martial-node[data-value="seal_wrist"]')?.innerText || ""`), /已在局中用过/);
 await screenshot("wudao-martial-reference-1672x941.png");
 await click("close-martial-node");
 const martialBeforeTraining = JSON.parse(await evaluate(`localStorage.getItem("wudao-high-martial-v1")`));
+assert.equal(
+  martialBeforeTraining.martial.learned.spring_rain_needles.firstUseNodes.some((entry) => entry.startsWith("use:combat:rain_ambush:")),
+  true,
+);
 await click("train-martial", "spring_rain_needles");
 const martialAfterTraining = JSON.parse(await evaluate(`localStorage.getItem("wudao-high-martial-v1")`));
 assert.equal(martialAfterTraining.martial.experience, martialBeforeTraining.martial.experience - 40);
-assert.equal(martialAfterTraining.martial.learned.spring_rain_needles.progress, 70);
+assert.equal(martialAfterTraining.martial.learned.spring_rain_needles.progress, 80);
 await click("unequip-martial", "spring_rain_needles");
 assert.equal(Object.values(JSON.parse(await evaluate(`localStorage.getItem("wudao-high-martial-v1")`)).martial.loadout).includes("spring_rain_needles"), false);
 await click("equip-martial", "spring_rain_needles");
@@ -1379,7 +1384,7 @@ const failedCheckSave = structuredClone(saved);
 failedCheckSave.fateSeed = "seed-4";
 failedCheckSave.screen = "firstNeedleAmbush";
 failedCheckSave.lives = 2;
-failedCheckSave.attributes = { constitution: 0, insight: -5, agility: 0, strength: 0, fortune: 0 };
+failedCheckSave.attributes = { constitution: 0, insight: -7, agility: 0, strength: 0, fortune: 0 };
 failedCheckSave.martialStage = "mortal";
 failedCheckSave.p0 = createP0State();
 failedCheckSave.p0.started = true;

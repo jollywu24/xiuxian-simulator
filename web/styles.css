@@ -10828,6 +10828,77 @@ body[data-martial-open="true"] {
   line-height: 1.6;
 }
 
+.martial-question,
+.martial-first-use,
+.martial-synergy {
+  border: 1px solid rgba(164, 109, 48, 0.3);
+  background: rgba(126, 91, 45, 0.06);
+}
+
+.martial-question {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.55cqw;
+  padding: 0.38cqw 0.55cqw;
+  align-items: start;
+}
+
+.martial-question span,
+.martial-first-use span,
+.martial-synergy span {
+  color: #a27643;
+  font-size: 0.66cqw;
+  letter-spacing: 0.08em;
+}
+
+.martial-question p,
+.martial-synergy p {
+  margin: 0;
+  color: #b6a386;
+  font-size: 0.72cqw;
+  line-height: 1.5;
+}
+
+.martial-first-use {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6cqw;
+  padding: 0.34cqw 0.55cqw;
+}
+
+.martial-first-use strong,
+.martial-synergy strong {
+  color: #c5ac80;
+  font-family: var(--font-display);
+  font-size: 0.72cqw;
+  font-weight: 400;
+}
+
+.martial-first-use.complete {
+  border-color: rgba(105, 148, 126, 0.46);
+  background: rgba(63, 112, 89, 0.08);
+}
+
+.martial-first-use.complete span {
+  color: #7ca58e;
+}
+
+.martial-synergy {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.18cqw 0.55cqw;
+  padding: 0.38cqw 0.55cqw;
+}
+
+.martial-synergy p {
+  grid-column: 2;
+}
+
+.martial-synergy.active {
+  border-color: rgba(198, 157, 90, 0.7);
+  box-shadow: inset 0 0 0.6cqw rgba(177, 130, 66, 0.09);
+}
+
 .martial-requirement {
   padding: 0.42cqw 0.58cqw;
   font-size: 0.75cqw;
@@ -10902,6 +10973,15 @@ body[data-martial-open="true"] {
 .martial-node small {
   color: #847052;
   font-size: 0.64cqw;
+}
+
+.martial-node.practiced {
+  border-color: rgba(104, 151, 127, 0.62);
+  box-shadow: inset 0 0 0.7cqw rgba(64, 120, 92, 0.12);
+}
+
+.martial-node.practiced small {
+  color: #80a88f;
 }
 
 .martial-node.unlocked {
