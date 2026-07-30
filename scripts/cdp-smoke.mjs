@@ -393,9 +393,39 @@ assert.doesNotMatch(checkpoints.at(-1).text, /现实|论坛|武道局|其他玩�
 await click("new-journey");
 assert.match(await text(), /这里的刀剑，不只决定胜负/);
 await click("enter-creation");
-assert.match(await text(), /这一夜以前，你怎样活着/);
+assert.match(await text(), /你从何处踏入江湖/);
 assert.equal(await evaluate(`document.querySelectorAll(".origin-choice-card").length`), 3);
+assert.deepEqual(
+  await evaluate(`[...document.querySelectorAll(".origin-creation-step b")].map((item) => item.textContent.trim())`),
+  ["出身", "容貌", "天赋", "属性"],
+);
+assert.equal(await evaluate(`document.querySelector(".origin-choice-card.selected")?.dataset.value`), "streetborn");
+assert.equal(await evaluate(`document.querySelector(".origin-confirm-button")?.textContent.trim()`), "选定出身");
+assert.equal(await evaluate(`document.querySelector('[data-field="hero-name"]')`), null);
+assert.match(
+  await evaluate(`getComputedStyle(document.querySelector('[data-value="streetborn"] .origin-card-art')).backgroundImage`),
+  /streetborn-v2\.webp/,
+);
 assert.doesNotMatch(await text(), /人物车卡|旧债|债务/);
+await send("Emulation.setDeviceMetricsOverride", { width: 1672, height: 941, deviceScaleFactor: 1, mobile: false });
+await evaluate(`new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
+assert.equal(await evaluate(`document.documentElement.scrollWidth <= 1672`), true);
+assert.equal(await evaluate(`document.documentElement.scrollHeight <= 941`), true);
+await screenshot("wudao-origin-selection-reference-1672x941.png");
+await send("Emulation.setDeviceMetricsOverride", { width: 844, height: 390, deviceScaleFactor: 1, mobile: true });
+await evaluate(`new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
+assert.equal(await evaluate(`document.documentElement.scrollWidth <= 844`), true);
+assert.equal(await evaluate(`document.documentElement.scrollHeight <= 390`), true);
+assert.equal(await evaluate(`[...document.querySelectorAll(".origin-card-copy > span")].every((item) => getComputedStyle(item).display !== "none")`), true);
+assert.equal(await evaluate(`[...document.querySelectorAll(".origin-choice-card")].every((item) => item.getBoundingClientRect().bottom <= 390)`), true);
+await screenshot("wudao-origin-selection-phone-landscape.png");
+await send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
+await evaluate(`new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
+assert.equal(await evaluate(`document.documentElement.scrollWidth <= 390`), true);
+assert.ok(await evaluate(`document.documentElement.scrollHeight > 844`));
+await screenshot("wudao-origin-selection-phone-portrait.png");
+await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
+await evaluate(`new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
 await click("select-background", "mystery");
 await click("to-vow");
 await click("select-vow", "path");

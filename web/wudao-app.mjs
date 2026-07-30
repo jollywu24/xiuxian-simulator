@@ -50,8 +50,8 @@ import {
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs?v=20260730.1";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260730.1";
+} from "./wudao-core.mjs?v=20260730.2";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260730.2";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -81,7 +81,7 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260730.1";
+} from "./wudao-p0-core.mjs?v=20260730.2";
 import {
   M4_EVIDENCE,
   M4_METHOD,
@@ -100,7 +100,7 @@ import {
   resolveM4Training,
   resolveMoneyInquiry,
   resolveOldHouseChoice,
-} from "./wudao-p1-core.mjs?v=20260730.1";
+} from "./wudao-p1-core.mjs?v=20260730.2";
 import {
   advanceCombatLabCampaign,
   createCombatLabSession,
@@ -111,14 +111,14 @@ import {
   restartCombatLab,
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
-} from "./combat-lab-core.mjs?v=20260730.1";
+} from "./combat-lab-core.mjs?v=20260730.2";
 import {
   INVENTORY_CAPACITY,
   createInventoryBoard,
   formatSilver,
   getInventoryCategory,
   getInventoryUseState,
-} from "./inventory-core.mjs?v=20260730.1";
+} from "./inventory-core.mjs?v=20260730.2";
 import {
   EQUIPMENT_CAPACITY,
   EQUIPMENT_SLOTS,
@@ -132,7 +132,7 @@ import {
   migrateCharacterVitals,
   migrateEquipmentState,
   unequipEquipmentSlot,
-} from "./character-system.mjs?v=20260730.1";
+} from "./character-system.mjs?v=20260730.2";
 import {
   MARTIAL_MASTERIES,
   breakthroughMartial,
@@ -154,9 +154,9 @@ import {
   trainMartial,
   unequipMartial,
   unlockedMartialNodes,
-} from "./martial-system.mjs?v=20260730.1";
-import { SAVE_STORAGE_KEY } from "./save-core.mjs?v=20260730.1";
-import { createSaveStorage } from "./save-storage.mjs?v=20260730.1";
+} from "./martial-system.mjs?v=20260730.2";
+import { SAVE_STORAGE_KEY } from "./save-core.mjs?v=20260730.2";
+import { createSaveStorage } from "./save-storage.mjs?v=20260730.2";
 import {
   ORIGINS,
   ORIGIN_LADY_INSIGHTS,
@@ -169,7 +169,7 @@ import {
   resolveOriginPersonalEvent,
   resolveOriginPrologueChoice,
   resolveOriginTempleTask,
-} from "./origin-core.mjs?v=20260730.1";
+} from "./origin-core.mjs?v=20260730.2";
 
 const app = document.querySelector("#app");
 const BUILD_SHA = document.documentElement.dataset.buildSha || "dev";
@@ -1792,32 +1792,34 @@ function renderWorldIntro() {
 
 function renderCharacterDraft() {
   const selected = getOrigin(state.originId || state.backgroundId);
+  const creationSteps = ["出身", "容貌", "天赋", "属性"];
   return `
     <main class="origin-selection-screen">
       <header class="origin-selection-header">
-        <div><p class="eyebrow">金陵道 · 来处</p><h1>这一夜以前，你怎样活着？</h1></div>
-        <p>来处不会替你定下武艺，却会改变开场地点、手中之物、认识的人，以及你为何走进东郊破庙。</p>
+        <nav class="origin-creation-steps" aria-label="创建人物进度">
+          ${creationSteps.map((step, index) => `
+            <span class="origin-creation-step ${index === 0 ? "active" : ""}" aria-current="${index === 0 ? "step" : "false"}">
+              <i aria-hidden="true"></i>
+              <b>${step}</b>
+            </span>
+          `).join("")}
+        </nav>
+        <button class="origin-return-button" data-action="return-world-intro" aria-label="返回上一页"><span>返回</span><i aria-hidden="true">↶</i></button>
       </header>
+      <h1 class="origin-selection-title">你从何处踏入江湖？</h1>
       <section class="origin-choice-grid" aria-label="选择来处">
         ${ORIGINS.map((item) => `
           <button class="origin-choice-card ${selected?.id === item.id ? "selected" : ""}" data-action="select-background" data-value="${item.id}" style="--origin-card-image:url('${item.cardImage}')">
-            <span class="origin-card-shade"></span>
+            <span class="origin-card-art" aria-hidden="true"></span>
             <span class="origin-card-copy">
-              <small>${item.id === "shen_branch" ? "高墙之内" : item.id === "streetborn" ? "水陆之间" : "旧事之外"}</small>
               <strong>${escapeHtml(item.name)}</strong>
               <span>${escapeHtml(item.summary)}</span>
             </span>
           </button>
         `).join("")}
       </section>
-      <section class="origin-selected-detail ${selected ? "is-visible" : ""}">
-        ${selected ? `
-          <div><small>今夜身在</small><strong>${escapeHtml(selected.opening)}</strong></div>
-        ` : `<p>选中一个来处，看看今夜从哪里开始。</p>`}
-      </section>
       <footer class="origin-selection-footer">
-        <label for="hero-name">姓名 <input id="hero-name" data-field="hero-name" maxlength="8" value="${escapeHtml(state.name)}" /></label>
-        <button class="primary-button" data-action="to-vow" ${selected && state.name.trim() ? "" : "disabled"}>记住这个名字</button>
+        <button class="origin-confirm-button" data-action="to-vow" ${selected ? "" : "disabled"}>选定出身</button>
       </footer>
     </main>
   `;
@@ -4324,7 +4326,14 @@ const handlers = {
     state = savedState ? structuredClone(savedState) : createInitialState();
     render();
   },
-  "enter-creation": () => moveTo("characterDraft"),
+  "enter-creation": () => {
+    if (!getOrigin(state.originId || state.backgroundId)) {
+      state.originId = "streetborn";
+      state.backgroundId = "streetborn";
+    }
+    moveTo("characterDraft");
+  },
+  "return-world-intro": () => moveTo("worldIntro"),
   "select-background": (value) => {
     if (!ORIGINS.some((item) => item.id === value)) return;
     state.originId = value;

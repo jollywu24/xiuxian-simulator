@@ -19,9 +19,17 @@ import {
 test("three origins each establish a distinct place, task, tag and card image", () => {
   assert.deepEqual(ORIGINS.map((origin) => origin.id), ["shen_branch", "streetborn", "mystery"]);
   assert.deepEqual(ORIGINS.map((origin) => origin.name), ["世家旁支", "市井子弟", "身世成谜"]);
+  assert.deepEqual(ORIGINS.map((origin) => origin.cardImage), [
+    "./assets/origins/cards/clan-branch-v2.webp",
+    "./assets/origins/cards/streetborn-v2.webp",
+    "./assets/origins/cards/mystery-v2.webp",
+  ]);
   assert.equal(new Set(ORIGINS.map((origin) => origin.opening)).size, 3);
   assert.equal(new Set(ORIGINS.map((origin) => origin.taskId)).size, 3);
   assert.ok(ORIGINS.every((origin) => origin.tag && origin.cardImage.endsWith(".webp")));
+  assert.match(ORIGINS[0].summary, /小时候读过书/);
+  assert.match(ORIGINS[1].summary, /给鱼贩看过摊/);
+  assert.match(ORIGINS[2].summary, /只记得零碎几段/);
   assert.doesNotMatch(getOrigin("shen_branch").summary, /沈家/);
   assert.doesNotMatch(getOrigin("shen_branch").opening, /沈家/);
 });
