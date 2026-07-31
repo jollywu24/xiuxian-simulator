@@ -2250,10 +2250,86 @@ body[data-character-open="true"] {
 
 .character-hero {
   position: absolute;
-  inset: 0;
+  inset: 1.25cqw 5.2cqw 8.7cqw;
   z-index: 0;
-  background: url("./assets/character/chen-siming-paperdoll.png") center 44% / cover no-repeat;
-  filter: saturate(0.82) contrast(1.06) brightness(0.83);
+  filter: saturate(0.86) contrast(1.05) brightness(0.88);
+}
+
+.paper-doll-composition {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: auto;
+  height: 100%;
+  aspect-ratio: 355 / 887;
+  pointer-events: none;
+  transform: translateX(-50%);
+  transform-origin: bottom center;
+  filter: drop-shadow(0 0.65cqw 0.55cqw rgba(0, 0, 0, 0.28));
+}
+
+.paper-doll-layer {
+  position: absolute;
+  z-index: var(--paper-doll-z, 1);
+  display: block;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+}
+
+.paper-doll-layer.layer-base {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom center;
+}
+
+.paper-doll-layer[data-item-id="iron_scale_vest"] {
+  top: 18.5%;
+  left: 50.5%;
+  width: 61%;
+  transform: translateX(-50%);
+}
+
+.paper-doll-composition[data-body="female"] .paper-doll-layer[data-item-id="iron_scale_vest"] {
+  top: 18.8%;
+  width: 57%;
+}
+
+.paper-doll-layer[data-item-id="rain_hood"] {
+  top: 1.4%;
+  left: 50%;
+  width: 82%;
+  transform: translateX(-50%);
+}
+
+.paper-doll-composition[data-body="female"] .paper-doll-layer[data-item-id="rain_hood"] {
+  top: 0.8%;
+  width: 78%;
+}
+
+.paper-doll-layer[data-item-id="traveler_straw_hat"] {
+  top: 0.2%;
+  left: 50%;
+  width: 88%;
+  transform: translateX(-50%);
+}
+
+.paper-doll-composition[data-body="female"] .paper-doll-layer[data-item-id="traveler_straw_hat"] {
+  width: 84%;
+}
+
+.paper-doll-layer[data-item-id="shen_guard_bracers"] {
+  top: 31.5%;
+  left: 50%;
+  width: 72%;
+  transform: translateX(-50%);
+}
+
+.paper-doll-composition[data-body="female"] .paper-doll-layer[data-item-id="shen_guard_bracers"] {
+  top: 32%;
+  width: 68%;
 }
 
 .paperdoll-slots {
@@ -13749,11 +13825,17 @@ body[data-martial-open="true"] {
 .appearance-body-control button {
   min-height: clamp(38px, 5.3vh, 52px);
   border: 1px solid rgba(75, 91, 90, 0.34);
-  color: #5a625f;
-  background: rgba(51, 72, 74, 0.76);
+  color: #c9c5b8;
+  background: rgba(46, 69, 71, 0.78);
   box-shadow: inset 0 0 0 3px rgba(234, 235, 228, 0.1);
   font-size: clamp(17px, 1.55vw, 24px);
   letter-spacing: 0.16em;
+}
+
+.appearance-body-control button:hover,
+.appearance-body-control button:focus-visible {
+  border-color: rgba(213, 174, 97, 0.72);
+  color: #f0d291;
 }
 
 .appearance-body-control button.selected {
@@ -13765,85 +13847,107 @@ body[data-martial-open="true"] {
   box-shadow: inset 0 0 0 3px rgba(224, 194, 126, 0.08), 0 0 12px rgba(180, 135, 54, 0.16);
 }
 
-.appearance-face-grid {
+.appearance-stepper {
   min-width: 0;
+  min-height: clamp(46px, 6vh, 58px);
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: clamp(4px, 0.55vw, 8px);
+  grid-template-columns: clamp(40px, 4.2vw, 58px) minmax(0, 1fr) clamp(40px, 4.2vw, 58px);
+  border: 1px solid rgba(75, 91, 90, 0.34);
+  background:
+    linear-gradient(90deg, rgba(30, 59, 62, 0.76), rgba(40, 74, 77, 0.68)),
+    rgba(225, 230, 225, 0.62);
+  box-shadow: inset 0 0 0 3px rgba(234, 235, 228, 0.09), 0 4px 10px rgba(41, 57, 56, 0.12);
 }
 
-.appearance-face-grid button {
-  position: relative;
-  aspect-ratio: 0.82;
-  border: 1px solid rgba(71, 80, 79, 0.38);
-  padding: 0;
+.appearance-stepper > button {
+  border: 0;
+  color: #e3c276;
+  background: rgba(15, 45, 49, 0.68);
+  font: clamp(28px, 2.7vw, 40px)/1 Georgia, serif;
+  cursor: pointer;
+}
+
+.appearance-stepper > button:first-child {
+  border-right: 1px solid rgba(204, 174, 108, 0.28);
+}
+
+.appearance-stepper > button:last-child {
+  border-left: 1px solid rgba(204, 174, 108, 0.28);
+}
+
+.appearance-stepper > button:hover,
+.appearance-stepper > button:focus-visible {
+  color: #ffe1a2;
+  background: #17383d;
+}
+
+.appearance-stepper-current {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: clamp(42px, 4.4vw, 60px) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(10px, 1.1vw, 16px);
+  padding: 4px clamp(10px, 1vw, 15px);
+}
+
+.appearance-stepper-current > span:last-child {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.appearance-stepper-current strong {
+  overflow: hidden;
+  color: #ead9b5;
+  font-size: clamp(15px, 1.35vw, 20px);
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.appearance-stepper-current small {
+  flex: none;
+  color: #9fb1ae;
+  font: clamp(11px, 0.95vw, 14px)/1 Georgia, serif;
+}
+
+.appearance-stepper-face,
+.appearance-stepper-current > img,
+.appearance-stepper-skin {
+  width: clamp(40px, 4vw, 56px);
+  height: clamp(40px, 4vw, 56px);
+  display: block;
+}
+
+.appearance-stepper-face {
+  border: 1px solid rgba(207, 183, 134, 0.42);
   background-image: url("./assets/appearance/face-atlas-v1.webp");
   background-size: 600% 200%;
   background-position: calc(var(--face-column) * 20%) top;
   background-repeat: no-repeat;
-  box-shadow: inset 0 0 0 2px rgba(247, 244, 235, 0.24);
-  filter: saturate(0.78) contrast(0.98);
 }
 
-.appearance-face-grid.body-female button {
+.appearance-stepper-face.body-female {
   background-position: calc(var(--face-column) * 20%) bottom;
 }
 
-.appearance-face-grid button.selected,
-.appearance-hair-grid button.selected {
-  border-color: #d5ae61;
-  box-shadow: 0 0 0 2px rgba(213, 174, 97, 0.52), 0 0 12px rgba(181, 139, 63, 0.2);
-  filter: none;
-}
-
-.appearance-hair-grid {
-  min-width: 0;
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: clamp(5px, 0.65vw, 9px);
-}
-
-.appearance-hair-grid button {
-  position: relative;
-  aspect-ratio: 1.02;
-  border: 1px solid rgba(71, 80, 79, 0.38);
-  padding: 0;
-  overflow: hidden;
-  background: rgba(189, 198, 195, 0.62);
-}
-
-.appearance-hair-grid img {
-  width: 100%;
-  height: 100%;
-  display: block;
+.appearance-stepper-current > img {
   object-fit: cover;
   object-position: 50% 5%;
-  transform: scale(1.25);
-  transform-origin: 50% 8%;
+  transform: scale(1.08);
 }
 
-.appearance-skin-control > div {
-  display: flex;
-  align-items: center;
-  gap: clamp(15px, 1.7vw, 25px);
-}
-
-.appearance-skin-control button {
-  box-sizing: border-box;
-  width: clamp(34px, 3.2vw, 50px);
-  height: clamp(34px, 3.2vw, 50px);
-  border: 1px solid rgba(68, 75, 73, 0.48);
+.appearance-stepper-skin {
+  width: clamp(30px, 3vw, 42px);
+  height: clamp(30px, 3vw, 42px);
+  margin: auto;
+  border: 1px solid rgba(222, 202, 164, 0.62);
   border-radius: 50%;
-  padding: 0;
   background: var(--skin-color);
-  box-shadow: inset 0 0 0 3px rgba(246, 240, 226, 0.36);
-}
-
-.appearance-skin-control button.selected {
-  border-color: #e0b96c;
-  outline: 2px solid #d0a254;
-  outline-offset: 3px;
-  box-shadow: inset 0 0 0 3px rgba(248, 232, 197, 0.38), 0 0 11px rgba(181, 139, 63, 0.24);
+  box-shadow: inset 0 0 0 3px rgba(246, 240, 226, 0.28);
 }
 
 .appearance-random-button {
@@ -13882,7 +13986,7 @@ body[data-martial-open="true"] {
   background: radial-gradient(ellipse at 50% 48%, rgba(240, 242, 237, 0.44), transparent 61%);
 }
 
-.appearance-preview img {
+.appearance-preview .paper-doll-composition {
   position: absolute;
   z-index: 2;
   bottom: 0;
@@ -13891,8 +13995,6 @@ body[data-martial-open="true"] {
   max-width: 55%;
   height: 100%;
   display: block;
-  object-fit: contain;
-  object-position: bottom center;
   transform: translateX(-50%);
   filter: drop-shadow(0 10px 9px rgba(28, 38, 37, 0.18));
 }
@@ -13971,7 +14073,7 @@ body[data-martial-open="true"] {
     inset: 3% 5%;
   }
 
-  .appearance-preview img {
+  .appearance-preview .paper-doll-composition {
     max-width: 82%;
     transform: translateX(-50%) scale(1.04);
   }
@@ -14045,36 +14147,38 @@ body[data-martial-open="true"] {
     font-size: 12px;
   }
 
-  .appearance-face-grid {
-    gap: 3px;
+  .appearance-stepper {
+    min-height: 31px;
+    grid-template-columns: 28px minmax(0, 1fr) 28px;
   }
 
-  .appearance-face-grid button {
-    height: 46px;
-    aspect-ratio: auto;
+  .appearance-stepper > button {
+    font-size: 22px;
   }
 
-  .appearance-hair-grid {
-    gap: 3px;
+  .appearance-stepper-current {
+    grid-template-columns: 28px minmax(0, 1fr);
+    gap: 6px;
+    padding: 2px 7px;
   }
 
-  .appearance-hair-grid button {
-    height: 42px;
-    aspect-ratio: auto;
+  .appearance-stepper-face,
+  .appearance-stepper-current > img {
+    width: 27px;
+    height: 27px;
   }
 
-  .appearance-skin-control > div {
-    gap: 15px;
+  .appearance-stepper-skin {
+    width: 20px;
+    height: 20px;
   }
 
-  .appearance-skin-control button {
-    width: 22px;
-    height: 22px;
+  .appearance-stepper-current strong {
+    font-size: 11px;
   }
 
-  .appearance-skin-control button.selected {
-    outline-width: 1px;
-    outline-offset: 2px;
+  .appearance-stepper-current small {
+    font-size: 9px;
   }
 
   .appearance-random-button {
@@ -14091,7 +14195,7 @@ body[data-martial-open="true"] {
     min-height: 0;
   }
 
-  .appearance-preview img {
+  .appearance-preview .paper-doll-composition {
     max-width: 58%;
     transform: translateX(-50%) scale(1.1);
   }
@@ -14108,16 +14212,18 @@ body[data-martial-open="true"] {
 }
 
 @media (orientation: landscape) and (max-height: 360px) {
-  .appearance-face-grid button {
-    height: 37px;
+  .appearance-stepper {
+    min-height: 27px;
   }
 
-  .appearance-hair-grid button {
-    height: 34px;
+  .appearance-stepper-face,
+  .appearance-stepper-current > img {
+    width: 23px;
+    height: 23px;
   }
 
-  .appearance-skin-control button {
-    width: 18px;
-    height: 18px;
+  .appearance-stepper-skin {
+    width: 17px;
+    height: 17px;
   }
 }

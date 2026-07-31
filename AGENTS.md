@@ -168,6 +168,7 @@
 | `web/index.html` | 正式网页入口和发布资源引用 |
 | `web/wudao-app.mjs` | 状态机、渲染、事件委托和系统编排 |
 | `web/appearance-core.mjs` | 容貌目录、默认值、迁移规范化和正式资源映射 |
+| `web/paperdoll-system.mjs` | 人物底像、当前装备透明层、稳定层级与换装合成 |
 | `web/origin-core.mjs` | 三出身、独立序章、旧ID迁移、任务结果与个人事件 |
 | `web/wudao-core.mjs` | 世界、人物建立与首章基础规则 |
 | `web/wudao-p0-core.mjs`、`web/wudao-p1-core.mjs` | 后续篇章和跨系统纯规则 |

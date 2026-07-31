@@ -104,8 +104,12 @@ async function createCharacter(originId) {
   if (originId === "shen_branch") assert.doesNotMatch(selectionText, /沈家/);
   await click("select-background", originId);
   await click("to-appearance");
-  assert.equal(await evaluate(`document.querySelectorAll(".appearance-face-grid button").length`), 6);
-  assert.equal(await evaluate(`document.querySelectorAll(".appearance-hair-grid button").length`), 5);
+  assert.deepEqual(
+    await evaluate(`[...document.querySelectorAll(".appearance-stepper")].map((item) => item.dataset.appearancePart)`),
+    ["face", "hair", "skin"],
+  );
+  assert.equal(await evaluate(`document.querySelectorAll('.appearance-controls input[type="range"]').length`), 0);
+  assert.equal(await evaluate(`Boolean(document.querySelector('[data-appearance-part="clothing"]'))`), false);
   await click("confirm-appearance");
   await click("select-vow", "path");
   await click("start-journey");

@@ -1,7 +1,7 @@
 import {
   getMartialCombatBonuses,
   heartMasteryQiBonus,
-} from "./martial-system.mjs?v=20260731.1";
+} from "./martial-system.mjs?v=20260731.2";
 
 export const CHARACTER_SAVE_VERSION = 2;
 
@@ -76,6 +76,11 @@ export const EQUIPMENT_ITEMS = Object.freeze([
     slotIds: "head",
     atlas: [0, 0],
     bonuses: { rangedDefense: 1 },
+    paperDoll: {
+      asset: "./assets/paperdoll/rain-hood-v1.webp",
+      layer: "head",
+      hides: ["hairFront"],
+    },
   }),
   equipmentItem({
     id: "patched_martial_coat",
@@ -161,6 +166,10 @@ export const EQUIPMENT_ITEMS = Object.freeze([
     atlas: [1, 2],
     requirements: { constitution: 2 },
     bonuses: { reduction: 2, defense: -1, health: 3 },
+    paperDoll: {
+      asset: "./assets/paperdoll/iron-scale-vest-v1.webp",
+      layer: "body",
+    },
   }),
   equipmentItem({
     id: "traveler_straw_hat",
@@ -170,6 +179,10 @@ export const EQUIPMENT_ITEMS = Object.freeze([
     slotIds: "head",
     atlas: [2, 2],
     bonuses: { defense: 1 },
+    paperDoll: {
+      asset: "./assets/paperdoll/traveler-straw-hat-v1.webp",
+      layer: "head",
+    },
   }),
   equipmentItem({
     id: "shen_guard_bracers",
@@ -179,6 +192,10 @@ export const EQUIPMENT_ITEMS = Object.freeze([
     slotIds: "wrist",
     atlas: [3, 2],
     bonuses: { reduction: 1, defense: 1 },
+    paperDoll: {
+      asset: "./assets/paperdoll/shen-guard-bracers-v1.webp",
+      layer: "wrist",
+    },
   }),
   equipmentItem({
     id: "narrow_straight_sword",

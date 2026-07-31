@@ -46,6 +46,7 @@ npm run test:browser
 | 三夫人至灵猴篇规则 | `web/wudao-p0-core.mjs`、`web/content/p0/` | `tests/p0-systems.test.mjs` |
 | 曹青离场至白栀云授武 | `web/wudao-p1-core.mjs`、`web/content/p1/` | `tests/p1-systems.test.mjs` |
 | 状态机、叙事栏和页面交互 | `web/wudao-app.mjs` | `scripts/cdp-smoke.mjs`、`docs/systems/07_INTERFACE_SAVE_QA.md` |
+| 容貌预设与装备换装合成 | `web/appearance-core.mjs`、`web/paperdoll-system.mjs` | `tests/appearance-system.test.mjs`、`tests/paperdoll-system.test.mjs`、`docs/systems/09_EQUIPMENT_COMBAT_FORMULA.md` |
 | 人物、装备和战斗派生值 | `web/character-system.mjs` | `tests/character-system.test.mjs`、`docs/systems/09_EQUIPMENT_COMBAT_FORMULA.md` |
 | 武学目录、成长和携带 | `web/martial-system.mjs` | `tests/martial-system.test.mjs`、`docs/systems/02_CHARACTER_MARTIAL.md` |
 | 通用战斗和遭遇 | `web/combat-engine.mjs`、`web/combat-encounters.mjs` | `tests/combat-engine.test.mjs`、`scripts/cdp-combat-lab.mjs` |
