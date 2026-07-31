@@ -50,8 +50,8 @@ import {
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs?v=20260730.2";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260730.2";
+} from "./wudao-core.mjs?v=20260731.1";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260731.1";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -81,7 +81,7 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260730.2";
+} from "./wudao-p0-core.mjs?v=20260731.1";
 import {
   M4_EVIDENCE,
   M4_METHOD,
@@ -100,7 +100,7 @@ import {
   resolveM4Training,
   resolveMoneyInquiry,
   resolveOldHouseChoice,
-} from "./wudao-p1-core.mjs?v=20260730.2";
+} from "./wudao-p1-core.mjs?v=20260731.1";
 import {
   advanceCombatLabCampaign,
   createCombatLabSession,
@@ -111,14 +111,14 @@ import {
   restartCombatLab,
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
-} from "./combat-lab-core.mjs?v=20260730.2";
+} from "./combat-lab-core.mjs?v=20260731.1";
 import {
   INVENTORY_CAPACITY,
   createInventoryBoard,
   formatSilver,
   getInventoryCategory,
   getInventoryUseState,
-} from "./inventory-core.mjs?v=20260730.2";
+} from "./inventory-core.mjs?v=20260731.1";
 import {
   EQUIPMENT_CAPACITY,
   EQUIPMENT_SLOTS,
@@ -132,7 +132,7 @@ import {
   migrateCharacterVitals,
   migrateEquipmentState,
   unequipEquipmentSlot,
-} from "./character-system.mjs?v=20260730.2";
+} from "./character-system.mjs?v=20260731.1";
 import {
   MARTIAL_MASTERIES,
   breakthroughMartial,
@@ -154,9 +154,9 @@ import {
   trainMartial,
   unequipMartial,
   unlockedMartialNodes,
-} from "./martial-system.mjs?v=20260730.2";
-import { SAVE_STORAGE_KEY } from "./save-core.mjs?v=20260730.2";
-import { createSaveStorage } from "./save-storage.mjs?v=20260730.2";
+} from "./martial-system.mjs?v=20260731.1";
+import { SAVE_STORAGE_KEY } from "./save-core.mjs?v=20260731.1";
+import { createSaveStorage } from "./save-storage.mjs?v=20260731.1";
 import {
   ORIGINS,
   ORIGIN_LADY_INSIGHTS,
@@ -169,11 +169,23 @@ import {
   resolveOriginPersonalEvent,
   resolveOriginPrologueChoice,
   resolveOriginTempleTask,
-} from "./origin-core.mjs?v=20260730.2";
+} from "./origin-core.mjs?v=20260731.1";
+import {
+  APPEARANCE_BODIES,
+  APPEARANCE_FACES,
+  APPEARANCE_HAIRS,
+  APPEARANCE_SKINS,
+  appearanceCharacterAsset,
+  appearanceHairAsset,
+  createAppearanceState,
+  cycleAppearance,
+  normalizeAppearance,
+} from "./appearance-core.mjs?v=20260731.1";
 
 const app = document.querySelector("#app");
 const BUILD_SHA = document.documentElement.dataset.buildSha || "dev";
 const DEBUG_PROTOCOL_VERSION = 1;
+const HERO_NAMES = Object.freeze(["陈司命", "陆听澜", "顾长风", "谢怀川", "宁照雪", "苏见微", "沈砚秋", "叶归舟"]);
 const COMBAT_ATTRIBUTE_NAMES = { constitution: "根骨", insight: "悟性", agility: "身法", strength: "力道", fortune: "福缘" };
 const COMBAT_STAGE_NAMES = { mortal: "未入门", body: "锻体", qi: "聚气", meridian: "通脉", master: "宗师" };
 const COMBAT_CHECK_LABELS = { great: "大成", success: "得手", costly: "得手有损", failure: "失手" };
@@ -207,9 +219,10 @@ function legacyFateSeed(saved) {
 
 function createInitialState() {
   return {
-    version: 8,
+    version: 9,
     screen: "landing",
     name: "陈司命",
+    appearance: createAppearanceState(),
     originId: null,
     backgroundId: null,
     originPrologue: createOriginProgress(),
@@ -306,7 +319,7 @@ function createInitialState() {
 }
 
 function supportsStoredState(saved) {
-  return Boolean(saved && [2, 3, 4, 5, 6, 7, 8].includes(saved.version) && saved.screen);
+  return Boolean(saved && [2, 3, 4, 5, 6, 7, 8, 9].includes(saved.version) && saved.screen);
 }
 
 function loadState(raw) {
@@ -318,7 +331,8 @@ function loadState(raw) {
       ...createInitialState(),
       ...saved,
       ...origin,
-      version: 8,
+      version: 9,
+      appearance: normalizeAppearance(saved.appearance),
       p0: migrateP0State(saved.p0),
       m4: migrateM4State(saved.m4),
       equipment: migrateEquipmentState(saved.equipment),
@@ -1790,20 +1804,27 @@ function renderWorldIntro() {
   `);
 }
 
+const CREATION_STEPS = Object.freeze(["出身", "容貌", "天赋", "属性"]);
+
+function creationProgress(activeIndex) {
+  return `
+    <nav class="origin-creation-steps" aria-label="创建人物进度">
+      ${CREATION_STEPS.map((step, index) => `
+        <span class="origin-creation-step ${index < activeIndex ? "complete" : ""} ${index === activeIndex ? "active" : ""}" aria-current="${index === activeIndex ? "step" : "false"}">
+          <i aria-hidden="true">${index < activeIndex ? "✓" : ""}</i>
+          <b>${step}</b>
+        </span>
+      `).join("")}
+    </nav>
+  `;
+}
+
 function renderCharacterDraft() {
   const selected = getOrigin(state.originId || state.backgroundId);
-  const creationSteps = ["出身", "容貌", "天赋", "属性"];
   return `
     <main class="origin-selection-screen">
       <header class="origin-selection-header">
-        <nav class="origin-creation-steps" aria-label="创建人物进度">
-          ${creationSteps.map((step, index) => `
-            <span class="origin-creation-step ${index === 0 ? "active" : ""}" aria-current="${index === 0 ? "step" : "false"}">
-              <i aria-hidden="true"></i>
-              <b>${step}</b>
-            </span>
-          `).join("")}
-        </nav>
+        ${creationProgress(0)}
         <button class="origin-return-button" data-action="return-world-intro" aria-label="返回上一页"><span>返回</span><i aria-hidden="true">↶</i></button>
       </header>
       <h1 class="origin-selection-title">你从何处踏入江湖？</h1>
@@ -1819,7 +1840,79 @@ function renderCharacterDraft() {
         `).join("")}
       </section>
       <footer class="origin-selection-footer">
-        <button class="origin-confirm-button" data-action="to-vow" ${selected ? "" : "disabled"}>选定出身</button>
+        <button class="origin-confirm-button" data-action="to-appearance" ${selected ? "" : "disabled"}>选定出身</button>
+      </footer>
+    </main>
+  `;
+}
+
+function renderAppearanceDraft() {
+  const appearance = normalizeAppearance(state.appearance);
+  const bodyName = APPEARANCE_BODIES.find((entry) => entry.id === appearance.body)?.name || "男身";
+  const selectedSkin = APPEARANCE_SKINS.find((entry) => entry.id === appearance.skin);
+  const characterAsset = appearanceCharacterAsset(appearance);
+  return `
+    <main class="origin-selection-screen appearance-creation-screen">
+      <header class="origin-selection-header">
+        ${creationProgress(1)}
+        <button class="origin-return-button" data-action="back-to-origin" aria-label="返回出身选择"><span>返回</span><i aria-hidden="true">↶</i></button>
+      </header>
+      <h1 class="origin-selection-title">定下你的模样</h1>
+      <section class="appearance-workspace">
+        <form class="appearance-controls" onsubmit="return false">
+          <label class="appearance-name-field">
+            <span>姓名</span>
+            <span class="appearance-name-input">
+              <input data-field="hero-name" maxlength="8" autocomplete="off" value="${escapeHtml(state.name)}" aria-label="姓名" />
+              <button type="button" data-action="randomize-name" aria-label="换一个名字" title="换一个名字">◆</button>
+            </span>
+          </label>
+          <div class="appearance-control-row appearance-body-control" role="group" aria-labelledby="appearance-body-label">
+            <span class="appearance-control-label" id="appearance-body-label">体貌</span>
+            <div>
+              ${APPEARANCE_BODIES.map((body) => `
+                <button type="button" class="${appearance.body === body.id ? "selected" : ""}" data-action="select-appearance-body" data-value="${body.id}" aria-pressed="${appearance.body === body.id}">
+                  ${body.name}
+                </button>
+              `).join("")}
+            </div>
+          </div>
+          <div class="appearance-control-row appearance-face-control" role="group" aria-labelledby="appearance-face-label">
+            <span class="appearance-control-label" id="appearance-face-label">面容</span>
+            <div class="appearance-face-grid body-${escapeHtml(appearance.body)}">
+              ${APPEARANCE_FACES.map((face, index) => `
+                <button type="button" class="${appearance.face === face.id ? "selected" : ""}" style="--face-column:${index}" data-action="select-appearance-face" data-value="${face.id}" aria-label="${escapeHtml(face.name)}" aria-pressed="${appearance.face === face.id}"></button>
+              `).join("")}
+            </div>
+          </div>
+          <div class="appearance-control-row appearance-hair-control" role="group" aria-labelledby="appearance-hair-label">
+            <span class="appearance-control-label" id="appearance-hair-label">发式</span>
+            <div class="appearance-hair-grid">
+              ${APPEARANCE_HAIRS.map((hair) => `
+                <button type="button" class="${appearance.hair === hair.id ? "selected" : ""}" data-action="select-appearance-hair" data-value="${hair.id}" aria-label="${escapeHtml(hair.name)}" aria-pressed="${appearance.hair === hair.id}">
+                  <img src="${escapeHtml(appearanceHairAsset(appearance.body, hair.id))}" alt="" />
+                </button>
+              `).join("")}
+            </div>
+          </div>
+          <div class="appearance-control-row appearance-skin-control" role="group" aria-labelledby="appearance-skin-label">
+            <span class="appearance-control-label" id="appearance-skin-label">肤色</span>
+            <div>
+              ${APPEARANCE_SKINS.map((skin) => `
+                <button type="button" class="${appearance.skin === skin.id ? "selected" : ""}" style="--skin-color:${escapeHtml(skin.color)}" data-action="select-appearance-skin" data-value="${skin.id}" aria-label="${escapeHtml(skin.name)}" aria-pressed="${appearance.skin === skin.id}"></button>
+              `).join("")}
+            </div>
+          </div>
+          <button type="button" class="appearance-random-button" data-action="randomize-appearance"><span aria-hidden="true">↻</span> 随心一变</button>
+        </form>
+        <div class="appearance-preview" aria-live="polite">
+          <div class="appearance-preview-halo" aria-hidden="true"></div>
+          <img src="${escapeHtml(characterAsset)}" alt="${escapeHtml(`${bodyName}，${APPEARANCE_HAIRS.find((entry) => entry.id === appearance.hair)?.name || "短束发"}，${selectedSkin?.name || "浅麦"}`)}" />
+          <span class="appearance-preview-ground" aria-hidden="true"></span>
+        </div>
+      </section>
+      <footer class="appearance-footer">
+        <button class="origin-confirm-button" data-action="confirm-appearance" ${state.name.trim() ? "" : "disabled"}>确认容貌</button>
       </footer>
     </main>
   `;
@@ -3616,6 +3709,7 @@ const renderers = {
   landing: renderLanding,
   worldIntro: renderWorldIntro,
   characterDraft: renderCharacterDraft,
+  appearance: renderAppearanceDraft,
   vow: renderVow,
   destiny: renderDestiny,
   characterSheet: renderCharacterSheet,
@@ -3724,7 +3818,7 @@ const renderers = {
 function screenMode() {
   if (["gameDeath", "shenDeath", "p0Death"].includes(state.screen)) return "death";
   if (["encounterReward", "mindArt", "roadResult", "ending", "quietDeparture", "qingQingReward", "fiveAnimalReward", "shenPharmacy", "alchemyFailure", "shenChapterEnding", "needleInheritance", "firstKillAftermath", "assailantPlotResult", "wangAftermath", "midAutumnWarning", "p0Missed", "p0JourneyEnd", "m4Tracking", "m4WorldEcho", "m4JourneyEnd"].includes(state.screen)) return "settlement";
-  if (["landing", "worldIntro", "characterDraft", "vow", "destiny", "characterSheet"].includes(state.screen)) return "neutral";
+  if (["landing", "worldIntro", "characterDraft", "appearance", "vow", "destiny", "characterSheet"].includes(state.screen)) return "neutral";
   return "simulation";
 }
 
@@ -4339,6 +4433,50 @@ const handlers = {
     state.originId = value;
     state.backgroundId = value;
     refresh();
+  },
+  "to-appearance": () => {
+    if (!getBackground(state.backgroundId)) return;
+    state.appearance = normalizeAppearance(state.appearance);
+    moveTo("appearance");
+  },
+  "back-to-origin": () => moveTo("characterDraft"),
+  "select-appearance-body": (value) => {
+    if (!APPEARANCE_BODIES.some((item) => item.id === value)) return;
+    state.appearance = normalizeAppearance({ ...state.appearance, body: value });
+    refresh();
+  },
+  "select-appearance-face": (value) => {
+    const face = Number(value);
+    if (!APPEARANCE_FACES.some((item) => item.id === face)) return;
+    state.appearance = normalizeAppearance({ ...state.appearance, face });
+    refresh();
+  },
+  "select-appearance-hair": (value) => {
+    const hair = Number(value);
+    if (!APPEARANCE_HAIRS.some((item) => item.id === hair)) return;
+    state.appearance = normalizeAppearance({ ...state.appearance, hair });
+    refresh();
+  },
+  "select-appearance-skin": (value) => {
+    const skin = Number(value);
+    if (!APPEARANCE_SKINS.some((item) => item.id === skin)) return;
+    state.appearance = normalizeAppearance({ ...state.appearance, skin });
+    refresh();
+  },
+  "randomize-name": () => {
+    const currentIndex = HERO_NAMES.indexOf(state.name.trim());
+    state.name = HERO_NAMES[(currentIndex + 1 + HERO_NAMES.length) % HERO_NAMES.length];
+    refresh();
+  },
+  "randomize-appearance": () => {
+    state.appearance = cycleAppearance(state.appearance);
+    refresh();
+  },
+  "confirm-appearance": () => {
+    state.name = state.name.trim().slice(0, 8);
+    if (!state.name || !getBackground(state.backgroundId)) return;
+    state.appearance = normalizeAppearance(state.appearance);
+    moveTo("vow");
   },
   "to-vow": () => {
     if (!state.name.trim() || !getBackground(state.backgroundId)) return;
@@ -5639,7 +5777,7 @@ app.addEventListener("input", (event) => {
   if (event.target.dataset.field !== "hero-name") return;
   state.name = event.target.value.slice(0, 8);
   saveState();
-  const button = app.querySelector('[data-action="to-vow"]');
+  const button = app.querySelector('[data-action="confirm-appearance"]');
   if (button) button.disabled = !state.name.trim() || !state.backgroundId;
 });
 

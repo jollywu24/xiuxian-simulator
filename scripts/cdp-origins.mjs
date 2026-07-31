@@ -40,6 +40,17 @@ async function evaluate(expression) {
   return result.result.value;
 }
 
+async function waitForApp() {
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  const deadline = Date.now() + 10_000;
+  while (Date.now() < deadline) {
+    const ready = await evaluate(`document.readyState === "complete" && Boolean(document.querySelector("#app")?.innerText?.trim())`);
+    if (ready) return;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  throw new Error("Timed out waiting for the game to render");
+}
+
 async function click(action, value = null) {
   const selector = value === null
     ? `[data-action="${action}"]`
@@ -64,7 +75,7 @@ async function currentSave() {
 async function clearAndNavigate(seed) {
   await send("Storage.clearDataForOrigin", { origin: pageOrigin, storageTypes: "local_storage" });
   await send("Page.navigate", { url: `${pageOrigin}/?seed=${encodeURIComponent(seed)}` });
-  await new Promise((resolve) => setTimeout(resolve, 700));
+  await waitForApp();
 }
 
 async function writeSaveAndReload(save) {
@@ -81,7 +92,7 @@ async function writeSaveAndReload(save) {
     value: JSON.stringify(save),
   });
   await send("Page.reload", { ignoreCache: false });
-  await new Promise((resolve) => setTimeout(resolve, 700));
+  await waitForApp();
 }
 
 async function createCharacter(originId) {
@@ -92,7 +103,10 @@ async function createCharacter(originId) {
   assert.doesNotMatch(selectionText, /人物车卡|旧债|债务|Demo|原型|随身之物|暗处风声/);
   if (originId === "shen_branch") assert.doesNotMatch(selectionText, /沈家/);
   await click("select-background", originId);
-  await click("to-vow");
+  await click("to-appearance");
+  assert.equal(await evaluate(`document.querySelectorAll(".appearance-face-grid button").length`), 6);
+  assert.equal(await evaluate(`document.querySelectorAll(".appearance-hair-grid button").length`), 5);
+  await click("confirm-appearance");
   await click("select-vow", "path");
   await click("start-journey");
 }
@@ -171,7 +185,8 @@ assert.match(await pageText(), /旁支的名字/);
 await click("enter-origin-danroom");
 assert.match(await pageText(), /旁支腰牌/);
 let shenSave = await currentSave();
-assert.equal(shenSave.version, 8);
+  assert.equal(shenSave.version, 9);
+  assert.deepEqual(shenSave.appearance, { body: "male", face: 1, hair: 1, skin: 2 });
 assert.equal(shenSave.originId, "shen_branch");
 assert.equal(shenSave.originPrologue.taskState, "costly_success");
 assert.ok(shenSave.originAccess.includes("shen_side_door_writ"));
@@ -210,7 +225,8 @@ const legacy = {
 };
 await writeSaveAndReload(legacy);
 const migrated = await currentSave();
-assert.equal(migrated.version, 8);
+assert.equal(migrated.version, 9);
+assert.deepEqual(migrated.appearance, { body: "male", face: 1, hair: 1, skin: 2 });
 assert.equal(migrated.originId, "shen_branch");
 assert.equal(migrated.originPrologue.completed, true);
 assert.equal(migrated.screen, "shenMeeting");
@@ -219,7 +235,7 @@ assert.deepEqual(pageErrors, []);
 process.stdout.write(`${JSON.stringify({
   ok: true,
   origins: ["shen_branch", "streetborn", "mystery"],
-  saveVersion: 8,
+  saveVersion: 9,
   responsive: "844x390",
 })}\n`);
 socket.close();

@@ -49,6 +49,17 @@ async function evaluate(expression) {
   return result.result.value;
 }
 
+async function waitForApp() {
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  const deadline = Date.now() + 10_000;
+  while (Date.now() < deadline) {
+    const ready = await evaluate(`document.readyState === "complete" && Boolean(document.querySelector("#app")?.innerText?.trim())`);
+    if (ready) return;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  throw new Error("Timed out waiting for the game to render");
+}
+
 async function writeSave(value) {
   for (const key of [
     "wudao-high-martial-v1-checksum",
@@ -63,7 +74,7 @@ async function writeSave(value) {
 async function reloadWithSave(value) {
   await writeSave(value);
   await send("Page.reload", { ignoreCache: false });
-  await new Promise((resolve) => setTimeout(resolve, 650));
+  await waitForApp();
 }
 
 async function click(action, value = null) {
@@ -371,7 +382,7 @@ await send("Network.clearBrowserCache");
 await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
 await send("Storage.clearDataForOrigin", { origin: pageOrigin, storageTypes: "local_storage" });
 await send("Page.navigate", { url: testUrl });
-await new Promise((resolve) => setTimeout(resolve, 1000));
+await waitForApp();
 
 const checkpoints = [];
 checkpoints.push(await snapshot("landing"));
@@ -427,7 +438,33 @@ await screenshot("wudao-origin-selection-phone-portrait.png");
 await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
 await evaluate(`new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
 await click("select-background", "mystery");
-await click("to-vow");
+await click("to-appearance");
+assert.equal(await evaluate(`document.querySelectorAll(".appearance-face-grid button").length`), 6);
+assert.equal(await evaluate(`document.querySelectorAll(".appearance-hair-grid button").length`), 5);
+assert.match(await evaluate(`document.querySelector(".appearance-preview img")?.getAttribute("src") || ""`), /male-1-v1\.webp/);
+await send("Emulation.setDeviceMetricsOverride", { width: 1672, height: 941, deviceScaleFactor: 1, mobile: false });
+await evaluate(`new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
+assert.equal(await evaluate(`document.documentElement.scrollWidth <= 1672`), true);
+assert.equal(await evaluate(`document.documentElement.scrollHeight <= 941`), true);
+assert.equal(await evaluate(`getComputedStyle(document.querySelector(".appearance-creation-screen")).backgroundImage.includes("appearance-courtyard-v1.webp")`), true);
+await screenshot("wudao-appearance-reference-1672x941.png");
+await send("Emulation.setDeviceMetricsOverride", { width: 844, height: 390, deviceScaleFactor: 1, mobile: true });
+await evaluate(`new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
+assert.equal(await evaluate(`document.documentElement.scrollWidth <= 844`), true);
+assert.equal(await evaluate(`document.documentElement.scrollHeight <= 390`), true);
+assert.equal(await evaluate(`document.querySelector(".appearance-footer").getBoundingClientRect().bottom <= 390`), true);
+await screenshot("wudao-appearance-phone-landscape.png");
+await send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
+await evaluate(`new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
+assert.equal(await evaluate(`document.documentElement.scrollWidth <= 390`), true);
+assert.ok(await evaluate(`document.documentElement.scrollHeight > 844`));
+await screenshot("wudao-appearance-phone-portrait.png");
+await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
+await evaluate(`new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
+await click("select-appearance-body", "female");
+await click("select-appearance-hair", "4");
+assert.match(await evaluate(`document.querySelector(".appearance-preview img")?.getAttribute("src") || ""`), /female-4-v1\.webp/);
+await click("confirm-appearance");
 await click("select-vow", "path");
 await click("start-journey");
 assert.match(await text(), /你是被冷醒的/);
@@ -1158,7 +1195,8 @@ const saved = JSON.parse(savedEntry[1]);
 assert.equal(saved.backgroundId, "mystery");
 assert.equal(saved.originId, "mystery");
 assert.equal(saved.vowId, "path");
-assert.equal(saved.version, 8);
+assert.equal(saved.version, 9);
+assert.deepEqual(saved.appearance, { body: "female", face: 1, hair: 4, skin: 2 });
 assert.equal(saved.fateSeed, "seed-2");
 assert.ok(Array.isArray(saved.narrativeLog));
 assert.ok(saved.narrativeLog.length > 0 && saved.narrativeLog.length <= 64);
@@ -1353,7 +1391,8 @@ delete versionFiveSave.equipment;
 delete versionFiveSave.characterVitals;
 await reloadWithSave(versionFiveSave);
 const migratedVersionSeven = JSON.parse(await evaluate(`localStorage.getItem("wudao-high-martial-v1")`));
-assert.equal(migratedVersionSeven.version, 8);
+assert.equal(migratedVersionSeven.version, 9);
+assert.deepEqual(migratedVersionSeven.appearance, { body: "female", face: 1, hair: 4, skin: 2 });
 assert.equal(migratedVersionSeven.equipment.owned.length, 12);
 assert.equal(Object.keys(migratedVersionSeven.equipment.slots).length, 9);
 assert.deepEqual(migratedVersionSeven.characterVitals, { health: null, qi: null });
@@ -1499,7 +1538,7 @@ await send("DOMStorage.removeDOMStorageItem", {
   key: "wudao-high-martial-v1-checksum",
 });
 await send("Page.reload", { ignoreCache: false });
-await new Promise((resolve) => setTimeout(resolve, 650));
+await waitForApp();
 assert.match(await text(), /江湖留痕/);
 assert.match(await text(), /七道刀痕已经入册/);
 assert.match(await text(), /白栀云的卸力三诀/);
@@ -1510,10 +1549,10 @@ assert.equal(JSON.parse(recoveredPrimary?.[1] || "null")?.screen, saved.screen);
 assert.match(recoveredChecksum?.[1] || "", /^fnv1a32:[0-9a-f]{8}$/);
 
 await send("Page.navigate", { url: `${pageOrigin}/?debug=1&seed=debug-interface` });
-await new Promise((resolve) => setTimeout(resolve, 650));
+await waitForApp();
 const debugSnapshot = JSON.parse(await evaluate(`JSON.stringify(window.WudaoDebug?.snapshot())`));
 assert.equal(debugSnapshot.buildSha, "dev");
-assert.equal(debugSnapshot.saveVersion, 8);
+assert.equal(debugSnapshot.saveVersion, 9);
 assert.equal(debugSnapshot.screen, saved.screen);
 const debugStatus = JSON.parse(await evaluate(`JSON.stringify(window.WudaoDebug?.status())`));
 assert.equal(debugStatus.protocolVersion, 1);
