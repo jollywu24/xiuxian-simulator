@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { DEFAULT_APPEARANCE } from "../web/appearance-core.mjs";
 
 const port = Number(process.argv[2] || 9225);
 const tabs = await (await fetch(`http://127.0.0.1:${port}/json`)).json();
@@ -105,11 +106,11 @@ async function createCharacter(originId) {
   await click("select-background", originId);
   await click("to-appearance");
   assert.deepEqual(
-    await evaluate(`[...document.querySelectorAll(".appearance-stepper")].map((item) => item.dataset.appearancePart)`),
-    ["face", "hair", "skin"],
+    await evaluate(`[...document.querySelectorAll(".appearance-ring-control")].map((item) => item.dataset.appearancePart)`),
+    ["hat", "frontHair", "backHair", "eyes", "brows", "mouth", "nose", "faceShape", "faceAccessory", "backAccessory", "clothing"],
   );
-  assert.equal(await evaluate(`document.querySelectorAll('.appearance-controls input[type="range"]').length`), 0);
-  assert.equal(await evaluate(`Boolean(document.querySelector('[data-appearance-part="clothing"]'))`), false);
+  assert.equal(await evaluate(`document.querySelectorAll('.appearance-identity-controls input[type="range"]').length`), 0);
+  assert.equal(await evaluate(`Boolean(document.querySelector('[data-appearance-part="clothing"]'))`), true);
   await click("confirm-appearance");
   await click("select-vow", "path");
   await click("start-journey");
@@ -189,8 +190,8 @@ assert.match(await pageText(), /旁支的名字/);
 await click("enter-origin-danroom");
 assert.match(await pageText(), /旁支腰牌/);
 let shenSave = await currentSave();
-  assert.equal(shenSave.version, 9);
-  assert.deepEqual(shenSave.appearance, { body: "male", face: 1, hair: 1, skin: 2 });
+  assert.equal(shenSave.version, 10);
+  assert.deepEqual(shenSave.appearance, DEFAULT_APPEARANCE);
 assert.equal(shenSave.originId, "shen_branch");
 assert.equal(shenSave.originPrologue.taskState, "costly_success");
 assert.ok(shenSave.originAccess.includes("shen_side_door_writ"));
@@ -229,8 +230,8 @@ const legacy = {
 };
 await writeSaveAndReload(legacy);
 const migrated = await currentSave();
-assert.equal(migrated.version, 9);
-assert.deepEqual(migrated.appearance, { body: "male", face: 1, hair: 1, skin: 2 });
+assert.equal(migrated.version, 10);
+assert.deepEqual(migrated.appearance, DEFAULT_APPEARANCE);
 assert.equal(migrated.originId, "shen_branch");
 assert.equal(migrated.originPrologue.completed, true);
 assert.equal(migrated.screen, "shenMeeting");
@@ -239,7 +240,7 @@ assert.deepEqual(pageErrors, []);
 process.stdout.write(`${JSON.stringify({
   ok: true,
   origins: ["shen_branch", "streetborn", "mystery"],
-  saveVersion: 9,
+  saveVersion: 10,
   responsive: "844x390",
 })}\n`);
 socket.close();

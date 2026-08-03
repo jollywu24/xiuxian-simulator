@@ -29,7 +29,7 @@ window.WudaoDebug.status()
   protocolVersion: 1,
   ready: true,
   buildSha: "a1b2c3d",
-  saveVersion: 9,
+  saveVersion: 10,
   screen: "templeWake",
   originId: "mystery",
   viewport: { width: 844, height: 390 },

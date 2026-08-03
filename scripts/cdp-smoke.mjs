@@ -3,6 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { createP0State } from "../web/wudao-p0-core.mjs";
+import { DEFAULT_APPEARANCE } from "../web/appearance-core.mjs";
 
 const port = Number(process.argv[2] || 9225);
 const tabs = await (await fetch(`http://127.0.0.1:${port}/json`)).json();
@@ -15,6 +16,7 @@ const entryHtml = fs.readFileSync(new URL("../web/index.html", import.meta.url),
 const expectedCacheVersion = entryHtml.match(/wudao-app\.mjs\?v=([0-9]{8}\.[0-9]+)/)?.[1];
 if (!expectedCacheVersion) throw new Error("Unable to read the runtime cache version from web/index.html");
 const escapedCacheVersion = expectedCacheVersion.replace(".", "\\.");
+const expectedCreatedAppearance = Object.freeze({ ...DEFAULT_APPEARANCE, body: "female", frontHair: 4 });
 
 const socket = new WebSocket(tab.webSocketDebuggerUrl);
 let id = 0;
@@ -292,6 +294,7 @@ async function snapshot(label) {
         profileText: document.querySelector(".character-profile-copy")?.textContent?.replace(/\\s+/g, " ").trim() || "",
         paperDollBase: document.querySelector('.character-hero [data-layer-id="appearance-base"]')?.getAttribute("src") || "",
         paperDollItems: [...document.querySelectorAll(".character-hero [data-item-id]")].map((entry) => entry.dataset.itemId),
+        paperDollParts: [...document.querySelectorAll('.character-hero [data-layer-id^="appearance:"]')].map((entry) => entry.dataset.layerId),
         overflowX: overlay ? overlay.scrollWidth - overlay.clientWidth : 0,
         overflowY: overlay ? overlay.scrollHeight - overlay.clientHeight : 0,
       };
@@ -441,24 +444,53 @@ await evaluate(`new Promise((resolve) => requestAnimationFrame(() => requestAnim
 await click("select-background", "mystery");
 await click("to-appearance");
 assert.deepEqual(
-  await evaluate(`[...document.querySelectorAll(".appearance-stepper")].map((item) => item.dataset.appearancePart)`),
-  ["face", "hair", "skin"],
+  await evaluate(`[...document.querySelectorAll(".appearance-ring-control")].map((item) => item.dataset.appearancePart)`),
+  ["hat", "frontHair", "backHair", "eyes", "brows", "mouth", "nose", "faceShape", "faceAccessory", "backAccessory", "clothing"],
 );
-assert.equal(await evaluate(`document.querySelectorAll('.appearance-controls input[type="range"]').length`), 0);
+assert.equal(await evaluate(`document.querySelectorAll('.appearance-identity-controls input[type="range"]').length`), 0);
 assert.equal(await evaluate(`document.querySelectorAll(".appearance-face-grid, .appearance-hair-grid").length`), 0);
-assert.equal(await evaluate(`Boolean(document.querySelector('[data-appearance-part="clothing"]'))`), false);
-assert.match(await evaluate(`document.querySelector(".appearance-preview img")?.getAttribute("src") || ""`), /male-1-v1\.webp/);
+assert.equal(await evaluate(`Boolean(document.querySelector('[data-appearance-part="clothing"]'))`), true);
+assert.match(await evaluate(`document.querySelector(".appearance-preview img")?.getAttribute("src") || ""`), /male-base-v2\.webp/);
+assert.equal(await evaluate(`document.querySelectorAll(".appearance-ring-control").length`), 11);
 await send("Emulation.setDeviceMetricsOverride", { width: 1672, height: 941, deviceScaleFactor: 1, mobile: false });
 await evaluate(`new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
 assert.equal(await evaluate(`document.documentElement.scrollWidth <= 1672`), true);
 assert.equal(await evaluate(`document.documentElement.scrollHeight <= 941`), true);
 assert.equal(await evaluate(`getComputedStyle(document.querySelector(".appearance-creation-screen")).backgroundImage.includes("appearance-courtyard-v1.webp")`), true);
+const appearanceGeometry = await evaluate(`(() => {
+  const rect = (selector) => {
+    const box = document.querySelector(selector)?.getBoundingClientRect();
+    return box ? { left: box.left, right: box.right, top: box.top, width: box.width, height: box.height, center: box.left + box.width / 2 } : null;
+  };
+  const controls = Object.fromEntries([...document.querySelectorAll(".appearance-ring-control")].map((item) => {
+    const box = item.getBoundingClientRect();
+    return [item.dataset.appearancePart, { left: box.left, right: box.right, top: box.top, width: box.width, height: box.height, center: box.left + box.width / 2 }];
+  }));
+  return { viewportCenter: innerWidth / 2, controls, figure: rect(".appearance-preview .paper-doll-composition") };
+})()`);
+assert.equal(new Set(Object.values(appearanceGeometry.controls).map((item) => item.width.toFixed(1))).size, 1);
+assert.equal(new Set(Object.values(appearanceGeometry.controls).map((item) => item.height.toFixed(1))).size, 1);
+assert.ok(Math.abs(appearanceGeometry.figure.center - appearanceGeometry.viewportCenter) < 2, JSON.stringify(appearanceGeometry));
+assert.ok(Math.abs(appearanceGeometry.controls.hat.center - appearanceGeometry.viewportCenter) < 2, JSON.stringify(appearanceGeometry));
+for (const [leftPart, rightPart] of [["frontHair", "backHair"], ["eyes", "brows"], ["mouth", "nose"], ["faceShape", "faceAccessory"], ["backAccessory", "clothing"]]) {
+  const left = appearanceGeometry.controls[leftPart];
+  const right = appearanceGeometry.controls[rightPart];
+  assert.ok(Math.abs(left.top - right.top) < 2, `${leftPart}/${rightPart} are not row-aligned`);
+  assert.ok(Math.abs((appearanceGeometry.viewportCenter - left.center) - (right.center - appearanceGeometry.viewportCenter)) < 2, `${leftPart}/${rightPart} are not mirrored`);
+}
 await screenshot("wudao-appearance-reference-1672x941.png");
 await send("Emulation.setDeviceMetricsOverride", { width: 844, height: 390, deviceScaleFactor: 1, mobile: true });
 await evaluate(`new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
 assert.equal(await evaluate(`document.documentElement.scrollWidth <= 844`), true);
 assert.equal(await evaluate(`document.documentElement.scrollHeight <= 390`), true);
 assert.equal(await evaluate(`document.querySelector(".appearance-footer").getBoundingClientRect().bottom <= 390`), true);
+assert.equal(await evaluate(`(() => {
+  const controls = [...document.querySelectorAll(".appearance-ring-control")].map((item) => item.getBoundingClientRect());
+  const figure = document.querySelector(".appearance-preview .paper-doll-composition").getBoundingClientRect();
+  return new Set(controls.map((item) => item.width.toFixed(1))).size === 1
+    && new Set(controls.map((item) => item.height.toFixed(1))).size === 1
+    && Math.abs(figure.left + figure.width / 2 - innerWidth / 2) < 2;
+})()`), true);
 await screenshot("wudao-appearance-phone-landscape.png");
 await send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
 await evaluate(`new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
@@ -468,8 +500,9 @@ await screenshot("wudao-appearance-phone-portrait.png");
 await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
 await evaluate(`new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
 await click("select-appearance-body", "female");
-for (let index = 0; index < 3; index += 1) await click("step-appearance", "hair:1");
-assert.match(await evaluate(`document.querySelector(".appearance-preview img")?.getAttribute("src") || ""`), /female-4-v1\.webp/);
+for (let index = 0; index < 3; index += 1) await click("step-appearance", "frontHair:1");
+assert.match(await evaluate(`document.querySelector(".appearance-preview img")?.getAttribute("src") || ""`), /female-base-v2\.webp/);
+assert.match(await evaluate(`document.querySelector('.appearance-preview [data-layer-id^="appearance:frontHair:"] use')?.getAttribute("href") || ""`), /#front-hair-4$/);
 await click("confirm-appearance");
 await click("select-vow", "path");
 await click("start-journey");
@@ -690,8 +723,9 @@ assert.equal(landscapeCharacter.characterView.bagSlots, 24);
 assert.equal(landscapeCharacter.characterView.occupiedBagSlots, 12);
 assert.ok(landscapeCharacter.characterView.bagSlotSizes.every(([width, height]) => height > width), JSON.stringify(landscapeCharacter.characterView.bagSlotSizes));
 assert.doesNotMatch(landscapeCharacter.characterView.profileText, /潜能|命灯/);
-assert.match(landscapeCharacter.characterView.paperDollBase, /female-4-v1\.webp/);
-assert.deepEqual(landscapeCharacter.characterView.paperDollItems, ["rain_hood"]);
+assert.match(landscapeCharacter.characterView.paperDollBase, /female-base-v2\.webp/);
+assert.deepEqual(landscapeCharacter.characterView.paperDollItems, []);
+assert.ok(landscapeCharacter.characterView.paperDollParts.includes("appearance:frontHair:4"));
 assert.ok(landscapeCharacter.characterView.overflowX <= 1, JSON.stringify(landscapeCharacter.characterView));
 assert.ok(landscapeCharacter.characterView.overflowY <= 1, JSON.stringify(landscapeCharacter.characterView));
 const paperDollBaseBeforeEquipmentDetail = landscapeCharacter.characterView.paperDollBase;
@@ -704,13 +738,14 @@ assert.equal(equipmentDetail.characterView.equipmentDetailButton, "替换");
 assert.equal(equipmentDetail.characterView.equipmentDetailQualityColor, equipmentDetail.characterView.equipmentDetailNameColor);
 assert.equal(equipmentDetail.characterView.equipmentDetailQualityColor, equipmentDetail.characterView.equipmentDetailBaseColor);
 assert.equal(await evaluate(`document.querySelector(".slot-head")?.getAttribute("aria-label") || ""`), headBeforeEquipmentDetail);
-assert.deepEqual(equipmentDetail.characterView.paperDollItems, ["rain_hood"]);
+assert.deepEqual(equipmentDetail.characterView.paperDollItems, []);
 await click("confirm-equip-character-item", "traveler_straw_hat");
 assert.match(await evaluate(`document.querySelector(".slot-head")?.getAttribute("aria-label") || ""`), /江行斗笠/);
 assert.equal(await evaluate(`Boolean(document.querySelector(".character-equipment-detail"))`), false);
 const hatPaperDoll = await snapshot("character-straw-hat-paperdoll");
 assert.equal(hatPaperDoll.characterView.paperDollBase, paperDollBaseBeforeEquipmentDetail);
-assert.deepEqual(hatPaperDoll.characterView.paperDollItems, ["traveler_straw_hat"]);
+assert.deepEqual(hatPaperDoll.characterView.paperDollItems, []);
+assert.ok(hatPaperDoll.characterView.paperDollParts.includes("appearance:frontHair:4"));
 await click("inspect-character-equipment", "traveler_straw_hat|head");
 assert.equal((await snapshot("character-equipped-detail")).characterView.equipmentDetailAction, "confirm-unequip-character-item");
 await click("confirm-unequip-character-item", "head");
@@ -1208,8 +1243,8 @@ const saved = JSON.parse(savedEntry[1]);
 assert.equal(saved.backgroundId, "mystery");
 assert.equal(saved.originId, "mystery");
 assert.equal(saved.vowId, "path");
-assert.equal(saved.version, 9);
-assert.deepEqual(saved.appearance, { body: "female", face: 1, hair: 4, skin: 2 });
+assert.equal(saved.version, 10);
+assert.deepEqual(saved.appearance, expectedCreatedAppearance);
 assert.equal(saved.fateSeed, "seed-2");
 assert.ok(Array.isArray(saved.narrativeLog));
 assert.ok(saved.narrativeLog.length > 0 && saved.narrativeLog.length <= 64);
@@ -1404,8 +1439,8 @@ delete versionFiveSave.equipment;
 delete versionFiveSave.characterVitals;
 await reloadWithSave(versionFiveSave);
 const migratedVersionSeven = JSON.parse(await evaluate(`localStorage.getItem("wudao-high-martial-v1")`));
-assert.equal(migratedVersionSeven.version, 9);
-assert.deepEqual(migratedVersionSeven.appearance, { body: "female", face: 1, hair: 4, skin: 2 });
+assert.equal(migratedVersionSeven.version, 10);
+assert.deepEqual(migratedVersionSeven.appearance, expectedCreatedAppearance);
 assert.equal(migratedVersionSeven.equipment.owned.length, 12);
 assert.equal(Object.keys(migratedVersionSeven.equipment.slots).length, 9);
 assert.deepEqual(migratedVersionSeven.characterVitals, { health: null, qi: null });
@@ -1565,7 +1600,7 @@ await send("Page.navigate", { url: `${pageOrigin}/?debug=1&seed=debug-interface`
 await waitForApp();
 const debugSnapshot = JSON.parse(await evaluate(`JSON.stringify(window.WudaoDebug?.snapshot())`));
 assert.equal(debugSnapshot.buildSha, "dev");
-assert.equal(debugSnapshot.saveVersion, 9);
+assert.equal(debugSnapshot.saveVersion, 10);
 assert.equal(debugSnapshot.screen, saved.screen);
 const debugStatus = JSON.parse(await evaluate(`JSON.stringify(window.WudaoDebug?.status())`));
 assert.equal(debugStatus.protocolVersion, 1);

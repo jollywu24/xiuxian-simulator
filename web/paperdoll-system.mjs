@@ -1,84 +1,75 @@
 import {
-  appearanceCharacterAsset,
+  APPEARANCE_PARTS,
+  APPEARANCE_RUNTIME_ASSETS,
+  appearanceBaseAsset,
+  appearancePart,
   normalizeAppearance,
-} from "./appearance-core.mjs?v=20260731.2";
-import {
-  EQUIPMENT_SLOTS,
-  getEquipmentItem,
-  migrateEquipmentState,
-} from "./character-system.mjs?v=20260731.2";
+} from "./appearance-core.mjs?v=20260803.1";
 
 export const PAPER_DOLL_LAYER_ORDER = Object.freeze({
-  base: 10,
-  body: 20,
-  wrist: 30,
-  boots: 35,
-  accessory: 40,
-  head: 50,
-  weaponBack: 60,
-  weaponFront: 70,
+  backAccessory: 5,
+  backHair: 10,
+  base: 20,
+  clothing: 30,
+  faceShape: 40,
+  eyes: 45,
+  brows: 46,
+  nose: 47,
+  mouth: 48,
+  frontHair: 50,
+  faceAccessory: 60,
+  hat: 70,
 });
 
-export const PAPER_DOLL_RUNTIME_ASSETS = Object.freeze([
-  "./assets/paperdoll/iron-scale-vest-v1.webp",
-  "./assets/paperdoll/rain-hood-v1.webp",
-  "./assets/paperdoll/traveler-straw-hat-v1.webp",
-  "./assets/paperdoll/shen-guard-bracers-v1.webp",
-]);
+// 兼容发布资源契约的旧导出名；内容已经改为纯容貌资源。
+export const PAPER_DOLL_RUNTIME_ASSETS = APPEARANCE_RUNTIME_ASSETS;
 
-const SLOT_RENDER_ORDER = Object.freeze([
-  "body",
-  "wrist",
-  "boots",
-  "accessory",
-  "head",
-  "meleeMain",
-  "meleeOff",
-  "rangedMain",
-  "rangedOff",
-]);
-
-function equippedVisuals(equipment) {
-  if (!equipment) return [];
-  const normalized = migrateEquipmentState(equipment);
-  return SLOT_RENDER_ORDER.flatMap((slotId) => {
-    const item = getEquipmentItem(normalized.slots[slotId]);
-    const visual = item?.paperDoll;
-    if (!item || !visual?.asset) return [];
-    return [{
-      id: `${slotId}:${item.id}`,
-      itemId: item.id,
-      slotId,
-      kind: visual.layer || EQUIPMENT_SLOTS.find((slot) => slot.id === slotId)?.group || "accessory",
-      asset: visual.asset,
-      z: PAPER_DOLL_LAYER_ORDER[visual.layer] || PAPER_DOLL_LAYER_ORDER.accessory,
-      hides: Array.isArray(visual.hides) ? [...visual.hides] : [],
-    }];
-  });
-}
-
-export function resolvePaperDollLayers({
-  appearance,
-  equipment = null,
-  includeEquipment = true,
-} = {}) {
+export function resolvePaperDollLayers({ appearance } = {}) {
   const normalizedAppearance = normalizeAppearance(appearance);
-  const layers = [{
-    id: "appearance-base",
-    itemId: null,
-    slotId: null,
-    kind: "base",
-    asset: appearanceCharacterAsset(normalizedAppearance),
-    z: PAPER_DOLL_LAYER_ORDER.base,
-    hides: [],
-  }];
-  if (includeEquipment) layers.push(...equippedVisuals(equipment));
+  const layers = [
+    ...APPEARANCE_PARTS.flatMap((part) => {
+      const selected = appearancePart(normalizedAppearance, part.id);
+      if (!selected?.href || part.z >= PAPER_DOLL_LAYER_ORDER.base) return [];
+      return [{
+        id: `appearance:${part.id}:${selected.id}`,
+        itemId: null,
+        slotId: null,
+        kind: part.id,
+        source: "symbol",
+        href: selected.href,
+        z: part.z,
+      }];
+    }),
+    {
+      id: "appearance-base",
+      itemId: null,
+      slotId: null,
+      kind: "base",
+      source: "image",
+      asset: appearanceBaseAsset(normalizedAppearance),
+      z: PAPER_DOLL_LAYER_ORDER.base,
+    },
+    ...APPEARANCE_PARTS.flatMap((part) => {
+      const selected = appearancePart(normalizedAppearance, part.id);
+      if (!selected?.href || part.z < PAPER_DOLL_LAYER_ORDER.base) return [];
+      return [{
+        id: `appearance:${part.id}:${selected.id}`,
+        itemId: null,
+        slotId: null,
+        kind: part.id,
+        source: "symbol",
+        href: selected.href,
+        z: part.z,
+      }];
+    }),
+  ];
   return {
     appearance: normalizedAppearance,
     layers: layers.sort((left, right) => left.z - right.z),
   };
 }
 
-export function paperDollVisibleItemIds(equipment) {
-  return [...new Set(equippedVisuals(equipment).map((layer) => layer.itemId))];
+// D-013以后装备不再提供人物外观层；保留接口供旧调用和迁移测试使用。
+export function paperDollVisibleItemIds() {
+  return [];
 }

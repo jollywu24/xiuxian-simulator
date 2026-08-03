@@ -50,8 +50,8 @@ import {
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs?v=20260731.2";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260731.2";
+} from "./wudao-core.mjs?v=20260803.1";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260803.1";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -81,7 +81,7 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260731.2";
+} from "./wudao-p0-core.mjs?v=20260803.1";
 import {
   M4_EVIDENCE,
   M4_METHOD,
@@ -100,7 +100,7 @@ import {
   resolveM4Training,
   resolveMoneyInquiry,
   resolveOldHouseChoice,
-} from "./wudao-p1-core.mjs?v=20260731.2";
+} from "./wudao-p1-core.mjs?v=20260803.1";
 import {
   advanceCombatLabCampaign,
   createCombatLabSession,
@@ -111,14 +111,14 @@ import {
   restartCombatLab,
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
-} from "./combat-lab-core.mjs?v=20260731.2";
+} from "./combat-lab-core.mjs?v=20260803.1";
 import {
   INVENTORY_CAPACITY,
   createInventoryBoard,
   formatSilver,
   getInventoryCategory,
   getInventoryUseState,
-} from "./inventory-core.mjs?v=20260731.2";
+} from "./inventory-core.mjs?v=20260803.1";
 import {
   EQUIPMENT_CAPACITY,
   EQUIPMENT_SLOTS,
@@ -132,7 +132,7 @@ import {
   migrateCharacterVitals,
   migrateEquipmentState,
   unequipEquipmentSlot,
-} from "./character-system.mjs?v=20260731.2";
+} from "./character-system.mjs?v=20260803.1";
 import {
   MARTIAL_MASTERIES,
   breakthroughMartial,
@@ -154,9 +154,9 @@ import {
   trainMartial,
   unequipMartial,
   unlockedMartialNodes,
-} from "./martial-system.mjs?v=20260731.2";
-import { SAVE_STORAGE_KEY } from "./save-core.mjs?v=20260731.2";
-import { createSaveStorage } from "./save-storage.mjs?v=20260731.2";
+} from "./martial-system.mjs?v=20260803.1";
+import { SAVE_STORAGE_KEY } from "./save-core.mjs?v=20260803.1";
+import { createSaveStorage } from "./save-storage.mjs?v=20260803.1";
 import {
   ORIGINS,
   ORIGIN_LADY_INSIGHTS,
@@ -169,18 +169,17 @@ import {
   resolveOriginPersonalEvent,
   resolveOriginPrologueChoice,
   resolveOriginTempleTask,
-} from "./origin-core.mjs?v=20260731.2";
+} from "./origin-core.mjs?v=20260803.1";
 import {
   APPEARANCE_BODIES,
-  APPEARANCE_FACES,
-  APPEARANCE_HAIRS,
-  APPEARANCE_SKINS,
-  appearanceHairAsset,
+  APPEARANCE_CATALOGS,
+  APPEARANCE_PARTS,
+  appearanceDescription,
   createAppearanceState,
   cycleAppearance,
   normalizeAppearance,
-} from "./appearance-core.mjs?v=20260731.2";
-import { resolvePaperDollLayers } from "./paperdoll-system.mjs?v=20260731.2";
+} from "./appearance-core.mjs?v=20260803.1";
+import { resolvePaperDollLayers } from "./paperdoll-system.mjs?v=20260803.1";
 
 const app = document.querySelector("#app");
 const BUILD_SHA = document.documentElement.dataset.buildSha || "dev";
@@ -219,7 +218,7 @@ function legacyFateSeed(saved) {
 
 function createInitialState() {
   return {
-    version: 9,
+    version: 10,
     screen: "landing",
     name: "陈司命",
     appearance: createAppearanceState(),
@@ -319,7 +318,7 @@ function createInitialState() {
 }
 
 function supportsStoredState(saved) {
-  return Boolean(saved && [2, 3, 4, 5, 6, 7, 8, 9].includes(saved.version) && saved.screen);
+  return Boolean(saved && [2, 3, 4, 5, 6, 7, 8, 9, 10].includes(saved.version) && saved.screen);
 }
 
 function loadState(raw) {
@@ -331,7 +330,7 @@ function loadState(raw) {
       ...createInitialState(),
       ...saved,
       ...origin,
-      version: 9,
+      version: 10,
       appearance: normalizeAppearance(saved.appearance),
       p0: migrateP0State(saved.p0),
       m4: migrateM4State(saved.m4),
@@ -952,24 +951,18 @@ function equipmentArtHtml(item) {
 
 function paperDollHtml({
   appearance = state.appearance,
-  equipment = state.equipment,
-  includeEquipment = true,
   label = "",
   context = "character",
 } = {}) {
-  const composition = resolvePaperDollLayers({ appearance, equipment, includeEquipment });
+  const composition = resolvePaperDollLayers({ appearance });
   return `
     <div class="paper-doll-composition paper-doll-${escapeHtml(context)}" data-body="${escapeHtml(composition.appearance.body)}" ${label ? `role="img" aria-label="${escapeHtml(label)}"` : "aria-hidden=\"true\""}>
-      ${composition.layers.map((layer) => `
-        <img
-          class="paper-doll-layer layer-${escapeHtml(layer.kind)}"
-          src="${escapeHtml(layer.asset)}"
-          alt=""
-          draggable="false"
-          data-layer-id="${escapeHtml(layer.id)}"
-          ${layer.itemId ? `data-item-id="${escapeHtml(layer.itemId)}"` : ""}
-          style="--paper-doll-z:${Number(layer.z)}"
-        />
+      ${composition.layers.map((layer) => layer.source === "symbol" ? `
+        <svg class="paper-doll-layer paper-doll-symbol layer-${escapeHtml(layer.kind)}" viewBox="0 0 1024 1536" aria-hidden="true" data-layer-id="${escapeHtml(layer.id)}" style="--paper-doll-z:${Number(layer.z)}">
+          <use href="${escapeHtml(layer.href)}"></use>
+        </svg>
+      ` : `
+        <img class="paper-doll-layer layer-${escapeHtml(layer.kind)}" src="${escapeHtml(layer.asset)}" alt="" draggable="false" data-layer-id="${escapeHtml(layer.id)}" style="--paper-doll-z:${Number(layer.z)}" />
       `).join("")}
     </div>
   `;
@@ -1850,19 +1843,13 @@ function appearanceStepperHtml({
   current,
   total,
   name,
-  preview,
+  layout,
 }) {
   return `
-    <div class="appearance-control-row appearance-preset-control" role="group" aria-labelledby="appearance-${escapeHtml(part)}-label">
-      <span class="appearance-control-label" id="appearance-${escapeHtml(part)}-label">${escapeHtml(label)}</span>
-      <div class="appearance-stepper" data-appearance-part="${escapeHtml(part)}">
-        <button type="button" data-action="step-appearance" data-value="${escapeHtml(`${part}:-1`)}" aria-label="上一个${escapeHtml(label)}">‹</button>
-        <div class="appearance-stepper-current">
-          ${preview}
-          <span><strong>${escapeHtml(name)}</strong><small>${Number(current)} / ${Number(total)}</small></span>
-        </div>
-        <button type="button" data-action="step-appearance" data-value="${escapeHtml(`${part}:1`)}" aria-label="下一个${escapeHtml(label)}">›</button>
-      </div>
+    <div class="appearance-ring-control slot-${escapeHtml(layout)}" role="group" aria-label="${escapeHtml(`${label}，当前${name}，第${current}项，共${total}项`)}" data-appearance-part="${escapeHtml(part)}">
+      <button type="button" data-action="step-appearance" data-value="${escapeHtml(`${part}:-1`)}" aria-label="上一个${escapeHtml(label)}">‹</button>
+      <span><strong>${escapeHtml(label)}</strong><small>${Number(current)} / ${Number(total)}</small></span>
+      <button type="button" data-action="step-appearance" data-value="${escapeHtml(`${part}:1`)}" aria-label="下一个${escapeHtml(label)}">›</button>
     </div>
   `;
 }
@@ -1896,9 +1883,7 @@ function renderCharacterDraft() {
 
 function renderAppearanceDraft() {
   const appearance = normalizeAppearance(state.appearance);
-  const bodyName = APPEARANCE_BODIES.find((entry) => entry.id === appearance.body)?.name || "男身";
-  const selectedSkin = APPEARANCE_SKINS.find((entry) => entry.id === appearance.skin);
-  const appearanceLabel = `${bodyName}，${APPEARANCE_HAIRS.find((entry) => entry.id === appearance.hair)?.name || "短束发"}，${selectedSkin?.name || "浅麦"}`;
+  const appearanceLabel = appearanceDescription(appearance);
   return `
     <main class="origin-selection-screen appearance-creation-screen">
       <header class="origin-selection-header">
@@ -1907,7 +1892,7 @@ function renderAppearanceDraft() {
       </header>
       <h1 class="origin-selection-title">定下你的模样</h1>
       <section class="appearance-workspace">
-        <form class="appearance-controls" onsubmit="return false">
+        <form class="appearance-identity-controls" onsubmit="return false">
           <label class="appearance-name-field">
             <span>姓名</span>
             <span class="appearance-name-input">
@@ -1925,42 +1910,22 @@ function renderAppearanceDraft() {
               `).join("")}
             </div>
           </div>
-          ${appearanceStepperHtml({
-            part: "face",
-            label: "面容",
-            current: appearance.face,
-            total: APPEARANCE_FACES.length,
-            name: APPEARANCE_FACES.find((face) => face.id === appearance.face)?.name || "面容一",
-            preview: `<span class="appearance-stepper-face body-${escapeHtml(appearance.body)}" style="--face-column:${appearance.face - 1}" aria-hidden="true"></span>`,
-          })}
-          ${appearanceStepperHtml({
-            part: "hair",
-            label: "发式",
-            current: appearance.hair,
-            total: APPEARANCE_HAIRS.length,
-            name: APPEARANCE_HAIRS.find((hair) => hair.id === appearance.hair)?.name || "短束发",
-            preview: `<img src="${escapeHtml(appearanceHairAsset(appearance.body, appearance.hair))}" alt="" />`,
-          })}
-          ${appearanceStepperHtml({
-            part: "skin",
-            label: "肤色",
-            current: appearance.skin,
-            total: APPEARANCE_SKINS.length,
-            name: selectedSkin?.name || "浅麦",
-            preview: `<i class="appearance-stepper-skin" style="--skin-color:${escapeHtml(selectedSkin?.color || "#d3b68e")}" aria-hidden="true"></i>`,
-          })}
           <button type="button" class="appearance-random-button" data-action="randomize-appearance"><span aria-hidden="true">↻</span> 随心一变</button>
         </form>
-        <div class="appearance-preview" aria-live="polite">
-          <div class="appearance-preview-halo" aria-hidden="true"></div>
-          ${paperDollHtml({
-            appearance,
-            equipment: null,
-            includeEquipment: false,
-            label: appearanceLabel,
-            context: "appearance",
-          })}
-          <span class="appearance-preview-ground" aria-hidden="true"></span>
+        <div class="appearance-stage" aria-live="polite">
+          ${APPEARANCE_PARTS.map((part) => appearanceStepperHtml({
+            part: part.id,
+            label: part.label,
+            current: appearance[part.id],
+            total: part.catalog.length,
+            name: part.catalog.find((entry) => entry.id === appearance[part.id])?.name || part.catalog[0].name,
+            layout: part.layout,
+          })).join("")}
+          <div class="appearance-preview">
+            <div class="appearance-preview-halo" aria-hidden="true"></div>
+            ${paperDollHtml({ appearance, label: appearanceLabel, context: "appearance" })}
+            <span class="appearance-preview-ground" aria-hidden="true"></span>
+          </div>
         </div>
       </section>
       <footer class="appearance-footer">
@@ -4497,32 +4462,9 @@ const handlers = {
     state.appearance = normalizeAppearance({ ...state.appearance, body: value });
     refresh();
   },
-  "select-appearance-face": (value) => {
-    const face = Number(value);
-    if (!APPEARANCE_FACES.some((item) => item.id === face)) return;
-    state.appearance = normalizeAppearance({ ...state.appearance, face });
-    refresh();
-  },
-  "select-appearance-hair": (value) => {
-    const hair = Number(value);
-    if (!APPEARANCE_HAIRS.some((item) => item.id === hair)) return;
-    state.appearance = normalizeAppearance({ ...state.appearance, hair });
-    refresh();
-  },
-  "select-appearance-skin": (value) => {
-    const skin = Number(value);
-    if (!APPEARANCE_SKINS.some((item) => item.id === skin)) return;
-    state.appearance = normalizeAppearance({ ...state.appearance, skin });
-    refresh();
-  },
   "step-appearance": (value) => {
     const [part, rawDirection] = String(value || "").split(":");
-    const catalogs = {
-      face: APPEARANCE_FACES,
-      hair: APPEARANCE_HAIRS,
-      skin: APPEARANCE_SKINS,
-    };
-    const catalog = catalogs[part];
+    const catalog = APPEARANCE_CATALOGS[part];
     const direction = Number(rawDirection);
     if (!catalog || ![-1, 1].includes(direction)) return;
     const current = normalizeAppearance(state.appearance);

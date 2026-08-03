@@ -32,8 +32,8 @@ class MemoryStorage {
   }
 }
 
-const validState = (screen, version = 9) => ({ version, screen, name: "陈司命" });
-const supportsCurrentState = (value) => [2, 3, 4, 5, 6, 7, 8, 9].includes(value?.version) && Boolean(value?.screen);
+const validState = (screen, version = 10) => ({ version, screen, name: "陈司命" });
+const supportsCurrentState = (value) => [2, 3, 4, 5, 6, 7, 8, 9, 10].includes(value?.version) && Boolean(value?.screen);
 
 test("checksum detects truncated or altered save text", () => {
   const raw = JSON.stringify(validState("templeWake"));
