@@ -450,13 +450,14 @@ assert.deepEqual(
 assert.equal(await evaluate(`document.querySelectorAll('.appearance-identity-controls input[type="range"]').length`), 0);
 assert.equal(await evaluate(`document.querySelectorAll(".appearance-face-grid, .appearance-hair-grid").length`), 0);
 assert.equal(await evaluate(`Boolean(document.querySelector('[data-appearance-part="clothing"]'))`), true);
-assert.match(await evaluate(`document.querySelector(".appearance-preview img")?.getAttribute("src") || ""`), /male-base-v2\.webp/);
+assert.match(await evaluate(`document.querySelector('.appearance-preview [data-layer-id="appearance-base"]')?.getAttribute("src") || ""`), /male-base-v2\.webp/);
+assert.equal(await evaluate(`document.querySelectorAll('.appearance-preview [data-layer-id^="appearance:"][src]').length >= 3`), true);
 assert.equal(await evaluate(`document.querySelectorAll(".appearance-ring-control").length`), 11);
 await send("Emulation.setDeviceMetricsOverride", { width: 1672, height: 941, deviceScaleFactor: 1, mobile: false });
 await evaluate(`new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
 assert.equal(await evaluate(`document.documentElement.scrollWidth <= 1672`), true);
 assert.equal(await evaluate(`document.documentElement.scrollHeight <= 941`), true);
-assert.equal(await evaluate(`getComputedStyle(document.querySelector(".appearance-creation-screen")).backgroundImage.includes("appearance-courtyard-v1.webp")`), true);
+assert.equal(await evaluate(`getComputedStyle(document.querySelector(".appearance-creation-screen")).backgroundImage.includes("appearance-courtyard-v2.webp")`), true);
 const appearanceGeometry = await evaluate(`(() => {
   const rect = (selector) => {
     const box = document.querySelector(selector)?.getBoundingClientRect();
@@ -501,7 +502,7 @@ await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, dev
 await evaluate(`new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
 await click("select-appearance-body", "female");
 for (let index = 0; index < 3; index += 1) await click("step-appearance", "frontHair:1");
-assert.match(await evaluate(`document.querySelector(".appearance-preview img")?.getAttribute("src") || ""`), /female-base-v2\.webp/);
+assert.match(await evaluate(`document.querySelector('.appearance-preview [data-layer-id="appearance-base"]')?.getAttribute("src") || ""`), /female-base-v2\.webp/);
 assert.match(await evaluate(`document.querySelector('.appearance-preview [data-layer-id^="appearance:frontHair:"] use')?.getAttribute("href") || ""`), /#front-hair-4$/);
 await click("confirm-appearance");
 await click("select-vow", "path");

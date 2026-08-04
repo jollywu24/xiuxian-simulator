@@ -4,7 +4,7 @@ import {
   appearanceBaseAsset,
   appearancePart,
   normalizeAppearance,
-} from "./appearance-core.mjs?v=20260803.1";
+} from "./appearance-core.mjs?v=20260804.1";
 
 export const PAPER_DOLL_LAYER_ORDER = Object.freeze({
   backAccessory: 5,
@@ -29,14 +29,15 @@ export function resolvePaperDollLayers({ appearance } = {}) {
   const layers = [
     ...APPEARANCE_PARTS.flatMap((part) => {
       const selected = appearancePart(normalizedAppearance, part.id);
-      if (!selected?.href || part.z >= PAPER_DOLL_LAYER_ORDER.base) return [];
+      if ((!selected?.href && !selected?.asset) || part.z >= PAPER_DOLL_LAYER_ORDER.base) return [];
       return [{
         id: `appearance:${part.id}:${selected.id}`,
         itemId: null,
         slotId: null,
         kind: part.id,
-        source: "symbol",
+        source: selected.source,
         href: selected.href,
+        asset: selected.asset,
         z: part.z,
       }];
     }),
@@ -51,14 +52,15 @@ export function resolvePaperDollLayers({ appearance } = {}) {
     },
     ...APPEARANCE_PARTS.flatMap((part) => {
       const selected = appearancePart(normalizedAppearance, part.id);
-      if (!selected?.href || part.z < PAPER_DOLL_LAYER_ORDER.base) return [];
+      if ((!selected?.href && !selected?.asset) || part.z < PAPER_DOLL_LAYER_ORDER.base) return [];
       return [{
         id: `appearance:${part.id}:${selected.id}`,
         itemId: null,
         slotId: null,
         kind: part.id,
-        source: "symbol",
+        source: selected.source,
         href: selected.href,
+        asset: selected.asset,
         z: part.z,
       }];
     }),

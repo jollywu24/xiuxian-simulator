@@ -44,7 +44,7 @@
   </defs>
 
   <!-- 后发：位于人物底像之后 -->
-  <symbol id="back-hair-1" viewBox="0 0 1024 1536"><path d="M452 186Q458 132 512 126q56 4 64 60l-8 100q-18 40-56 48-42-9-57-48z" fill="url(#hairInk)" stroke="#07090a" stroke-width="5"/></symbol>
+  <symbol id="back-hair-1" viewBox="0 0 1024 1536"><!-- natural base high knot --></symbol>
   <symbol id="back-hair-2" viewBox="0 0 1024 1536"><path d="M447 190q7-67 65-69 59 4 67 69l-5 151q-20 54-62 66-44-13-64-66z" fill="url(#hairInk)" stroke="#080a0b" stroke-width="5"/><path d="M461 260q-25 92-4 171M563 260q26 92 4 171" fill="none" stroke="#34383b" stroke-width="9" opacity=".7"/></symbol>
   <symbol id="back-hair-3" viewBox="0 0 1024 1536"><path d="M444 189q8-69 68-72 63 4 70 72l7 193q-25 80-77 104-53-26-79-104z" fill="url(#hairInk)" stroke="#08090b" stroke-width="5"/><path d="M451 269q-34 133-10 225M573 269q34 133 10 225" fill="none" stroke="#2d3236" stroke-width="13" opacity=".8"/></symbol>
   <symbol id="back-hair-4" viewBox="0 0 1024 1536"><path d="M449 186q7-64 63-68 59 4 67 68l-3 135q-18 50-64 62-46-13-65-62z" fill="url(#hairInk)"/><path d="M548 217q78 38 81 116-16 72-74 103 28-72-7-219z" fill="#14181c" stroke="#080a0c" stroke-width="6"/></symbol>
@@ -99,7 +99,7 @@
   <symbol id="mouth-8" viewBox="0 0 1024 1536"><path d="M488 299q24 7 48 0-24 18-48 0z" fill="#a85e5b" stroke="#75413f" stroke-width="2"/></symbol>
 
   <!-- 前发 -->
-  <symbol id="front-hair-1" viewBox="0 0 1024 1536"><path d="M453 211q0-83 59-90 62 7 62 90-25-28-62-32-37 4-59 32z" fill="url(#hairInk)" stroke="#07090a" stroke-width="4"/><path d="M468 183q42-36 88 0" fill="none" stroke="#3b4043" stroke-opacity=".65" stroke-width="7" stroke-linecap="round"/></symbol>
+  <symbol id="front-hair-1" viewBox="0 0 1024 1536"><!-- natural base loose fringe --></symbol>
   <symbol id="front-hair-2" viewBox="0 0 1024 1536"><path d="M451 211q2-84 61-92 61 8 62 92-20-36-39-50-6 34-23 67-12-36-12-67-30 19-49 50z" fill="url(#hairInk)" stroke="#080a0b" stroke-width="4"/></symbol>
   <symbol id="front-hair-3" viewBox="0 0 1024 1536"><path d="M452 211q2-82 60-90 60 7 62 90-31-34-50-39-15 35-41 62 5-47-31-23z" fill="url(#hairInk)"/><path d="M518 144q29 19 46 67" fill="none" stroke="#3b4045" stroke-width="8"/></symbol>
   <symbol id="front-hair-4" viewBox="0 0 1024 1536"><path d="M451 210q2-84 61-91 61 7 63 91-22-31-43-39l-20 68-16-67q-23 9-45 38z" fill="url(#hairInk)" stroke="#07090a" stroke-width="4"/></symbol>

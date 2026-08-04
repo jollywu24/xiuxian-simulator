@@ -36,6 +36,7 @@ test("容貌目录保持与参考一致的十一类离散部件", () => {
 
 test("十一部件状态可序列化并修复越界值", () => {
   assert.deepEqual(createAppearanceState(), DEFAULT_APPEARANCE);
+  assert.ok(APPEARANCE_PARTS.every((part) => DEFAULT_APPEARANCE[part.id] === 1));
   const repaired = normalizeAppearance({ body: "unknown", hat: 99, frontHair: -1, clothing: "bad" });
   assert.deepEqual(repaired, DEFAULT_APPEARANCE);
   const custom = createAppearanceState({ body: "female", hat: 5, eyes: 8, faceShape: 6, clothing: 7 });
@@ -68,6 +69,8 @@ test("随心一变同时轮换十一类外观但不改变体貌", () => {
 test("容貌底像和部件图集都位于正式运行资源目录", () => {
   assert.equal(appearanceBaseAsset({ body: "male" }), "./assets/appearance/layered/male-base-v2.webp");
   assert.equal(appearanceBaseAsset({ body: "female" }), "./assets/appearance/layered/female-base-v2.webp");
+  assert.equal(appearancePart({ body: "male", frontHair: 1 }, "frontHair").asset, "./assets/appearance/layered/male-front-hair-1-v1.webp");
+  assert.equal(appearancePart({ body: "female", clothing: 1 }, "clothing").asset, "./assets/appearance/layered/female-clothing-1-v1.webp");
   assert.equal(appearancePart({ frontHair: 3 }, "frontHair").href, "./assets/appearance/layered/parts-v1.svg#front-hair-3");
   assert.equal(appearancePart({ hat: 1 }, "hat").href, null);
   assert.ok(APPEARANCE_RUNTIME_ASSETS.every((path) => /^\.\/assets\/appearance\/layered\/.+\.(?:webp|svg)$/.test(path)));

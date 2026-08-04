@@ -32,7 +32,7 @@ test("人物由底像与十一类容貌层按稳定顺序合成", () => {
   assert.deepEqual(composition.layers.map((layer) => layer.kind), [
     "backAccessory", "backHair", "base", "clothing", "faceShape", "eyes", "brows", "nose", "mouth", "frontHair", "faceAccessory", "hat",
   ]);
-  assert.equal(composition.layers[2].asset, "./assets/appearance/layered/female-base-v2.webp");
+  assert.ok(composition.layers.some((layer) => layer.kind === "base" && layer.asset === "./assets/appearance/layered/female-base-v2.webp"));
   assert.match(composition.layers.at(-1).href, /parts-v1\.svg#hat-5$/);
 });
 
@@ -44,6 +44,9 @@ test("无帽无脸饰无后背时不渲染空部件但其它类别保留", () =>
   assert.deepEqual(layers.map((layer) => layer.kind), [
     "backHair", "base", "clothing", "faceShape", "eyes", "brows", "nose", "mouth", "frontHair",
   ]);
+  assert.ok(layers.some((layer) => layer.kind === "frontHair" && layer.source === "image"));
+  assert.ok(layers.some((layer) => layer.kind === "faceShape" && layer.source === "image"));
+  assert.ok(layers.some((layer) => layer.kind === "clothing" && layer.source === "image"));
 });
 
 test("更换装备只改变装备状态，不进入人物外观层", () => {
@@ -58,10 +61,16 @@ test("更换装备只改变装备状态，不进入人物外观层", () => {
   assert.deepEqual(after, before);
 });
 
-test("正式分层容貌资源包含两张底像与一个部件图集", () => {
+test("正式分层容貌资源包含中性底像、默认透明组件与部件图集", () => {
   assert.deepEqual(PAPER_DOLL_RUNTIME_ASSETS, [
     "./assets/appearance/layered/male-base-v2.webp",
     "./assets/appearance/layered/female-base-v2.webp",
+    "./assets/appearance/layered/male-front-hair-1-v1.webp",
+    "./assets/appearance/layered/male-face-shape-1-v1.webp",
+    "./assets/appearance/layered/male-clothing-1-v1.webp",
+    "./assets/appearance/layered/female-front-hair-1-v1.webp",
+    "./assets/appearance/layered/female-face-shape-1-v1.webp",
+    "./assets/appearance/layered/female-clothing-1-v1.webp",
     "./assets/appearance/layered/parts-v1.svg",
   ]);
 });

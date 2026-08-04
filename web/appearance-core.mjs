@@ -11,10 +11,10 @@ export const APPEARANCE_HATS = numbered([
   "不戴冠帽", "旧布额巾", "束发小冠", "青布方巾", "竹骨斗笠", "夜行兜帽", "乌篾笠", "褐绸软帽",
 ]);
 export const APPEARANCE_FRONT_HAIRS = numbered([
-  "短碎前发", "分束垂发", "斜掠前发", "齐束前发", "散落额发", "利落露额", "长束侧发", "浓密碎发",
+  "散碎垂发", "分束垂发", "斜掠前发", "齐束前发", "散落额发", "利落露额", "长束侧发", "浓密碎发",
 ]);
 export const APPEARANCE_BACK_HAIRS = numbered([
-  "短束后发", "齐颈后发", "披肩后发", "侧束马尾", "高束发髻", "半束长发", "蓬松短发", "垂腰长发",
+  "高束发髻", "齐颈后发", "披肩后发", "侧束马尾", "束顶发髻", "半束长发", "蓬松短发", "垂腰长发",
 ]);
 export const APPEARANCE_EYES = numbered([
   "平直凤眼", "清锐长眼", "微垂静眼", "明净圆眼", "狭长冷眼", "上挑利眼", "沉水青眼", "澄亮杏眼",
@@ -35,7 +35,7 @@ export const APPEARANCE_BACK_ACCESSORIES = numbered([
   "不负外物", "旧木剑匣", "黄皮酒葫芦", "竹简书筒", "青布披风", "柘木长弓",
 ]);
 export const APPEARANCE_CLOTHINGS = numbered([
-  "玄青短打", "褐布行衣", "素白劲装", "赤练窄袖", "苍苔猎衣", "黛蓝长衣", "旧麻练服", "深青游侠装",
+  "玄青游侠装", "褐布行衣", "素白劲装", "赤练窄袖", "苍苔猎衣", "黛蓝长衣", "旧麻练服", "深青长衣",
 ]);
 export const APPEARANCE_FACE_ACCESSORIES = numbered([
   "不饰面容", "颊上旧痕", "眼下小痣", "青黛面纹", "玄布眼罩", "缝线伤痕",
@@ -81,9 +81,23 @@ export const APPEARANCE_BASE_ASSETS = Object.freeze({
 
 export const APPEARANCE_PARTS_ASSET = "./assets/appearance/layered/parts-v1.svg";
 
+export const APPEARANCE_DEFAULT_LAYER_ASSETS = Object.freeze({
+  male: Object.freeze({
+    frontHair: "./assets/appearance/layered/male-front-hair-1-v1.webp",
+    faceShape: "./assets/appearance/layered/male-face-shape-1-v1.webp",
+    clothing: "./assets/appearance/layered/male-clothing-1-v1.webp",
+  }),
+  female: Object.freeze({
+    frontHair: "./assets/appearance/layered/female-front-hair-1-v1.webp",
+    faceShape: "./assets/appearance/layered/female-face-shape-1-v1.webp",
+    clothing: "./assets/appearance/layered/female-clothing-1-v1.webp",
+  }),
+});
+
 export const APPEARANCE_RUNTIME_ASSETS = Object.freeze([
   APPEARANCE_BASE_ASSETS.male,
   APPEARANCE_BASE_ASSETS.female,
+  ...Object.values(APPEARANCE_DEFAULT_LAYER_ASSETS).flatMap((layers) => Object.values(layers)),
   APPEARANCE_PARTS_ASSET,
 ]);
 
@@ -141,11 +155,14 @@ export function appearancePart(value, partId) {
   const part = APPEARANCE_PARTS.find((entry) => entry.id === partId);
   if (!part) return null;
   const id = appearance[partId];
+  const asset = id === 1 ? APPEARANCE_DEFAULT_LAYER_ASSETS[appearance.body]?.[partId] || null : null;
   return {
     ...part,
     id,
     name: part.catalog.find((entry) => entry.id === id)?.name || part.catalog[0].name,
-    href: (partId === "hat" || partId === "backAccessory" || partId === "faceAccessory") && id === 1
+    asset,
+    source: asset ? "image" : "symbol",
+    href: asset || ((partId === "hat" || partId === "backAccessory" || partId === "faceAccessory") && id === 1)
       ? null
       : `${APPEARANCE_PARTS_ASSET}#${part.symbol}-${id}`,
   };
