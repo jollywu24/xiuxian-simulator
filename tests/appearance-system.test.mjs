@@ -90,4 +90,9 @@ test("容貌透明锚点和全部手绘组件都位于正式运行资源目录",
     assert.ok(fs.existsSync(target), `missing appearance asset: ${asset}`);
     assert.ok(fs.statSync(target).size >= 64, `empty appearance asset: ${asset}`);
   }
+  for (const body of ["male", "female"]) {
+    const master = path.resolve(webRoot, `../scripts/assets/appearance/${body}-face-master-v1.webp`);
+    assert.ok(fs.existsSync(master), `missing reproducible face master: ${master}`);
+    assert.ok(fs.statSync(master).size >= 64, `empty face master: ${master}`);
+  }
 });

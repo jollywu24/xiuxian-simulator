@@ -468,6 +468,27 @@ assert.match(await evaluate(`document.querySelector('.appearance-preview [data-l
 assert.equal(await evaluate(`document.querySelectorAll('.appearance-preview [data-layer-id^="appearance:"][src]').length >= 8`), true);
 assert.equal(await evaluate(`[...document.querySelectorAll('.appearance-preview [data-layer-id^="appearance:"][src]')].every((image) => image.complete && image.naturalWidth === 1024 && image.naturalHeight === 1536)`), true);
 assert.equal(await evaluate(`document.querySelectorAll(".appearance-ring-control").length`), 11);
+await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 660, deviceScaleFactor: 1, mobile: false });
+await evaluate(`new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
+const compactDesktopAppearance = await evaluate(`(() => {
+  const identity = document.querySelector(".appearance-identity-controls").getBoundingClientRect();
+  const firstLeft = document.querySelector('[data-appearance-part="frontHair"]').getBoundingClientRect();
+  const finalLeft = document.querySelector('[data-appearance-part="backAccessory"]').getBoundingClientRect();
+  const footer = document.querySelector(".appearance-footer").getBoundingClientRect();
+  return {
+    identityBottom: identity.bottom,
+    firstTop: firstLeft.top,
+    finalBottom: finalLeft.bottom,
+    footerTop: footer.top,
+    scrollWidth: document.documentElement.scrollWidth,
+    scrollHeight: document.documentElement.scrollHeight,
+  };
+})()`);
+assert.ok(compactDesktopAppearance.firstTop >= compactDesktopAppearance.identityBottom, JSON.stringify(compactDesktopAppearance));
+assert.ok(compactDesktopAppearance.finalBottom <= compactDesktopAppearance.footerTop, JSON.stringify(compactDesktopAppearance));
+assert.ok(compactDesktopAppearance.scrollWidth <= 1280, JSON.stringify(compactDesktopAppearance));
+assert.ok(compactDesktopAppearance.scrollHeight <= 660, JSON.stringify(compactDesktopAppearance));
+await screenshot("wudao-appearance-compact-desktop-1280x660.png");
 await send("Emulation.setDeviceMetricsOverride", { width: 1672, height: 941, deviceScaleFactor: 1, mobile: false });
 await evaluate(`new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
 assert.equal(await evaluate(`document.documentElement.scrollWidth <= 1672`), true);

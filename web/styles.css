@@ -15160,7 +15160,23 @@ body[data-martial-open="true"] {
   font-size: 31px;
 }
 
-@media (orientation: landscape) and (max-height: 500px) {
+/* Keep the five mirrored part rows below the identity controls on short desktop
+   and tablet landscape viewports.  The previous percentage-only anchors made
+   the first row collide with the body selector around 1280 x 660. */
+@media (orientation: landscape) and (min-height: 620px) and (max-height: 760px) {
+  .appearance-ring-control.slot-left-1,
+  .appearance-ring-control.slot-right-1 { top: 33%; }
+  .appearance-ring-control.slot-left-2,
+  .appearance-ring-control.slot-right-2 { top: 43%; }
+  .appearance-ring-control.slot-left-3,
+  .appearance-ring-control.slot-right-3 { top: 53%; }
+  .appearance-ring-control.slot-left-4,
+  .appearance-ring-control.slot-right-4 { top: 63%; }
+  .appearance-ring-control.slot-left-5,
+  .appearance-ring-control.slot-right-5 { top: 73%; }
+}
+
+@media (orientation: landscape) and (max-height: 619px) {
   .appearance-creation-screen {
     padding: 0;
     background:

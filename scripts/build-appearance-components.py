@@ -35,6 +35,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source-dir", type=Path, required=True)
     parser.add_argument("--hair-dir", type=Path)
+    parser.add_argument("--face-master-dir", type=Path)
     parser.add_argument("--clothing-dir", type=Path)
     parser.add_argument("--headwear-dir", type=Path)
     parser.add_argument("--component-dir", type=Path)
@@ -182,23 +183,55 @@ def transform_component(layer: Image.Image, x_scale: float, y_scale: float, shif
     return result
 
 
+def feature_detail_layer(source: Image.Image, region: Image.Image, kind: str) -> Image.Image:
+    """Keep painted facial strokes without carrying a rectangular skin patch.
+
+    The old implementation copied an oval of skin around every feature.  Those
+    ovals only disappeared for the exact source face and produced bright seams
+    as soon as another face shape or feature was selected.  Here alpha comes
+    from local tonal detail instead, so eyes, brows, nose and mouth remain
+    brushwork laid over one shared skin surface.
+    """
+    original = np.asarray(source.convert("RGBA"), dtype=np.float32)
+    softened = np.asarray(source.filter(ImageFilter.GaussianBlur(7)).convert("RGBA"), dtype=np.float32)
+    color_delta = np.max(np.abs(original[:, :, :3] - softened[:, :, :3]), axis=2)
+    darkness = np.mean(softened[:, :, :3] - original[:, :, :3], axis=2)
+    if kind in {"eyes", "brows", "mouth"}:
+        strength = np.maximum(color_delta * 5.4, darkness * 11.0)
+    else:
+        strength = np.maximum(color_delta * 5.0, np.abs(darkness) * 8.0)
+    strength = np.clip(strength - 13, 0, 255)
+    region_alpha = np.asarray(region, dtype=np.float32) / 255
+    source_alpha = original[:, :, 3] / 255
+    alpha = np.uint8(np.clip(strength * region_alpha * source_alpha, 0, 255))
+    alpha_image = Image.fromarray(alpha, "L").filter(ImageFilter.GaussianBlur(0.55))
+    result = source.copy()
+    result.putalpha(alpha_image)
+    return result
+
+
 def clean_face_layers(body: str, sheet: Image.Image) -> dict[tuple[str, int], Image.Image]:
-    panel = sheet.crop((384, 512, 768, 1024))
+    panel = sheet if sheet.size == (384, 512) else sheet.crop((384, 512, 768, 1024))
     aligned = Image.new("RGBA", CANVAS, (0, 0, 0, 0))
     aligned.alpha_composite(panel, (320, 20 if body == "male" else 0))
+    aligned = align_source(aligned)
     masks = {
-        "faceShape": shape_mask(ellipses=[(420, 118, 610, 307)], polygons=[[(454, 260), (570, 260), (579, 358), (445, 358)]], blur=4),
+        "faceShape": shape_mask(ellipses=[(416, 112, 614, 318)], polygons=[[(448, 255), (576, 255), (604, 420), (420, 420)]], blur=3),
         "eyes": shape_mask(ellipses=[(438, 170, 511, 221), (509, 170, 582, 221)], blur=3),
         "brows": shape_mask(ellipses=[(436, 146, 513, 190), (507, 146, 584, 190)], blur=3),
         "nose": shape_mask(ellipses=[(480, 187, 544, 248)], blur=3),
         "mouth": shape_mask(ellipses=[(464, 220, 560, 272)], blur=3),
     }
+    detected_skin = Image.fromarray(np.uint8(skin_mask(aligned) * 255), "L")
+    detected_skin = detected_skin.filter(ImageFilter.MaxFilter(17)).filter(ImageFilter.MinFilter(17))
+    detected_skin = detected_skin.filter(ImageFilter.GaussianBlur(1.35))
+    face_alpha = ImageChops.multiply(masks["faceShape"], detected_skin)
     feature_erase = Image.new("L", CANVAS, 0)
     for kind in ("eyes", "brows", "nose", "mouth"):
         feature_erase = ImageChops.lighter(feature_erase, masks[kind])
-    face = multiply_alpha(aligned, masks["faceShape"])
-    smooth = multiply_alpha(aligned.filter(ImageFilter.GaussianBlur(14)), masks["faceShape"])
-    face = Image.composite(smooth, face, feature_erase)
+    smooth = aligned.filter(ImageFilter.GaussianBlur(12))
+    face = Image.composite(smooth, aligned, feature_erase)
+    face = multiply_alpha(face, face_alpha)
     layers: dict[tuple[str, int], Image.Image] = {}
     face_transforms = [
         (1.00, 1.00, 0, 0), (1.05, 0.99, 0, 0), (0.94, 1.04, 0, 1),
@@ -213,7 +246,7 @@ def clean_face_layers(body: str, sheet: Image.Image) -> dict[tuple[str, int], Im
         "mouth": [(1, 1, 0, 0), (.92, .96, 0, 0), (1.08, 1.04, 0, 0), (.96, .9, 0, 1), (1.04, 1.08, 0, -1), (.9, 1.02, 0, 0), (1.1, .94, 0, 1), (.98, 1.1, 0, -1)],
     }
     for kind, transforms in feature_transforms.items():
-        base = multiply_alpha(aligned, masks[kind])
+        base = feature_detail_layer(aligned, masks[kind], kind)
         for index, transform in enumerate(transforms, start=1):
             layers[(kind, index)] = transform_component(base, *transform)
     return layers
@@ -603,8 +636,15 @@ def validate(output_dir: Path) -> None:
                 if image.size != CANVAS:
                     failures.append(f"wrong canvas {path.name}: {image.size}")
                 alpha = np.asarray(image.getchannel("A"))
-                if np.count_nonzero(alpha > 12) < 6:
+                visible_pixels = np.count_nonzero(alpha > 12)
+                if visible_pixels < 6:
                     failures.append(f"empty {path.name}")
+                if part in {"eyes", "brows", "nose", "mouth"} and visible_pixels > 12000:
+                    failures.append(f"facial feature carries a skin patch {path.name}: {visible_pixels}")
+                if part == "faceShape":
+                    bbox = image.getchannel("A").getbbox()
+                    if bbox and abs((bbox[0] + bbox[2]) / 2 - CANVAS[0] / 2) > 14:
+                        failures.append(f"face anchor is off center {path.name}: {bbox}")
                 if any(alpha[y, x] > 0 for x, y in ((0, 0), (1023, 0), (0, 1535), (1023, 1535))):
                     failures.append(f"opaque corner {path.name}")
     if failures:
@@ -626,8 +666,10 @@ def main() -> None:
     args = parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
     if args.hair_only or args.faces_only or args.clothing_only or args.hats_only or args.components_only:
-        if (args.hair_only or args.faces_only) and not args.hair_dir:
-            raise SystemExit("--hair-only/--faces-only requires --hair-dir")
+        if args.hair_only and not args.hair_dir:
+            raise SystemExit("--hair-only requires --hair-dir")
+        if args.faces_only and not (args.face_master_dir or args.hair_dir):
+            raise SystemExit("--faces-only requires --face-master-dir or --hair-dir")
         if args.clothing_only and not args.clothing_dir:
             raise SystemExit("--clothing-only requires --clothing-dir")
         if args.components_only and not args.component_dir:
@@ -637,8 +679,12 @@ def main() -> None:
             if args.hair_only:
                 replacement_layers.update(hair_sheet_layers(body, args.hair_dir))
             if args.faces_only:
-                sheet = Image.open(args.hair_dir / f"{body}-hair-sheet.png").convert("RGBA")
-                replacement_layers.update(clean_face_layers(body, sheet))
+                face_source = (
+                    Image.open(args.face_master_dir / f"{body}-face-master-v1.webp").convert("RGBA")
+                    if args.face_master_dir
+                    else Image.open(args.hair_dir / f"{body}-hair-sheet.png").convert("RGBA")
+                )
+                replacement_layers.update(clean_face_layers(body, face_source))
             if args.clothing_only:
                 replacement_layers.update(clothing_sheet_layers(body, args.clothing_dir))
             if args.hats_only:
