@@ -50,8 +50,8 @@ import {
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs?v=20260804.1";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260804.1";
+} from "./wudao-core.mjs?v=20260804.2";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260804.2";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -81,7 +81,7 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260804.1";
+} from "./wudao-p0-core.mjs?v=20260804.2";
 import {
   M4_EVIDENCE,
   M4_METHOD,
@@ -100,7 +100,7 @@ import {
   resolveM4Training,
   resolveMoneyInquiry,
   resolveOldHouseChoice,
-} from "./wudao-p1-core.mjs?v=20260804.1";
+} from "./wudao-p1-core.mjs?v=20260804.2";
 import {
   advanceCombatLabCampaign,
   createCombatLabSession,
@@ -111,14 +111,14 @@ import {
   restartCombatLab,
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
-} from "./combat-lab-core.mjs?v=20260804.1";
+} from "./combat-lab-core.mjs?v=20260804.2";
 import {
   INVENTORY_CAPACITY,
   createInventoryBoard,
   formatSilver,
   getInventoryCategory,
   getInventoryUseState,
-} from "./inventory-core.mjs?v=20260804.1";
+} from "./inventory-core.mjs?v=20260804.2";
 import {
   EQUIPMENT_CAPACITY,
   EQUIPMENT_SLOTS,
@@ -132,7 +132,7 @@ import {
   migrateCharacterVitals,
   migrateEquipmentState,
   unequipEquipmentSlot,
-} from "./character-system.mjs?v=20260804.1";
+} from "./character-system.mjs?v=20260804.2";
 import {
   MARTIAL_MASTERIES,
   breakthroughMartial,
@@ -154,9 +154,9 @@ import {
   trainMartial,
   unequipMartial,
   unlockedMartialNodes,
-} from "./martial-system.mjs?v=20260804.1";
-import { SAVE_STORAGE_KEY } from "./save-core.mjs?v=20260804.1";
-import { createSaveStorage } from "./save-storage.mjs?v=20260804.1";
+} from "./martial-system.mjs?v=20260804.2";
+import { SAVE_STORAGE_KEY } from "./save-core.mjs?v=20260804.2";
+import { createSaveStorage } from "./save-storage.mjs?v=20260804.2";
 import {
   ORIGINS,
   ORIGIN_LADY_INSIGHTS,
@@ -169,7 +169,7 @@ import {
   resolveOriginPersonalEvent,
   resolveOriginPrologueChoice,
   resolveOriginTempleTask,
-} from "./origin-core.mjs?v=20260804.1";
+} from "./origin-core.mjs?v=20260804.2";
 import {
   APPEARANCE_BODIES,
   APPEARANCE_CATALOGS,
@@ -178,8 +178,8 @@ import {
   createAppearanceState,
   cycleAppearance,
   normalizeAppearance,
-} from "./appearance-core.mjs?v=20260804.1";
-import { resolvePaperDollLayers } from "./paperdoll-system.mjs?v=20260804.1";
+} from "./appearance-core.mjs?v=20260804.2";
+import { resolvePaperDollLayers } from "./paperdoll-system.mjs?v=20260804.2";
 
 const app = document.querySelector("#app");
 const BUILD_SHA = document.documentElement.dataset.buildSha || "dev";

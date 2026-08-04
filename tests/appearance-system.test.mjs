@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 
 import {
   APPEARANCE_BODIES,
@@ -13,6 +16,8 @@ import {
   cycleAppearance,
   normalizeAppearance,
 } from "../web/appearance-core.mjs";
+
+const webRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../web");
 
 test("容貌目录保持与参考一致的十一类离散部件", () => {
   assert.deepEqual(APPEARANCE_BODIES.map((entry) => entry.name), ["男身", "女身"]);
@@ -66,12 +71,23 @@ test("随心一变同时轮换十一类外观但不改变体貌", () => {
   assert.ok(APPEARANCE_PARTS.every((part) => APPEARANCE_CATALOGS[part.id].some((entry) => entry.id === next[part.id])));
 });
 
-test("容貌底像和部件图集都位于正式运行资源目录", () => {
-  assert.equal(appearanceBaseAsset({ body: "male" }), "./assets/appearance/layered/male-base-v2.webp");
-  assert.equal(appearanceBaseAsset({ body: "female" }), "./assets/appearance/layered/female-base-v2.webp");
-  assert.equal(appearancePart({ body: "male", frontHair: 1 }, "frontHair").asset, "./assets/appearance/layered/male-front-hair-1-v1.webp");
-  assert.equal(appearancePart({ body: "female", clothing: 1 }, "clothing").asset, "./assets/appearance/layered/female-clothing-1-v1.webp");
-  assert.equal(appearancePart({ frontHair: 3 }, "frontHair").href, "./assets/appearance/layered/parts-v1.svg#front-hair-3");
+test("容貌透明锚点和全部手绘组件都位于正式运行资源目录", () => {
+  assert.equal(appearanceBaseAsset({ body: "male" }), "./assets/appearance/layered/male-base-v3.webp");
+  assert.equal(appearanceBaseAsset({ body: "female" }), "./assets/appearance/layered/female-base-v3.webp");
+  assert.equal(appearancePart({ body: "male", frontHair: 1 }, "frontHair").asset, "./assets/appearance/layered/male-frontHair-1-v2.webp");
+  assert.equal(appearancePart({ body: "female", clothing: 1 }, "clothing").asset, "./assets/appearance/layered/female-clothing-1-v2.webp");
+  assert.equal(appearancePart({ body: "male", frontHair: 3 }, "frontHair").asset, "./assets/appearance/layered/male-frontHair-3-v2.webp");
+  assert.equal(appearancePart({ body: "female", eyes: 8 }, "eyes").asset, "./assets/appearance/layered/female-eyes-8-v2.webp");
+  assert.equal(appearancePart({ frontHair: 3 }, "frontHair").href, null);
   assert.equal(appearancePart({ hat: 1 }, "hat").href, null);
-  assert.ok(APPEARANCE_RUNTIME_ASSETS.every((path) => /^\.\/assets\/appearance\/layered\/.+\.(?:webp|svg)$/.test(path)));
+  assert.equal(appearancePart({ hat: 1 }, "hat").asset, null);
+  assert.equal(APPEARANCE_RUNTIME_ASSETS.length, 160);
+  assert.equal(new Set(APPEARANCE_RUNTIME_ASSETS).size, APPEARANCE_RUNTIME_ASSETS.length);
+  assert.ok(APPEARANCE_RUNTIME_ASSETS.every((path) => /^\.\/assets\/appearance\/layered\/.+\.webp$/.test(path)));
+  assert.ok(APPEARANCE_RUNTIME_ASSETS.every((path) => !path.includes("parts-v1.svg")));
+  for (const asset of APPEARANCE_RUNTIME_ASSETS) {
+    const target = path.join(webRoot, asset.replace(/^\.\//, ""));
+    assert.ok(fs.existsSync(target), `missing appearance asset: ${asset}`);
+    assert.ok(fs.statSync(target).size >= 64, `empty appearance asset: ${asset}`);
+  }
 });

@@ -6,6 +6,7 @@ import {
   RELEASE_CRITICAL_RESOURCES,
   RUNTIME_SOURCE_EXTENSIONS,
 } from "./release-contract.mjs";
+import { APPEARANCE_RUNTIME_ASSETS } from "../web/appearance-core.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -22,9 +23,10 @@ export function collectRuntimeAssetReferences(webRoot) {
   for (const source of sources) {
     const contents = fs.readFileSync(source, "utf8");
     for (const match of contents.matchAll(/(?:\.\/)?assets\/[^"'`()\s?]+\.(?:jpeg|jpg|png|svg|webp|woff2)/gi)) {
-      references.add(match[0].replace(/^\.\//, ""));
+      if (!match[0].includes("${")) references.add(match[0].replace(/^\.\//, ""));
     }
   }
+  for (const asset of APPEARANCE_RUNTIME_ASSETS) references.add(asset.replace(/^\.\//, ""));
   return [...references].sort();
 }
 

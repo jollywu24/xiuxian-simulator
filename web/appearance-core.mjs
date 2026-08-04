@@ -75,30 +75,35 @@ export const DEFAULT_APPEARANCE = Object.freeze({
 });
 
 export const APPEARANCE_BASE_ASSETS = Object.freeze({
-  male: "./assets/appearance/layered/male-base-v2.webp",
-  female: "./assets/appearance/layered/female-base-v2.webp",
+  male: "./assets/appearance/layered/male-base-v3.webp",
+  female: "./assets/appearance/layered/female-base-v3.webp",
 });
 
-export const APPEARANCE_PARTS_ASSET = "./assets/appearance/layered/parts-v1.svg";
+const EMPTY_APPEARANCE_PARTS = Object.freeze({
+  hat: new Set([1]),
+  faceAccessory: new Set([1]),
+  backAccessory: new Set([1]),
+});
+
+export function appearanceLayerAsset(body, partId, id) {
+  if (!catalogHas(APPEARANCE_BODIES, body)) return null;
+  const part = APPEARANCE_PARTS.find((entry) => entry.id === partId);
+  const numeric = Number(id);
+  if (!part || !catalogHas(part.catalog, numeric) || EMPTY_APPEARANCE_PARTS[partId]?.has(numeric)) return null;
+  return `./assets/appearance/layered/${body}-${partId}-${numeric}-v2.webp`;
+}
 
 export const APPEARANCE_DEFAULT_LAYER_ASSETS = Object.freeze({
-  male: Object.freeze({
-    frontHair: "./assets/appearance/layered/male-front-hair-1-v1.webp",
-    faceShape: "./assets/appearance/layered/male-face-shape-1-v1.webp",
-    clothing: "./assets/appearance/layered/male-clothing-1-v1.webp",
-  }),
-  female: Object.freeze({
-    frontHair: "./assets/appearance/layered/female-front-hair-1-v1.webp",
-    faceShape: "./assets/appearance/layered/female-face-shape-1-v1.webp",
-    clothing: "./assets/appearance/layered/female-clothing-1-v1.webp",
-  }),
+  male: Object.freeze(Object.fromEntries(APPEARANCE_PARTS.map((part) => [part.id, appearanceLayerAsset("male", part.id, 1)]))),
+  female: Object.freeze(Object.fromEntries(APPEARANCE_PARTS.map((part) => [part.id, appearanceLayerAsset("female", part.id, 1)]))),
 });
 
 export const APPEARANCE_RUNTIME_ASSETS = Object.freeze([
   APPEARANCE_BASE_ASSETS.male,
   APPEARANCE_BASE_ASSETS.female,
-  ...Object.values(APPEARANCE_DEFAULT_LAYER_ASSETS).flatMap((layers) => Object.values(layers)),
-  APPEARANCE_PARTS_ASSET,
+  ...APPEARANCE_BODIES.flatMap(({ id: body }) => APPEARANCE_PARTS.flatMap((part) => (
+    part.catalog.map(({ id }) => appearanceLayerAsset(body, part.id, id)).filter(Boolean)
+  ))),
 ]);
 
 function catalogHas(catalog, id) {
@@ -155,16 +160,14 @@ export function appearancePart(value, partId) {
   const part = APPEARANCE_PARTS.find((entry) => entry.id === partId);
   if (!part) return null;
   const id = appearance[partId];
-  const asset = id === 1 ? APPEARANCE_DEFAULT_LAYER_ASSETS[appearance.body]?.[partId] || null : null;
+  const asset = appearanceLayerAsset(appearance.body, partId, id);
   return {
     ...part,
     id,
     name: part.catalog.find((entry) => entry.id === id)?.name || part.catalog[0].name,
     asset,
-    source: asset ? "image" : "symbol",
-    href: asset || ((partId === "hat" || partId === "backAccessory" || partId === "faceAccessory") && id === 1)
-      ? null
-      : `${APPEARANCE_PARTS_ASSET}#${part.symbol}-${id}`,
+    source: asset ? "image" : null,
+    href: null,
   };
 }
 
@@ -182,5 +185,6 @@ export function appearanceCharacterAsset(value = {}) {
   return appearanceBaseAsset(value);
 }
 export function appearanceHairAsset(body, hair) {
-  return `${APPEARANCE_PARTS_ASSET}#front-hair-${normalizeAppearance({ body, frontHair: hair }).frontHair}`;
+  const appearance = normalizeAppearance({ body, frontHair: hair });
+  return appearanceLayerAsset(appearance.body, "frontHair", appearance.frontHair);
 }

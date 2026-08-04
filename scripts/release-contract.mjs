@@ -1,4 +1,4 @@
-export const RELEASE_CONTRACT_VERSION = 3;
+export const RELEASE_CONTRACT_VERSION = 4;
 
 export const RELEASE_ENTRY_RESOURCES = Object.freeze([
   { path: "index.html", contentType: "text/html", minBytes: 256 },
@@ -15,15 +15,14 @@ export const RELEASE_CRITICAL_ASSETS = Object.freeze([
   { path: "assets/origins/cards/mystery-v1.webp", contentType: "image/webp", minBytes: 1024 },
   { path: "assets/scenes/ruined-temple-stage-v3.webp", contentType: "image/webp", minBytes: 1024 },
   { path: "assets/appearance/appearance-courtyard-v2.webp", contentType: "image/webp", minBytes: 1024 },
-  { path: "assets/appearance/layered/male-base-v2.webp", contentType: "image/webp", minBytes: 1024 },
-  { path: "assets/appearance/layered/female-base-v2.webp", contentType: "image/webp", minBytes: 1024 },
-  { path: "assets/appearance/layered/male-front-hair-1-v1.webp", contentType: "image/webp", minBytes: 1024 },
-  { path: "assets/appearance/layered/male-face-shape-1-v1.webp", contentType: "image/webp", minBytes: 1024 },
-  { path: "assets/appearance/layered/male-clothing-1-v1.webp", contentType: "image/webp", minBytes: 1024 },
-  { path: "assets/appearance/layered/female-front-hair-1-v1.webp", contentType: "image/webp", minBytes: 1024 },
-  { path: "assets/appearance/layered/female-face-shape-1-v1.webp", contentType: "image/webp", minBytes: 1024 },
-  { path: "assets/appearance/layered/female-clothing-1-v1.webp", contentType: "image/webp", minBytes: 1024 },
-  { path: "assets/appearance/layered/parts-v1.svg", contentType: "image/svg+xml", minBytes: 1024 },
+  { path: "assets/appearance/layered/male-base-v3.webp", contentType: "image/webp", minBytes: 64 },
+  { path: "assets/appearance/layered/female-base-v3.webp", contentType: "image/webp", minBytes: 64 },
+  { path: "assets/appearance/layered/male-frontHair-1-v2.webp", contentType: "image/webp", minBytes: 1024 },
+  { path: "assets/appearance/layered/male-faceShape-1-v2.webp", contentType: "image/webp", minBytes: 1024 },
+  { path: "assets/appearance/layered/male-clothing-1-v2.webp", contentType: "image/webp", minBytes: 1024 },
+  { path: "assets/appearance/layered/female-frontHair-1-v2.webp", contentType: "image/webp", minBytes: 1024 },
+  { path: "assets/appearance/layered/female-faceShape-1-v2.webp", contentType: "image/webp", minBytes: 1024 },
+  { path: "assets/appearance/layered/female-clothing-1-v2.webp", contentType: "image/webp", minBytes: 1024 },
   { path: "assets/inventory/inventory-backdrop.png", contentType: "image/png", minBytes: 1024 },
   { path: "assets/martial/martial-screen-backdrop.webp", contentType: "image/webp", minBytes: 1024 },
 ]);

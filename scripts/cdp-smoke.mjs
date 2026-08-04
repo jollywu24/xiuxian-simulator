@@ -16,7 +16,21 @@ const entryHtml = fs.readFileSync(new URL("../web/index.html", import.meta.url),
 const expectedCacheVersion = entryHtml.match(/wudao-app\.mjs\?v=([0-9]{8}\.[0-9]+)/)?.[1];
 if (!expectedCacheVersion) throw new Error("Unable to read the runtime cache version from web/index.html");
 const escapedCacheVersion = expectedCacheVersion.replace(".", "\\.");
-const expectedCreatedAppearance = Object.freeze({ ...DEFAULT_APPEARANCE, body: "female", frontHair: 4 });
+const expectedCreatedAppearance = Object.freeze({
+  ...DEFAULT_APPEARANCE,
+  body: "female",
+  hat: 2,
+  frontHair: 4,
+  backHair: 2,
+  eyes: 2,
+  brows: 2,
+  mouth: 2,
+  nose: 2,
+  faceShape: 2,
+  faceAccessory: 2,
+  backAccessory: 2,
+  clothing: 2,
+});
 
 const socket = new WebSocket(tab.webSocketDebuggerUrl);
 let id = 0;
@@ -450,8 +464,9 @@ assert.deepEqual(
 assert.equal(await evaluate(`document.querySelectorAll('.appearance-identity-controls input[type="range"]').length`), 0);
 assert.equal(await evaluate(`document.querySelectorAll(".appearance-face-grid, .appearance-hair-grid").length`), 0);
 assert.equal(await evaluate(`Boolean(document.querySelector('[data-appearance-part="clothing"]'))`), true);
-assert.match(await evaluate(`document.querySelector('.appearance-preview [data-layer-id="appearance-base"]')?.getAttribute("src") || ""`), /male-base-v2\.webp/);
-assert.equal(await evaluate(`document.querySelectorAll('.appearance-preview [data-layer-id^="appearance:"][src]').length >= 3`), true);
+assert.match(await evaluate(`document.querySelector('.appearance-preview [data-layer-id="appearance-base"]')?.getAttribute("src") || ""`), /male-base-v3\.webp/);
+assert.equal(await evaluate(`document.querySelectorAll('.appearance-preview [data-layer-id^="appearance:"][src]').length >= 8`), true);
+assert.equal(await evaluate(`[...document.querySelectorAll('.appearance-preview [data-layer-id^="appearance:"][src]')].every((image) => image.complete && image.naturalWidth === 1024 && image.naturalHeight === 1536)`), true);
 assert.equal(await evaluate(`document.querySelectorAll(".appearance-ring-control").length`), 11);
 await send("Emulation.setDeviceMetricsOverride", { width: 1672, height: 941, deviceScaleFactor: 1, mobile: false });
 await evaluate(`new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
@@ -501,9 +516,15 @@ await screenshot("wudao-appearance-phone-portrait.png");
 await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
 await evaluate(`new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
 await click("select-appearance-body", "female");
-for (let index = 0; index < 3; index += 1) await click("step-appearance", "frontHair:1");
-assert.match(await evaluate(`document.querySelector('.appearance-preview [data-layer-id="appearance-base"]')?.getAttribute("src") || ""`), /female-base-v2\.webp/);
-assert.match(await evaluate(`document.querySelector('.appearance-preview [data-layer-id^="appearance:frontHair:"] use')?.getAttribute("href") || ""`), /#front-hair-4$/);
+for (const part of ["hat", "frontHair", "backHair", "eyes", "brows", "mouth", "nose", "faceShape", "faceAccessory", "backAccessory", "clothing"]) {
+  await click("step-appearance", `${part}:1`);
+}
+for (let index = 0; index < 2; index += 1) await click("step-appearance", "frontHair:1");
+assert.match(await evaluate(`document.querySelector('.appearance-preview [data-layer-id="appearance-base"]')?.getAttribute("src") || ""`), /female-base-v3\.webp/);
+assert.match(await evaluate(`document.querySelector('.appearance-preview [data-layer-id^="appearance:frontHair:"]')?.getAttribute("src") || ""`), /female-frontHair-4-v2\.webp/);
+assert.equal(await evaluate(`document.querySelectorAll('.appearance-preview [data-layer-id^="appearance:"][src]').length`), 11);
+assert.equal(await evaluate(`[...document.querySelectorAll('.appearance-preview [data-layer-id^="appearance:"][src]')].every((image) => image.complete && image.naturalWidth === 1024 && image.naturalHeight === 1536)`), true);
+await screenshot("wudao-appearance-female-mixed-components.png");
 await click("confirm-appearance");
 await click("select-vow", "path");
 await click("start-journey");
@@ -724,7 +745,7 @@ assert.equal(landscapeCharacter.characterView.bagSlots, 24);
 assert.equal(landscapeCharacter.characterView.occupiedBagSlots, 12);
 assert.ok(landscapeCharacter.characterView.bagSlotSizes.every(([width, height]) => height > width), JSON.stringify(landscapeCharacter.characterView.bagSlotSizes));
 assert.doesNotMatch(landscapeCharacter.characterView.profileText, /潜能|命灯/);
-assert.match(landscapeCharacter.characterView.paperDollBase, /female-base-v2\.webp/);
+assert.match(landscapeCharacter.characterView.paperDollBase, /female-base-v3\.webp/);
 assert.deepEqual(landscapeCharacter.characterView.paperDollItems, []);
 assert.ok(landscapeCharacter.characterView.paperDollParts.includes("appearance:frontHair:4"));
 assert.ok(landscapeCharacter.characterView.overflowX <= 1, JSON.stringify(landscapeCharacter.characterView));
