@@ -20,7 +20,7 @@ const expectedCreatedAppearance = Object.freeze({
   ...DEFAULT_APPEARANCE,
   body: "female",
   hat: 2,
-  frontHair: 4,
+  frontHair: 2,
   backHair: 2,
   eyes: 2,
   brows: 2,
@@ -74,6 +74,17 @@ async function waitForApp() {
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
   throw new Error("Timed out waiting for the game to render");
+}
+
+async function waitForPaperDoll(scope = ".appearance-preview") {
+  const deadline = Date.now() + 10_000;
+  while (Date.now() < deadline) {
+    const selector = `${scope} canvas[data-paper-doll-plan]`;
+    const ready = await evaluate(`document.querySelector(${JSON.stringify(selector)})?.dataset.renderReady === "true"`);
+    if (ready) return;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  throw new Error(`Timed out waiting for the paper doll in ${scope}`);
 }
 
 async function writeSave(value) {
@@ -269,6 +280,8 @@ async function snapshot(label) {
       const slots = [...document.querySelectorAll(".character-equipment-slot")];
       const bagSlots = [...document.querySelectorAll(".character-bag-item")];
       const sectionTabs = [...document.querySelectorAll(".character-section-tabs button")];
+      const paperDollCanvas = document.querySelector(".character-hero canvas[data-paper-doll-plan]");
+      const paperDollPlan = paperDollCanvas ? JSON.parse(decodeURIComponent(paperDollCanvas.dataset.paperDollPlan)) : { layers: [] };
       return {
         visible: Boolean(overlay),
         rect: rect ? [rect.left, rect.top, rect.width, rect.height] : [0, 0, 0, 0],
@@ -306,9 +319,11 @@ async function snapshot(label) {
         equipmentDetailNameColor: getComputedStyle(document.querySelector(".character-equipment-detail h2") || document.body).color,
         equipmentDetailBaseColor: getComputedStyle(document.querySelector(".character-equipment-detail-art .inventory-quality-base") || document.body).backgroundColor,
         profileText: document.querySelector(".character-profile-copy")?.textContent?.replace(/\\s+/g, " ").trim() || "",
-        paperDollBase: document.querySelector('.character-hero [data-layer-id="appearance-base"]')?.getAttribute("src") || "",
-        paperDollItems: [...document.querySelectorAll(".character-hero [data-item-id]")].map((entry) => entry.dataset.itemId),
-        paperDollParts: [...document.querySelectorAll('.character-hero [data-layer-id^="appearance:"]')].map((entry) => entry.dataset.layerId),
+        paperDollBase: paperDollPlan.layers.find((entry) => entry.id === "appearance-base")?.asset || "",
+        paperDollItems: paperDollPlan.layers.map((entry) => entry.itemId).filter(Boolean),
+        paperDollParts: paperDollPlan.layers.filter((entry) => entry.id.startsWith("appearance:")).map((entry) => entry.id),
+        paperDollMasks: JSON.parse(paperDollCanvas?.dataset.maskedLayerIds || "[]"),
+        paperDollReady: paperDollCanvas?.dataset.renderReady === "true",
         overflowX: overlay ? overlay.scrollWidth - overlay.clientWidth : 0,
         overflowY: overlay ? overlay.scrollHeight - overlay.clientHeight : 0,
       };
@@ -457,6 +472,7 @@ await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, dev
 await evaluate(`new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
 await click("select-background", "mystery");
 await click("to-appearance");
+await waitForPaperDoll();
 assert.deepEqual(
   await evaluate(`[...document.querySelectorAll(".appearance-ring-control")].map((item) => item.dataset.appearancePart)`),
   ["hat", "frontHair", "backHair", "eyes", "brows", "mouth", "nose", "faceShape", "faceAccessory", "backAccessory", "clothing"],
@@ -464,9 +480,9 @@ assert.deepEqual(
 assert.equal(await evaluate(`document.querySelectorAll('.appearance-identity-controls input[type="range"]').length`), 0);
 assert.equal(await evaluate(`document.querySelectorAll(".appearance-face-grid, .appearance-hair-grid").length`), 0);
 assert.equal(await evaluate(`Boolean(document.querySelector('[data-appearance-part="clothing"]'))`), true);
-assert.match(await evaluate(`document.querySelector('.appearance-preview [data-layer-id="appearance-base"]')?.getAttribute("src") || ""`), /male-base-v3\.webp/);
-assert.equal(await evaluate(`document.querySelectorAll('.appearance-preview [data-layer-id^="appearance:"][src]').length >= 8`), true);
-assert.equal(await evaluate(`[...document.querySelectorAll('.appearance-preview [data-layer-id^="appearance:"][src]')].every((image) => image.complete && image.naturalWidth === 1024 && image.naturalHeight === 1536)`), true);
+assert.equal(await evaluate(`document.querySelector('.appearance-preview canvas[data-paper-doll-plan]')?.width`), 1024);
+assert.equal(await evaluate(`document.querySelector('.appearance-preview canvas[data-paper-doll-plan]')?.height`), 1536);
+assert.equal(await evaluate(`document.querySelector('.appearance-preview canvas[data-paper-doll-plan]')?.dataset.renderError || ""`), "");
 assert.equal(await evaluate(`document.querySelectorAll(".appearance-ring-control").length`), 11);
 await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 660, deviceScaleFactor: 1, mobile: false });
 await evaluate(`new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
@@ -541,10 +557,22 @@ for (const part of ["hat", "frontHair", "backHair", "eyes", "brows", "mouth", "n
   await click("step-appearance", `${part}:1`);
 }
 for (let index = 0; index < 2; index += 1) await click("step-appearance", "frontHair:1");
-assert.match(await evaluate(`document.querySelector('.appearance-preview [data-layer-id="appearance-base"]')?.getAttribute("src") || ""`), /female-base-v3\.webp/);
-assert.match(await evaluate(`document.querySelector('.appearance-preview [data-layer-id^="appearance:frontHair:"]')?.getAttribute("src") || ""`), /female-frontHair-4-v2\.webp/);
-assert.equal(await evaluate(`document.querySelectorAll('.appearance-preview [data-layer-id^="appearance:"][src]').length`), 11);
-assert.equal(await evaluate(`[...document.querySelectorAll('.appearance-preview [data-layer-id^="appearance:"][src]')].every((image) => image.complete && image.naturalWidth === 1024 && image.naturalHeight === 1536)`), true);
+await waitForPaperDoll();
+const mixedAppearancePlan = await evaluate(`(() => {
+  const canvas = document.querySelector('.appearance-preview canvas[data-paper-doll-plan]');
+  const plan = JSON.parse(decodeURIComponent(canvas.dataset.paperDollPlan));
+  return {
+    assets: plan.layers.map((entry) => entry.asset),
+    ids: plan.layers.map((entry) => entry.id),
+    masked: JSON.parse(canvas.dataset.maskedLayerIds || "[]"),
+    ready: canvas.dataset.renderReady,
+  };
+})()`);
+assert.ok(mixedAppearancePlan.assets.includes("./assets/appearance/rig-v1/female-base-v4.webp"));
+assert.ok(mixedAppearancePlan.assets.includes("./assets/appearance/rig-v1/female-frontHair-2-v3.webp"));
+assert.ok(mixedAppearancePlan.ids.includes("appearance:hatFront:2"));
+assert.deepEqual(mixedAppearancePlan.masked, ["appearance:backHair:2", "appearance:frontHair:2"]);
+assert.equal(mixedAppearancePlan.ready, "true");
 await screenshot("wudao-appearance-female-mixed-components.png");
 await click("confirm-appearance");
 await click("select-vow", "path");
@@ -748,6 +776,7 @@ assert.equal(landscapeTasks.splitView, true);
 assert.equal(landscapeTasks.dockCount, 3);
 await screenshot("wudao-temple-encounters-landscape.png");
 await click("open-character");
+await waitForPaperDoll(".character-hero");
 const landscapeCharacter = await snapshot("character-phone-landscape");
 assert.equal(landscapeCharacter.characterView.visible, true);
 assert.ok(Math.abs(landscapeCharacter.characterView.rect[2] - 844) < 2, JSON.stringify(landscapeCharacter.characterView));
@@ -766,9 +795,11 @@ assert.equal(landscapeCharacter.characterView.bagSlots, 24);
 assert.equal(landscapeCharacter.characterView.occupiedBagSlots, 12);
 assert.ok(landscapeCharacter.characterView.bagSlotSizes.every(([width, height]) => height > width), JSON.stringify(landscapeCharacter.characterView.bagSlotSizes));
 assert.doesNotMatch(landscapeCharacter.characterView.profileText, /潜能|命灯/);
-assert.match(landscapeCharacter.characterView.paperDollBase, /female-base-v3\.webp/);
+assert.match(landscapeCharacter.characterView.paperDollBase, /female-base-v4\.webp/);
 assert.deepEqual(landscapeCharacter.characterView.paperDollItems, []);
-assert.ok(landscapeCharacter.characterView.paperDollParts.includes("appearance:frontHair:4"));
+assert.ok(landscapeCharacter.characterView.paperDollParts.includes("appearance:frontHair:2"));
+assert.deepEqual(landscapeCharacter.characterView.paperDollMasks, ["appearance:backHair:2", "appearance:frontHair:2"]);
+assert.equal(landscapeCharacter.characterView.paperDollReady, true);
 assert.ok(landscapeCharacter.characterView.overflowX <= 1, JSON.stringify(landscapeCharacter.characterView));
 assert.ok(landscapeCharacter.characterView.overflowY <= 1, JSON.stringify(landscapeCharacter.characterView));
 const paperDollBaseBeforeEquipmentDetail = landscapeCharacter.characterView.paperDollBase;
@@ -788,7 +819,7 @@ assert.equal(await evaluate(`Boolean(document.querySelector(".character-equipmen
 const hatPaperDoll = await snapshot("character-straw-hat-paperdoll");
 assert.equal(hatPaperDoll.characterView.paperDollBase, paperDollBaseBeforeEquipmentDetail);
 assert.deepEqual(hatPaperDoll.characterView.paperDollItems, []);
-assert.ok(hatPaperDoll.characterView.paperDollParts.includes("appearance:frontHair:4"));
+assert.ok(hatPaperDoll.characterView.paperDollParts.includes("appearance:frontHair:2"));
 await click("inspect-character-equipment", "traveler_straw_hat|head");
 assert.equal((await snapshot("character-equipped-detail")).characterView.equipmentDetailAction, "confirm-unequip-character-item");
 await click("confirm-unequip-character-item", "head");

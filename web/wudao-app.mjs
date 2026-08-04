@@ -50,8 +50,8 @@ import {
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs?v=20260804.3";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260804.3";
+} from "./wudao-core.mjs?v=20260804.4";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260804.4";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -81,7 +81,7 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260804.3";
+} from "./wudao-p0-core.mjs?v=20260804.4";
 import {
   M4_EVIDENCE,
   M4_METHOD,
@@ -100,7 +100,7 @@ import {
   resolveM4Training,
   resolveMoneyInquiry,
   resolveOldHouseChoice,
-} from "./wudao-p1-core.mjs?v=20260804.3";
+} from "./wudao-p1-core.mjs?v=20260804.4";
 import {
   advanceCombatLabCampaign,
   createCombatLabSession,
@@ -111,14 +111,14 @@ import {
   restartCombatLab,
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
-} from "./combat-lab-core.mjs?v=20260804.3";
+} from "./combat-lab-core.mjs?v=20260804.4";
 import {
   INVENTORY_CAPACITY,
   createInventoryBoard,
   formatSilver,
   getInventoryCategory,
   getInventoryUseState,
-} from "./inventory-core.mjs?v=20260804.3";
+} from "./inventory-core.mjs?v=20260804.4";
 import {
   EQUIPMENT_CAPACITY,
   EQUIPMENT_SLOTS,
@@ -132,7 +132,7 @@ import {
   migrateCharacterVitals,
   migrateEquipmentState,
   unequipEquipmentSlot,
-} from "./character-system.mjs?v=20260804.3";
+} from "./character-system.mjs?v=20260804.4";
 import {
   MARTIAL_MASTERIES,
   breakthroughMartial,
@@ -154,9 +154,9 @@ import {
   trainMartial,
   unequipMartial,
   unlockedMartialNodes,
-} from "./martial-system.mjs?v=20260804.3";
-import { SAVE_STORAGE_KEY } from "./save-core.mjs?v=20260804.3";
-import { createSaveStorage } from "./save-storage.mjs?v=20260804.3";
+} from "./martial-system.mjs?v=20260804.4";
+import { SAVE_STORAGE_KEY } from "./save-core.mjs?v=20260804.4";
+import { createSaveStorage } from "./save-storage.mjs?v=20260804.4";
 import {
   ORIGINS,
   ORIGIN_LADY_INSIGHTS,
@@ -169,7 +169,7 @@ import {
   resolveOriginPersonalEvent,
   resolveOriginPrologueChoice,
   resolveOriginTempleTask,
-} from "./origin-core.mjs?v=20260804.3";
+} from "./origin-core.mjs?v=20260804.4";
 import {
   APPEARANCE_BODIES,
   APPEARANCE_CATALOGS,
@@ -178,8 +178,11 @@ import {
   createAppearanceState,
   cycleAppearance,
   normalizeAppearance,
-} from "./appearance-core.mjs?v=20260804.3";
-import { resolvePaperDollLayers } from "./paperdoll-system.mjs?v=20260804.3";
+} from "./appearance-core.mjs?v=20260804.4";
+import { resolvePaperDollLayers } from "./paperdoll-system.mjs?v=20260804.4";
+import { renderPaperDollCanvases } from "./paperdoll-renderer.mjs?v=20260804.4";
+
+const PAPER_DOLL_ASSET_VERSION = "20260804.4";
 
 const app = document.querySelector("#app");
 const BUILD_SHA = document.documentElement.dataset.buildSha || "dev";
@@ -955,15 +958,11 @@ function paperDollHtml({
   context = "character",
 } = {}) {
   const composition = resolvePaperDollLayers({ appearance });
+  const encodedPlan = encodeURIComponent(JSON.stringify(composition));
   return `
     <div class="paper-doll-composition paper-doll-${escapeHtml(context)}" data-body="${escapeHtml(composition.appearance.body)}" ${label ? `role="img" aria-label="${escapeHtml(label)}"` : "aria-hidden=\"true\""}>
-      ${composition.layers.map((layer) => layer.source === "symbol" ? `
-        <svg class="paper-doll-layer paper-doll-symbol layer-${escapeHtml(layer.kind)}" viewBox="0 0 1024 1536" aria-hidden="true" data-layer-id="${escapeHtml(layer.id)}" style="--paper-doll-z:${Number(layer.z)}">
-          <use href="${escapeHtml(layer.href)}"></use>
-        </svg>
-      ` : `
-        <img class="paper-doll-layer layer-${escapeHtml(layer.kind)}" src="${escapeHtml(`${layer.asset}?v=20260804.3`)}" alt="" draggable="false" data-layer-id="${escapeHtml(layer.id)}" style="--paper-doll-z:${Number(layer.z)}" />
-      `).join("")}
+      <canvas class="paper-doll-canvas" width="1024" height="1536" data-paper-doll-plan="${escapeHtml(encodedPlan)}" aria-hidden="true"></canvas>
+      <span class="paper-doll-render-error">人物形象未能绘成</span>
     </div>
   `;
 }
@@ -3854,6 +3853,7 @@ function render() {
   const characterFeedbackWasRendered = Boolean(pendingCharacterFeedback?.text);
   const martialFeedbackWasRendered = Boolean(pendingMartialFeedback?.text);
   app.innerHTML = renderer();
+  void renderPaperDollCanvases(app, { assetVersion: PAPER_DOLL_ASSET_VERSION });
   document.documentElement.dataset.appReady = "true";
   pendingSceneFeedback = null;
   pendingInventoryFeedback = null;

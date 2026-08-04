@@ -8,37 +8,37 @@ function numbered(names) {
 }
 
 export const APPEARANCE_HATS = numbered([
-  "不戴冠帽", "旧布额巾", "束发小冠", "青布方巾", "竹骨斗笠", "夜行兜帽", "乌篾笠", "褐绸软帽",
+  "不戴冠帽", "旧布额巾", "束发小冠",
 ]);
 export const APPEARANCE_FRONT_HAIRS = numbered([
-  "散碎垂发", "分束垂发", "斜掠前发", "齐束前发", "散落额发", "利落露额", "长束侧发", "浓密碎发",
+  "散碎垂发", "分束垂发",
 ]);
 export const APPEARANCE_BACK_HAIRS = numbered([
-  "高束发髻", "齐颈后发", "披肩后发", "侧束马尾", "束顶发髻", "半束长发", "蓬松短发", "垂腰长发",
+  "高束发髻", "齐颈后发",
 ]);
 export const APPEARANCE_EYES = numbered([
-  "平直凤眼", "清锐长眼", "微垂静眼", "明净圆眼", "狭长冷眼", "上挑利眼", "沉水青眼", "澄亮杏眼",
+  "平直凤眼", "清锐长眼",
 ]);
 export const APPEARANCE_BROWS = numbered([
-  "平锋眉", "淡月眉", "扬剑眉", "垂锋眉", "浓墨眉", "细直眉", "拢峰眉", "断岳眉",
+  "平锋眉", "淡月眉",
 ]);
 export const APPEARANCE_MOUTHS = numbered([
-  "常唇", "薄唇", "丰唇", "抿唇", "窄唇", "含笑唇", "冷唇", "阔唇",
+  "常唇", "薄唇",
 ]);
 export const APPEARANCE_NOSES = numbered([
-  "直鼻", "圆鼻", "秀鼻", "阔鼻", "窄鼻", "高鼻", "短鼻", "鹰鼻",
+  "直鼻", "圆鼻",
 ]);
 export const APPEARANCE_FACE_SHAPES = numbered([
-  "清峻脸型", "方正脸型", "狭长脸型", "圆润脸型", "尖颌脸型", "宽颌脸型",
+  "清峻脸型", "方正脸型",
 ]);
 export const APPEARANCE_BACK_ACCESSORIES = numbered([
-  "不负外物", "旧木剑匣", "黄皮酒葫芦", "竹简书筒", "青布披风", "柘木长弓",
+  "不负外物", "旧木剑匣",
 ]);
 export const APPEARANCE_CLOTHINGS = numbered([
-  "玄青游侠装", "褐布行衣", "素白劲装", "赤练窄袖", "苍苔猎衣", "黛蓝长衣", "旧麻练服", "深青长衣",
+  "玄青游侠装", "褐布行衣",
 ]);
 export const APPEARANCE_FACE_ACCESSORIES = numbered([
-  "不饰面容", "颊上旧痕", "眼下小痣", "青黛面纹", "玄布眼罩", "缝线伤痕",
+  "不饰面容", "颊上旧痕",
 ]);
 
 export const APPEARANCE_PARTS = Object.freeze([
@@ -75,8 +75,8 @@ export const DEFAULT_APPEARANCE = Object.freeze({
 });
 
 export const APPEARANCE_BASE_ASSETS = Object.freeze({
-  male: "./assets/appearance/layered/male-base-v3.webp",
-  female: "./assets/appearance/layered/female-base-v3.webp",
+  male: "./assets/appearance/rig-v1/male-base-v4.webp",
+  female: "./assets/appearance/rig-v1/female-base-v4.webp",
 });
 
 const EMPTY_APPEARANCE_PARTS = Object.freeze({
@@ -90,7 +90,14 @@ export function appearanceLayerAsset(body, partId, id) {
   const part = APPEARANCE_PARTS.find((entry) => entry.id === partId);
   const numeric = Number(id);
   if (!part || !catalogHas(part.catalog, numeric) || EMPTY_APPEARANCE_PARTS[partId]?.has(numeric)) return null;
-  return `./assets/appearance/layered/${body}-${partId}-${numeric}-v2.webp`;
+  if (partId === "hat") return `./assets/appearance/rig-v1/${body}-hat-${numeric}-front-v3.webp`;
+  return `./assets/appearance/rig-v1/${body}-${partId}-${numeric}-v3.webp`;
+}
+
+export function appearanceHairMaskAsset(body, hatId) {
+  const numeric = Number(hatId);
+  if (!catalogHas(APPEARANCE_BODIES, body) || !catalogHas(APPEARANCE_HATS, numeric) || numeric === 1) return null;
+  return `./assets/appearance/rig-v1/${body}-hat-${numeric}-hair-mask-v3.webp`;
 }
 
 export const APPEARANCE_DEFAULT_LAYER_ASSETS = Object.freeze({
@@ -104,6 +111,7 @@ export const APPEARANCE_RUNTIME_ASSETS = Object.freeze([
   ...APPEARANCE_BODIES.flatMap(({ id: body }) => APPEARANCE_PARTS.flatMap((part) => (
     part.catalog.map(({ id }) => appearanceLayerAsset(body, part.id, id)).filter(Boolean)
   ))),
+  ...APPEARANCE_BODIES.flatMap(({ id: body }) => APPEARANCE_HATS.map(({ id }) => appearanceHairMaskAsset(body, id)).filter(Boolean)),
 ]);
 
 function catalogHas(catalog, id) {

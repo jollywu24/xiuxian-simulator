@@ -2,13 +2,15 @@ import {
   APPEARANCE_PARTS,
   APPEARANCE_RUNTIME_ASSETS,
   appearanceBaseAsset,
+  appearanceHairMaskAsset,
   appearancePart,
   normalizeAppearance,
-} from "./appearance-core.mjs?v=20260804.3";
+} from "./appearance-core.mjs?v=20260804.4";
 
 export const PAPER_DOLL_LAYER_ORDER = Object.freeze({
   backAccessory: 5,
   backHair: 10,
+  hatBack: 15,
   base: 20,
   clothing: 30,
   faceShape: 40,
@@ -18,7 +20,7 @@ export const PAPER_DOLL_LAYER_ORDER = Object.freeze({
   mouth: 48,
   frontHair: 50,
   faceAccessory: 60,
-  hat: 70,
+  hatFront: 70,
 });
 
 // 兼容发布资源契约的旧导出名；内容已经改为纯容貌资源。
@@ -26,20 +28,28 @@ export const PAPER_DOLL_RUNTIME_ASSETS = APPEARANCE_RUNTIME_ASSETS;
 
 export function resolvePaperDollLayers({ appearance } = {}) {
   const normalizedAppearance = normalizeAppearance(appearance);
+  const hairMaskAsset = appearanceHairMaskAsset(normalizedAppearance.body, normalizedAppearance.hat);
+  const resolveAppearanceLayer = (part) => {
+    const selected = appearancePart(normalizedAppearance, part.id);
+    if (!selected?.asset) return null;
+    const kind = part.id === "hat" ? "hatFront" : part.id;
+    return {
+      id: `appearance:${kind}:${selected.id}`,
+      itemId: null,
+      slotId: kind,
+      kind,
+      source: selected.source,
+      href: selected.href,
+      asset: selected.asset,
+      maskAsset: ["frontHair", "backHair"].includes(kind) ? hairMaskAsset : null,
+      z: PAPER_DOLL_LAYER_ORDER[kind],
+    };
+  };
   const layers = [
     ...APPEARANCE_PARTS.flatMap((part) => {
-      const selected = appearancePart(normalizedAppearance, part.id);
-      if ((!selected?.href && !selected?.asset) || part.z >= PAPER_DOLL_LAYER_ORDER.base) return [];
-      return [{
-        id: `appearance:${part.id}:${selected.id}`,
-        itemId: null,
-        slotId: null,
-        kind: part.id,
-        source: selected.source,
-        href: selected.href,
-        asset: selected.asset,
-        z: part.z,
-      }];
+      const layer = resolveAppearanceLayer(part);
+      if (!layer || layer.z >= PAPER_DOLL_LAYER_ORDER.base) return [];
+      return [layer];
     }),
     {
       id: "appearance-base",
@@ -51,18 +61,9 @@ export function resolvePaperDollLayers({ appearance } = {}) {
       z: PAPER_DOLL_LAYER_ORDER.base,
     },
     ...APPEARANCE_PARTS.flatMap((part) => {
-      const selected = appearancePart(normalizedAppearance, part.id);
-      if ((!selected?.href && !selected?.asset) || part.z < PAPER_DOLL_LAYER_ORDER.base) return [];
-      return [{
-        id: `appearance:${part.id}:${selected.id}`,
-        itemId: null,
-        slotId: null,
-        kind: part.id,
-        source: selected.source,
-        href: selected.href,
-        asset: selected.asset,
-        z: part.z,
-      }];
+      const layer = resolveAppearanceLayer(part);
+      if (!layer || layer.z < PAPER_DOLL_LAYER_ORDER.base) return [];
+      return [layer];
     }),
   ];
   return {
