@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 
 import {
   APPEARANCE_BODIES,
+  APPEARANCE_BODY_ASSETS,
   APPEARANCE_CATALOGS,
   APPEARANCE_PARTS,
   APPEARANCE_RUNTIME_ASSETS,
@@ -44,16 +45,16 @@ test("容貌目录保持与参考一致的十一类离散部件", () => {
     "帽子", "前发", "后发", "眼睛", "眉毛", "嘴巴", "鼻子", "脸型", "脸饰", "后背", "衣服",
   ]);
   assert.deepEqual(Object.fromEntries(APPEARANCE_PARTS.map((part) => [part.id, part.catalog.length])), {
-    hat: 3,
-    frontHair: 2,
-    backHair: 2,
-    eyes: 2,
-    brows: 2,
-    mouth: 2,
-    nose: 2,
-    faceShape: 2,
-    faceAccessory: 2,
-    backAccessory: 2,
+    hat: 2,
+    frontHair: 1,
+    backHair: 1,
+    eyes: 1,
+    brows: 1,
+    mouth: 1,
+    nose: 1,
+    faceShape: 1,
+    faceAccessory: 1,
+    backAccessory: 1,
     clothing: 2,
   });
 });
@@ -63,7 +64,7 @@ test("十一部件状态可序列化并修复越界值", () => {
   assert.ok(APPEARANCE_PARTS.every((part) => DEFAULT_APPEARANCE[part.id] === 1));
   const repaired = normalizeAppearance({ body: "unknown", hat: 99, frontHair: -1, clothing: "bad" });
   assert.deepEqual(repaired, DEFAULT_APPEARANCE);
-  const custom = createAppearanceState({ body: "female", hat: 3, eyes: 2, faceShape: 2, clothing: 2 });
+  const custom = createAppearanceState({ body: "female", hat: 2, clothing: 2 });
   assert.deepEqual(JSON.parse(JSON.stringify(custom)), custom);
 });
 
@@ -72,15 +73,15 @@ test("版本9的整脸发式肤色安全迁移成十一部件", () => {
   assert.equal(migrated.body, "female");
   assert.equal(migrated.frontHair, 1);
   assert.equal(migrated.backHair, 1);
-  assert.equal(migrated.faceShape, 2);
-  assert.equal(migrated.eyes, 2);
+  assert.equal(migrated.faceShape, 1);
+  assert.equal(migrated.eyes, 1);
   assert.equal(migrated.clothing, 1);
   assert.equal("face" in migrated, false);
   assert.equal("skin" in migrated, false);
 });
 
 test("随心一变同时轮换十一类外观但不改变体貌", () => {
-  const current = createAppearanceState({ body: "female", hat: 3, frontHair: 2, backHair: 2, eyes: 2, brows: 2, mouth: 2, nose: 2, faceShape: 2, faceAccessory: 2, backAccessory: 2, clothing: 2 });
+  const current = createAppearanceState({ body: "female", hat: 2, clothing: 2 });
   const next = cycleAppearance(current);
   assert.equal(next.body, "female");
   assert.equal(next.hat, 1);
@@ -90,21 +91,21 @@ test("随心一变同时轮换十一类外观但不改变体貌", () => {
   assert.ok(APPEARANCE_PARTS.every((part) => APPEARANCE_CATALOGS[part.id].some((entry) => entry.id === next[part.id])));
 });
 
-test("容貌固定母版、槽位附件和帽发遮罩都位于正式运行资源目录", () => {
-  assert.equal(appearanceBaseAsset({ body: "male" }), "./assets/appearance/rig-v1/male-base-v4.webp");
-  assert.equal(appearanceBaseAsset({ body: "female" }), "./assets/appearance/rig-v1/female-base-v4.webp");
-  assert.equal(appearancePart({ body: "male", frontHair: 1 }, "frontHair").asset, "./assets/appearance/rig-v1/male-frontHair-1-v3.webp");
-  assert.equal(appearancePart({ body: "female", clothing: 1 }, "clothing").asset, "./assets/appearance/rig-v1/female-clothing-1-v3.webp");
-  assert.equal(appearancePart({ body: "male", frontHair: 2 }, "frontHair").asset, "./assets/appearance/rig-v1/male-frontHair-2-v3.webp");
-  assert.equal(appearancePart({ body: "female", eyes: 2 }, "eyes").asset, "./assets/appearance/rig-v1/female-eyes-2-v3.webp");
+test("容貌只发布由完整人物母版派生并人工验收过的资源", () => {
+  assert.equal(appearanceBaseAsset({ body: "male", clothing: 1 }), "./assets/appearance/rig-v2/male-clothing-1-v1.webp");
+  assert.equal(appearanceBaseAsset({ body: "female", clothing: 2 }), "./assets/appearance/rig-v2/female-clothing-2-v1.webp");
+  assert.equal(APPEARANCE_BODY_ASSETS.male[2], "./assets/appearance/rig-v2/male-clothing-2-v1.webp");
+  assert.equal(appearancePart({ body: "male", frontHair: 1 }, "frontHair").asset, null);
+  assert.equal(appearancePart({ body: "female", clothing: 2 }, "clothing").asset, null);
+  assert.equal(appearancePart({ body: "female", hat: 2 }, "hat").asset, "./assets/appearance/rig-v2/female-head-2-v1.webp");
   assert.equal(appearanceHairMaskAsset("male", 1), null);
-  assert.equal(appearanceHairMaskAsset("male", 2), "./assets/appearance/rig-v1/male-hat-2-hair-mask-v3.webp");
-  assert.equal(appearancePart({ frontHair: 2 }, "frontHair").href, null);
+  assert.equal(appearanceHairMaskAsset("male", 2), null);
+  assert.equal(appearancePart({ frontHair: 1 }, "frontHair").href, null);
   assert.equal(appearancePart({ hat: 1 }, "hat").href, null);
   assert.equal(appearancePart({ hat: 1 }, "hat").asset, null);
-  assert.equal(APPEARANCE_RUNTIME_ASSETS.length, 46);
+  assert.equal(APPEARANCE_RUNTIME_ASSETS.length, 6);
   assert.equal(new Set(APPEARANCE_RUNTIME_ASSETS).size, APPEARANCE_RUNTIME_ASSETS.length);
-  assert.ok(APPEARANCE_RUNTIME_ASSETS.every((path) => /^\.\/assets\/appearance\/rig-v1\/.+\.webp$/.test(path)));
+  assert.ok(APPEARANCE_RUNTIME_ASSETS.every((path) => /^\.\/assets\/appearance\/rig-v2\/.+\.webp$/.test(path)));
   assert.ok(APPEARANCE_RUNTIME_ASSETS.every((path) => !path.includes("parts-v1.svg")));
   for (const asset of APPEARANCE_RUNTIME_ASSETS) {
     const target = path.join(webRoot, asset.replace(/^\.\//, ""));
@@ -112,6 +113,6 @@ test("容貌固定母版、槽位附件和帽发遮罩都位于正式运行资�
     assert.ok(fs.statSync(target).size >= 64, `empty appearance asset: ${asset}`);
     assert.deepEqual(webpDimensions(fs.readFileSync(target)), { width: 1024, height: 1536 }, `wrong fixed canvas: ${asset}`);
   }
-  const builder = path.resolve(webRoot, "../scripts/build-appearance-rig.py");
+  const builder = path.resolve(webRoot, "../scripts/build-appearance-rig-v2.py");
   assert.ok(fs.existsSync(builder), `missing reproducible rig builder: ${builder}`);
 });

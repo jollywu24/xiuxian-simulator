@@ -20,15 +20,6 @@ const expectedCreatedAppearance = Object.freeze({
   ...DEFAULT_APPEARANCE,
   body: "female",
   hat: 2,
-  frontHair: 2,
-  backHair: 2,
-  eyes: 2,
-  brows: 2,
-  mouth: 2,
-  nose: 2,
-  faceShape: 2,
-  faceAccessory: 2,
-  backAccessory: 2,
   clothing: 2,
 });
 
@@ -319,7 +310,7 @@ async function snapshot(label) {
         equipmentDetailNameColor: getComputedStyle(document.querySelector(".character-equipment-detail h2") || document.body).color,
         equipmentDetailBaseColor: getComputedStyle(document.querySelector(".character-equipment-detail-art .inventory-quality-base") || document.body).backgroundColor,
         profileText: document.querySelector(".character-profile-copy")?.textContent?.replace(/\\s+/g, " ").trim() || "",
-        paperDollBase: paperDollPlan.layers.find((entry) => entry.id === "appearance-base")?.asset || "",
+        paperDollBase: paperDollPlan.layers.find((entry) => entry.kind === "base")?.asset || "",
         paperDollItems: paperDollPlan.layers.map((entry) => entry.itemId).filter(Boolean),
         paperDollParts: paperDollPlan.layers.filter((entry) => entry.id.startsWith("appearance:")).map((entry) => entry.id),
         paperDollMasks: JSON.parse(paperDollCanvas?.dataset.maskedLayerIds || "[]"),
@@ -568,10 +559,10 @@ const mixedAppearancePlan = await evaluate(`(() => {
     ready: canvas.dataset.renderReady,
   };
 })()`);
-assert.ok(mixedAppearancePlan.assets.includes("./assets/appearance/rig-v1/female-base-v4.webp"));
-assert.ok(mixedAppearancePlan.assets.includes("./assets/appearance/rig-v1/female-frontHair-2-v3.webp"));
+assert.ok(mixedAppearancePlan.assets.includes("./assets/appearance/rig-v2/female-clothing-2-v1.webp"));
+assert.ok(mixedAppearancePlan.assets.includes("./assets/appearance/rig-v2/female-head-2-v1.webp"));
 assert.ok(mixedAppearancePlan.ids.includes("appearance:hatFront:2"));
-assert.deepEqual(mixedAppearancePlan.masked, ["appearance:backHair:2", "appearance:frontHair:2"]);
+assert.deepEqual(mixedAppearancePlan.masked, []);
 assert.equal(mixedAppearancePlan.ready, "true");
 await screenshot("wudao-appearance-female-mixed-components.png");
 await click("confirm-appearance");
@@ -795,10 +786,10 @@ assert.equal(landscapeCharacter.characterView.bagSlots, 24);
 assert.equal(landscapeCharacter.characterView.occupiedBagSlots, 12);
 assert.ok(landscapeCharacter.characterView.bagSlotSizes.every(([width, height]) => height > width), JSON.stringify(landscapeCharacter.characterView.bagSlotSizes));
 assert.doesNotMatch(landscapeCharacter.characterView.profileText, /潜能|命灯/);
-assert.match(landscapeCharacter.characterView.paperDollBase, /female-base-v4\.webp/);
+assert.match(landscapeCharacter.characterView.paperDollBase, /female-clothing-2-v1\.webp/);
 assert.deepEqual(landscapeCharacter.characterView.paperDollItems, []);
-assert.ok(landscapeCharacter.characterView.paperDollParts.includes("appearance:frontHair:2"));
-assert.deepEqual(landscapeCharacter.characterView.paperDollMasks, ["appearance:backHair:2", "appearance:frontHair:2"]);
+assert.ok(landscapeCharacter.characterView.paperDollParts.includes("appearance:hatFront:2"));
+assert.deepEqual(landscapeCharacter.characterView.paperDollMasks, []);
 assert.equal(landscapeCharacter.characterView.paperDollReady, true);
 assert.ok(landscapeCharacter.characterView.overflowX <= 1, JSON.stringify(landscapeCharacter.characterView));
 assert.ok(landscapeCharacter.characterView.overflowY <= 1, JSON.stringify(landscapeCharacter.characterView));
@@ -819,7 +810,7 @@ assert.equal(await evaluate(`Boolean(document.querySelector(".character-equipmen
 const hatPaperDoll = await snapshot("character-straw-hat-paperdoll");
 assert.equal(hatPaperDoll.characterView.paperDollBase, paperDollBaseBeforeEquipmentDetail);
 assert.deepEqual(hatPaperDoll.characterView.paperDollItems, []);
-assert.ok(hatPaperDoll.characterView.paperDollParts.includes("appearance:frontHair:2"));
+assert.ok(hatPaperDoll.characterView.paperDollParts.includes("appearance:hatFront:2"));
 await click("inspect-character-equipment", "traveler_straw_hat|head");
 assert.equal((await snapshot("character-equipped-detail")).characterView.equipmentDetailAction, "confirm-unequip-character-item");
 await click("confirm-unequip-character-item", "head");

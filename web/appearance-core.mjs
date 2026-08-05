@@ -8,37 +8,37 @@ function numbered(names) {
 }
 
 export const APPEARANCE_HATS = numbered([
-  "不戴冠帽", "旧布额巾", "束发小冠",
+  "不戴冠帽", "旧布额巾",
 ]);
 export const APPEARANCE_FRONT_HAIRS = numbered([
-  "散碎垂发", "分束垂发",
+  "束起碎发",
 ]);
 export const APPEARANCE_BACK_HAIRS = numbered([
-  "高束发髻", "齐颈后发",
+  "短束发髻",
 ]);
 export const APPEARANCE_EYES = numbered([
-  "平直凤眼", "清锐长眼",
+  "清锐长眼",
 ]);
 export const APPEARANCE_BROWS = numbered([
-  "平锋眉", "淡月眉",
+  "平锋眉",
 ]);
 export const APPEARANCE_MOUTHS = numbered([
-  "常唇", "薄唇",
+  "常唇",
 ]);
 export const APPEARANCE_NOSES = numbered([
-  "直鼻", "圆鼻",
+  "直鼻",
 ]);
 export const APPEARANCE_FACE_SHAPES = numbered([
-  "清峻脸型", "方正脸型",
+  "清峻脸型",
 ]);
 export const APPEARANCE_BACK_ACCESSORIES = numbered([
-  "不负外物", "旧木剑匣",
+  "不负外物",
 ]);
 export const APPEARANCE_CLOTHINGS = numbered([
-  "玄青游侠装", "褐布行衣",
+  "灰衣短打", "靛蓝行衣",
 ]);
 export const APPEARANCE_FACE_ACCESSORIES = numbered([
-  "不饰面容", "颊上旧痕",
+  "不饰面容",
 ]);
 
 export const APPEARANCE_PARTS = Object.freeze([
@@ -74,15 +74,34 @@ export const DEFAULT_APPEARANCE = Object.freeze({
   faceAccessory: 1,
 });
 
+export const APPEARANCE_BODY_ASSETS = Object.freeze({
+  male: Object.freeze({
+    1: "./assets/appearance/rig-v2/male-clothing-1-v1.webp",
+    2: "./assets/appearance/rig-v2/male-clothing-2-v1.webp",
+  }),
+  female: Object.freeze({
+    1: "./assets/appearance/rig-v2/female-clothing-1-v1.webp",
+    2: "./assets/appearance/rig-v2/female-clothing-2-v1.webp",
+  }),
+});
+
 export const APPEARANCE_BASE_ASSETS = Object.freeze({
-  male: "./assets/appearance/rig-v1/male-base-v4.webp",
-  female: "./assets/appearance/rig-v1/female-base-v4.webp",
+  male: APPEARANCE_BODY_ASSETS.male[1],
+  female: APPEARANCE_BODY_ASSETS.female[1],
 });
 
 const EMPTY_APPEARANCE_PARTS = Object.freeze({
   hat: new Set([1]),
-  faceAccessory: new Set([1]),
+  frontHair: new Set([1]),
+  backHair: new Set([1]),
+  eyes: new Set([1]),
+  brows: new Set([1]),
+  mouth: new Set([1]),
+  nose: new Set([1]),
+  faceShape: new Set([1]),
   backAccessory: new Set([1]),
+  clothing: new Set([1, 2]),
+  faceAccessory: new Set([1]),
 });
 
 export function appearanceLayerAsset(body, partId, id) {
@@ -90,14 +109,12 @@ export function appearanceLayerAsset(body, partId, id) {
   const part = APPEARANCE_PARTS.find((entry) => entry.id === partId);
   const numeric = Number(id);
   if (!part || !catalogHas(part.catalog, numeric) || EMPTY_APPEARANCE_PARTS[partId]?.has(numeric)) return null;
-  if (partId === "hat") return `./assets/appearance/rig-v1/${body}-hat-${numeric}-front-v3.webp`;
-  return `./assets/appearance/rig-v1/${body}-${partId}-${numeric}-v3.webp`;
+  if (partId === "hat") return `./assets/appearance/rig-v2/${body}-head-${numeric}-v1.webp`;
+  return null;
 }
 
-export function appearanceHairMaskAsset(body, hatId) {
-  const numeric = Number(hatId);
-  if (!catalogHas(APPEARANCE_BODIES, body) || !catalogHas(APPEARANCE_HATS, numeric) || numeric === 1) return null;
-  return `./assets/appearance/rig-v1/${body}-hat-${numeric}-hair-mask-v3.webp`;
+export function appearanceHairMaskAsset() {
+  return null;
 }
 
 export const APPEARANCE_DEFAULT_LAYER_ASSETS = Object.freeze({
@@ -106,12 +123,10 @@ export const APPEARANCE_DEFAULT_LAYER_ASSETS = Object.freeze({
 });
 
 export const APPEARANCE_RUNTIME_ASSETS = Object.freeze([
-  APPEARANCE_BASE_ASSETS.male,
-  APPEARANCE_BASE_ASSETS.female,
+  ...APPEARANCE_BODIES.flatMap(({ id: body }) => APPEARANCE_CLOTHINGS.map(({ id }) => APPEARANCE_BODY_ASSETS[body][id])),
   ...APPEARANCE_BODIES.flatMap(({ id: body }) => APPEARANCE_PARTS.flatMap((part) => (
     part.catalog.map(({ id }) => appearanceLayerAsset(body, part.id, id)).filter(Boolean)
   ))),
-  ...APPEARANCE_BODIES.flatMap(({ id: body }) => APPEARANCE_HATS.map(({ id }) => appearanceHairMaskAsset(body, id)).filter(Boolean)),
 ]);
 
 function catalogHas(catalog, id) {
@@ -160,7 +175,8 @@ export function cycleAppearance(value = {}) {
 }
 
 export function appearanceBaseAsset(value = {}) {
-  return APPEARANCE_BASE_ASSETS[normalizeAppearance(value).body];
+  const appearance = normalizeAppearance(value);
+  return APPEARANCE_BODY_ASSETS[appearance.body][appearance.clothing];
 }
 
 export function appearancePart(value, partId) {

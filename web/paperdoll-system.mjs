@@ -2,10 +2,9 @@ import {
   APPEARANCE_PARTS,
   APPEARANCE_RUNTIME_ASSETS,
   appearanceBaseAsset,
-  appearanceHairMaskAsset,
   appearancePart,
   normalizeAppearance,
-} from "./appearance-core.mjs?v=20260804.4";
+} from "./appearance-core.mjs?v=20260805.1";
 
 export const PAPER_DOLL_LAYER_ORDER = Object.freeze({
   backAccessory: 5,
@@ -28,7 +27,6 @@ export const PAPER_DOLL_RUNTIME_ASSETS = APPEARANCE_RUNTIME_ASSETS;
 
 export function resolvePaperDollLayers({ appearance } = {}) {
   const normalizedAppearance = normalizeAppearance(appearance);
-  const hairMaskAsset = appearanceHairMaskAsset(normalizedAppearance.body, normalizedAppearance.hat);
   const resolveAppearanceLayer = (part) => {
     const selected = appearancePart(normalizedAppearance, part.id);
     if (!selected?.asset) return null;
@@ -41,7 +39,7 @@ export function resolvePaperDollLayers({ appearance } = {}) {
       source: selected.source,
       href: selected.href,
       asset: selected.asset,
-      maskAsset: ["frontHair", "backHair"].includes(kind) ? hairMaskAsset : null,
+      maskAsset: null,
       z: PAPER_DOLL_LAYER_ORDER[kind],
     };
   };
@@ -52,7 +50,7 @@ export function resolvePaperDollLayers({ appearance } = {}) {
       return [layer];
     }),
     {
-      id: "appearance-base",
+      id: `appearance-base:clothing:${normalizedAppearance.clothing}`,
       itemId: null,
       slotId: null,
       kind: "base",

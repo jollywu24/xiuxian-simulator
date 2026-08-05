@@ -1,4 +1,4 @@
-export const RELEASE_CONTRACT_VERSION = 5;
+export const RELEASE_CONTRACT_VERSION = 6;
 
 export const RELEASE_ENTRY_RESOURCES = Object.freeze([
   { path: "index.html", contentType: "text/html", minBytes: 256 },
@@ -15,16 +15,12 @@ export const RELEASE_CRITICAL_ASSETS = Object.freeze([
   { path: "assets/origins/cards/mystery-v1.webp", contentType: "image/webp", minBytes: 1024 },
   { path: "assets/scenes/ruined-temple-stage-v3.webp", contentType: "image/webp", minBytes: 1024 },
   { path: "assets/appearance/appearance-courtyard-v2.webp", contentType: "image/webp", minBytes: 1024 },
-  { path: "assets/appearance/rig-v1/male-base-v4.webp", contentType: "image/webp", minBytes: 64 },
-  { path: "assets/appearance/rig-v1/female-base-v4.webp", contentType: "image/webp", minBytes: 64 },
-  { path: "assets/appearance/rig-v1/male-frontHair-1-v3.webp", contentType: "image/webp", minBytes: 1024 },
-  { path: "assets/appearance/rig-v1/male-faceShape-1-v3.webp", contentType: "image/webp", minBytes: 1024 },
-  { path: "assets/appearance/rig-v1/male-clothing-1-v3.webp", contentType: "image/webp", minBytes: 1024 },
-  { path: "assets/appearance/rig-v1/male-hat-2-hair-mask-v3.webp", contentType: "image/webp", minBytes: 64 },
-  { path: "assets/appearance/rig-v1/female-frontHair-1-v3.webp", contentType: "image/webp", minBytes: 1024 },
-  { path: "assets/appearance/rig-v1/female-faceShape-1-v3.webp", contentType: "image/webp", minBytes: 1024 },
-  { path: "assets/appearance/rig-v1/female-clothing-1-v3.webp", contentType: "image/webp", minBytes: 1024 },
-  { path: "assets/appearance/rig-v1/female-hat-2-hair-mask-v3.webp", contentType: "image/webp", minBytes: 64 },
+  { path: "assets/appearance/rig-v2/male-clothing-1-v1.webp", contentType: "image/webp", minBytes: 1024 },
+  { path: "assets/appearance/rig-v2/male-clothing-2-v1.webp", contentType: "image/webp", minBytes: 1024 },
+  { path: "assets/appearance/rig-v2/male-head-2-v1.webp", contentType: "image/webp", minBytes: 1024 },
+  { path: "assets/appearance/rig-v2/female-clothing-1-v1.webp", contentType: "image/webp", minBytes: 1024 },
+  { path: "assets/appearance/rig-v2/female-clothing-2-v1.webp", contentType: "image/webp", minBytes: 1024 },
+  { path: "assets/appearance/rig-v2/female-head-2-v1.webp", contentType: "image/webp", minBytes: 1024 },
   { path: "assets/inventory/inventory-backdrop.png", contentType: "image/png", minBytes: 1024 },
   { path: "assets/martial/martial-screen-backdrop.webp", contentType: "image/webp", minBytes: 1024 },
 ]);
