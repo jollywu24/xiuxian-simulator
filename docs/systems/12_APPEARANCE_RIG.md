@@ -173,5 +173,67 @@ AI 图像只允许用于完整人物母版或以该母版为输入的身份保�
 - 不用 CSS 位移修正不属于同一母版的素材；
 - 不用独立 AI 生成图批量填满 `1/8`；
 - 不让装备改变人物外观；
-- 不接入骨骼动画、Live2D 或完整 Spine 运行时；
-- 不在同源母版纵切稳定前扩大外观数量。
+- 不采用Live2D作为全身纸娃娃主体；
+- 不在Spine纵切通过官方编辑器／运行时验证前扩大到八套服装；
+- 不在许可未确认时向`web/`或Pages分发官方Spine运行时。
+
+## 9. Spine 4.2 待机纵切
+
+### 9.1 采用范围
+
+人物动态采用Spine，取代服装专属循环帧作为长期主方案。当前纵切只包含：
+
+- 男身、女身；
+- 灰衣短打一套服装；
+- `male`、`female`两张皮肤；
+- `root`、`pelvis`、`torso`、`head`、`hair-tip`、左右衣摆和左右手臂九个统一骨骼；
+- `body`与`eyes-closed`两个插槽；
+- 六秒循环`idle`动画。
+
+`idle`包含两次非等间隔眨眼、上身极低幅呼吸和中央衣料网格摆动。眨眼只替换眼周附件，不替换整张脸；身体和服装继续使用已验收`rig-v2`母版。
+
+### 9.2 文件
+
+```text
+art_source/appearance/spine-v1/
+  README.md
+  male-blink-generated.png
+  female-blink-generated.png
+  export/
+    wuxia-idle.json
+    wuxia-idle.atlas
+    wuxia-idle.png
+
+scripts/build-spine-idle-slice.py
+tests/spine-idle-slice.test.mjs
+docs/assets/spine-idle-slice-v1.webp
+docs/assets/spine-idle-motion-v1.webp
+```
+
+生成的闭眼整图不能直接使用；构建脚本只在固定眼周蒙版内提取眼睑并与母版边缘校色。静态开／闭眼近景必须先通过，再检查动画。
+
+### 9.3 Spine数据契约
+
+- 数据格式锁定`4.2`主次版本，当前预制标记为`4.2.119`；
+- 男女共用骨骼、插槽、网格拓扑和动画名，只替换皮肤附件；
+- 正式扩充服装时，每套衣服必须提供同样的`body`网格与眼部附件接缝，不允许复制一套不同骨架；
+- 编辑器导出版本与运行时版本必须同步升级；原始`.spine`工程成为正式生产源后，不再以手改JSON作为常规生产方式；
+- 动态加载失败、`prefers-reduced-motion`启用或设备进入低性能模式时，回退到当前静态Canvas合成。
+
+### 9.4 当前授权与验证状态
+
+官方文档要求编辑器导出版本与运行时匹配，官方运行时的公开分发还受到Spine许可约束。当前机器未安装Spine编辑器，也没有确认可用于公开分发的许可。因此当前完成的是：
+
+- 可导入Spine 4.2的骨架JSON、Atlas与纹理；
+- 男女皮肤、眨眼、呼吸和衣摆时间轴的结构验证；
+- 静态合成与本地动态预演；
+- 自动资源契约。
+
+当前尚未完成：
+
+- 在匹配版本Spine编辑器中导入、保存和人工检查`.spine`工程；
+- 使用官方Spine Player加载并录制男女皮肤；
+- 将官方运行时接入正式页面；
+- 批量制作八套服装。
+
+上述四项必须按顺序完成，不能因为JSON结构测试通过就宣布Spine动画已经上线。

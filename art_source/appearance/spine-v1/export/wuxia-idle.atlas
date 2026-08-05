@@ -1,0 +1,26 @@
+wuxia-idle.png
+size: 2048, 1664
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+pma: false
+body_male
+  index: -1
+  rotate: false
+  bounds: 0, 0, 1024, 1536
+  offsets: 0, 0, 1024, 1536
+body_female
+  index: -1
+  rotate: false
+  bounds: 1024, 0, 1024, 1536
+  offsets: 0, 0, 1024, 1536
+eyes_male_closed
+  index: -1
+  rotate: false
+  bounds: 0, 1536, 256, 112
+  offsets: 0, 0, 256, 112
+eyes_female_closed
+  index: -1
+  rotate: false
+  bounds: 256, 1536, 256, 112
+  offsets: 0, 0, 256, 112

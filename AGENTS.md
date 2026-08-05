@@ -161,7 +161,7 @@
 
 ## 6. 技术架构
 
-项目使用原生 HTML、CSS 和 ES Modules，无构建步骤和第三方运行时。
+正式网页当前使用原生 HTML、CSS 和 ES Modules，无构建步骤和第三方运行时。人物动态已经选择 Spine 作为唯一候选例外，但在确认项目持有可公开分发的 Spine 许可、安装编辑器并完成同版本导出验证前，官方 Spine Runtime 不得进入 `web/`、提交或 Pages；当前只能维护可导入源数据、评估资源和静态降级。
 
 | 路径 | 职责 |
 | --- | --- |
@@ -169,6 +169,7 @@
 | `web/wudao-app.mjs` | 状态机、渲染、事件委托和系统编排 |
 | `web/appearance-core.mjs` | 容貌目录、默认值、迁移规范化和正式资源映射 |
 | `web/paperdoll-system.mjs` | 人物底像、当前装备透明层、稳定层级与换装合成 |
+| `art_source/appearance/spine-v1/`、`scripts/build-spine-idle-slice.py` | Spine 4.2男女待机纵切源数据、图集、网格、眨眼／呼吸／衣摆预制；不是已发布运行时 |
 | `web/origin-core.mjs` | 三出身、独立序章、旧ID迁移、任务结果与个人事件 |
 | `web/wudao-core.mjs` | 世界、人物建立与首章基础规则 |
 | `web/wudao-p0-core.mjs`、`web/wudao-p1-core.mjs` | 后续篇章和跨系统纯规则 |
@@ -211,6 +212,7 @@
 - 视觉层级、最新确认效果和详细响应式标准见 `docs/systems/07_INTERFACE_SAVE_QA.md` 及用户最近确认的效果图；
 - `web/assets/UI_Renderings/` 中的图片默认是设计参考，不应被网页直接加载，除非已经明确转化为正式运行资源；
 - 新运行资源应放入对应资产目录，控制文件体积，优先使用适合网页的格式，并在目标视口实际检查裁切与清晰度。
+- Spine 编辑器、导出数据和官方运行时必须锁定同一主次版本；未在编辑器和官方运行时中实际打开的数据只能称为“可导入预制”，不能称为已完成 Spine 工程；正式动态加载失败或设备要求减少动态时必须回退到现有静态 WebP。
 
 最低检查视口：
 

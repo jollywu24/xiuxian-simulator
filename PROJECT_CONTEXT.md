@@ -47,6 +47,7 @@ npm run test:browser
 | 曹青离场至白栀云授武 | `web/wudao-p1-core.mjs`、`web/content/p1/` | `tests/p1-systems.test.mjs` |
 | 状态机、叙事栏和页面交互 | `web/wudao-app.mjs` | `scripts/cdp-smoke.mjs`、`docs/systems/07_INTERFACE_SAVE_QA.md` |
 | 十一类容貌状态、同源人物／服装／头部变体、旧档回落与Canvas合成 | `web/appearance-core.mjs`、`web/paperdoll-system.mjs`、`web/paperdoll-renderer.mjs`、`scripts/build-appearance-rig-v2.py` | `tests/appearance-system.test.mjs`、`tests/paperdoll-system.test.mjs`、`docs/systems/12_APPEARANCE_RIG.md` |
+| Spine待机动态预制、男女皮肤、统一骨架与动画授权门禁 | `art_source/appearance/spine-v1/`、`scripts/build-spine-idle-slice.py` | `tests/spine-idle-slice.test.mjs`、`docs/assets/spine-idle-slice-v1.webp`、`docs/assets/spine-idle-motion-v1.webp`、`docs/systems/12_APPEARANCE_RIG.md` |
 | 人物、装备和战斗派生值 | `web/character-system.mjs` | `tests/character-system.test.mjs`、`docs/systems/09_EQUIPMENT_COMBAT_FORMULA.md` |
 | 武学目录、成长和携带 | `web/martial-system.mjs` | `tests/martial-system.test.mjs`、`docs/systems/02_CHARACTER_MARTIAL.md` |
 | 通用战斗和遭遇 | `web/combat-engine.mjs`、`web/combat-encounters.mjs` | `tests/combat-engine.test.mjs`、`scripts/cdp-combat-lab.mjs` |
