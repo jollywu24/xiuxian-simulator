@@ -18,7 +18,7 @@
 
 ## 授权门禁
 
-当前机器没有 Spine 编辑器，仓库也没有确认可用于公开分发的 Spine 许可。因此：
+当前机器没有 Spine 编辑器，仓库也没有确认可用于公开分发的 Spine Professional 许可。纵切包含网格形变，Spine Essential不能保存或导出该工程；达到官方企业门槛时应使用Enterprise。因此：
 
 1. 本目录数据只能称为“Spine 4.2 可导入纵切”，不能冒充编辑器导出的 `.spine` 工程；
 2. 官方 Spine Runtime 不进入 `web/`、提交或 Pages；
