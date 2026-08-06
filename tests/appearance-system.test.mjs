@@ -45,7 +45,7 @@ test("容貌目录保持与参考一致的十一类离散部件", () => {
     "帽子", "前发", "后发", "眼睛", "眉毛", "嘴巴", "鼻子", "脸型", "脸饰", "后背", "衣服",
   ]);
   assert.deepEqual(Object.fromEntries(APPEARANCE_PARTS.map((part) => [part.id, part.catalog.length])), {
-    hat: 2,
+    hat: 1,
     frontHair: 1,
     backHair: 1,
     eyes: 1,
@@ -64,7 +64,7 @@ test("十一部件状态可序列化并修复越界值", () => {
   assert.ok(APPEARANCE_PARTS.every((part) => DEFAULT_APPEARANCE[part.id] === 1));
   const repaired = normalizeAppearance({ body: "unknown", hat: 99, frontHair: -1, clothing: "bad" });
   assert.deepEqual(repaired, DEFAULT_APPEARANCE);
-  const custom = createAppearanceState({ body: "female", hat: 2, clothing: 2 });
+  const custom = createAppearanceState({ body: "female", clothing: 2 });
   assert.deepEqual(JSON.parse(JSON.stringify(custom)), custom);
 });
 
@@ -80,32 +80,34 @@ test("版本9的整脸发式肤色安全迁移成十一部件", () => {
   assert.equal("skin" in migrated, false);
 });
 
-test("随心一变同时轮换十一类外观但不改变体貌", () => {
-  const current = createAppearanceState({ body: "female", hat: 2, clothing: 2 });
-  const next = cycleAppearance(current);
-  assert.equal(next.body, "female");
-  assert.equal(next.hat, 1);
-  assert.equal(next.frontHair, 1);
-  assert.equal(next.faceShape, 1);
-  assert.equal(next.clothing, 1);
-  assert.ok(APPEARANCE_PARTS.every((part) => APPEARANCE_CATALOGS[part.id].some((entry) => entry.id === next[part.id])));
+test("随心一变依次轮换四套已验证的半身容貌组合", () => {
+  const first = createAppearanceState({ body: "male", clothing: 1 });
+  const second = cycleAppearance(first);
+  const third = cycleAppearance(second);
+  const fourth = cycleAppearance(third);
+  const wrapped = cycleAppearance(fourth);
+  assert.deepEqual([first, second, third, fourth].map(({ body, clothing }) => `${body}:${clothing}`), [
+    "male:1", "male:2", "female:1", "female:2",
+  ]);
+  assert.deepEqual(wrapped, first);
+  assert.ok(APPEARANCE_PARTS.every((part) => APPEARANCE_CATALOGS[part.id].some((entry) => entry.id === fourth[part.id])));
 });
 
 test("容貌只发布由完整人物母版派生并人工验收过的资源", () => {
-  assert.equal(appearanceBaseAsset({ body: "male", clothing: 1 }), "./assets/appearance/rig-v2/male-clothing-1-v1.webp");
-  assert.equal(appearanceBaseAsset({ body: "female", clothing: 2 }), "./assets/appearance/rig-v2/female-clothing-2-v1.webp");
-  assert.equal(APPEARANCE_BODY_ASSETS.male[2], "./assets/appearance/rig-v2/male-clothing-2-v1.webp");
+  assert.equal(appearanceBaseAsset({ body: "male", clothing: 1 }), "./assets/appearance/rig-v3/male-look-1-v1.webp");
+  assert.equal(appearanceBaseAsset({ body: "female", clothing: 2 }), "./assets/appearance/rig-v3/female-look-2-v1.webp");
+  assert.equal(APPEARANCE_BODY_ASSETS.male[2], "./assets/appearance/rig-v3/male-look-2-v1.webp");
   assert.equal(appearancePart({ body: "male", frontHair: 1 }, "frontHair").asset, null);
   assert.equal(appearancePart({ body: "female", clothing: 2 }, "clothing").asset, null);
-  assert.equal(appearancePart({ body: "female", hat: 2 }, "hat").asset, "./assets/appearance/rig-v2/female-head-2-v1.webp");
+  assert.equal(appearancePart({ body: "female", hat: 2 }, "hat").asset, null);
   assert.equal(appearanceHairMaskAsset("male", 1), null);
   assert.equal(appearanceHairMaskAsset("male", 2), null);
   assert.equal(appearancePart({ frontHair: 1 }, "frontHair").href, null);
   assert.equal(appearancePart({ hat: 1 }, "hat").href, null);
   assert.equal(appearancePart({ hat: 1 }, "hat").asset, null);
-  assert.equal(APPEARANCE_RUNTIME_ASSETS.length, 6);
+  assert.equal(APPEARANCE_RUNTIME_ASSETS.length, 4);
   assert.equal(new Set(APPEARANCE_RUNTIME_ASSETS).size, APPEARANCE_RUNTIME_ASSETS.length);
-  assert.ok(APPEARANCE_RUNTIME_ASSETS.every((path) => /^\.\/assets\/appearance\/rig-v2\/.+\.webp$/.test(path)));
+  assert.ok(APPEARANCE_RUNTIME_ASSETS.every((path) => /^\.\/assets\/appearance\/rig-v3\/.+\.webp$/.test(path)));
   assert.ok(APPEARANCE_RUNTIME_ASSETS.every((path) => !path.includes("parts-v1.svg")));
   for (const asset of APPEARANCE_RUNTIME_ASSETS) {
     const target = path.join(webRoot, asset.replace(/^\.\//, ""));
@@ -113,6 +115,6 @@ test("容貌只发布由完整人物母版派生并人工验收过的资源", ()
     assert.ok(fs.statSync(target).size >= 64, `empty appearance asset: ${asset}`);
     assert.deepEqual(webpDimensions(fs.readFileSync(target)), { width: 1024, height: 1536 }, `wrong fixed canvas: ${asset}`);
   }
-  const builder = path.resolve(webRoot, "../scripts/build-appearance-rig-v2.py");
+  const builder = path.resolve(webRoot, "../scripts/build-appearance-rig-v3.py");
   assert.ok(fs.existsSync(builder), `missing reproducible rig builder: ${builder}`);
 });

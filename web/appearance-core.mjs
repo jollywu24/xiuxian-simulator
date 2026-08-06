@@ -8,7 +8,7 @@ function numbered(names) {
 }
 
 export const APPEARANCE_HATS = numbered([
-  "不戴冠帽", "旧布额巾",
+  "不戴冠帽",
 ]);
 export const APPEARANCE_FRONT_HAIRS = numbered([
   "束起碎发",
@@ -35,7 +35,7 @@ export const APPEARANCE_BACK_ACCESSORIES = numbered([
   "不负外物",
 ]);
 export const APPEARANCE_CLOTHINGS = numbered([
-  "灰衣短打", "靛蓝行衣",
+  "束袖长衣", "短褂行装",
 ]);
 export const APPEARANCE_FACE_ACCESSORIES = numbered([
   "不饰面容",
@@ -76,12 +76,12 @@ export const DEFAULT_APPEARANCE = Object.freeze({
 
 export const APPEARANCE_BODY_ASSETS = Object.freeze({
   male: Object.freeze({
-    1: "./assets/appearance/rig-v2/male-clothing-1-v1.webp",
-    2: "./assets/appearance/rig-v2/male-clothing-2-v1.webp",
+    1: "./assets/appearance/rig-v3/male-look-1-v1.webp",
+    2: "./assets/appearance/rig-v3/male-look-2-v1.webp",
   }),
   female: Object.freeze({
-    1: "./assets/appearance/rig-v2/female-clothing-1-v1.webp",
-    2: "./assets/appearance/rig-v2/female-clothing-2-v1.webp",
+    1: "./assets/appearance/rig-v3/female-look-1-v1.webp",
+    2: "./assets/appearance/rig-v3/female-look-2-v1.webp",
   }),
 });
 
@@ -109,7 +109,6 @@ export function appearanceLayerAsset(body, partId, id) {
   const part = APPEARANCE_PARTS.find((entry) => entry.id === partId);
   const numeric = Number(id);
   if (!part || !catalogHas(part.catalog, numeric) || EMPTY_APPEARANCE_PARTS[partId]?.has(numeric)) return null;
-  if (partId === "hat") return `./assets/appearance/rig-v2/${body}-head-${numeric}-v1.webp`;
   return null;
 }
 
@@ -168,9 +167,12 @@ export function createAppearanceState(overrides = {}) {
 
 export function cycleAppearance(value = {}) {
   const current = normalizeAppearance(value);
+  const looks = APPEARANCE_BODIES.flatMap(({ id: body }) => APPEARANCE_CLOTHINGS.map(({ id: clothing }) => ({ body, clothing })));
+  const currentIndex = Math.max(0, looks.findIndex((look) => look.body === current.body && look.clothing === current.clothing));
+  const nextLook = looks[(currentIndex + 1) % looks.length];
   return normalizeAppearance(Object.fromEntries([
-    ["body", current.body],
-    ...APPEARANCE_PARTS.map((part) => [part.id, (current[part.id] % part.catalog.length) + 1]),
+    ["body", nextLook.body],
+    ...APPEARANCE_PARTS.map((part) => [part.id, part.id === "clothing" ? nextLook.clothing : current[part.id]]),
   ]));
 }
 

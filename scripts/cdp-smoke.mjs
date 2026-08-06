@@ -19,7 +19,6 @@ const escapedCacheVersion = expectedCacheVersion.replace(".", "\\.");
 const expectedCreatedAppearance = Object.freeze({
   ...DEFAULT_APPEARANCE,
   body: "female",
-  hat: 2,
   clothing: 2,
 });
 
@@ -541,10 +540,8 @@ await screenshot("wudao-appearance-phone-landscape.png");
 await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
 await evaluate(`new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
 await click("select-appearance-body", "female");
-for (const part of ["hat", "frontHair", "backHair", "eyes", "brows", "mouth", "nose", "faceShape", "faceAccessory", "backAccessory", "clothing"]) {
-  await click("step-appearance", `${part}:1`);
-}
-for (let index = 0; index < 2; index += 1) await click("step-appearance", "frontHair:1");
+assert.equal(await evaluate(`document.querySelectorAll('.appearance-ring-control button:disabled').length`), 20);
+await click("step-appearance", "clothing:1");
 await waitForPaperDoll();
 const mixedAppearancePlan = await evaluate(`(() => {
   const canvas = document.querySelector('.appearance-preview canvas[data-paper-doll-plan]');
@@ -556,12 +553,11 @@ const mixedAppearancePlan = await evaluate(`(() => {
     ready: canvas.dataset.renderReady,
   };
 })()`);
-assert.ok(mixedAppearancePlan.assets.includes("./assets/appearance/rig-v2/female-clothing-2-v1.webp"));
-assert.ok(mixedAppearancePlan.assets.includes("./assets/appearance/rig-v2/female-head-2-v1.webp"));
-assert.ok(mixedAppearancePlan.ids.includes("appearance:hatFront:2"));
+assert.deepEqual(mixedAppearancePlan.assets, ["./assets/appearance/rig-v3/female-look-2-v1.webp"]);
+assert.deepEqual(mixedAppearancePlan.ids, ["appearance-base:clothing:2"]);
 assert.deepEqual(mixedAppearancePlan.masked, []);
 assert.equal(mixedAppearancePlan.ready, "true");
-await screenshot("wudao-appearance-female-mixed-components.png");
+await screenshot("wudao-appearance-female-look-2.png");
 await click("confirm-appearance");
 await click("select-vow", "path");
 await click("start-journey");
@@ -769,9 +765,9 @@ assert.equal(landscapeCharacter.characterView.bagSlots, 24);
 assert.equal(landscapeCharacter.characterView.occupiedBagSlots, 12);
 assert.ok(landscapeCharacter.characterView.bagSlotSizes.every(([width, height]) => height > width), JSON.stringify(landscapeCharacter.characterView.bagSlotSizes));
 assert.doesNotMatch(landscapeCharacter.characterView.profileText, /潜能|命灯/);
-assert.match(landscapeCharacter.characterView.paperDollBase, /female-clothing-2-v1\.webp/);
+assert.match(landscapeCharacter.characterView.paperDollBase, /rig-v3\/female-look-2-v1\.webp/);
 assert.deepEqual(landscapeCharacter.characterView.paperDollItems, []);
-assert.ok(landscapeCharacter.characterView.paperDollParts.includes("appearance:hatFront:2"));
+assert.deepEqual(landscapeCharacter.characterView.paperDollParts, []);
 assert.deepEqual(landscapeCharacter.characterView.paperDollMasks, []);
 assert.equal(landscapeCharacter.characterView.paperDollReady, true);
 assert.ok(landscapeCharacter.characterView.overflowX <= 1, JSON.stringify(landscapeCharacter.characterView));
@@ -793,7 +789,7 @@ assert.equal(await evaluate(`Boolean(document.querySelector(".character-equipmen
 const hatPaperDoll = await snapshot("character-straw-hat-paperdoll");
 assert.equal(hatPaperDoll.characterView.paperDollBase, paperDollBaseBeforeEquipmentDetail);
 assert.deepEqual(hatPaperDoll.characterView.paperDollItems, []);
-assert.ok(hatPaperDoll.characterView.paperDollParts.includes("appearance:hatFront:2"));
+assert.deepEqual(hatPaperDoll.characterView.paperDollParts, []);
 await click("inspect-character-equipment", "traveler_straw_hat|head");
 assert.equal((await snapshot("character-equipped-detail")).characterView.equipmentDetailAction, "confirm-unequip-character-item");
 await click("confirm-unequip-character-item", "head");

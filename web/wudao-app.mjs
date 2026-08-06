@@ -50,8 +50,8 @@ import {
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs?v=20260806.2";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260806.2";
+} from "./wudao-core.mjs?v=20260806.5";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260806.5";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -81,7 +81,7 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260806.2";
+} from "./wudao-p0-core.mjs?v=20260806.5";
 import {
   M4_EVIDENCE,
   M4_METHOD,
@@ -100,7 +100,7 @@ import {
   resolveM4Training,
   resolveMoneyInquiry,
   resolveOldHouseChoice,
-} from "./wudao-p1-core.mjs?v=20260806.2";
+} from "./wudao-p1-core.mjs?v=20260806.5";
 import {
   advanceCombatLabCampaign,
   createCombatLabSession,
@@ -111,14 +111,14 @@ import {
   restartCombatLab,
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
-} from "./combat-lab-core.mjs?v=20260806.2";
+} from "./combat-lab-core.mjs?v=20260806.5";
 import {
   INVENTORY_CAPACITY,
   createInventoryBoard,
   formatSilver,
   getInventoryCategory,
   getInventoryUseState,
-} from "./inventory-core.mjs?v=20260806.2";
+} from "./inventory-core.mjs?v=20260806.5";
 import {
   EQUIPMENT_CAPACITY,
   EQUIPMENT_SLOTS,
@@ -132,7 +132,7 @@ import {
   migrateCharacterVitals,
   migrateEquipmentState,
   unequipEquipmentSlot,
-} from "./character-system.mjs?v=20260806.2";
+} from "./character-system.mjs?v=20260806.5";
 import {
   MARTIAL_MASTERIES,
   breakthroughMartial,
@@ -154,9 +154,9 @@ import {
   trainMartial,
   unequipMartial,
   unlockedMartialNodes,
-} from "./martial-system.mjs?v=20260806.2";
-import { SAVE_STORAGE_KEY } from "./save-core.mjs?v=20260806.2";
-import { createSaveStorage } from "./save-storage.mjs?v=20260806.2";
+} from "./martial-system.mjs?v=20260806.5";
+import { SAVE_STORAGE_KEY } from "./save-core.mjs?v=20260806.5";
+import { createSaveStorage } from "./save-storage.mjs?v=20260806.5";
 import {
   ORIGINS,
   ORIGIN_LADY_INSIGHTS,
@@ -169,7 +169,7 @@ import {
   resolveOriginPersonalEvent,
   resolveOriginPrologueChoice,
   resolveOriginTempleTask,
-} from "./origin-core.mjs?v=20260806.2";
+} from "./origin-core.mjs?v=20260806.5";
 import {
   APPEARANCE_BODIES,
   APPEARANCE_CATALOGS,
@@ -178,11 +178,11 @@ import {
   createAppearanceState,
   cycleAppearance,
   normalizeAppearance,
-} from "./appearance-core.mjs?v=20260806.2";
-import { resolvePaperDollLayers } from "./paperdoll-system.mjs?v=20260806.2";
-import { renderPaperDollCanvases } from "./paperdoll-renderer.mjs?v=20260806.2";
+} from "./appearance-core.mjs?v=20260806.5";
+import { resolvePaperDollLayers } from "./paperdoll-system.mjs?v=20260806.5";
+import { renderPaperDollCanvases } from "./paperdoll-renderer.mjs?v=20260806.5";
 
-const PAPER_DOLL_ASSET_VERSION = "20260806.2";
+const PAPER_DOLL_ASSET_VERSION = "20260806.5";
 
 const app = document.querySelector("#app");
 const BUILD_SHA = document.documentElement.dataset.buildSha || "dev";
@@ -1844,11 +1844,12 @@ function appearanceStepperHtml({
   name,
   layout,
 }) {
+  const locked = Number(total) <= 1;
   return `
     <div class="appearance-ring-control slot-${escapeHtml(layout)}" role="group" aria-label="${escapeHtml(`${label}，当前${name}，第${current}项，共${total}项`)}" data-appearance-part="${escapeHtml(part)}">
-      <button type="button" data-action="step-appearance" data-value="${escapeHtml(`${part}:-1`)}" aria-label="上一个${escapeHtml(label)}">‹</button>
+      <button type="button" data-action="step-appearance" data-value="${escapeHtml(`${part}:-1`)}" aria-label="上一个${escapeHtml(label)}" ${locked ? "disabled" : ""}>‹</button>
       <span><strong>${escapeHtml(label)}</strong><small>${Number(current)} / ${Number(total)}</small></span>
-      <button type="button" data-action="step-appearance" data-value="${escapeHtml(`${part}:1`)}" aria-label="下一个${escapeHtml(label)}">›</button>
+      <button type="button" data-action="step-appearance" data-value="${escapeHtml(`${part}:1`)}" aria-label="下一个${escapeHtml(label)}" ${locked ? "disabled" : ""}>›</button>
     </div>
   `;
 }
