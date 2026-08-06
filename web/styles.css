@@ -14315,24 +14315,11 @@ body[data-martial-open="true"] {
   font: clamp(11px, 0.95vw, 14px)/1 Georgia, serif;
 }
 
-.appearance-stepper-face,
 .appearance-stepper-current > img,
 .appearance-stepper-skin {
   width: clamp(40px, 4vw, 56px);
   height: clamp(40px, 4vw, 56px);
   display: block;
-}
-
-.appearance-stepper-face {
-  border: 1px solid rgba(207, 183, 134, 0.42);
-  background-image: url("./assets/appearance/face-atlas-v1.webp");
-  background-size: 600% 200%;
-  background-position: calc(var(--face-column) * 20%) top;
-  background-repeat: no-repeat;
-}
-
-.appearance-stepper-face.body-female {
-  background-position: calc(var(--face-column) * 20%) bottom;
 }
 
 .appearance-stepper-current > img {

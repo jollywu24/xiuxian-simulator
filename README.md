@@ -131,8 +131,9 @@ npm run verify
 - `web/combat-lab-core.mjs`：雨巷旧规则与通用引擎的统一入口适配层；
 - `web/combat-lab.mjs`：双战局界面、同伴／状态聚焦、行动反馈与连续战役交互；
 - `web/assets/scenes/`：破庙、紫金河、沈家侧门和丹房场景背景；
-- `web/assets/origins/`：西偏院、秦淮鱼市与三张匿名出身牌面；
+- `web/assets/origins/`：西偏院与秦淮鱼市序章场景；`web/assets/creation-v1/`保存三张匿名出身牌面和容貌页环境；
 - `web/assets/inventory/`：生成式行囊背景、十六件统一画风物品、回春丹详情图，以及分页、银锭、宣纸与空格纹样；
+- `art_source/inventory/v1/`：行囊物品的4×4源图集与生产说明，不由网页直接加载；
 - `web/assets/character/`、`web/assets/equipment/`：人物纸偶立绘与十六件统一画风装备图集；
 - `web/styles.css`：江湖冷墨、死亡暗红、场景热点与手机路线视觉；
 - `tests/wudao.test.mjs`：当前路线核心规则测试；

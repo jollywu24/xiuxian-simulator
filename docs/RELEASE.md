@@ -39,7 +39,7 @@
 npm run test:release
 ```
 
-除了关键清单，脚本还扫描所有运行时HTML、CSS和ES Modules中的`assets/`引用，确认文件存在且非空，拒绝把`web/assets/UI_Renderings/`设计稿当正式运行资源，并确认入口与模块只使用一个缓存版本。
+除了关键清单，脚本还扫描所有运行时HTML、CSS和ES Modules中的`assets/`引用，确认文件存在且非空；再反向扫描`web/assets/`，拒绝没有运行引用或显式发布契约的孤儿文件，并禁止重新建立`UI_Renderings`设计稿目录。入口与模块还必须只使用一个缓存版本。
 
 ## 3. 部署后HTTP冒烟
 

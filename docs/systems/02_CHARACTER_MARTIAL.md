@@ -9,7 +9,7 @@
 | 已确认范围 | 分类、品阶、修为、携带、招式节点、真气催动、战斗接入、武学界面 |
 | 当前运行时 | 主存档版本10、武学子状态版本2；统一目录、阅历研习、条件突破、节点门禁、首次兑现、六个携带位、全屏武学页、装备条件、人物派生与战斗接入均已完成 |
 | 相关文档 | [《烟雨江湖》武学设计拆解](../YANYU_JIANGHU_MARTIAL_DESIGN_REFERENCE.md)、[SYS-03 战斗、伤势与死亡](03_COMBAT_INJURY_DEATH.md)、[SYS-09 装备系统与统一战斗公式](09_EQUIPMENT_COMBAT_FORMULA.md)、[系统路线图](../SYSTEM_ROADMAP.md) |
-| 界面基准 | [招式界面效果图](../../web/assets/UI_Renderings/武学效果图-v5.png)、[心法界面效果图](../../web/assets/UI_Renderings/武学-心法效果图-v1.png) |
+| 界面基准 | [招式界面效果图](../assets/references/martial-interface-v5.png)、[心法界面效果图](../assets/references/martial-heart-method-interface-v1.png) |
 
 本文既描述当前已经落地的通用武学系统，也约束后续武学内容。首次聚气、完整轻功传承和更高品阶晋升仍须随正文取得来源后再增加内容，但不再需要另建一套系统。
 

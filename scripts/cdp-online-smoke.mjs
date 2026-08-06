@@ -95,12 +95,13 @@ assert.deepEqual(
   await evaluate(`[...document.querySelectorAll(".origin-creation-step b")].map((item) => item.textContent.trim())`),
   ["出身", "容貌", "天赋", "属性"],
 );
-assert.equal(await evaluate(`document.querySelector(".origin-choice-card.selected")?.dataset.value`), "streetborn");
-assert.equal(await evaluate(`document.querySelector(".origin-confirm-button")?.textContent.trim()`), "选定出身");
+assert.equal(await evaluate(`document.querySelector(".origin-choice-card.selected")?.dataset.value`), "shen_branch");
+assert.equal(await evaluate(`document.querySelector(".origin-confirm-button")?.textContent.trim()`), "确认出身");
 assert.match(
   await evaluate(`getComputedStyle(document.querySelector('[data-value="streetborn"] .origin-card-art')).backgroundImage`),
-  /streetborn-v2\.webp/,
+  /origin-streetborn-v1\.webp/,
 );
+assert.equal(await evaluate(`document.querySelectorAll(".origin-card-copy > span").length`), 1);
 assert.equal(await evaluate(`document.documentElement.scrollWidth <= document.documentElement.clientWidth`), true);
 
 await send("Emulation.setDeviceMetricsOverride", {

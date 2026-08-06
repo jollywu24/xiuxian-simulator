@@ -1,3 +1,4 @@
 .chrome-*/
 .edge-*/
 .server-*.log
+.tmp/

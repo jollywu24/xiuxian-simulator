@@ -8,6 +8,8 @@ import {
   RELEASE_CRITICAL_RESOURCES,
 } from "../scripts/release-contract.mjs";
 import {
+  collectOrphanRuntimeAssets,
+  collectPublishedAssetFiles,
   collectRuntimeAssetReferences,
   collectRuntimeCacheVersions,
   verifyLocalRelease,
@@ -27,6 +29,8 @@ test("runtime and critical release resources resolve through one contract", () =
   assert.equal(report.criticalResources, RELEASE_CRITICAL_RESOURCES.length);
   assert.ok(report.runtimeAssets >= 30);
   assert.ok(collectRuntimeAssetReferences(webRoot).every((resource) => !resource.includes("/UI_Renderings/")));
+  assert.deepEqual(collectOrphanRuntimeAssets(webRoot), []);
+  assert.ok(collectPublishedAssetFiles(webRoot).every((resource) => !resource.includes("/UI_Renderings/")));
 });
 
 test("runtime modules and entry assets share one cache version", () => {

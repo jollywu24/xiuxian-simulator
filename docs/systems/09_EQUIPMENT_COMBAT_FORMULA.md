@@ -531,7 +531,7 @@
 
 ## 11. 人物界面
 
-界面参考：[人物效果图-v10](../../web/assets/UI_Renderings/人物效果图-v10.png)。
+界面参考：[人物界面效果图 v10](../assets/references/character-interface-v10.png)。
 
 ### 11.1 布局
 

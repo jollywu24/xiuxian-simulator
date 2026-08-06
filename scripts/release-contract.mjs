@@ -1,4 +1,4 @@
-export const RELEASE_CONTRACT_VERSION = 7;
+export const RELEASE_CONTRACT_VERSION = 8;
 
 export const RELEASE_ENTRY_RESOURCES = Object.freeze([
   { path: "index.html", contentType: "text/html", minBytes: 256 },

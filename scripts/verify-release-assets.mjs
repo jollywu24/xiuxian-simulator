@@ -30,6 +30,22 @@ export function collectRuntimeAssetReferences(webRoot) {
   return [...references].sort();
 }
 
+export function collectPublishedAssetFiles(webRoot) {
+  const assetsRoot = path.join(webRoot, "assets");
+  return sourceFiles(assetsRoot)
+    .filter((file) => path.extname(file).toLowerCase() !== ".md")
+    .map((file) => path.relative(webRoot, file).split(path.sep).join("/"))
+    .sort();
+}
+
+export function collectOrphanRuntimeAssets(webRoot) {
+  const references = new Set(collectRuntimeAssetReferences(webRoot));
+  for (const resource of RELEASE_CRITICAL_RESOURCES) {
+    if (resource.path.startsWith("assets/")) references.add(resource.path);
+  }
+  return collectPublishedAssetFiles(webRoot).filter((resourcePath) => !references.has(resourcePath));
+}
+
 export function collectRuntimeCacheVersions(webRoot) {
   const sources = sourceFiles(webRoot).filter((file) => [".html", ".mjs"].includes(path.extname(file)));
   const versions = new Set();
@@ -57,6 +73,11 @@ function validateFile(webRoot, resource) {
 export function verifyLocalRelease(webRoot = path.join(repositoryRoot, "web")) {
   const critical = RELEASE_CRITICAL_RESOURCES.map((resource) => validateFile(webRoot, resource));
   const runtimeAssets = collectRuntimeAssetReferences(webRoot);
+  const publishedAssets = collectPublishedAssetFiles(webRoot);
+  const designRenderingDirectory = path.join(webRoot, "assets", "UI_Renderings");
+  if (fs.existsSync(designRenderingDirectory)) {
+    throw new Error("Design rendering directory must not be published: assets/UI_Renderings");
+  }
   if (runtimeAssets.length < 30) {
     throw new Error(`Expected at least 30 runtime assets, found ${runtimeAssets.length}`);
   }
@@ -65,6 +86,10 @@ export function verifyLocalRelease(webRoot = path.join(repositoryRoot, "web")) {
       throw new Error(`Design rendering is referenced by runtime code: ${resourcePath}`);
     }
     validateFile(webRoot, { path: resourcePath, minBytes: 1 });
+  }
+  const orphanAssets = collectOrphanRuntimeAssets(webRoot);
+  if (orphanAssets.length) {
+    throw new Error(`Orphan release assets: ${orphanAssets.join(", ")}`);
   }
   const cacheVersions = collectRuntimeCacheVersions(webRoot);
   if (cacheVersions.length !== 1) {
@@ -81,6 +106,8 @@ export function verifyLocalRelease(webRoot = path.join(repositoryRoot, "web")) {
     cacheVersion,
     criticalResources: critical.length,
     runtimeAssets: runtimeAssets.length,
+    publishedAssets: publishedAssets.length,
+    orphanAssets: orphanAssets.length,
   };
 }
 
