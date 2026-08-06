@@ -50,8 +50,8 @@ import {
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs?v=20260805.1";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260805.1";
+} from "./wudao-core.mjs?v=20260806.1";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260806.1";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -81,7 +81,7 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260805.1";
+} from "./wudao-p0-core.mjs?v=20260806.1";
 import {
   M4_EVIDENCE,
   M4_METHOD,
@@ -100,7 +100,7 @@ import {
   resolveM4Training,
   resolveMoneyInquiry,
   resolveOldHouseChoice,
-} from "./wudao-p1-core.mjs?v=20260805.1";
+} from "./wudao-p1-core.mjs?v=20260806.1";
 import {
   advanceCombatLabCampaign,
   createCombatLabSession,
@@ -111,14 +111,14 @@ import {
   restartCombatLab,
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
-} from "./combat-lab-core.mjs?v=20260805.1";
+} from "./combat-lab-core.mjs?v=20260806.1";
 import {
   INVENTORY_CAPACITY,
   createInventoryBoard,
   formatSilver,
   getInventoryCategory,
   getInventoryUseState,
-} from "./inventory-core.mjs?v=20260805.1";
+} from "./inventory-core.mjs?v=20260806.1";
 import {
   EQUIPMENT_CAPACITY,
   EQUIPMENT_SLOTS,
@@ -132,7 +132,7 @@ import {
   migrateCharacterVitals,
   migrateEquipmentState,
   unequipEquipmentSlot,
-} from "./character-system.mjs?v=20260805.1";
+} from "./character-system.mjs?v=20260806.1";
 import {
   MARTIAL_MASTERIES,
   breakthroughMartial,
@@ -154,9 +154,9 @@ import {
   trainMartial,
   unequipMartial,
   unlockedMartialNodes,
-} from "./martial-system.mjs?v=20260805.1";
-import { SAVE_STORAGE_KEY } from "./save-core.mjs?v=20260805.1";
-import { createSaveStorage } from "./save-storage.mjs?v=20260805.1";
+} from "./martial-system.mjs?v=20260806.1";
+import { SAVE_STORAGE_KEY } from "./save-core.mjs?v=20260806.1";
+import { createSaveStorage } from "./save-storage.mjs?v=20260806.1";
 import {
   ORIGINS,
   ORIGIN_LADY_INSIGHTS,
@@ -169,7 +169,7 @@ import {
   resolveOriginPersonalEvent,
   resolveOriginPrologueChoice,
   resolveOriginTempleTask,
-} from "./origin-core.mjs?v=20260805.1";
+} from "./origin-core.mjs?v=20260806.1";
 import {
   APPEARANCE_BODIES,
   APPEARANCE_CATALOGS,
@@ -178,11 +178,11 @@ import {
   createAppearanceState,
   cycleAppearance,
   normalizeAppearance,
-} from "./appearance-core.mjs?v=20260805.1";
-import { resolvePaperDollLayers } from "./paperdoll-system.mjs?v=20260805.1";
-import { renderPaperDollCanvases } from "./paperdoll-renderer.mjs?v=20260805.1";
+} from "./appearance-core.mjs?v=20260806.1";
+import { resolvePaperDollLayers } from "./paperdoll-system.mjs?v=20260806.1";
+import { renderPaperDollCanvases } from "./paperdoll-renderer.mjs?v=20260806.1";
 
-const PAPER_DOLL_ASSET_VERSION = "20260805.1";
+const PAPER_DOLL_ASSET_VERSION = "20260806.1";
 
 const app = document.querySelector("#app");
 const BUILD_SHA = document.documentElement.dataset.buildSha || "dev";
@@ -1858,23 +1858,23 @@ function renderCharacterDraft() {
   return `
     <main class="origin-selection-screen">
       <header class="origin-selection-header">
+        <h1 class="origin-selection-title">择定你的来处</h1>
         ${creationProgress(0)}
         <button class="origin-return-button" data-action="return-world-intro" aria-label="返回上一页"><span>返回</span><i aria-hidden="true">↶</i></button>
       </header>
-      <h1 class="origin-selection-title">你从何处踏入江湖？</h1>
       <section class="origin-choice-grid" aria-label="选择来处">
         ${ORIGINS.map((item) => `
           <button class="origin-choice-card ${selected?.id === item.id ? "selected" : ""}" data-action="select-background" data-value="${item.id}" style="--origin-card-image:url('${item.cardImage}')">
             <span class="origin-card-art" aria-hidden="true"></span>
             <span class="origin-card-copy">
               <strong>${escapeHtml(item.name)}</strong>
-              <span>${escapeHtml(item.summary)}</span>
+              ${selected?.id === item.id ? `<span>${escapeHtml(item.summary)}</span>` : ""}
             </span>
           </button>
         `).join("")}
       </section>
       <footer class="origin-selection-footer">
-        <button class="origin-confirm-button" data-action="to-appearance" ${selected ? "" : "disabled"}>选定出身</button>
+        <button class="origin-confirm-button" data-action="to-appearance" ${selected ? "" : "disabled"}>确认出身</button>
       </footer>
     </main>
   `;
@@ -1886,10 +1886,10 @@ function renderAppearanceDraft() {
   return `
     <main class="origin-selection-screen appearance-creation-screen">
       <header class="origin-selection-header">
+        <h1 class="origin-selection-title">定下你的模样</h1>
         ${creationProgress(1)}
         <button class="origin-return-button" data-action="back-to-origin" aria-label="返回出身选择"><span>返回</span><i aria-hidden="true">↶</i></button>
       </header>
-      <h1 class="origin-selection-title">定下你的模样</h1>
       <section class="appearance-workspace">
         <form class="appearance-identity-controls" onsubmit="return false">
           <label class="appearance-name-field">
@@ -4440,8 +4440,8 @@ const handlers = {
   },
   "enter-creation": () => {
     if (!getOrigin(state.originId || state.backgroundId)) {
-      state.originId = "streetborn";
-      state.backgroundId = "streetborn";
+      state.originId = "shen_branch";
+      state.backgroundId = "shen_branch";
     }
     moveTo("characterDraft");
   },

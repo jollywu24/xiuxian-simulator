@@ -168,10 +168,16 @@ assert.deepEqual(
   await evaluate(`[...document.querySelectorAll(".origin-creation-step b")].map((item) => item.textContent.trim())`),
   ["出身", "容貌", "天赋", "属性"],
 );
-assert.equal(await evaluate(`document.querySelector(".origin-choice-card.selected")?.dataset.value`), "streetborn");
-assert.equal(await evaluate(`document.querySelector(".origin-confirm-button")?.textContent.trim()`), "选定出身");
+assert.equal(await evaluate(`document.querySelector(".origin-choice-card.selected")?.dataset.value`), "shen_branch");
+assert.equal(await evaluate(`document.querySelector(".origin-confirm-button")?.textContent.trim()`), "确认出身");
 assert.equal(await evaluate(`document.querySelector('[data-field="hero-name"]')`), null);
-assert.equal(await evaluate(`[...document.querySelectorAll(".origin-card-copy > span")].every((item) => getComputedStyle(item).display !== "none")`), true);
+assert.equal(await evaluate(`document.querySelectorAll(".origin-card-copy > span").length`), 1);
+assert.equal(await evaluate(`document.querySelector(".origin-choice-card.selected .origin-card-copy > span")?.textContent.includes("小时候读过书")`), true);
+assert.equal(await evaluate(`document.querySelectorAll(".origin-choice-card:not(.selected) .origin-card-copy > span").length`), 0);
+await click("select-background", "streetborn");
+assert.equal(await evaluate(`document.querySelectorAll(".origin-card-copy > span").length`), 1);
+assert.equal(await evaluate(`document.querySelector(".origin-choice-card.selected .origin-card-copy > span")?.textContent.includes("给鱼贩看过摊")`), true);
+assert.equal(await evaluate(`getComputedStyle(document.querySelector(".origin-selection-screen")).backgroundImage.includes("appearance-jiangnan-v1.webp")`), true);
 await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
 await clearAndNavigate("origin-shen");
 

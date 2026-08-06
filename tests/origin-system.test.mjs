@@ -20,9 +20,9 @@ test("three origins each establish a distinct place, task, tag and card image", 
   assert.deepEqual(ORIGINS.map((origin) => origin.id), ["shen_branch", "streetborn", "mystery"]);
   assert.deepEqual(ORIGINS.map((origin) => origin.name), ["世家旁支", "市井子弟", "身世成谜"]);
   assert.deepEqual(ORIGINS.map((origin) => origin.cardImage), [
-    "./assets/origins/cards/clan-branch-v2.webp",
-    "./assets/origins/cards/streetborn-v2.webp",
-    "./assets/origins/cards/mystery-v2.webp",
+    "./assets/creation-v1/origin-shen-branch-v1.webp",
+    "./assets/creation-v1/origin-streetborn-v1.webp",
+    "./assets/creation-v1/origin-mystery-v1.webp",
   ]);
   assert.equal(new Set(ORIGINS.map((origin) => origin.opening)).size, 3);
   assert.equal(new Set(ORIGINS.map((origin) => origin.taskId)).size, 3);

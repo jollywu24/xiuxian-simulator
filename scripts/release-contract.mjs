@@ -1,4 +1,4 @@
-export const RELEASE_CONTRACT_VERSION = 6;
+export const RELEASE_CONTRACT_VERSION = 7;
 
 export const RELEASE_ENTRY_RESOURCES = Object.freeze([
   { path: "index.html", contentType: "text/html", minBytes: 256 },
@@ -10,11 +10,11 @@ export const RELEASE_ENTRY_RESOURCES = Object.freeze([
 export const RELEASE_CRITICAL_ASSETS = Object.freeze([
   { path: "assets/origins/shen-west-courtyard-v1.webp", contentType: "image/webp", minBytes: 1024 },
   { path: "assets/origins/qinhuai-fish-market-v1.webp", contentType: "image/webp", minBytes: 1024 },
-  { path: "assets/origins/cards/clan-branch-v1.webp", contentType: "image/webp", minBytes: 1024 },
-  { path: "assets/origins/cards/streetborn-v1.webp", contentType: "image/webp", minBytes: 1024 },
-  { path: "assets/origins/cards/mystery-v1.webp", contentType: "image/webp", minBytes: 1024 },
+  { path: "assets/creation-v1/origin-shen-branch-v1.webp", contentType: "image/webp", minBytes: 1024 },
+  { path: "assets/creation-v1/origin-streetborn-v1.webp", contentType: "image/webp", minBytes: 1024 },
+  { path: "assets/creation-v1/origin-mystery-v1.webp", contentType: "image/webp", minBytes: 1024 },
   { path: "assets/scenes/ruined-temple-stage-v3.webp", contentType: "image/webp", minBytes: 1024 },
-  { path: "assets/appearance/appearance-courtyard-v2.webp", contentType: "image/webp", minBytes: 1024 },
+  { path: "assets/creation-v1/appearance-jiangnan-v1.webp", contentType: "image/webp", minBytes: 1024 },
   { path: "assets/appearance/rig-v2/male-clothing-1-v1.webp", contentType: "image/webp", minBytes: 1024 },
   { path: "assets/appearance/rig-v2/male-clothing-2-v1.webp", contentType: "image/webp", minBytes: 1024 },
   { path: "assets/appearance/rig-v2/male-head-2-v1.webp", contentType: "image/webp", minBytes: 1024 },
