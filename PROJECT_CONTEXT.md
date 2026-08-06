@@ -15,6 +15,7 @@
 
 ```bash
 npm run serve
+npm run verify:quick
 npm run verify
 npm test
 npm run validate:content
@@ -26,6 +27,7 @@ npm run test:browser
 ```
 
 - `npm run serve`：只启动本地静态页面；
+- `npm run verify:quick`：执行语法、规则、内容与发布资源检查，不启动三套长浏览器流程；
 - `npm run verify`：执行语法、规则、内容、发布资源与三套自启动浏览器完整质量门禁；
 - `npm test`：纯规则、存档、资源与发布契约测试；
 - `npm run validate:content`：剧情目录、节点和跳转校验；
@@ -54,6 +56,7 @@ npm run test:browser
 | 通用战斗和遭遇 | `web/combat-engine.mjs`、`web/combat-encounters.mjs` | `tests/combat-engine.test.mjs`、`scripts/cdp-combat-lab.mjs` |
 | 存档、备份和迁移 | `web/save-core.mjs`、`web/save-storage.mjs` | `tests/save-core.test.mjs`、`docs/SAVE_ARCHITECTURE.md` |
 | 样式和响应式 | `web/styles.css` | 三套浏览器回归、`docs/systems/07_INTERFACE_SAVE_QA.md` |
+| 确认效果图还原 | 对应页面、样式与正式资源 | `docs/VISUAL_IMPLEMENTATION.md`、对应系统文档与浏览器截图回归 |
 | 测试与浏览器回归 | `scripts/run-quality-gate.mjs`、`scripts/run-browser-regression.mjs` | `docs/TESTING.md` |
 | 调试状态协议 | `web/wudao-app.mjs` | `docs/DEBUGGING.md`、`tests/release-infrastructure.test.mjs` |
 | 发布与线上验证 | `.github/workflows/`、`scripts/release-contract.mjs`、`scripts/smoke-deployed.mjs` | `docs/RELEASE.md` |
@@ -72,6 +75,7 @@ npm run test:browser
 | `docs/TESTING.md` | 自动化测试层级、自启动浏览器回归、覆盖矩阵和失败定位 |
 | `docs/DEBUGGING.md` | `WudaoDebug`协议、只读状态、受控命令和诊断边界 |
 | `docs/RELEASE.md` | Pages质量门禁、资源契约、构建标识和部署后线上冒烟 |
+| `docs/VISUAL_IMPLEMENTATION.md` | 效果图冻结、量取、灰盒、资源、叠图、视口与视觉验收流程 |
 | `docs/DECISION_LOG.md` | 已确认设计或工程决策的原因与取舍 |
 | `docs/CHANGELOG.md` | 已经交付的重要变更，不解释设计理由 |
 | `GOAL.md` | 用户明确指定且尚在推进的一次性施工目标 |

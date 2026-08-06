@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "test": "node --test",
-    "verify": "node scripts/run-quality-gate.mjs",
+    "verify": "node scripts/run-quality-gate.mjs release",
+    "verify:quick": "node scripts/run-quality-gate.mjs quick",
     "validate:content": "node scripts/validate-p0-content.mjs",
     "test:release": "node scripts/verify-release-assets.mjs",
     "smoke": "node scripts/run-browser-regression.mjs main",

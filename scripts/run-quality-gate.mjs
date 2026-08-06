@@ -20,7 +20,7 @@ const syntaxTargets = [
   "scripts/smoke-deployed.mjs",
 ];
 
-const steps = [
+const sharedSteps = [
   ...syntaxTargets.map((target) => ({
     name: `JavaScript syntax (${target})`,
     command: process.execPath,
@@ -29,8 +29,19 @@ const steps = [
   { name: "Rule and contract tests", command: process.execPath, args: ["--test"] },
   { name: "Story content validation", command: process.execPath, args: ["scripts/validate-p0-content.mjs"] },
   { name: "Release resource contract", command: process.execPath, args: ["scripts/verify-release-assets.mjs"] },
-  { name: "Self-starting browser regression", command: process.execPath, args: ["scripts/run-browser-regression.mjs", "all"] },
 ];
+
+const profile = process.argv[2] || "release";
+if (!new Set(["quick", "release"]).has(profile)) {
+  throw new Error(`Unknown quality profile: ${profile}`);
+}
+
+const steps = profile === "quick"
+  ? sharedSteps
+  : [
+      ...sharedSteps,
+      { name: "Self-starting browser regression", command: process.execPath, args: ["scripts/run-browser-regression.mjs", "all"] },
+    ];
 
 function runStep(step) {
   process.stdout.write(`quality: ${step.name}\n`);
@@ -50,4 +61,4 @@ function runStep(step) {
 }
 
 for (const step of steps) await runStep(step);
-process.stdout.write(`${JSON.stringify({ ok: true, steps: steps.length })}\n`);
+process.stdout.write(`${JSON.stringify({ ok: true, profile, steps: steps.length })}\n`);

@@ -135,13 +135,14 @@ assert.match(subdued.text, /留下活口|刀客被生擒/);
 
 await setViewport(390, 844, true);
 await navigate();
-const portrait = await snapshot("portrait");
-assert.ok(portrait.scrollWidth <= 390);
-assert.equal(portrait.positionMapDisplay, "none");
-assert.ok(portrait.enemyTextSize >= 10);
-assert.ok(portrait.forecastTextSize >= 10);
-assert.ok(portrait.rail.bottom <= portrait.scene.top + 1);
-assert.ok(portrait.actionRects.length === 3 && portrait.actionRects.every((entry) => entry.top < 844));
+const portraitGate = await evaluate(`(() => ({
+  gateDisplay: getComputedStyle(document.querySelector(".landscape-required")).display,
+  appVisibility: getComputedStyle(document.querySelector("#combat-lab")).visibility,
+  text: document.querySelector(".landscape-required")?.innerText || ""
+}))()`);
+assert.equal(portraitGate.gateDisplay, "flex");
+assert.equal(portraitGate.appVisibility, "hidden");
+assert.match(portraitGate.text, /请横置设备/);
 
 await setViewport(844, 390, true);
 await navigate();
@@ -175,4 +176,4 @@ assert.ok(riverbank.actions.includes("needle_wang"));
 
 assert.deepEqual(pageErrors, []);
 socket.close();
-console.log(JSON.stringify({ ok: true, checkpoints: [desktop, finisherReady, subdued, portrait, landscape, pursuit, riverbank].map(({ label, encounter, round, enemyHp, pursuit: tail }) => ({ label, encounter, round, enemyHp, pursuit: tail })) }, null, 2));
+console.log(JSON.stringify({ ok: true, checkpoints: [desktop, finisherReady, subdued, landscape, pursuit, riverbank].map(({ label, encounter, round, enemyHp, pursuit: tail }) => ({ label, encounter, round, enemyHp, pursuit: tail })) }, null, 2));

@@ -62,7 +62,8 @@ test("automated verification owns the browser and gates Pages deployment", () =>
   const deployment = read(".github/workflows/pages.yml");
   const packageJson = JSON.parse(read("package.json"));
 
-  assert.equal(packageJson.scripts.verify, "node scripts/run-quality-gate.mjs");
+  assert.equal(packageJson.scripts.verify, "node scripts/run-quality-gate.mjs release");
+  assert.equal(packageJson.scripts["verify:quick"], "node scripts/run-quality-gate.mjs quick");
   assert.equal(packageJson.scripts.serve, "node scripts/serve-web.mjs");
   assert.equal(packageJson.scripts["test:browser"], "node scripts/run-browser-regression.mjs all");
   assert.equal(packageJson.scripts["smoke:online"], "node scripts/run-browser-regression.mjs online");

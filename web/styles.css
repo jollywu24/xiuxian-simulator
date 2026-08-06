@@ -1534,6 +1534,85 @@ h1 {
   background: rgba(246, 242, 231, 0.97);
 }
 
+/* MVP viewport contract: gameplay is authored for desktop and mobile landscape. */
+.landscape-required {
+  display: none;
+}
+
+@media (orientation: portrait) and (max-width: 900px) {
+  html,
+  body {
+    min-height: 100%;
+    overflow: hidden;
+  }
+
+  body > #app {
+    visibility: hidden;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .landscape-required {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: max(28px, env(safe-area-inset-top)) max(28px, env(safe-area-inset-right)) max(28px, env(safe-area-inset-bottom)) max(28px, env(safe-area-inset-left));
+    color: #263d3e;
+    text-align: center;
+    background:
+      linear-gradient(rgba(247, 243, 229, 0.84), rgba(242, 237, 220, 0.94)),
+      url("./assets/creation-v1/appearance-jiangnan-v1.webp") center / cover no-repeat;
+  }
+
+  .landscape-required i {
+    position: relative;
+    width: 54px;
+    height: 82px;
+    margin-bottom: 28px;
+    border: 2px solid #547274;
+    border-radius: 9px;
+    box-shadow: inset 0 0 0 4px rgba(238, 230, 203, 0.76), 0 12px 30px rgba(54, 70, 66, 0.14);
+    transform: rotate(90deg);
+  }
+
+  .landscape-required i::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 5px;
+    width: 5px;
+    height: 5px;
+    border: 1px solid #9c7d42;
+    border-radius: 50%;
+    transform: translateX(-50%);
+  }
+
+  .landscape-required span {
+    margin-bottom: 8px;
+    color: #9b7b3e;
+    font-size: 12px;
+    letter-spacing: 0.3em;
+  }
+
+  .landscape-required strong {
+    font-family: "STKaiti", "KaiTi", "Noto Serif SC", serif;
+    font-size: clamp(28px, 8vw, 38px);
+    font-weight: 500;
+    letter-spacing: 0.12em;
+  }
+
+  .landscape-required p {
+    margin: 14px 0 0;
+    color: #667573;
+    font-size: 14px;
+    letter-spacing: 0.06em;
+  }
+}
+
 .origin-selection-screen .origin-choice-card.selected .origin-card-copy {
   border-top-color: rgba(218, 181, 104, 0.52);
   background:
