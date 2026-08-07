@@ -241,7 +241,7 @@
 .appearance-stage .appearance-preview .paper-doll-composition {
   position: absolute;
   z-index: 5;
-  bottom: -82px;
+  bottom: -96px;
   left: 50%;
   width: auto;
   max-width: none;
@@ -316,7 +316,7 @@
   .appearance-ring-control.slot-left-5,
   .appearance-ring-control.slot-right-5 { top: 84%; }
   .appearance-stage .appearance-preview { top: 29px; bottom: 0; width: 250px; }
-  .appearance-stage .appearance-preview .paper-doll-composition { bottom: -22px; height: 330px; }
+  .appearance-stage .appearance-preview .paper-doll-composition { bottom: -34px; height: 330px; }
   .appearance-footer { right: 20px; bottom: 9px; }
   .appearance-footer .origin-confirm-button { min-width: 194px; min-height: 34px; outline-offset: -3px; font-size: 16px; }
 }

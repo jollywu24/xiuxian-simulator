@@ -662,8 +662,8 @@
 - 帽子必须同时声明帽前附件和头发遮罩；遮罩只裁掉被帽冠包住的前后发，不得擦除脸、衣服或帽子；
 - 不允许为某个编号增加`top`、`left`、`scale`或`clip-path`特例。结构不对时返回母版、插槽或遮罩修正；
 - AI图像只可作为完整母版候选，不能把多张独立生成图直接当作运行时组件；所有附件必须在共同母版上重绘、拆分并经过组合验收；
-- 当前开放双体貌与十一类双选项；四套推荐组合见[容貌组合矩阵 v4](../assets/appearance-rig-v4-matrix.webp)，旧版把完整立绘映射为衣服而禁用其它控件的路径已经撤回；
-- 可重复生成与校验脚本为`scripts/build-appearance-rig-v4.py`，专项浏览器回归为`scripts/cdp-appearance.mjs`；完整契约、成熟方案取舍和扩充条件见[容貌纸娃娃与美术生产管线](12_APPEARANCE_RIG.md)。
+- 当前开放双体貌与十一类双选项；四套推荐组合见[固定锚点容貌组合矩阵](../assets/appearance-rig-v5-psd-matrix.webp)，衣服允许改变颈部以下动作，但不能移动或重画固定头脸；
+- 可重复生成与校验脚本为`scripts/build-appearance-rig-v5.py`，专项浏览器回归为`scripts/cdp-appearance.mjs`；完整契约、成熟方案取舍和扩充条件见[容貌纸娃娃与美术生产管线](12_APPEARANCE_RIG.md)。
 - 出身卡与容貌页背景的源母版保存在`art_source/creation-v1/`，网页资源由`scripts/build-creation-art-v1.py`统一裁切、压缩并生成验收图；正式文件位于`web/assets/creation-v1/`。
 
 ### 12.3 卡片文案

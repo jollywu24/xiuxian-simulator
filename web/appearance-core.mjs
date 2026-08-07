@@ -54,14 +54,23 @@ export const DEFAULT_APPEARANCE = Object.freeze({
 
 export const APPEARANCE_BODY_ASSETS = Object.freeze({
   male: Object.freeze({
-    1: "./assets/appearance/rig-v4/male-base-v1.webp",
-    2: "./assets/appearance/rig-v4/male-clothing-2-v1.webp",
+    1: "./assets/appearance/rig-v5-psd/male-base-c1-v1.webp",
+    2: "./assets/appearance/rig-v5-psd/male-base-c2-v1.webp",
   }),
   female: Object.freeze({
-    1: "./assets/appearance/rig-v4/female-base-v1.webp",
-    2: "./assets/appearance/rig-v4/female-clothing-2-v1.webp",
+    1: "./assets/appearance/rig-v5-psd/female-base-c1-v1.webp",
+    2: "./assets/appearance/rig-v5-psd/female-base-c2-v1.webp",
   }),
 });
+
+export const APPEARANCE_HEAD_ASSETS = Object.freeze(Object.fromEntries(
+  APPEARANCE_BODIES.map(({ id: body }) => [body, Object.freeze(Object.fromEntries(
+    APPEARANCE_FRONT_HAIRS.flatMap(({ id: frontHair }) => APPEARANCE_BACK_HAIRS.map(({ id: backHair }) => [
+      `${frontHair}:${backHair}`,
+      `./assets/appearance/rig-v5-psd/${body}-head-f${frontHair}-b${backHair}-v1.webp`,
+    ])),
+  ))]),
+));
 
 export const APPEARANCE_BASE_ASSETS = Object.freeze({
   male: APPEARANCE_BODY_ASSETS.male[1],
@@ -69,16 +78,14 @@ export const APPEARANCE_BASE_ASSETS = Object.freeze({
 });
 
 const PART_ASSET_STEMS = Object.freeze({
-  hat: "hat",
-  frontHair: "front-hair-2",
-  backHair: "back-hair-2",
+  hat: "hat-2",
   eyes: "eyes-2",
   brows: "brows-2",
   mouth: "mouth-2",
   nose: "nose-2",
   faceShape: "face-shape-2",
-  backAccessory: "back-accessory",
-  faceAccessory: "face-accessory",
+  backAccessory: "back-accessory-2",
+  faceAccessory: "face-accessory-2",
 });
 
 function catalogHas(catalog, id) {
@@ -87,9 +94,9 @@ function catalogHas(catalog, id) {
 
 export function appearanceLayerAsset(body, partId, id) {
   if (!catalogHas(APPEARANCE_BODIES, body) || Number(id) !== 2) return null;
-  if (partId === "clothing") return null;
+  if (["clothing", "frontHair", "backHair"].includes(partId)) return null;
   const stem = PART_ASSET_STEMS[partId];
-  return stem ? `./assets/appearance/rig-v4/${body}-${stem}-v1.webp` : null;
+  return stem ? `./assets/appearance/rig-v5-psd/${body}-${stem}-v1.webp` : null;
 }
 
 export function appearanceHairMaskAsset() {
@@ -102,7 +109,8 @@ export const APPEARANCE_DEFAULT_LAYER_ASSETS = Object.freeze({
 });
 
 export const APPEARANCE_RUNTIME_ASSETS = Object.freeze([
-  ...APPEARANCE_BODIES.flatMap(({ id: body }) => APPEARANCE_CLOTHINGS.map(({ id }) => APPEARANCE_BODY_ASSETS[body][id])),
+  ...APPEARANCE_BODIES.flatMap(({ id: body }) => APPEARANCE_CLOTHINGS.map(({ id: clothing }) => APPEARANCE_BODY_ASSETS[body][clothing])),
+  ...Object.values(APPEARANCE_HEAD_ASSETS).flatMap((assets) => Object.values(assets)),
   ...APPEARANCE_BODIES.flatMap(({ id: body }) => Object.keys(PART_ASSET_STEMS).map((partId) => appearanceLayerAsset(body, partId, 2))),
 ].filter(Boolean));
 
@@ -156,6 +164,11 @@ export function cycleAppearance(value = {}) {
 export function appearanceBaseAsset(value = {}) {
   const appearance = normalizeAppearance(value);
   return APPEARANCE_BODY_ASSETS[appearance.body][appearance.clothing];
+}
+
+export function appearanceHeadAsset(value = {}) {
+  const appearance = normalizeAppearance(value);
+  return APPEARANCE_HEAD_ASSETS[appearance.body][`${appearance.frontHair}:${appearance.backHair}`];
 }
 
 export function appearancePart(value, partId) {

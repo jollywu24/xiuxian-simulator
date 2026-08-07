@@ -81,11 +81,33 @@ async function canvasHash() {
   return evaluate(`(() => {
     const source = document.querySelector('.appearance-preview canvas[data-paper-doll-plan]');
     const sample = document.createElement('canvas');
-    sample.width = 64; sample.height = 96;
-    sample.getContext('2d').drawImage(source, 0, 0, 64, 96);
-    const bytes = sample.getContext('2d').getImageData(0, 0, 64, 96).data;
+    sample.width = 128; sample.height = 192;
+    sample.getContext('2d').drawImage(source, 0, 0, 128, 192);
+    const bytes = sample.getContext('2d').getImageData(0, 0, 128, 192).data;
     let hash = 2166136261;
     for (const byte of bytes) { hash ^= byte; hash = Math.imul(hash, 16777619); }
+    return hash >>> 0;
+  })()`);
+}
+
+async function canvasRegionHash({ x, y, width, height, outside = false }) {
+  return evaluate(`(() => {
+    const source = document.querySelector('.appearance-preview canvas[data-paper-doll-plan]');
+    const context = source.getContext('2d');
+    const bytes = context.getImageData(0, 0, source.width, source.height).data;
+    const rect = ${JSON.stringify({ x, y, width, height })};
+    let hash = 2166136261;
+    for (let py = 0; py < source.height; py += 2) {
+      for (let px = 0; px < source.width; px += 2) {
+        const inside = px >= rect.x && px < rect.x + rect.width && py >= rect.y && py < rect.y + rect.height;
+        if (${outside ? "true" : "false"} ? inside : !inside) continue;
+        const offset = (py * source.width + px) * 4;
+        for (let channel = 0; channel < 4; channel += 1) {
+          hash ^= bytes[offset + channel];
+          hash = Math.imul(hash, 16777619);
+        }
+      }
+    }
     return hash >>> 0;
   })()`);
 }
@@ -122,23 +144,54 @@ const desktopGeometry = await evaluate(`(() => {
 })()`);
 assert.ok(desktopGeometry.hat.bottom + 4 <= desktopGeometry.figure.top, JSON.stringify(desktopGeometry));
 assert.ok(Math.abs(desktopGeometry.figure.center - 640) < 2, JSON.stringify(desktopGeometry));
-assert.ok(desktopGeometry.figure.top >= 145 && desktopGeometry.figure.top <= 165, JSON.stringify(desktopGeometry));
+assert.ok(desktopGeometry.figure.top >= 155 && desktopGeometry.figure.top <= 175, JSON.stringify(desktopGeometry));
 assert.ok(desktopGeometry.firstLeft.top >= desktopGeometry.identity.bottom, JSON.stringify(desktopGeometry));
 assert.ok(desktopGeometry.lastLeft.bottom <= desktopGeometry.footer.top, JSON.stringify(desktopGeometry));
 assert.equal(new Set(desktopGeometry.controls.map((item) => item.width.toFixed(1))).size, 1);
 assert.equal(new Set(desktopGeometry.controls.map((item) => item.height.toFixed(1))).size, 1);
 
-let previousHash = await canvasHash();
+const featureRois = {
+  eyes: { x: 382, y: 266, width: 260, height: 102 },
+  brows: { x: 380, y: 228, width: 264, height: 91 },
+  mouth: { x: 422, y: 376, width: 180, height: 90 },
+  nose: { x: 452, y: 288, width: 120, height: 134 },
+  faceShape: { x: 366, y: 160, width: 292, height: 362 },
+};
+const fixedFaceRoi = { x: 440, y: 300, width: 144, height: 150 };
+const fixedHeadRoi = { x: 440, y: 190, width: 144, height: 190 };
 for (const part of ["frontHair", "backHair", "eyes", "brows", "mouth", "nose", "faceShape", "faceAccessory", "backAccessory", "clothing", "hat"]) {
+  const previousHash = await canvasHash();
+  const fixedFaceBefore = ["frontHair", "backHair"].includes(part) ? await canvasRegionHash(fixedFaceRoi) : null;
+  const fixedHeadBefore = part === "clothing" ? await canvasRegionHash(fixedHeadRoi) : null;
+  const outsideBefore = featureRois[part] ? await canvasRegionHash({ ...featureRois[part], outside: true }) : null;
   await click("step-appearance", `${part}:1`);
   await waitForPaperDoll();
   const currentHash = await canvasHash();
   assert.notEqual(currentHash, previousHash, `${part} did not change rendered pixels`);
+  if (fixedFaceBefore != null) {
+    assert.equal(await canvasRegionHash(fixedFaceRoi), fixedFaceBefore, `${part} moved or repainted the fixed face`);
+  }
+  if (fixedHeadBefore != null) {
+    assert.equal(await canvasRegionHash(fixedHeadRoi), fixedHeadBefore, "clothing changed fixed head pixels");
+  }
+  if (outsideBefore != null) {
+    assert.equal(
+      await canvasRegionHash({ ...featureRois[part], outside: true }),
+      outsideBefore,
+      `${part} changed pixels outside its facial ROI`,
+    );
+  }
   assert.equal(
     await evaluate(`document.querySelector('[data-appearance-part="${part}"] small')?.textContent.trim()`),
     "2 / 2",
   );
-  previousHash = currentHash;
+  await click("step-appearance", `${part}:-1`);
+  await waitForPaperDoll();
+  assert.equal(await canvasHash(), previousHash, `${part} did not restore the deterministic base image`);
+}
+for (const part of ["frontHair", "backHair", "eyes", "brows", "mouth", "nose", "faceShape", "faceAccessory", "backAccessory", "clothing", "hat"]) {
+  await click("step-appearance", `${part}:1`);
+  await waitForPaperDoll();
 }
 await screenshot("appearance-desktop-1280x720.png");
 

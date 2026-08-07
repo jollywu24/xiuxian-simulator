@@ -23,9 +23,10 @@ test("人物按固定层级绘制当前底像、衣装与容貌部件", () => {
   assert.equal(composition.appearance.body, "female");
   assert.equal(composition.appearance.hat, 2);
   assert.deepEqual(composition.layers.map((layer) => layer.kind), [
-    "backAccessory", "base", "eyes", "frontHair", "faceAccessory", "hatFront",
+    "backAccessory", "base", "head", "eyes", "faceAccessory", "hatFront",
   ]);
-  assert.equal(composition.layers[1].asset, "./assets/appearance/rig-v4/female-clothing-2-v1.webp");
+  assert.equal(composition.layers[1].asset, "./assets/appearance/rig-v5-psd/female-base-c2-v1.webp");
+  assert.equal(composition.layers[2].asset, "./assets/appearance/rig-v5-psd/female-head-f2-b1-v1.webp");
   assert.ok(composition.layers.filter((layer) => layer.kind !== "base").every((layer) => layer.source === "image"));
   assert.ok(composition.layers.every((layer) => layer.href == null));
 });
@@ -39,7 +40,9 @@ test("每一类非默认容貌都产生可见图层", () => {
   const layers = resolvePaperDollLayers({ appearance }).layers;
   assert.equal(layers[0].kind, "backAccessory");
   assert.equal(layers.filter((layer) => layer.kind === "base").length, 1);
-  assert.equal(layers.filter((layer) => layer.kind !== "base").length, 10);
+  assert.equal(layers.filter((layer) => layer.kind !== "base").length, 9);
+  assert.equal(layers.find((layer) => layer.kind === "base").asset, "./assets/appearance/rig-v5-psd/male-base-c2-v1.webp");
+  assert.equal(layers.find((layer) => layer.kind === "head").asset, "./assets/appearance/rig-v5-psd/male-head-f2-b2-v1.webp");
   assert.equal(layers.at(-1).kind, "hatFront");
   assert.ok(layers.every((layer) => layer.asset?.endsWith(".webp")));
 });
@@ -54,9 +57,9 @@ test("更换装备只改变装备状态，不进入人物外观层", () => {
   assert.deepEqual(after, before);
 });
 
-test("正式容貌资源全部来自分层 rig v4", () => {
-  assert.equal(PAPER_DOLL_RUNTIME_ASSETS.length, 24);
-  assert.equal(new Set(PAPER_DOLL_RUNTIME_ASSETS).size, 24);
-  assert.ok(PAPER_DOLL_RUNTIME_ASSETS.every((asset) => asset.startsWith("./assets/appearance/rig-v4/")));
+test("正式容貌资源全部来自固定锚点 rig v5", () => {
+  assert.equal(PAPER_DOLL_RUNTIME_ASSETS.length, 28);
+  assert.equal(new Set(PAPER_DOLL_RUNTIME_ASSETS).size, 28);
+  assert.ok(PAPER_DOLL_RUNTIME_ASSETS.every((asset) => asset.startsWith("./assets/appearance/rig-v5-psd/")));
   assert.ok(PAPER_DOLL_RUNTIME_ASSETS.every((asset) => asset.endsWith(".webp")));
 });

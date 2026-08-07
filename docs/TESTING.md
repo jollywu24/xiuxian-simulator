@@ -47,7 +47,7 @@ npm run verify
 | `npm run smoke` | 正篇完整流程 |
 | `npm run smoke:origins` | 三出身选择、两条独立序章、汇流与个人事件 |
 | `npm run smoke:combat` | 独立战斗与连续战役 |
-| `npm run smoke:appearance` | 容貌页十一类切换、人物中轴、帽子安全距与双横屏视口 |
+| `npm run smoke:appearance` | 容貌页十一类切换、固定头脸保护区、部件作用域、人物中轴、帽子安全距与双横屏视口 |
 | `npm run test:browser` | 连续执行全部本地浏览器回归 |
 | `npm run verify` | 发布前完整质量门禁 |
 
@@ -72,7 +72,7 @@ npm run verify
 - `scripts/cdp-smoke.mjs`：正篇、存档迁移、恢复、人物／行囊／武学和多视口；
 - `scripts/cdp-origins.mjs`：三出身选择、世家旁支／市井子弟序章、三档结果、沈家汇流和个人事件；
 - `scripts/cdp-combat-lab.mjs`：战斗动作、敌方阶段、同伴、环境、伤势、死亡和连续战役。
-- `scripts/cdp-appearance.mjs`：容貌页十一类逐项变化、人物／帽子中轴、安全距、桌面与手机横屏几何。
+- `scripts/cdp-appearance.mjs`：容貌页十一类逐项变化和确定性回切；换发不改五官、换衣不改头脸、五官不越出各自区域；人物／帽子中轴、安全距、桌面与手机横屏几何。
 
 `scripts/cdp-online-smoke.mjs`只在部署后运行最短真实页面流程，不代替本地深回归。
 

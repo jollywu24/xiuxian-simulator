@@ -2,15 +2,17 @@ import {
   APPEARANCE_PARTS,
   APPEARANCE_RUNTIME_ASSETS,
   appearanceBaseAsset,
+  appearanceHeadAsset,
   appearancePart,
   normalizeAppearance,
-} from "./appearance-core.mjs?v=20260807.1";
+} from "./appearance-core.mjs?v=20260807.2";
 
 export const PAPER_DOLL_LAYER_ORDER = Object.freeze({
   backAccessory: 5,
   backHair: 44,
   hatBack: 15,
   base: 20,
+  head: 30,
   clothing: 30,
   faceShape: 40,
   eyes: 45,
@@ -57,6 +59,15 @@ export function resolvePaperDollLayers({ appearance } = {}) {
       source: "image",
       asset: appearanceBaseAsset(normalizedAppearance),
       z: PAPER_DOLL_LAYER_ORDER.base,
+    },
+    {
+      id: `appearance-head:front:${normalizedAppearance.frontHair}:back:${normalizedAppearance.backHair}`,
+      itemId: null,
+      slotId: "head",
+      kind: "head",
+      source: "image",
+      asset: appearanceHeadAsset(normalizedAppearance),
+      z: PAPER_DOLL_LAYER_ORDER.head,
     },
     ...APPEARANCE_PARTS.flatMap((part) => {
       const layer = resolveAppearanceLayer(part);

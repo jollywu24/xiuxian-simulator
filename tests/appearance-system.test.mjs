@@ -7,11 +7,13 @@ import { fileURLToPath } from "node:url";
 import {
   APPEARANCE_BODIES,
   APPEARANCE_BODY_ASSETS,
+  APPEARANCE_HEAD_ASSETS,
   APPEARANCE_CATALOGS,
   APPEARANCE_PARTS,
   APPEARANCE_RUNTIME_ASSETS,
   DEFAULT_APPEARANCE,
   appearanceBaseAsset,
+  appearanceHeadAsset,
   appearanceHairMaskAsset,
   appearancePart,
   createAppearanceState,
@@ -89,23 +91,29 @@ test("随心一变依次轮换四套分层容貌组合", () => {
   assert.ok(APPEARANCE_PARTS.every((part) => APPEARANCE_CATALOGS[part.id].some((entry) => entry.id === fourth[part.id])));
 });
 
-test("容貌发布同画布的底像、衣装与独立部件层", () => {
-  assert.equal(appearanceBaseAsset({ body: "male", clothing: 1 }), "./assets/appearance/rig-v4/male-base-v1.webp");
-  assert.equal(appearanceBaseAsset({ body: "female", clothing: 2 }), "./assets/appearance/rig-v4/female-clothing-2-v1.webp");
-  assert.equal(APPEARANCE_BODY_ASSETS.male[2], "./assets/appearance/rig-v4/male-clothing-2-v1.webp");
+test("容貌发布固定头锚的衣装组合与局部五官层", () => {
+  assert.equal(appearanceBaseAsset({ body: "male", clothing: 1 }), "./assets/appearance/rig-v5-psd/male-base-c1-v1.webp");
+  assert.equal(appearanceBaseAsset({ body: "female", clothing: 2 }), "./assets/appearance/rig-v5-psd/female-base-c2-v1.webp");
+  assert.equal(
+    appearanceHeadAsset({ body: "female", clothing: 2, frontHair: 2, backHair: 2 }),
+    "./assets/appearance/rig-v5-psd/female-head-f2-b2-v1.webp",
+  );
+  assert.equal(APPEARANCE_BODY_ASSETS.male[2], "./assets/appearance/rig-v5-psd/male-base-c2-v1.webp");
+  assert.equal(APPEARANCE_HEAD_ASSETS.male["1:2"], "./assets/appearance/rig-v5-psd/male-head-f1-b2-v1.webp");
   assert.equal(appearancePart({ body: "male", frontHair: 1 }, "frontHair").asset, null);
-  assert.equal(appearancePart({ body: "male", frontHair: 2 }, "frontHair").asset, "./assets/appearance/rig-v4/male-front-hair-2-v1.webp");
-  assert.equal(appearancePart({ body: "female", hat: 2 }, "hat").asset, "./assets/appearance/rig-v4/female-hat-v1.webp");
+  assert.equal(appearancePart({ body: "male", frontHair: 2 }, "frontHair").asset, null);
+  assert.equal(appearancePart({ body: "female", hat: 2 }, "hat").asset, "./assets/appearance/rig-v5-psd/female-hat-2-v1.webp");
+  assert.equal(appearancePart({ body: "male", eyes: 2 }, "eyes").asset, "./assets/appearance/rig-v5-psd/male-eyes-2-v1.webp");
   assert.equal(appearancePart({ body: "female", clothing: 2 }, "clothing").asset, null);
   assert.equal(appearanceHairMaskAsset("male", 2), null);
-  assert.equal(APPEARANCE_RUNTIME_ASSETS.length, 24);
+  assert.equal(APPEARANCE_RUNTIME_ASSETS.length, 28);
   assert.equal(new Set(APPEARANCE_RUNTIME_ASSETS).size, APPEARANCE_RUNTIME_ASSETS.length);
-  assert.ok(APPEARANCE_RUNTIME_ASSETS.every((asset) => /^\.\/assets\/appearance\/rig-v4\/.+\.webp$/.test(asset)));
+  assert.ok(APPEARANCE_RUNTIME_ASSETS.every((asset) => /^\.\/assets\/appearance\/rig-v5-psd\/.+\.webp$/.test(asset)));
   for (const asset of APPEARANCE_RUNTIME_ASSETS) {
     const target = path.join(webRoot, asset.replace(/^\.\//, ""));
     assert.ok(fs.existsSync(target), `missing appearance asset: ${asset}`);
     assert.ok(fs.statSync(target).size >= 64, `empty appearance asset: ${asset}`);
     assert.deepEqual(webpDimensions(fs.readFileSync(target)), { width: 1024, height: 1536 }, `wrong fixed canvas: ${asset}`);
   }
-  assert.ok(fs.existsSync(path.resolve(webRoot, "../scripts/build-appearance-rig-v4.py")));
+  assert.ok(fs.existsSync(path.resolve(webRoot, "../scripts/build-appearance-rig-v5.py")));
 });

@@ -553,8 +553,14 @@ const mixedAppearancePlan = await evaluate(`(() => {
     ready: canvas.dataset.renderReady,
   };
 })()`);
-assert.deepEqual(mixedAppearancePlan.assets, ["./assets/appearance/rig-v4/female-clothing-2-v1.webp"]);
-assert.deepEqual(mixedAppearancePlan.ids, ["appearance-base:clothing:2"]);
+assert.deepEqual(mixedAppearancePlan.assets, [
+  "./assets/appearance/rig-v5-psd/female-base-c2-v1.webp",
+  "./assets/appearance/rig-v5-psd/female-head-f1-b1-v1.webp",
+]);
+assert.deepEqual(mixedAppearancePlan.ids, [
+  "appearance-base:clothing:2",
+  "appearance-head:front:1:back:1",
+]);
 assert.deepEqual(mixedAppearancePlan.masked, []);
 assert.equal(mixedAppearancePlan.ready, "true");
 await screenshot("wudao-appearance-female-look-2.png");
@@ -765,7 +771,7 @@ assert.equal(landscapeCharacter.characterView.bagSlots, 24);
 assert.equal(landscapeCharacter.characterView.occupiedBagSlots, 12);
 assert.ok(landscapeCharacter.characterView.bagSlotSizes.every(([width, height]) => height > width), JSON.stringify(landscapeCharacter.characterView.bagSlotSizes));
 assert.doesNotMatch(landscapeCharacter.characterView.profileText, /潜能|命灯/);
-assert.match(landscapeCharacter.characterView.paperDollBase, /rig-v4\/female-clothing-2-v1\.webp/);
+assert.match(landscapeCharacter.characterView.paperDollBase, /rig-v5-psd\/female-base-c2-v1\.webp/);
 assert.deepEqual(landscapeCharacter.characterView.paperDollItems, []);
 assert.deepEqual(landscapeCharacter.characterView.paperDollParts, []);
 assert.deepEqual(landscapeCharacter.characterView.paperDollMasks, []);
