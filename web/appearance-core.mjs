@@ -7,52 +7,30 @@ function numbered(names) {
   return Object.freeze(names.map((name, index) => Object.freeze({ id: index + 1, name })));
 }
 
-export const APPEARANCE_HATS = numbered([
-  "不戴冠帽",
-]);
-export const APPEARANCE_FRONT_HAIRS = numbered([
-  "束起碎发",
-]);
-export const APPEARANCE_BACK_HAIRS = numbered([
-  "短束发髻",
-]);
-export const APPEARANCE_EYES = numbered([
-  "清锐长眼",
-]);
-export const APPEARANCE_BROWS = numbered([
-  "平锋眉",
-]);
-export const APPEARANCE_MOUTHS = numbered([
-  "常唇",
-]);
-export const APPEARANCE_NOSES = numbered([
-  "直鼻",
-]);
-export const APPEARANCE_FACE_SHAPES = numbered([
-  "清峻脸型",
-]);
-export const APPEARANCE_BACK_ACCESSORIES = numbered([
-  "不负外物",
-]);
-export const APPEARANCE_CLOTHINGS = numbered([
-  "束袖长衣", "短褂行装",
-]);
-export const APPEARANCE_FACE_ACCESSORIES = numbered([
-  "不饰面容",
-]);
+export const APPEARANCE_HATS = numbered(["不戴冠帽", "乌木小冠"]);
+export const APPEARANCE_FRONT_HAIRS = numbered(["束起碎发", "斜分垂发"]);
+export const APPEARANCE_BACK_HAIRS = numbered(["利落高束", "蓬松长束"]);
+export const APPEARANCE_EYES = numbered(["清锐长眼", "明澈凤眼"]);
+export const APPEARANCE_BROWS = numbered(["平锋眉", "扬剑眉"]);
+export const APPEARANCE_MOUTHS = numbered(["常唇", "薄抿唇"]);
+export const APPEARANCE_NOSES = numbered(["直鼻", "秀挺鼻"]);
+export const APPEARANCE_FACE_SHAPES = numbered(["清峻脸型", "宽颌脸型"]);
+export const APPEARANCE_BACK_ACCESSORIES = numbered(["不负外物", "乌木剑匣"]);
+export const APPEARANCE_CLOTHINGS = numbered(["黛青锦衣", "玄褐行衣"]);
+export const APPEARANCE_FACE_ACCESSORIES = numbered(["不饰面容", "江湖旧痕"]);
 
 export const APPEARANCE_PARTS = Object.freeze([
-  Object.freeze({ id: "hat", label: "帽子", catalog: APPEARANCE_HATS, symbol: "hat", z: 70, layout: "top" }),
-  Object.freeze({ id: "frontHair", label: "前发", catalog: APPEARANCE_FRONT_HAIRS, symbol: "front-hair", z: 50, layout: "left-1" }),
-  Object.freeze({ id: "backHair", label: "后发", catalog: APPEARANCE_BACK_HAIRS, symbol: "back-hair", z: 10, layout: "right-1" }),
-  Object.freeze({ id: "eyes", label: "眼睛", catalog: APPEARANCE_EYES, symbol: "eyes", z: 45, layout: "left-2" }),
-  Object.freeze({ id: "brows", label: "眉毛", catalog: APPEARANCE_BROWS, symbol: "brows", z: 46, layout: "right-2" }),
-  Object.freeze({ id: "mouth", label: "嘴巴", catalog: APPEARANCE_MOUTHS, symbol: "mouth", z: 48, layout: "left-3" }),
-  Object.freeze({ id: "nose", label: "鼻子", catalog: APPEARANCE_NOSES, symbol: "nose", z: 47, layout: "right-3" }),
-  Object.freeze({ id: "faceShape", label: "脸型", catalog: APPEARANCE_FACE_SHAPES, symbol: "face-shape", z: 40, layout: "left-4" }),
-  Object.freeze({ id: "faceAccessory", label: "脸饰", catalog: APPEARANCE_FACE_ACCESSORIES, symbol: "face-accessory", z: 60, layout: "right-4" }),
-  Object.freeze({ id: "backAccessory", label: "后背", catalog: APPEARANCE_BACK_ACCESSORIES, symbol: "back-accessory", z: 5, layout: "left-5" }),
-  Object.freeze({ id: "clothing", label: "衣服", catalog: APPEARANCE_CLOTHINGS, symbol: "clothing", z: 30, layout: "right-5" }),
+  Object.freeze({ id: "hat", label: "帽子", catalog: APPEARANCE_HATS, z: 70, layout: "top" }),
+  Object.freeze({ id: "frontHair", label: "前发", catalog: APPEARANCE_FRONT_HAIRS, z: 50, layout: "left-1" }),
+  Object.freeze({ id: "backHair", label: "后发", catalog: APPEARANCE_BACK_HAIRS, z: 44, layout: "right-1" }),
+  Object.freeze({ id: "eyes", label: "眼睛", catalog: APPEARANCE_EYES, z: 45, layout: "left-2" }),
+  Object.freeze({ id: "brows", label: "眉毛", catalog: APPEARANCE_BROWS, z: 46, layout: "right-2" }),
+  Object.freeze({ id: "mouth", label: "嘴巴", catalog: APPEARANCE_MOUTHS, z: 48, layout: "left-3" }),
+  Object.freeze({ id: "nose", label: "鼻子", catalog: APPEARANCE_NOSES, z: 47, layout: "right-3" }),
+  Object.freeze({ id: "faceShape", label: "脸型", catalog: APPEARANCE_FACE_SHAPES, z: 40, layout: "left-4" }),
+  Object.freeze({ id: "faceAccessory", label: "脸饰", catalog: APPEARANCE_FACE_ACCESSORIES, z: 60, layout: "right-4" }),
+  Object.freeze({ id: "backAccessory", label: "后背", catalog: APPEARANCE_BACK_ACCESSORIES, z: 5, layout: "left-5" }),
+  Object.freeze({ id: "clothing", label: "衣服", catalog: APPEARANCE_CLOTHINGS, z: 30, layout: "right-5" }),
 ]);
 
 export const APPEARANCE_CATALOGS = Object.freeze(Object.fromEntries(
@@ -76,12 +54,12 @@ export const DEFAULT_APPEARANCE = Object.freeze({
 
 export const APPEARANCE_BODY_ASSETS = Object.freeze({
   male: Object.freeze({
-    1: "./assets/appearance/rig-v3/male-look-1-v1.webp",
-    2: "./assets/appearance/rig-v3/male-look-2-v1.webp",
+    1: "./assets/appearance/rig-v4/male-base-v1.webp",
+    2: "./assets/appearance/rig-v4/male-clothing-2-v1.webp",
   }),
   female: Object.freeze({
-    1: "./assets/appearance/rig-v3/female-look-1-v1.webp",
-    2: "./assets/appearance/rig-v3/female-look-2-v1.webp",
+    1: "./assets/appearance/rig-v4/female-base-v1.webp",
+    2: "./assets/appearance/rig-v4/female-clothing-2-v1.webp",
   }),
 });
 
@@ -90,26 +68,28 @@ export const APPEARANCE_BASE_ASSETS = Object.freeze({
   female: APPEARANCE_BODY_ASSETS.female[1],
 });
 
-const EMPTY_APPEARANCE_PARTS = Object.freeze({
-  hat: new Set([1]),
-  frontHair: new Set([1]),
-  backHair: new Set([1]),
-  eyes: new Set([1]),
-  brows: new Set([1]),
-  mouth: new Set([1]),
-  nose: new Set([1]),
-  faceShape: new Set([1]),
-  backAccessory: new Set([1]),
-  clothing: new Set([1, 2]),
-  faceAccessory: new Set([1]),
+const PART_ASSET_STEMS = Object.freeze({
+  hat: "hat",
+  frontHair: "front-hair-2",
+  backHair: "back-hair-2",
+  eyes: "eyes-2",
+  brows: "brows-2",
+  mouth: "mouth-2",
+  nose: "nose-2",
+  faceShape: "face-shape-2",
+  backAccessory: "back-accessory",
+  faceAccessory: "face-accessory",
 });
 
+function catalogHas(catalog, id) {
+  return catalog.some((entry) => entry.id === id);
+}
+
 export function appearanceLayerAsset(body, partId, id) {
-  if (!catalogHas(APPEARANCE_BODIES, body)) return null;
-  const part = APPEARANCE_PARTS.find((entry) => entry.id === partId);
-  const numeric = Number(id);
-  if (!part || !catalogHas(part.catalog, numeric) || EMPTY_APPEARANCE_PARTS[partId]?.has(numeric)) return null;
-  return null;
+  if (!catalogHas(APPEARANCE_BODIES, body) || Number(id) !== 2) return null;
+  if (partId === "clothing") return null;
+  const stem = PART_ASSET_STEMS[partId];
+  return stem ? `./assets/appearance/rig-v4/${body}-${stem}-v1.webp` : null;
 }
 
 export function appearanceHairMaskAsset() {
@@ -117,20 +97,14 @@ export function appearanceHairMaskAsset() {
 }
 
 export const APPEARANCE_DEFAULT_LAYER_ASSETS = Object.freeze({
-  male: Object.freeze(Object.fromEntries(APPEARANCE_PARTS.map((part) => [part.id, appearanceLayerAsset("male", part.id, 1)]))),
-  female: Object.freeze(Object.fromEntries(APPEARANCE_PARTS.map((part) => [part.id, appearanceLayerAsset("female", part.id, 1)]))),
+  male: Object.freeze(Object.fromEntries(APPEARANCE_PARTS.map((part) => [part.id, null]))),
+  female: Object.freeze(Object.fromEntries(APPEARANCE_PARTS.map((part) => [part.id, null]))),
 });
 
 export const APPEARANCE_RUNTIME_ASSETS = Object.freeze([
   ...APPEARANCE_BODIES.flatMap(({ id: body }) => APPEARANCE_CLOTHINGS.map(({ id }) => APPEARANCE_BODY_ASSETS[body][id])),
-  ...APPEARANCE_BODIES.flatMap(({ id: body }) => APPEARANCE_PARTS.flatMap((part) => (
-    part.catalog.map(({ id }) => appearanceLayerAsset(body, part.id, id)).filter(Boolean)
-  ))),
-]);
-
-function catalogHas(catalog, id) {
-  return catalog.some((entry) => entry.id === id);
-}
+  ...APPEARANCE_BODIES.flatMap(({ id: body }) => Object.keys(PART_ASSET_STEMS).map((partId) => appearanceLayerAsset(body, partId, 2))),
+].filter(Boolean));
 
 function legacyAppearance(value) {
   const legacyFace = Number(value?.face);
@@ -165,15 +139,18 @@ export function createAppearanceState(overrides = {}) {
   return normalizeAppearance({ ...DEFAULT_APPEARANCE, ...overrides });
 }
 
+const APPEARANCE_PRESETS = Object.freeze([
+  Object.freeze({ body: "male" }),
+  Object.freeze({ body: "male", clothing: 2, hat: 2, frontHair: 2, faceAccessory: 2 }),
+  Object.freeze({ body: "female", backHair: 2, eyes: 2, brows: 2 }),
+  Object.freeze({ body: "female", clothing: 2, hat: 2, faceShape: 2, nose: 2, mouth: 2, backAccessory: 2 }),
+]);
+
 export function cycleAppearance(value = {}) {
   const current = normalizeAppearance(value);
-  const looks = APPEARANCE_BODIES.flatMap(({ id: body }) => APPEARANCE_CLOTHINGS.map(({ id: clothing }) => ({ body, clothing })));
-  const currentIndex = Math.max(0, looks.findIndex((look) => look.body === current.body && look.clothing === current.clothing));
-  const nextLook = looks[(currentIndex + 1) % looks.length];
-  return normalizeAppearance(Object.fromEntries([
-    ["body", nextLook.body],
-    ...APPEARANCE_PARTS.map((part) => [part.id, part.id === "clothing" ? nextLook.clothing : current[part.id]]),
-  ]));
+  const signatures = APPEARANCE_PRESETS.map((preset) => JSON.stringify(normalizeAppearance(preset)));
+  const currentIndex = signatures.indexOf(JSON.stringify(current));
+  return normalizeAppearance(APPEARANCE_PRESETS[(Math.max(-1, currentIndex) + 1) % APPEARANCE_PRESETS.length]);
 }
 
 export function appearanceBaseAsset(value = {}) {
@@ -203,7 +180,6 @@ export function appearanceDescription(value = {}) {
   return [bodyName, ...APPEARANCE_PARTS.map((part) => appearancePart(appearance, part.id)?.name)].filter(Boolean).join("，");
 }
 
-// 旧接口保留到版本9存档迁移完成，返回新的分层底像／前发缩略资源。
 export const APPEARANCE_FACES = APPEARANCE_FACE_SHAPES;
 export const APPEARANCE_HAIRS = APPEARANCE_FRONT_HAIRS;
 export const APPEARANCE_SKINS = Object.freeze([]);

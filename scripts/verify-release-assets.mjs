@@ -97,7 +97,9 @@ export function verifyLocalRelease(webRoot = path.join(repositoryRoot, "web")) {
   }
   const index = fs.readFileSync(path.join(webRoot, "index.html"), "utf8");
   const [cacheVersion] = cacheVersions;
-  if (!index.includes(`styles.css?v=${cacheVersion}`) || !index.includes(`wudao-app.mjs?v=${cacheVersion}`)) {
+  if (!index.includes(`styles.css?v=${cacheVersion}`)
+    || !index.includes(`appearance.css?v=${cacheVersion}`)
+    || !index.includes(`wudao-app.mjs?v=${cacheVersion}`)) {
     throw new Error(`Entry resources do not use runtime cache version ${cacheVersion}`);
   }
   return {

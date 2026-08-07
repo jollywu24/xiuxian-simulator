@@ -540,7 +540,7 @@ await screenshot("wudao-appearance-phone-landscape.png");
 await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
 await evaluate(`new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
 await click("select-appearance-body", "female");
-assert.equal(await evaluate(`document.querySelectorAll('.appearance-ring-control button:disabled').length`), 20);
+assert.equal(await evaluate(`document.querySelectorAll('.appearance-ring-control button:disabled').length`), 0);
 await click("step-appearance", "clothing:1");
 await waitForPaperDoll();
 const mixedAppearancePlan = await evaluate(`(() => {
@@ -553,7 +553,7 @@ const mixedAppearancePlan = await evaluate(`(() => {
     ready: canvas.dataset.renderReady,
   };
 })()`);
-assert.deepEqual(mixedAppearancePlan.assets, ["./assets/appearance/rig-v3/female-look-2-v1.webp"]);
+assert.deepEqual(mixedAppearancePlan.assets, ["./assets/appearance/rig-v4/female-clothing-2-v1.webp"]);
 assert.deepEqual(mixedAppearancePlan.ids, ["appearance-base:clothing:2"]);
 assert.deepEqual(mixedAppearancePlan.masked, []);
 assert.equal(mixedAppearancePlan.ready, "true");
@@ -765,7 +765,7 @@ assert.equal(landscapeCharacter.characterView.bagSlots, 24);
 assert.equal(landscapeCharacter.characterView.occupiedBagSlots, 12);
 assert.ok(landscapeCharacter.characterView.bagSlotSizes.every(([width, height]) => height > width), JSON.stringify(landscapeCharacter.characterView.bagSlotSizes));
 assert.doesNotMatch(landscapeCharacter.characterView.profileText, /潜能|命灯/);
-assert.match(landscapeCharacter.characterView.paperDollBase, /rig-v3\/female-look-2-v1\.webp/);
+assert.match(landscapeCharacter.characterView.paperDollBase, /rig-v4\/female-clothing-2-v1\.webp/);
 assert.deepEqual(landscapeCharacter.characterView.paperDollItems, []);
 assert.deepEqual(landscapeCharacter.characterView.paperDollParts, []);
 assert.deepEqual(landscapeCharacter.characterView.paperDollMasks, []);

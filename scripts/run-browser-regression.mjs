@@ -14,8 +14,9 @@ const suites = {
   main: ["scripts/cdp-smoke.mjs"],
   origins: ["scripts/cdp-origins.mjs"],
   combat: ["scripts/cdp-combat-lab.mjs"],
+  appearance: ["scripts/cdp-appearance.mjs"],
   online: ["scripts/cdp-online-smoke.mjs"],
-  all: ["scripts/cdp-smoke.mjs", "scripts/cdp-origins.mjs", "scripts/cdp-combat-lab.mjs"],
+  all: ["scripts/cdp-smoke.mjs", "scripts/cdp-origins.mjs", "scripts/cdp-combat-lab.mjs", "scripts/cdp-appearance.mjs"],
 };
 
 if (!suites[suite]) {

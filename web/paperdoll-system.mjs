@@ -4,11 +4,11 @@ import {
   appearanceBaseAsset,
   appearancePart,
   normalizeAppearance,
-} from "./appearance-core.mjs?v=20260806.5";
+} from "./appearance-core.mjs?v=20260807.1";
 
 export const PAPER_DOLL_LAYER_ORDER = Object.freeze({
   backAccessory: 5,
-  backHair: 10,
+  backHair: 44,
   hatBack: 15,
   base: 20,
   clothing: 30,

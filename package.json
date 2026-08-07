@@ -12,6 +12,7 @@
     "smoke": "node scripts/run-browser-regression.mjs main",
     "smoke:origins": "node scripts/run-browser-regression.mjs origins",
     "smoke:combat": "node scripts/run-browser-regression.mjs combat",
+    "smoke:appearance": "node scripts/run-browser-regression.mjs appearance",
     "smoke:online": "node scripts/run-browser-regression.mjs online",
     "test:browser": "node scripts/run-browser-regression.mjs all",
     "serve": "node scripts/serve-web.mjs"

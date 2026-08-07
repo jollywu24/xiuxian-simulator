@@ -1,8 +1,9 @@
-export const RELEASE_CONTRACT_VERSION = 8;
+export const RELEASE_CONTRACT_VERSION = 9;
 
 export const RELEASE_ENTRY_RESOURCES = Object.freeze([
   { path: "index.html", contentType: "text/html", minBytes: 256 },
   { path: "styles.css", contentType: "text/css", minBytes: 1024 },
+  { path: "appearance.css", contentType: "text/css", minBytes: 1024 },
   { path: "wudao-app.mjs", contentType: "text/javascript", minBytes: 1024 },
   { path: "combat.html", contentType: "text/html", minBytes: 256 },
 ]);
@@ -21,6 +22,14 @@ export const RELEASE_CRITICAL_ASSETS = Object.freeze([
   { path: "assets/appearance/rig-v2/female-clothing-1-v1.webp", contentType: "image/webp", minBytes: 1024 },
   { path: "assets/appearance/rig-v2/female-clothing-2-v1.webp", contentType: "image/webp", minBytes: 1024 },
   { path: "assets/appearance/rig-v2/female-head-2-v1.webp", contentType: "image/webp", minBytes: 1024 },
+  { path: "assets/appearance/rig-v3/male-look-1-v1.webp", contentType: "image/webp", minBytes: 1024 },
+  { path: "assets/appearance/rig-v3/male-look-2-v1.webp", contentType: "image/webp", minBytes: 1024 },
+  { path: "assets/appearance/rig-v3/female-look-1-v1.webp", contentType: "image/webp", minBytes: 1024 },
+  { path: "assets/appearance/rig-v3/female-look-2-v1.webp", contentType: "image/webp", minBytes: 1024 },
+  { path: "assets/appearance/rig-v4/male-base-v1.webp", contentType: "image/webp", minBytes: 1024 },
+  { path: "assets/appearance/rig-v4/male-clothing-2-v1.webp", contentType: "image/webp", minBytes: 1024 },
+  { path: "assets/appearance/rig-v4/female-base-v1.webp", contentType: "image/webp", minBytes: 1024 },
+  { path: "assets/appearance/rig-v4/female-clothing-2-v1.webp", contentType: "image/webp", minBytes: 1024 },
   { path: "assets/inventory/inventory-backdrop.png", contentType: "image/png", minBytes: 1024 },
   { path: "assets/martial/martial-screen-backdrop.webp", contentType: "image/webp", minBytes: 1024 },
 ]);
