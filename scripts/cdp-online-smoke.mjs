@@ -89,7 +89,9 @@ if (expectedBuildSha) {
 assert.ok(await evaluate(`document.querySelector("#app")?.childElementCount > 0`));
 assert.ok(await evaluate(`document.styleSheets.length > 0`));
 await click("new-journey");
+await waitFor(`document.querySelector('[data-action="enter-creation"]') !== null`);
 await click("enter-creation");
+await waitFor(`document.querySelectorAll(".origin-choice-card").length === 3`);
 assert.equal(await evaluate(`document.querySelectorAll(".origin-choice-card").length`), 3);
 assert.deepEqual(
   await evaluate(`[...document.querySelectorAll(".origin-creation-step b")].map((item) => item.textContent.trim())`),
@@ -110,6 +112,10 @@ await send("Emulation.setDeviceMetricsOverride", {
   deviceScaleFactor: 1,
   mobile: true,
 });
+await waitFor(`new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve(
+  document.querySelectorAll(".origin-choice-card").length === 3
+    && document.documentElement.scrollWidth <= 844
+))))`);
 assert.equal(await evaluate(`document.documentElement.scrollWidth <= 844`), true);
 assert.equal(await evaluate(`document.querySelectorAll(".origin-choice-card").length`), 3);
 
