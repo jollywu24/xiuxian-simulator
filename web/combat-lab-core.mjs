@@ -12,14 +12,14 @@ import {
   restartBattle,
   rewindBattle,
   startEnemyPhase,
-} from "./combat-engine.mjs?v=20260807.2";
+} from "./combat-engine.mjs?v=20260807.3";
 import {
   COMBAT_ENCOUNTER_CATALOG,
   RAIN_AMBUSH_DEFAULTS,
   RAIN_AMBUSH_ENCOUNTER,
   WANG_ZHUO_DEFAULTS,
   WANG_ZHUO_ENCOUNTER,
-} from "./combat-encounters.mjs?v=20260807.2";
+} from "./combat-encounters.mjs?v=20260807.3";
 
 export const COMBAT_LAB_MAX_ENERGY = COMBAT_MAX_ENERGY;
 export const COMBAT_LAB_ENCOUNTERS = COMBAT_ENCOUNTER_CATALOG;

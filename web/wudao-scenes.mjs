@@ -7,7 +7,10 @@ const ASSETS = {
   danroom: "./assets/scenes/shen-alchemy-room.webp",
   shenWestCourtyard: "./assets/origins/shen-west-courtyard-v1.webp",
   fishMarket: "./assets/origins/qinhuai-fish-market-v1.webp",
+  eastRoadPorter: "./assets/knowledge/east-road-porter-v1.webp",
 };
+
+const EAST_ROAD_SCREENS = new Set(["eastRoadPorter"]);
 
 const TEMPLE_SCREENS = new Set([
   "templeWake",
@@ -528,8 +531,28 @@ function originPreludePresentation(screen, state) {
   };
 }
 
+function eastRoadPresentation(state) {
+  return {
+    id: "east_road",
+    title: "金陵东郊 · 旧墙雨路",
+    image: ASSETS.eastRoadPorter,
+    imageAspect: 5 / 4,
+    alt: "东郊雨路旧墙下，受伤脚夫倒在翻散的竹篓、货签和药箱旁",
+    summary: "追者已经离开，活口、散货与未干的雨痕却不能同时等你。",
+    tone: "rain",
+    hotspots: [
+      { id: "porter_wound", label: "脚夫的伤", detail: "伤在左臂和小腿，眼下还能说话；若先追人，他未必撑得到你回来。", x: 35, y: 57, state: state.porterEncounter?.alive === false ? "danger" : "available" },
+      { id: "scattered_cargo", label: "翻散的货篓", detail: "普通药材里混着不同泊位的药批签，像是一篓货在途中换过两次手。", x: 61, y: 73, state: state.porterEncounter?.searched ? "completed" : "special" },
+      { id: "rain_tracks", label: "墙外雨痕", detail: "两道脚印往东折去。雨越下越密，这条痕迹很快就会断。", x: 79, y: 47, state: "danger" },
+    ],
+    actors: [],
+    player: { label: state.name || "陈司命", x: 48, y: 83, visible: false },
+  };
+}
+
 export function getScenePresentation(screen, state = {}) {
   if (SHEN_ORIGIN_SCREENS.has(screen) || STREET_ORIGIN_SCREENS.has(screen)) return originPreludePresentation(screen, state);
+  if (EAST_ROAD_SCREENS.has(screen)) return eastRoadPresentation(state);
   if (TEMPLE_SCREENS.has(screen)) return templePresentation(screen, state);
   if (RIVER_SCREENS.has(screen)) return riverPresentation(screen, state);
   if (SHEN_GATE_SCREENS.has(screen)) return shenGatePresentation(screen, state);

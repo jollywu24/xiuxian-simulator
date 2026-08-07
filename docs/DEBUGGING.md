@@ -29,14 +29,15 @@ window.WudaoDebug.status()
   protocolVersion: 1,
   ready: true,
   buildSha: "a1b2c3d",
-  saveVersion: 10,
+  saveVersion: 11,
   screen: "templeWake",
   originId: "mystery",
   viewport: { width: 844, height: 390 },
   overlays: {
     inventory: false,
     character: false,
-    martial: false
+    martial: false,
+    knowledge: false
   }
 }
 ```

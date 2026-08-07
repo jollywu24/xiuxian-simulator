@@ -58,6 +58,7 @@ export const ORIGIN_PROLOGUE_SCREENS = new Set([
   "streetOriginOffer",
   "streetOriginBargain",
   "streetOriginRoute",
+  "eastRoadPorter",
   "originTempleTask",
 ]);
 

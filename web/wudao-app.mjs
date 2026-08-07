@@ -50,8 +50,8 @@ import {
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs?v=20260807.2";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260807.2";
+} from "./wudao-core.mjs?v=20260807.3";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260807.3";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -81,7 +81,7 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260807.2";
+} from "./wudao-p0-core.mjs?v=20260807.3";
 import {
   M4_EVIDENCE,
   M4_METHOD,
@@ -100,7 +100,7 @@ import {
   resolveM4Training,
   resolveMoneyInquiry,
   resolveOldHouseChoice,
-} from "./wudao-p1-core.mjs?v=20260807.2";
+} from "./wudao-p1-core.mjs?v=20260807.3";
 import {
   advanceCombatLabCampaign,
   createCombatLabSession,
@@ -111,14 +111,14 @@ import {
   restartCombatLab,
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
-} from "./combat-lab-core.mjs?v=20260807.2";
+} from "./combat-lab-core.mjs?v=20260807.3";
 import {
   INVENTORY_CAPACITY,
   createInventoryBoard,
   formatSilver,
   getInventoryCategory,
   getInventoryUseState,
-} from "./inventory-core.mjs?v=20260807.2";
+} from "./inventory-core.mjs?v=20260807.3";
 import {
   EQUIPMENT_CAPACITY,
   EQUIPMENT_SLOTS,
@@ -132,7 +132,7 @@ import {
   migrateCharacterVitals,
   migrateEquipmentState,
   unequipEquipmentSlot,
-} from "./character-system.mjs?v=20260807.2";
+} from "./character-system.mjs?v=20260807.3";
 import {
   MARTIAL_MASTERIES,
   breakthroughMartial,
@@ -154,9 +154,9 @@ import {
   trainMartial,
   unequipMartial,
   unlockedMartialNodes,
-} from "./martial-system.mjs?v=20260807.2";
-import { SAVE_STORAGE_KEY } from "./save-core.mjs?v=20260807.2";
-import { createSaveStorage } from "./save-storage.mjs?v=20260807.2";
+} from "./martial-system.mjs?v=20260807.3";
+import { SAVE_STORAGE_KEY } from "./save-core.mjs?v=20260807.3";
+import { createSaveStorage } from "./save-storage.mjs?v=20260807.3";
 import {
   ORIGINS,
   ORIGIN_LADY_INSIGHTS,
@@ -169,7 +169,7 @@ import {
   resolveOriginPersonalEvent,
   resolveOriginPrologueChoice,
   resolveOriginTempleTask,
-} from "./origin-core.mjs?v=20260807.2";
+} from "./origin-core.mjs?v=20260807.3";
 import {
   APPEARANCE_BODIES,
   APPEARANCE_CATALOGS,
@@ -178,11 +178,21 @@ import {
   createAppearanceState,
   cycleAppearance,
   normalizeAppearance,
-} from "./appearance-core.mjs?v=20260807.2";
-import { resolvePaperDollLayers } from "./paperdoll-system.mjs?v=20260807.2";
-import { renderPaperDollCanvases } from "./paperdoll-renderer.mjs?v=20260807.2";
+} from "./appearance-core.mjs?v=20260807.3";
+import { resolvePaperDollLayers } from "./paperdoll-system.mjs?v=20260807.3";
+import { renderPaperDollCanvases } from "./paperdoll-renderer.mjs?v=20260807.3";
+import {
+  KNOWLEDGE_CATALOG,
+  createKnowledgeBoard,
+  createKnowledgeState,
+  createPorterEncounterState,
+  markKnowledgeRead,
+  recordKnowledgeFragment,
+  resolvePorterEncounter,
+  syncKnowledgeFromGameState,
+} from "./knowledge-core.mjs?v=20260807.3";
 
-const PAPER_DOLL_ASSET_VERSION = "20260807.2";
+const PAPER_DOLL_ASSET_VERSION = "20260807.3";
 
 const app = document.querySelector("#app");
 const BUILD_SHA = document.documentElement.dataset.buildSha || "dev";
@@ -195,9 +205,11 @@ let pendingSceneFeedback = null;
 let pendingInventoryFeedback = null;
 let pendingCharacterFeedback = null;
 let pendingMartialFeedback = null;
+let pendingKnowledgeFeedback = null;
 const inventoryUi = { open: false, category: "all", selectedId: null };
 const characterUi = { open: false, section: "body", category: "all", selectedId: null, selectedSlot: null };
 const martialUi = { open: false, category: "heart", subtype: "all", selectedId: null, replacing: false };
+const knowledgeUi = { open: false, category: "all", selectedId: null };
 
 function freshFateSeed() {
   const fixedSeed = new URLSearchParams(window.location.search).get("seed");
@@ -221,7 +233,7 @@ function legacyFateSeed(saved) {
 
 function createInitialState() {
   return {
-    version: 10,
+    version: 11,
     screen: "landing",
     name: "陈司命",
     appearance: createAppearanceState(),
@@ -314,6 +326,8 @@ function createInitialState() {
     shenOutcome: null,
     shenChapterComplete: false,
     narrativeLog: [],
+    knowledge: createKnowledgeState(),
+    porterEncounter: createPorterEncounterState(),
     p0: createP0State(),
     m4: createM4State(),
     events: [],
@@ -321,7 +335,7 @@ function createInitialState() {
 }
 
 function supportsStoredState(saved) {
-  return Boolean(saved && [2, 3, 4, 5, 6, 7, 8, 9, 10].includes(saved.version) && saved.screen);
+  return Boolean(saved && [2, 3, 4, 5, 6, 7, 8, 9, 10, 11].includes(saved.version) && saved.screen);
 }
 
 function loadState(raw) {
@@ -333,14 +347,16 @@ function loadState(raw) {
       ...createInitialState(),
       ...saved,
       ...origin,
-      version: 10,
+      version: 11,
       appearance: normalizeAppearance(saved.appearance),
       p0: migrateP0State(saved.p0),
       m4: migrateM4State(saved.m4),
       equipment: migrateEquipmentState(saved.equipment),
       characterVitals: migrateCharacterVitals(saved.characterVitals),
+      porterEncounter: createPorterEncounterState(saved.porterEncounter),
     };
     migrated.martial = migrateMartialState(saved.martial, migrated);
+    migrated.knowledge = syncKnowledgeFromGameState(saved.knowledge, migrated).state;
     const isDeathScreen = ["gameDeath", "shenDeath", "p0Death"].includes(saved.screen);
     if (
       saved.version === 6 &&
@@ -398,6 +414,23 @@ function saveState() {
   if (state.screen === "landing") return;
   state.martial = migrateMartialState(state.martial, state);
   state.martial.experience = Math.max(0, Number(state.potential || 0));
+  const previousKnowledge = state.knowledge || createKnowledgeState();
+  const knowledgeResult = syncKnowledgeFromGameState(previousKnowledge, state);
+  state.knowledge = knowledgeResult.state;
+  if (knowledgeResult.changes.length) {
+    const existedBefore = new Set(Object.keys(previousKnowledge.items || {}));
+    const change = knowledgeResult.changes.find((entry) => entry.kind === "updated" && existedBefore.has(entry.itemId))
+      || knowledgeResult.changes.find((entry) => entry.kind === "discovered")
+      || knowledgeResult.changes[0];
+    const definition = KNOWLEDGE_CATALOG[change?.itemId];
+    if (definition) {
+      pendingKnowledgeFeedback = {
+        text: change.kind === "updated" && existedBefore.has(change.itemId)
+          ? `旧闻有了回声：${definition.title}`
+          : `${definition.type === "person" ? "记下一人" : "记下一事"}：${definition.title}`,
+      };
+    }
+  }
   writeStoredState(JSON.stringify(state));
   savedState = structuredClone(state);
 }
@@ -492,6 +525,7 @@ function moveTo(screen) {
   inventoryUi.open = false;
   characterUi.open = false;
   martialUi.open = false;
+  knowledgeUi.open = false;
   state.screen = screen;
   saveState();
   render();
@@ -876,6 +910,10 @@ function sceneVisualHtml() {
     if (!from || !to) return "";
     return `<line x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}"></line>`;
   }).join("");
+  const routeNodeIds = new Set((route?.nodes || []).map((node) => node.id));
+  const routeKnowledge = route
+    ? createKnowledgeBoard(state, { category: "all" }).items.filter((entry) => entry.related.some((relation) => relation.kind === "place" && routeNodeIds.has(relation.routeId)))
+    : [];
 
   return `
     <section class="scene-experience scene-${escapeHtml(scene.id)}" aria-label="${escapeHtml(scene.title)}">
@@ -908,6 +946,12 @@ function sceneVisualHtml() {
             `).join("")}
           </div>
           <p class="route-caption">${escapeHtml(route.summary)}</p>
+          ${routeKnowledge.length ? `
+            <aside class="route-knowledge-recall" aria-label="与这些地点有关的见闻">
+              <small>旧闻</small>
+              <div>${routeKnowledge.map((entry) => `<button type="button" data-action="open-knowledge-entry" data-value="${escapeHtml(entry.id)}">${escapeHtml(entry.title)}</button>`).join("")}</div>
+            </aside>
+          ` : ""}
         </details>
       ` : ""}
     </section>
@@ -1586,6 +1630,97 @@ function martialScreenHtml() {
   `;
 }
 
+function knowledgeHighlightedText(entry) {
+  const highlights = [...(entry.highlights || [])].sort((a, b) => String(b[0]).length - String(a[0]).length);
+  if (!highlights.length) return escapeHtml(entry.text);
+  const parts = [];
+  let cursor = 0;
+  while (cursor < entry.text.length) {
+    let nearest = null;
+    highlights.forEach(([term, tone]) => {
+      const index = entry.text.indexOf(term, cursor);
+      if (index < 0 || (nearest && index >= nearest.index)) return;
+      nearest = { index, term, tone };
+    });
+    if (!nearest) {
+      parts.push(escapeHtml(entry.text.slice(cursor)));
+      break;
+    }
+    if (nearest.index > cursor) parts.push(escapeHtml(entry.text.slice(cursor, nearest.index)));
+    parts.push(`<mark class="knowledge-key ${escapeHtml(nearest.tone)}">${escapeHtml(nearest.term)}</mark>`);
+    cursor = nearest.index + nearest.term.length;
+  }
+  return parts.join("");
+}
+
+function knowledgeFragmentHtml(entry) {
+  return `
+    <li class="knowledge-fragment ${entry.refuted ? "refuted" : ""}">
+      <span class="knowledge-source source-${escapeHtml(entry.mode)}">${escapeHtml(entry.label)}</span>
+      <p>${knowledgeHighlightedText(entry)}</p>
+      ${entry.refuted ? `<small>此说已误</small>` : ""}
+    </li>
+  `;
+}
+
+function knowledgeRelatedHtml(entry) {
+  const routeNodeIds = new Set((getRoutePresentation(state.screen, state)?.nodes || []).map((node) => node.id));
+  const related = entry.related.filter((relation) => relation.kind !== "place" || routeNodeIds.has(relation.routeId));
+  if (!related.length) return "";
+  return `
+    <section class="knowledge-related">
+      <h3><span>相关</span></h3>
+      <div>${related.map((relation) => `<button type="button" data-action="knowledge-related" data-value="${escapeHtml(`${relation.kind}|${relation.id}|${relation.routeId || ""}`)}">${escapeHtml(relation.label)}</button>`).join(`<i aria-hidden="true">·</i>`)}</div>
+    </section>
+  `;
+}
+
+function knowledgeDetailHtml(entry) {
+  if (!entry) return `<div class="knowledge-empty"><span>闻</span><strong>还没有足以记下的见闻</strong><p>亲眼看、开口问、亲身走过，纸上才会留下你的江湖。</p></div>`;
+  return `
+    <article class="knowledge-detail-card" aria-live="polite">
+      <header><span>${entry.type === "person" ? "人物见闻" : "江湖旧事"}</span><h2>${escapeHtml(entry.title)}</h2><p>${escapeHtml(entry.summary)}</p></header>
+      <figure><img src="${escapeHtml(entry.art)}" alt="${escapeHtml(entry.title)}的见闻插画" draggable="false" /></figure>
+      <section class="knowledge-section">
+        <h3><span>所知</span></h3>
+        <ul>${entry.fragments.map(knowledgeFragmentHtml).join("")}</ul>
+      </section>
+      ${entry.later.length ? `<section class="knowledge-section knowledge-later"><h3><span>后来</span></h3><ul>${entry.later.map(knowledgeFragmentHtml).join("")}</ul></section>` : ""}
+      ${knowledgeRelatedHtml(entry)}
+    </article>
+  `;
+}
+
+function knowledgeScreenHtml() {
+  const board = createKnowledgeBoard(state, knowledgeUi);
+  knowledgeUi.category = board.categoryId;
+  knowledgeUi.selectedId = board.selectedId;
+  return `
+    <section class="knowledge-screen" role="dialog" aria-modal="true" aria-label="见闻">
+      <header class="knowledge-header">
+        <div class="knowledge-title"><span>闻</span><div><h1>见闻</h1><p>江湖路远，见闻日增。</p></div></div>
+        <button type="button" class="knowledge-close" data-action="close-knowledge" aria-label="关闭见闻"><span aria-hidden="true">×</span> 关闭</button>
+      </header>
+      <div class="knowledge-workspace">
+        <nav class="knowledge-categories" aria-label="见闻分类">
+          ${board.categories.map((category) => `<button type="button" class="${category.selected ? "selected" : ""}" data-action="knowledge-category" data-value="${escapeHtml(category.id)}"><span aria-hidden="true">${escapeHtml(category.glyph)}</span><strong>${escapeHtml(category.name)}</strong></button>`).join("")}
+        </nav>
+        <aside class="knowledge-list" aria-label="见闻条目">
+          ${board.items.length ? board.items.map((entry) => `
+            <button type="button" class="knowledge-list-item source-${escapeHtml(entry.source.mode)} ${entry.id === board.selectedId ? "selected" : ""}" data-action="select-knowledge" data-value="${escapeHtml(entry.id)}">
+              <img src="${escapeHtml(entry.art)}" alt="" draggable="false" />
+              <span><strong>${escapeHtml(entry.title)}</strong><small>${escapeHtml(entry.summary)}</small></span>
+              <em>〔${escapeHtml(entry.source.label)}〕</em>
+              ${entry.unreadUpdate ? `<i>新</i>` : ""}
+            </button>
+          `).join("") : `<div class="knowledge-list-empty">这一路还没有留下可翻阅的旧事。</div>`}
+        </aside>
+        <main class="knowledge-detail">${knowledgeDetailHtml(board.selected)}</main>
+      </div>
+    </section>
+  `;
+}
+
 function syncLegacyActiveMartial() {
   if (!state.p0?.activeMartial) return;
   state.p0.activeMartial.foundation = state.martial.loadout.heart;
@@ -1673,17 +1808,20 @@ function gameShell(content) {
       <div class="game-grid">
         <section class="scene-panel ${visual ? "has-visual-scene" : "narrative-only"}">${visual}<div class="narrative-deck">${narrativeHistoryHtml()}<section class="narrative-current" data-narrative-current>${content}</section></div></section>
       </div>
-      <nav class="utility-dock" aria-label="人物、行囊与武学">
+      <nav class="utility-dock" aria-label="人物、行囊、武学与见闻">
         <button type="button" class="dock-entry character-panel" data-action="open-character"><span class="dock-glyph glyph-person" aria-hidden="true">人</span><strong>人物</strong></button>
         <details class="dock-drawer inventory-panel">
           <summary data-action="open-inventory"><span class="dock-glyph glyph-bag" aria-hidden="true">囊</span><strong>行囊</strong></summary>
         </details>
         <button type="button" class="dock-entry martial-panel" data-action="open-martial"><span class="dock-glyph glyph-martial" aria-hidden="true">武</span><strong>武学</strong></button>
+        <button type="button" class="dock-entry knowledge-panel" data-action="open-knowledge"><span class="dock-glyph glyph-knowledge" aria-hidden="true">闻</span><strong>见闻</strong></button>
       </nav>
+      ${pendingKnowledgeFeedback ? `<div class="knowledge-toast" role="status">${escapeHtml(pendingKnowledgeFeedback.text)}</div>` : ""}
     </main>
     ${inventoryUi.open ? inventoryScreenHtml() : ""}
     ${characterUi.open ? characterScreenHtml() : ""}
     ${martialUi.open ? martialScreenHtml() : ""}
+    ${knowledgeUi.open ? knowledgeScreenHtml() : ""}
   `;
 }
 
@@ -1697,6 +1835,7 @@ function modeLabel() {
     streetOriginOffer: "鱼棚灯下 · 一桩跑腿",
     streetOriginBargain: "秦淮外港 · 价钱与退路",
     streetOriginRoute: "外港至东郊 · 雨路",
+    eastRoadPorter: "金陵东郊 · 雨路遇袭",
     originTempleTask: "金陵东郊 · 暗墙旧物",
     templeWake: "金陵东郊 · 无名破庙",
     fateSight: "金陵东郊 · 无名破庙",
@@ -2511,6 +2650,17 @@ function shenRequirementText(job) {
   return status.missing.map((id) => names[id] || id).join("、");
 }
 
+function renderEastRoadPorter() {
+  return gameShell(`
+    ${sceneHeader("金陵东郊 · 旧墙雨路", "翻倒的竹篓旁，还有一个人喘着气", "运药脚夫护着左臂倒在泥水里。追他的人已经隐入雨幕，散货间露出半枚沈字货签；再迟片刻，能问的话就会少一句。")}
+    <div class="action-list">
+      ${actionCard({ action: "porter-choice", value: "rescue_question", title: "先把人拖到墙根，压住伤口再问", description: "保住活口，听他亲口说追者只翻哪一批货。", source: "救人 · 打听", meta: "脚夫活下 · 获得耳闻", kind: "special" })}
+      ${actionCard({ action: "porter-choice", value: "rescue_search", title: "用油布扎伤，再查翻散的货篓", description: "人能活，货里的泊位签也不会被雨冲走；只是来不及细问。", source: "救人 · 搜货", meta: "脚夫活下 · 亲见货签" })}
+      ${actionCard({ action: "porter-choice", value: "follow_attackers", title: "趁雨痕未散，先追离去的人", description: "也许能捡回追者掉落的东西，墙下的脚夫却等不起。", source: "追踪", meta: "活口可能失去", kind: "danger" })}
+    </div>
+  `);
+}
+
 function renderShenOriginReturn() {
   const taskState = state.originPrologue?.taskState;
   const intact = taskState === "success";
@@ -2660,6 +2810,7 @@ function originPhaseNote(phase) {
 function renderCaoArrival() {
   return gameShell(`
     ${sceneHeader("沈家后院 · 炼药房", "五名药童守着丹炉，没有一个人像能活过冬天", "他们面色惨白、眼眶发黑。穿灰黑长袍的曹医师枯瘦如柴，只看一眼，便说从未见过你这样孱弱却还活着的人。")}
+    <div class="story-copy"><p>丹房角落摆着一只乌沉药匣。${(state.originId || state.backgroundId) === "shen_branch" ? "匣角泥色与破庙里那只完全相同。" : (state.originId || state.backgroundId) === "streetborn" ? "外缚红绳正是秦淮货路的二手交割结。" : "半块玉佩贴着衣襟微微发热，匣角火印与血书残字有相似的收笔。"}</p></div>
     <div class="npc-reveal-card shen-npc-card"><div class="reveal-seal">曹<br />青</div><div><span>沈家客卿 · 医师</span><h2>下人传言：进他丹房的人很少活过三个月</h2><p>他不问铜钱怎么来的，只在估量你还能取几次血。</p></div></div>
     ${originPhaseNote("cao")}
     <div class="action-list">${actionCard({ action: "inspect-cao-fate", title: "对曹医师发动逆天改命", description: "先看清这个人身上的固定奇遇，再决定该逃、该告发，还是该设法取信。", source: "唯一命格", meta: "看见三条因果", kind: "special" })}</div>
@@ -3739,6 +3890,7 @@ const renderers = {
   streetOriginOffer: renderOriginPrologue,
   streetOriginBargain: renderOriginPrologue,
   streetOriginRoute: renderOriginPrologue,
+  eastRoadPorter: renderEastRoadPorter,
   templeWake: renderTempleWake,
   fateSight: renderFateSight,
   allocation: renderAllocation,
@@ -3848,11 +4000,13 @@ function render() {
   document.body.dataset.inventoryOpen = inventoryUi.open ? "true" : "false";
   document.body.dataset.characterOpen = characterUi.open ? "true" : "false";
   document.body.dataset.martialOpen = martialUi.open ? "true" : "false";
+  document.body.dataset.knowledgeOpen = knowledgeUi.open ? "true" : "false";
   const renderer = renderers[state.screen] || renderLanding;
   const feedbackWasRendered = Boolean(pendingSceneFeedback?.text);
   const inventoryFeedbackWasRendered = Boolean(pendingInventoryFeedback?.text);
   const characterFeedbackWasRendered = Boolean(pendingCharacterFeedback?.text);
   const martialFeedbackWasRendered = Boolean(pendingMartialFeedback?.text);
+  const knowledgeFeedbackWasRendered = Boolean(pendingKnowledgeFeedback?.text);
   app.innerHTML = renderer();
   void renderPaperDollCanvases(app, { assetVersion: PAPER_DOLL_ASSET_VERSION });
   document.documentElement.dataset.appReady = "true";
@@ -3860,6 +4014,7 @@ function render() {
   pendingInventoryFeedback = null;
   pendingCharacterFeedback = null;
   pendingMartialFeedback = null;
+  pendingKnowledgeFeedback = null;
   requestAnimationFrame(() => {
     positionSceneCanvasMarkers();
     const deck = app.querySelector(".world-stage-shell .narrative-deck");
@@ -3882,6 +4037,10 @@ function render() {
     if (martialFeedbackWasRendered) {
       const feedback = app.querySelector(".martial-feedback");
       if (feedback) window.setTimeout(() => feedback.remove(), 1800);
+    }
+    if (knowledgeFeedbackWasRendered) {
+      const feedback = app.querySelector(".knowledge-toast");
+      if (feedback) window.setTimeout(() => feedback.remove(), 1900);
     }
   });
 }
@@ -4108,6 +4267,21 @@ function settleMainCombat(session, kind) {
   refresh();
 }
 
+function openKnowledgeEntry(entryId = null, category = "all") {
+  inventoryUi.open = false;
+  characterUi.open = false;
+  martialUi.open = false;
+  const synced = syncKnowledgeFromGameState(state.knowledge, state).state;
+  const board = createKnowledgeBoard({ ...state, knowledge: synced }, { category, selectedId: entryId });
+  state.knowledge = board.selectedId ? markKnowledgeRead(synced, board.selectedId) : synced;
+  knowledgeUi.open = true;
+  knowledgeUi.category = board.categoryId;
+  knowledgeUi.selectedId = board.selectedId;
+  saveState();
+  pendingKnowledgeFeedback = null;
+  render();
+}
+
 const handlers = {
   "inspect-scene-object": (value) => {
     const scene = getScenePresentation(state.screen, state);
@@ -4117,6 +4291,59 @@ const handlers = {
       ? "悟性 · 已察觉"
       : hotspot.state === "completed" ? "此处 · 已查明" : "此处 · 已察觉";
     updateSceneInspection("所见", hotspot.label, hotspot.detail, "scene-hotspot", value, status);
+    if (value === "offering_table") {
+      const result = recordKnowledgeFragment(state.knowledge, "fresh_temple_peaches", "peaches_seen", { sceneId: "ruined_temple", eventId: "inspect_offering_table" });
+      if (result.changed) {
+        state.knowledge = result.state;
+        saveState();
+        pendingKnowledgeFeedback = null;
+        const toast = document.createElement("div");
+        toast.className = "knowledge-toast in-place";
+        toast.setAttribute("role", "status");
+        toast.textContent = "有所见闻：破庙里的新鲜山桃";
+        app.append(toast);
+        window.setTimeout(() => toast.remove(), 1900);
+      }
+    }
+  },
+  "open-knowledge": () => {
+    openKnowledgeEntry();
+  },
+  "open-knowledge-entry": (value) => {
+    if (!state.knowledge?.items?.[value]) return;
+    openKnowledgeEntry(value);
+  },
+  "close-knowledge": () => {
+    knowledgeUi.open = false;
+    render();
+  },
+  "knowledge-category": (value) => {
+    if (!["all", "person", "event"].includes(value)) return;
+    openKnowledgeEntry(null, value);
+  },
+  "select-knowledge": (value) => {
+    if (!state.knowledge?.items?.[value]) return;
+    knowledgeUi.selectedId = value;
+    state.knowledge = markKnowledgeRead(state.knowledge, value);
+    saveState();
+    render();
+  },
+  "knowledge-related": (value) => {
+    const [kind, id, routeId] = String(value || "").split("|");
+    if ((kind === "person" || kind === "event") && state.knowledge?.items?.[id]) {
+      knowledgeUi.category = "all";
+      knowledgeUi.selectedId = id;
+      state.knowledge = markKnowledgeRead(state.knowledge, id);
+      saveState();
+      return render();
+    }
+    if (kind !== "place" || !routeId) return;
+    knowledgeUi.open = false;
+    render();
+    const routeBoard = app.querySelector(".route-board");
+    if (!routeBoard) return;
+    routeBoard.open = true;
+    [...routeBoard.querySelectorAll(".route-node")].find((node) => node.dataset.value === routeId)?.click();
   },
   "inspect-scene-actor": (value) => {
     const scene = getScenePresentation(state.screen, state);
@@ -4506,6 +4733,7 @@ const handlers = {
   "confirm-destiny": () => moveTo("characterSheet"),
   "start-journey": () => beginOriginJourney(),
   "origin-prologue-choice": (value) => {
+    const originScreen = state.screen;
     const result = resolveOriginPrologueChoice(
       state.originId || state.backgroundId,
       state.screen,
@@ -4514,7 +4742,22 @@ const handlers = {
     );
     if (!applyOriginRuleResult(result)) return;
     track("origin_prologue_choice", { originId: state.originId, screen: state.screen, choice: value });
+    if (result.nextScreen === "templeWake" && ["shenOriginRoad", "streetOriginRoute"].includes(originScreen)) {
+      state.porterEncounter = { ...createPorterEncounterState(), encountered: true };
+      state.originPrologue = { ...state.originPrologue, nodeId: "eastRoadPorter" };
+      return moveTo("eastRoadPorter");
+    }
     moveTo(result.nextScreen);
+  },
+  "porter-choice": (value) => {
+    if (state.screen !== "eastRoadPorter") return;
+    const result = resolvePorterEncounter(value, state.porterEncounter);
+    if (!result.available) return;
+    state.porterEncounter = result.state;
+    state.originPrologue = { ...state.originPrologue, nodeId: "templeWake" };
+    appendNarrativeOutcome(result.result);
+    track("east_road_porter", { choice: value, alive: result.state.alive });
+    moveTo("templeWake");
   },
   "temple-opening": (value) => {
     if (state.screen !== "templeWake") return;
@@ -4673,6 +4916,7 @@ const handlers = {
         kind: "travel",
         nodeId: "carp_in_current",
       });
+      appendNarrativeOutcome("你沿紫金河顺流而下，途中亲眼看见一艘无灯乌篷船贴着北岸逆流而上。");
     }
     track("road_trial", { choice: value });
     moveTo("roadResult");
@@ -4880,6 +5124,7 @@ const handlers = {
     if (!result || (value === "watch" && result.effectiveInsight < 3)) return;
     state.observationChoice = value;
     state.effectiveInsight = result.effectiveInsight;
+    if (value === "watch") appendNarrativeOutcome("曹青从角落乌沉药匣的匣缝刮下一点苦垢，低声说这是伏脉藤留下的味道。");
     track("cao_observation", { choice: value, insight: result.effectiveInsight });
     if (result.outcome === "neglected") {
       state.shenOutcome = "neglected";
@@ -5679,9 +5924,11 @@ function resetDebugUiState() {
   pendingInventoryFeedback = null;
   pendingCharacterFeedback = null;
   pendingMartialFeedback = null;
+  pendingKnowledgeFeedback = null;
   Object.assign(inventoryUi, { open: false, category: "all", selectedId: null });
   Object.assign(characterUi, { open: false, section: "body", category: "all", selectedId: null, selectedSlot: null });
   Object.assign(martialUi, { open: false, category: "heart", subtype: "all", selectedId: null, replacing: false, nodeId: null });
+  Object.assign(knowledgeUi, { open: false, category: "all", selectedId: null });
 }
 
 function debugSnapshot() {
@@ -5696,6 +5943,7 @@ function debugSnapshot() {
       inventory: inventoryUi.open,
       character: characterUi.open,
       martial: martialUi.open,
+      knowledge: knowledgeUi.open,
     },
     state: structuredClone(state),
   };
@@ -5717,6 +5965,7 @@ function debugStatus() {
       inventory: inventoryUi.open,
       character: characterUi.open,
       martial: martialUi.open,
+      knowledge: knowledgeUi.open,
     },
   };
 }
@@ -5802,6 +6051,13 @@ app.addEventListener("toggle", (event) => {
 }, true);
 
 document.addEventListener("keydown", (event) => {
+  if (knowledgeUi.open) {
+    if (event.key === "Escape") {
+      knowledgeUi.open = false;
+      render();
+    }
+    return;
+  }
   if (martialUi.open) {
     if (event.key === "Escape") {
       if (martialUi.nodeId) martialUi.nodeId = null;

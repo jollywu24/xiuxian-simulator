@@ -45,6 +45,7 @@ npm run test:browser
 | --- | --- | --- |
 | 世界、人物、五维、破庙、沈家前段 | `web/wudao-core.mjs` | `tests/wudao.test.mjs`、`docs/STORY_BIBLE.md` |
 | 三出身、独立序章与旧ID迁移 | `web/origin-core.mjs` | `tests/origin-system.test.mjs`、`scripts/cdp-origins.mjs`、`docs/systems/11_ORIGIN_PROLOGUES.md` |
+| 首章见闻、来源、后来回响、三出身认知差异与地图双向跳转 | `web/knowledge-core.mjs` | `tests/knowledge-system.test.mjs`、`scripts/cdp-origins.mjs`、`docs/systems/13见闻系统设计文档.md` |
 | 出身卡与容貌页环境美术 | `art_source/creation-v1/`、`scripts/build-creation-art-v1.py`、`web/assets/creation-v1/` | `tests/creation-art.test.mjs`、`docs/assets/creation-art-v1-sheet.webp` |
 | 三夫人至灵猴篇规则 | `web/wudao-p0-core.mjs`、`web/content/p0/` | `tests/p0-systems.test.mjs` |
 | 曹青离场至白栀云授武 | `web/wudao-p1-core.mjs`、`web/content/p1/` | `tests/p1-systems.test.mjs` |

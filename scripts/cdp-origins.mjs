@@ -188,16 +188,34 @@ await click("origin-prologue-choice", "study_token");
 await click("origin-prologue-choice", "request_writ");
 await click("origin-prologue-choice", "buy_oilcloth");
 await click("origin-prologue-choice", "follow_cart_tracks");
+assert.match(await pageText(), /翻倒的竹篓旁/);
+assert.match(await evaluate(`getComputedStyle(document.querySelector(".scene-canvas")).backgroundImage`), /east-road-porter-v1\.webp/);
+await click("porter-choice", "rescue_question");
 assert.match(await pageText(), /你推开漏雨的庙门/);
 await finishSharedTemple("shen_branch", "inspect_box_seal");
+await click("open-knowledge");
+assert.equal(await evaluate(`document.querySelectorAll(".knowledge-categories button").length`), 3);
+assert.deepEqual(await evaluate(`[...document.querySelectorAll(".knowledge-categories strong")].map((node) => node.textContent.trim())`), ["全部", "人", "事"]);
+assert.equal(await evaluate(`document.querySelectorAll(".knowledge-list-item").length`), 5);
+assert.doesNotMatch(await pageText(), /完成度|待验证|未知总量/);
+await click("knowledge-category", "person");
+assert.equal(await evaluate(`document.querySelectorAll(".knowledge-list-item").length`), 1);
+assert.match(await pageText(), /龙青鱼/);
+await click("knowledge-category", "event");
+await click("select-knowledge", "purple_river_night_boat");
+await click("knowledge-related", "place|purple_gold_river|river");
+assert.equal(await evaluate(`document.querySelector(".route-board")?.open`), true);
+await click("open-knowledge-entry", "purple_river_night_boat");
+assert.match(await pageText(), /沿紫金河下水后/);
+await click("close-knowledge");
 assert.match(await pageText(), /封条还在/);
 await click("origin-return-choice", "report_trace");
 assert.match(await pageText(), /旁支的名字/);
 await click("enter-origin-danroom");
 assert.match(await pageText(), /旁支腰牌/);
 let shenSave = await currentSave();
-  assert.equal(shenSave.version, 10);
-  assert.deepEqual(shenSave.appearance, DEFAULT_APPEARANCE);
+assert.equal(shenSave.version, 11);
+assert.deepEqual(shenSave.appearance, DEFAULT_APPEARANCE);
 assert.equal(shenSave.originId, "shen_branch");
 assert.equal(shenSave.originPrologue.taskState, "costly_success");
 assert.ok(shenSave.originAccess.includes("shen_side_door_writ"));
@@ -212,6 +230,8 @@ await click("origin-prologue-choice", "help_fisher");
 await click("origin-prologue-choice", "inspect_cargo_tag");
 await click("origin-prologue-choice", "take_advance");
 await click("origin-prologue-choice", "take_fisher_route");
+assert.match(await pageText(), /翻倒的竹篓旁/);
+await click("porter-choice", "rescue_search");
 assert.match(await pageText(), /你推开漏雨的庙门/);
 await finishSharedTemple("streetborn", "open_package");
 assert.match(await pageText(), /红绳已断/);
@@ -236,7 +256,7 @@ const legacy = {
 };
 await writeSaveAndReload(legacy);
 const migrated = await currentSave();
-assert.equal(migrated.version, 10);
+assert.equal(migrated.version, 11);
 assert.deepEqual(migrated.appearance, DEFAULT_APPEARANCE);
 assert.equal(migrated.originId, "shen_branch");
 assert.equal(migrated.originPrologue.completed, true);
@@ -246,7 +266,7 @@ assert.deepEqual(pageErrors, []);
 process.stdout.write(`${JSON.stringify({
   ok: true,
   origins: ["shen_branch", "streetborn", "mystery"],
-  saveVersion: 10,
+  saveVersion: 11,
   responsive: "844x390",
 })}\n`);
 socket.close();
