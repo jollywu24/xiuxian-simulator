@@ -50,8 +50,8 @@ import {
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs?v=20260807.3";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260807.3";
+} from "./wudao-core.mjs?v=20260807.4";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260807.4";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -81,7 +81,7 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260807.3";
+} from "./wudao-p0-core.mjs?v=20260807.4";
 import {
   M4_EVIDENCE,
   M4_METHOD,
@@ -100,7 +100,7 @@ import {
   resolveM4Training,
   resolveMoneyInquiry,
   resolveOldHouseChoice,
-} from "./wudao-p1-core.mjs?v=20260807.3";
+} from "./wudao-p1-core.mjs?v=20260807.4";
 import {
   advanceCombatLabCampaign,
   createCombatLabSession,
@@ -111,14 +111,14 @@ import {
   restartCombatLab,
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
-} from "./combat-lab-core.mjs?v=20260807.3";
+} from "./combat-lab-core.mjs?v=20260807.4";
 import {
   INVENTORY_CAPACITY,
   createInventoryBoard,
   formatSilver,
   getInventoryCategory,
   getInventoryUseState,
-} from "./inventory-core.mjs?v=20260807.3";
+} from "./inventory-core.mjs?v=20260807.4";
 import {
   EQUIPMENT_CAPACITY,
   EQUIPMENT_SLOTS,
@@ -132,7 +132,7 @@ import {
   migrateCharacterVitals,
   migrateEquipmentState,
   unequipEquipmentSlot,
-} from "./character-system.mjs?v=20260807.3";
+} from "./character-system.mjs?v=20260807.4";
 import {
   MARTIAL_MASTERIES,
   breakthroughMartial,
@@ -154,9 +154,9 @@ import {
   trainMartial,
   unequipMartial,
   unlockedMartialNodes,
-} from "./martial-system.mjs?v=20260807.3";
-import { SAVE_STORAGE_KEY } from "./save-core.mjs?v=20260807.3";
-import { createSaveStorage } from "./save-storage.mjs?v=20260807.3";
+} from "./martial-system.mjs?v=20260807.4";
+import { SAVE_STORAGE_KEY } from "./save-core.mjs?v=20260807.4";
+import { createSaveStorage } from "./save-storage.mjs?v=20260807.4";
 import {
   ORIGINS,
   ORIGIN_LADY_INSIGHTS,
@@ -169,7 +169,7 @@ import {
   resolveOriginPersonalEvent,
   resolveOriginPrologueChoice,
   resolveOriginTempleTask,
-} from "./origin-core.mjs?v=20260807.3";
+} from "./origin-core.mjs?v=20260807.4";
 import {
   APPEARANCE_BODIES,
   APPEARANCE_CATALOGS,
@@ -178,9 +178,9 @@ import {
   createAppearanceState,
   cycleAppearance,
   normalizeAppearance,
-} from "./appearance-core.mjs?v=20260807.3";
-import { resolvePaperDollLayers } from "./paperdoll-system.mjs?v=20260807.3";
-import { renderPaperDollCanvases } from "./paperdoll-renderer.mjs?v=20260807.3";
+} from "./appearance-core.mjs?v=20260807.4";
+import { resolvePaperDollLayers } from "./paperdoll-system.mjs?v=20260807.4";
+import { renderPaperDollCanvases } from "./paperdoll-renderer.mjs?v=20260807.4";
 import {
   KNOWLEDGE_CATALOG,
   createKnowledgeBoard,
@@ -190,9 +190,20 @@ import {
   recordKnowledgeFragment,
   resolvePorterEncounter,
   syncKnowledgeFromGameState,
-} from "./knowledge-core.mjs?v=20260807.3";
+} from "./knowledge-core.mjs?v=20260807.4";
+import {
+  createTempleExplorationState,
+  enterTempleArea,
+  getTempleArea,
+  getTempleAreaView,
+  getTempleObjectView,
+  getTempleSituationClock,
+  migrateTempleExplorationState,
+  revealTempleObject,
+  resolveTempleObjectAction,
+} from "./temple-exploration.mjs?v=20260807.4";
 
-const PAPER_DOLL_ASSET_VERSION = "20260807.3";
+const PAPER_DOLL_ASSET_VERSION = "20260807.4";
 
 const app = document.querySelector("#app");
 const BUILD_SHA = document.documentElement.dataset.buildSha || "dev";
@@ -233,7 +244,7 @@ function legacyFateSeed(saved) {
 
 function createInitialState() {
   return {
-    version: 11,
+    version: 12,
     screen: "landing",
     name: "陈司命",
     appearance: createAppearanceState(),
@@ -263,6 +274,7 @@ function createInitialState() {
     characterVitals: createCharacterVitals(),
     martial: migrateMartialState(null, { potential: 0 }),
     templeOpening: createTempleOpeningState(),
+    templeExploration: createTempleExplorationState(),
     completedTempleTasks: [],
     templeLog: [],
     ladyChoiceLog: [],
@@ -335,7 +347,7 @@ function createInitialState() {
 }
 
 function supportsStoredState(saved) {
-  return Boolean(saved && [2, 3, 4, 5, 6, 7, 8, 9, 10, 11].includes(saved.version) && saved.screen);
+  return Boolean(saved && [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].includes(saved.version) && saved.screen);
 }
 
 function loadState(raw) {
@@ -347,14 +359,20 @@ function loadState(raw) {
       ...createInitialState(),
       ...saved,
       ...origin,
-      version: 11,
+      version: 12,
       appearance: normalizeAppearance(saved.appearance),
       p0: migrateP0State(saved.p0),
       m4: migrateM4State(saved.m4),
       equipment: migrateEquipmentState(saved.equipment),
       characterVitals: migrateCharacterVitals(saved.characterVitals),
       porterEncounter: createPorterEncounterState(saved.porterEncounter),
+      templeExploration: migrateTempleExplorationState(saved),
     };
+    if (["fateSight", "allocation", "originTempleTask"].includes(saved.screen) && !saved.originPrologue?.completed) {
+      migrated.screen = "templeWake";
+    } else if (saved.screen === "templeTasks") {
+      migrated.screen = "ladyArrival";
+    }
     migrated.martial = migrateMartialState(saved.martial, migrated);
     migrated.knowledge = syncKnowledgeFromGameState(saved.knowledge, migrated).state;
     const isDeathScreen = ["gameDeath", "shenDeath", "p0Death"].includes(saved.screen);
@@ -467,6 +485,7 @@ function beginOriginJourney() {
   state.peaches = 3;
   state.hungerLevel = 2;
   state.templeOpening = createTempleOpeningState();
+  state.templeExploration = createTempleExplorationState();
   if (origin.id === "shen_branch") {
     state.inventory = ["branch_waist_token", "copied_fist_manual"];
     state.shenSilver = 2;
@@ -899,6 +918,18 @@ function positionSceneCanvasMarkers(canvas = app.querySelector(".scene-canvas"))
   canvas.dataset.markersAligned = "true";
 }
 
+function sceneInspectionActionsHtml(objectId, actions = []) {
+  if (!actions.length) return "";
+  const available = actions.filter((action) => !action.disabled);
+  if (!available.length) return `<div class="scene-inspection-done"><span aria-hidden="true">✓</span>这里能做的事已经做完</div>`;
+  return `<div class="scene-inspection-actions" aria-label="可执行行动">${actions.map((action) => `
+    <button type="button" class="scene-inspection-action" data-action="temple-object-action" data-value="${escapeHtml(`${objectId}|${action.id}`)}" data-choice-title="${escapeHtml(action.title)}" data-choice-source="${escapeHtml(action.meta)}" ${action.disabled ? "disabled" : ""}>
+      <span><strong>${escapeHtml(action.title)}</strong><small>${escapeHtml(action.description)}</small></span>
+      <em>${escapeHtml(action.disabled ? action.reason : action.meta)}</em>
+    </button>
+  `).join("")}</div>`;
+}
+
 function sceneVisualHtml() {
   const scene = getScenePresentation(state.screen, state);
   if (!scene) return "";
@@ -916,10 +947,14 @@ function sceneVisualHtml() {
     : [];
 
   return `
-    <section class="scene-experience scene-${escapeHtml(scene.id)}" aria-label="${escapeHtml(scene.title)}">
-      <div class="scene-canvas tone-${escapeHtml(scene.tone)} ${scene.id === "ruined_temple" && state.templeOpening?.fireTended ? "fire-kindled" : ""}" data-scene-id="${escapeHtml(scene.id)}" data-scene-aspect="${Number(scene.imageAspect || 0)}" role="img" aria-label="${escapeHtml(scene.alt)}" style="--scene-image:url('${escapeHtml(scene.image)}')">
+    <section class="scene-experience scene-${escapeHtml(scene.id)} ${scene.areaId ? `scene-area-${escapeHtml(scene.areaId)}` : ""}" aria-label="${escapeHtml(scene.title)}">
+      <div class="scene-canvas tone-${escapeHtml(scene.tone)} ${scene.id === "ruined_temple" && (state.templeOpening?.fireTended || state.templeExploration?.objectStates?.embers?.actionIds?.includes("tend_embers")) ? "fire-kindled" : ""}" data-scene-id="${escapeHtml(scene.id)}" data-scene-aspect="${Number(scene.imageAspect || 0)}" role="img" aria-label="${escapeHtml(scene.alt)}" style="--scene-image:url('${escapeHtml(scene.image)}')">
         <div class="scene-vignette" aria-hidden="true"></div>
         ${sceneFeedbackHtml()}
+        ${scene.areaNav?.length ? `<nav class="temple-area-nav" aria-label="破庙区域">${scene.areaNav.map((area) => `
+          <button type="button" class="${area.current ? "current" : ""} ${area.visited ? "visited" : ""}" data-action="temple-area" data-value="${escapeHtml(area.id)}" ${area.current ? "aria-current=\"location\"" : ""}><span>${escapeHtml(area.short)}</span></button>
+        `).join("")}</nav>` : ""}
+        ${scene.situationClock ? `<div class="temple-situation-clock ${escapeHtml(scene.situationClock.phase)}" aria-label="${escapeHtml(`${scene.situationClock.label}，${scene.situationClock.phaseLabel}`)}"><span>${escapeHtml(scene.situationClock.label)}</span><strong>${escapeHtml(scene.situationClock.phaseLabel)}</strong><i style="--situation-progress:${Math.min(1, scene.situationClock.elapsed / Math.max(1, state.templeExploration?.limit || 8))}"></i></div>` : ""}
         ${scene.hotspots.map((hotspot) => `
           <button type="button" class="scene-hotspot ${sceneMarkerState(hotspot.state)}" data-action="inspect-scene-object" data-value="${escapeHtml(hotspot.id)}" data-source-x="${hotspot.x}" data-source-y="${hotspot.y}" style="--marker-x:${hotspot.x}%;--marker-y:${hotspot.y}%" aria-label="查看${escapeHtml(hotspot.label)}" aria-pressed="false">
             <span class="scene-hotspot-ring" aria-hidden="true"></span><span class="scene-marker-label">${escapeHtml(hotspot.label)}</span>
@@ -933,7 +968,7 @@ function sceneVisualHtml() {
         ${scene.player?.visible === false ? "" : `<div class="scene-player" data-source-x="${scene.player.x}" data-source-y="${scene.player.y}" style="--marker-x:${scene.player.x}%;--marker-y:${scene.player.y}%" aria-label="${escapeHtml(scene.player.label)}在此"><span aria-hidden="true">命</span><b>${escapeHtml(scene.player.label)}</b></div>`}
       </div>
       <i class="scene-inspection-line" data-scene-inspection-line aria-hidden="true"></i>
-      <div class="scene-inspection" data-scene-inspection aria-live="polite"><span>眼前</span><strong>${escapeHtml(scene.title)}</strong><p>${escapeHtml(scene.summary)}</p><small data-inspection-status></small></div>
+      <div class="scene-inspection" data-scene-inspection aria-live="polite"><span>眼前</span><strong>${escapeHtml(scene.title)}</strong><p>${escapeHtml(scene.summary)}</p><small data-inspection-status></small><div data-inspection-actions></div></div>
       ${route ? `
         <details class="route-board">
           <summary><span><small>行路图</small><strong>${escapeHtml(route.title)}</strong></span><i>展开</i></summary>
@@ -962,7 +997,7 @@ function characterPanelHtml() {
   const background = getBackground(state.backgroundId);
   const vow = getVow(state.vowId);
   const stage = MARTIAL_STAGES.find((item) => item.id === state.martialStage) || MARTIAL_STAGES[0];
-  const openingUnknown = state.screen === "templeWake" && !state.templeOpening?.belongingsChecked;
+  const openingUnknown = state.screen === "templeWake" && !state.templeExploration && !state.templeOpening?.belongingsChecked;
   return `
     <div class="panel-body">
       <div>
@@ -1064,7 +1099,7 @@ function characterProfileHtml(board) {
   const background = getBackground(state.backgroundId);
   const vow = getVow(state.vowId);
   const stage = MARTIAL_STAGES.find((item) => item.id === state.martialStage) || MARTIAL_STAGES[0];
-  const openingUnknown = state.screen === "templeWake" && !state.templeOpening?.belongingsChecked;
+  const openingUnknown = state.screen === "templeWake" && !state.templeExploration && !state.templeOpening?.belongingsChecked;
   const woundCount = (state.p0?.wounds || []).length;
   if (characterUi.section === "relations") return relationshipSummaryHtml();
   if (characterUi.section === "arts") return artsSummaryHtml();
@@ -1784,6 +1819,7 @@ const TEMPLE_HUD_SCREENS = new Set([
 ]);
 
 function templeClockLabel() {
+  if (state.screen === "templeWake") return getTempleSituationClock(state.templeExploration).label;
   if (["ladyArrival", "ladyPressure", "ladyTest", "nightTalk", "gameDeath"].includes(state.screen)) return "寅时";
   if (["quietDeparture", "encounterReward", "mindArt"].includes(state.screen)) return "卯时";
   return "亥时";
@@ -2185,39 +2221,31 @@ function renderOriginTempleTask() {
 }
 
 function renderTempleWake() {
-  const opening = { ...createTempleOpeningState(), ...state.templeOpening };
-  const originId = state.originId || state.backgroundId;
-  const arrivedOnPurpose = originId && originId !== "mystery";
-  const stable = canInspectTempleWall(opening);
-  const hasActed = opening.actions.length > 0;
-  const originOpeningCopy = {
-    tend_fire: arrivedOnPurpose
-      ? ["先替火堆挡住漏雨", "进庙以后，先留一盏能照见封条和脚印的火。", "火势"]
-      : null,
-    check_belongings: arrivedOnPurpose
-      ? ["复核差事与随身物", "确认信物、口粮和来时的交代都还贴身收着。", "来处"]
-      : null,
-    eat_peach: arrivedOnPurpose && Number(state.originSupplies || 0) > 0
-      ? ["咬一口随身粗粮", "雨路耗力，先压住空腹，再动墙后的东西。", "饥饿"]
-      : null,
-  };
-  const remaining = TEMPLE_OPENING_ACTIONS.filter((item) => !opening.actions.includes(item.id)).map((item) => {
-    const copy = originOpeningCopy[item.id];
-    return copy ? { ...item, title: copy[0], description: copy[1], source: copy[2], meta: item.id === "eat_peach" ? "粗粮 -1" : item.meta } : item;
-  });
+  const exploration = getTempleAreaView(state.templeExploration, state.originId || state.backgroundId);
+  const clock = exploration.clock;
+  const hasActed = state.templeExploration.actionLog.length > 0;
+  const seenCount = state.templeExploration.seenObjectIds.length;
+  const phaseCopy = clock.phase === "footsteps"
+    ? "雨里已经有脚步靠近。你至多还能做最后一件利落的事。"
+    : clock.phase === "driving_rain"
+      ? "雨势正在抹掉庙外痕迹。深查一件东西，便可能错过另一件。"
+      : "先扫视三处，再决定哪些东西值得花时间动手。";
   return gameShell(`
-    ${hasActed ? "" : `<header class="scene-head opening-scene-head">
-      <h1 class="scene-title">${arrivedOnPurpose ? "你推开漏雨的庙门" : "你是被冷醒的"}</h1>
-      <p class="scene-subtitle">${arrivedOnPurpose
-        ? `<span>来路已经被雨洗暗。</span><span>你要找的东西藏在东北角。</span><span>炭堆只剩一星将灭的红，</span><span>供桌上偏有一枚鲜桃。</span>`
-        : `<span>雨从破瓦间漏下来。</span><span>冷风挟着狼嚎，钻进骨缝。</span><span>炭堆只剩一星将灭的红，</span><span>供桌上偏有一枚鲜桃。</span>`}</p>
-    </header>
-    <div class="insight-whisper"><span>${arrivedOnPurpose ? "差事" : "悟性"}</span><strong>东北角那片墙灰，比这场雨还新。</strong></div>`}
-    ${hasActed ? `<div class="narrative-next-heading"><span>接下来</span></div>` : ""}
-    <div class="action-list opening-action-list">
-      ${remaining.map((item) => actionCard({ action: "temple-opening", value: item.id, title: item.title, description: item.description, source: item.source, meta: item.meta, kind: item.id === "tend_fire" ? "special" : "" })).join("")}
-      ${stable ? actionCard({ action: "inspect-temple-wall", title: "借着火光，走到东北角", description: "屈指轻叩，新砖后传回一声空响。墙里确有东西，剩下只看火灭之前，你肯付出什么代价。", source: "悟性 · 所见", meta: "发现暗墙", kind: "special" }) : ""}
+    ${sceneHeader(
+      `${clock.label} · ${exploration.area.name}`,
+      hasActed ? "雨夜不会等你查完" : "先看清这座庙",
+      phaseCopy,
+    )}
+    <div class="temple-exploration-status" aria-label="破庙局面">
+      <div><span>所在</span><strong>${escapeHtml(exploration.area.name)}</strong></div>
+      <div><span>已见</span><strong>${seenCount} / 12</strong></div>
+      <div><span>余裕</span><strong>${clock.remaining > 0 ? `${clock.remaining}刻` : "脚步已至"}</strong></div>
     </div>
+    <div class="story-copy temple-exploration-guide">
+      <p>点场景中的物件，只是看见；在“所见”里决定是否细查、修整或拆取，才会让时辰往前走。</p>
+      <p>庙前能听来路，大殿能动火与陈设，庙后藏着新痕。你不可能在来人之前把每件事都查完。</p>
+    </div>
+    <div class="insight-whisper ${clock.phase === "footsteps" ? "danger-whisper" : ""}"><span>局面</span><strong>${escapeHtml(clock.phaseLabel)}</strong></div>
   `);
 }
 
@@ -4080,7 +4108,7 @@ function closeSceneInspection() {
   app.querySelector("[data-scene-inspection]")?.classList.remove("is-visible");
 }
 
-function updateSceneInspection(kind, title, detail, markerClass, value, status = "已察觉") {
+function updateSceneInspection(kind, title, detail, markerClass, value, status = "已察觉", actions = []) {
   const panel = app.querySelector("[data-scene-inspection]");
   if (!panel) return;
   const markers = [...app.querySelectorAll(".scene-hotspot, .scene-actor, .route-node")];
@@ -4101,10 +4129,12 @@ function updateSceneInspection(kind, title, detail, markerClass, value, status =
   const titleNode = panel.querySelector("strong");
   const detailNode = panel.querySelector("p");
   const statusNode = panel.querySelector("[data-inspection-status]");
+  const actionsNode = panel.querySelector("[data-inspection-actions]");
   if (kindNode) kindNode.textContent = kind;
   if (titleNode) titleNode.textContent = title;
   if (detailNode) detailNode.textContent = detail;
   if (statusNode) statusNode.textContent = status;
+  if (actionsNode) actionsNode.innerHTML = sceneInspectionActionsHtml(value, actions);
   marker?.classList.add("selected");
   marker?.setAttribute("aria-pressed", "true");
   positionSceneInspectionLine(marker, panel);
@@ -4161,6 +4191,52 @@ function appendNarrativeOutcome(text) {
     .filter(Boolean)
     .map((item) => ({ type: "narration", speaker: "", role: "outcome", text: item.slice(0, 300) }));
   record.lines = [...lines, ...outcomes].slice(-8);
+}
+
+function recordTempleExplorationChoice(result) {
+  if (!result?.action || !result?.object) return;
+  const area = getTempleArea(state.templeExploration?.areaId);
+  const phaseLines = Array.isArray(result.phaseOutcomes) ? result.phaseOutcomes : [result.phaseOutcome].filter(Boolean);
+  const outcomeLines = [result.outcome, ...phaseLines].filter(Boolean).map((text) => ({
+    type: "narration",
+    speaker: "",
+    role: "outcome",
+    text: String(text).slice(0, 300),
+  }));
+  const record = {
+    id: `${Date.now()}-${state.events.length}`,
+    screen: "templeWake",
+    context: `无名破庙 · ${area.name}`,
+    title: result.object.label,
+    lines: outcomeLines,
+    choice: result.action.title,
+    choiceSource: result.action.cost === 1 ? "耗时一刻" : `耗时${result.action.cost}刻`,
+    choiceKind: result.phaseChanged ? "special" : "",
+  };
+  state.narrativeLog = [...(Array.isArray(state.narrativeLog) ? state.narrativeLog : []), record].slice(-64);
+}
+
+function finishTempleExplorationWindow() {
+  const originId = state.originId || state.backgroundId;
+  const wallState = state.templeExploration?.objectStates?.patched_wall;
+  const foundTaskObject = ["measured", "mapped"].includes(wallState?.stage);
+  if (["shen_branch", "streetborn"].includes(originId) && !state.originPrologue?.completed && foundTaskObject) {
+    state.originPrologue = { ...state.originPrologue, nodeId: "originTempleTask" };
+    return moveTo("originTempleTask");
+  }
+  if (!state.originPrologue?.completed) {
+    state.originPrologue = {
+      ...state.originPrologue,
+      completed: true,
+      nodeId: "ladyArrival",
+      taskState: ["shen_branch", "streetborn"].includes(originId) ? "missed" : "in_progress",
+      convergenceState: "temple_joined",
+    };
+    if (["shen_branch", "streetborn"].includes(originId)) {
+      state.originEchoes = addUnique(state.originEchoes, "雨夜错过了暗墙里的差事物");
+    }
+  }
+  moveTo("ladyArrival");
 }
 
 function combatOutcomeText(result) {
@@ -4283,14 +4359,34 @@ function openKnowledgeEntry(entryId = null, category = "all") {
 }
 
 const handlers = {
+  "temple-area": (value) => {
+    if (state.screen !== "templeWake") return;
+    const result = enterTempleArea(state.templeExploration, value);
+    if (!result.available || !result.changed) return;
+    state.templeExploration = result.state;
+    track("temple_area_entered", { areaId: value });
+    refresh();
+  },
   "inspect-scene-object": (value) => {
+    let templeObjectNewlySeen = false;
+    if (state.screen === "templeWake") {
+      const revealed = revealTempleObject(state.templeExploration, value);
+      if (!revealed.available) return;
+      state.templeExploration = revealed.state;
+      if (revealed.changed) {
+        templeObjectNewlySeen = true;
+        track("temple_object_seen", { areaId: state.templeExploration.areaId, objectId: value });
+        saveState();
+      }
+    }
+    if (templeObjectNewlySeen) render();
     const scene = getScenePresentation(state.screen, state);
     const hotspot = scene?.hotspots.find((item) => item.id === value);
     if (!hotspot) return;
     const status = hotspot.id === "patched_wall"
       ? "悟性 · 已察觉"
       : hotspot.state === "completed" ? "此处 · 已查明" : "此处 · 已察觉";
-    updateSceneInspection("所见", hotspot.label, hotspot.detail, "scene-hotspot", value, status);
+    updateSceneInspection("所见", hotspot.label, hotspot.detail, "scene-hotspot", value, status, hotspot.actions || []);
     if (value === "offering_table") {
       const result = recordKnowledgeFragment(state.knowledge, "fresh_temple_peaches", "peaches_seen", { sceneId: "ruined_temple", eventId: "inspect_offering_table" });
       if (result.changed) {
@@ -4305,6 +4401,36 @@ const handlers = {
         window.setTimeout(() => toast.remove(), 1900);
       }
     }
+  },
+  "temple-object-action": (value) => {
+    if (state.screen !== "templeWake") return;
+    const [objectId, actionId] = String(value || "").split("|");
+    const result = resolveTempleObjectAction(state.templeExploration, objectId, actionId);
+    if (!result.available) return;
+    state.templeExploration = result.state;
+    if (actionId === "tend_embers") {
+      state.templeOpening = { ...state.templeOpening, fireTended: true, actions: addUnique(state.templeOpening?.actions, "tend_fire") };
+      state.firePower = Math.max(40, Number(state.firePower || 0));
+    } else if (actionId === "bank_embers") {
+      state.firePower = Math.min(18, Math.max(8, Number(state.firePower || 0)));
+    } else if (actionId === "inspect_wall") {
+      state.templeOpening = { ...state.templeOpening, wallSeen: true };
+    }
+    recordTempleExplorationChoice(result);
+    pendingSceneFeedback = {
+      text: result.phaseChanged ? getTempleSituationClock(result.state).phaseLabel : `时辰 +${result.action.cost}刻`,
+      tone: result.phaseChanged ? "notice" : "gain",
+      resource: "time",
+    };
+    track("temple_object_action", {
+      areaId: state.templeExploration.areaId,
+      objectId,
+      actionId,
+      cost: result.action.cost,
+      phase: result.state.phase,
+    });
+    if (result.arrivalTriggered) return finishTempleExplorationWindow();
+    refresh();
   },
   "open-knowledge": () => {
     openKnowledgeEntry();
@@ -4833,7 +4959,8 @@ const handlers = {
     if (!applyOriginRuleResult(result)) return;
     if (result.itemId && !state.inventory.includes(result.itemId)) state.inventory.push(result.itemId);
     track("origin_temple_task", { originId: state.originId, choice: value, taskState: result.progress.taskState });
-    moveTo("templeTasks");
+    appendNarrativeOutcome("你刚把东西收好，庙门外的脚步已经停在石阶下。来人没有敲门。 ");
+    moveTo("ladyArrival");
   },
   "temple-task": (value) => {
     if (state.completedTempleTasks.includes(value) || value === "mysterious_offering") return;

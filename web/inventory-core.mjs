@@ -376,14 +376,16 @@ export function getInventoryCategory(id) {
 
 export function getInventoryItems(state = {}) {
   const items = new Map();
-  const belongingsKnown = state.screen !== "templeWake" || Boolean(state.templeOpening?.belongingsChecked);
+  const belongingsKnown = state.screen !== "templeWake"
+    || Boolean(state.templeExploration)
+    || Boolean(state.templeOpening?.belongingsChecked);
 
   if (belongingsKnown && state.backgroundId === "mystery") {
     addItem(items, "family_jade");
     addItem(items, "blood_letter");
   }
   if (Number(state.originSupplies || 0) > 0) addItem(items, "coarse_rations", state.originSupplies);
-  if (state.templeOpening?.peachEaten) addItem(items, "mountain_peach", state.peaches);
+  if (Number(state.peaches || 0) > 0) addItem(items, "mountain_peach", state.peaches);
   if (state.completedTempleTasks?.includes("traveler_relic")) addItem(items, "east_map");
   if (state.completedTempleTasks?.includes("shen_promise")) addItem(items, "shen_token");
 

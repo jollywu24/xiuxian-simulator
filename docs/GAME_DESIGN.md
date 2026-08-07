@@ -92,13 +92,16 @@ NPC、门派、世家、帮会和朝廷机构属于世界本身，不属于“�
 
 ### 第三层：事件
 
-三种开场先用地点、任务和人物态度解释玩家处于江湖哪一层，再让角色以不同理由抵达破庙。破庙共同局面逐步引入：
+三种开场先用地点、任务和人物态度解释玩家处于江湖哪一层，再让角色以不同理由抵达破庙。破庙不再是必须按顺序点完的选项链，而是第一个完整局面：庙前、大殿与庙后三块区域可以自由切换，十二个对象可以直接查看；观察和移动免费，救火、拆物、清路与深入调查会推进八刻局面时间，雨势、脚步与来人按状态自动发生。玩家不可能无代价清空所有内容，前半场改变过的火堆、破窗、柴堆、香架、暗墙与塌墙还会在后半场再次提供用途。
 
-- 生存压力和五维重分；
-- 固定奇遇及其条件；
-- 沈家信物代表的世家门路；
-- 龙青鱼代表的帮会权力与人物关系；
-- 心法改变行动规则的实际效果。
+这一局面随后逐步接入：
+
+- 乌沉药匣的完整、检查、拆封与遗失状态；
+- 三种出身对同一对象的不同知识和行动；
+- 脚夫的生死、信息和救治代价；
+- 龙青鱼对玩家此前行为的见证；
+- 追兵危机中战斗、撤离、藏匣与环境利用；
+- 见闻、关系、资源和地点状态在离场后的立即回响。
 
 三条序章只在曹青取血前汇入同一主线：
 
@@ -120,7 +123,7 @@ NPC、门派、世家、帮会和朝廷机构属于世界本身，不属于“�
 | 力道 | 体力、负重、外功和环境互动 |
 | 福缘 | 偶发人物、宝物与隐藏分支 |
 
-“逆天改命”令基础五维归零，但允许重新分配已经拥有的属性总量。第一次在破庙遭遇生存压力时，三种出身都取得相同的三点开场可调总量，因此力道三能更快完成敲墙，均衡或福缘路线则支付更多时间和食物。半块家传玉佩保留为“身世成谜”的人物线索，不再独占公共重分教程；后续装备和武学提供的数值仍遵守总量守恒。
+旧版“破庙洗点后敲墙”的教程已经从新旅程撤销。初始属性在人物建立的属性步骤分配；后续若保留洗点，将通过世界内人物或设施实现，不再把临时重分作为第一场景唯一解法。“逆天改命”的剧情意义需要随破庙完整垂直切片另行重做，半块玉佩只保留为“身世成谜”的人物线索。
 
 ### 5.2 命灯
 
@@ -266,7 +269,9 @@ NPC、门派、世家、帮会和朝廷机构属于世界本身，不属于“�
 
 ## 7. 当前完整流程
 
-`landing → templeWake（取火／查身／食桃）→ fateSight → allocation → templeTasks → ladyArrival → ladyPressure → ladyTest → nightTalk → encounterReward → mindArt → roadTrial → roadResult → ending → shenArrival → shenJobs → caoArrival → caoFate → bloodDemand → danObservation → caoExamFire → caoExamIngredients → caoExamMotive → qingQingReward → qingQingStudy → fiveAnimalReward → shenDaily → fiveAnimalChoice → shenMeeting → shenFuChoice → shenPharmacy → shenDaily → shenErrand → fishingPrep → riverFishing → treasureFish → wangTeaching → caoReturn → caoGuidance → alchemyLesson → firstAlchemy → shenChapterEnding → thirdLadySummons → thirdLadyDiagnosis → purpleDragonFormula → purpleDragonAlchemy → thirdLadyTreatment → needleInheritance → firstNeedleAmbush → firstKillAftermath → assailantTrace → assailantCounterplan → assailantPlotResult → apprenticeshipOffer → stakeChoice → stakeTraining → bodyBreakthrough → yanJinghongArrival → wangBattle → wangAftermath → midAutumnWarning → midAutumnDeparture → templeOfferingSource → monkeyTest → monkeyWineChoice → apeWaterCave → p0JourneyEnd → caoDeparture → shenFuOffer → dirtyMoneyChoice → shenFuReckoning → m4Tracking → sevenKillHouse → shenFuConfrontation → m4WorldEcho → baiReturn → m4Training → m4JourneyEnd`
+`landing → characterDraft → appearance → 三出身独立序章 → templeWake（三地区／十二对象／八刻局面）→〔发现暗墙时：originTempleTask〕→ ladyArrival → ladyPressure → ladyTest → nightTalk → encounterReward → mindArt → roadTrial → roadResult → ending → shenArrival → shenJobs → caoArrival → ... → m4JourneyEnd`
+
+`fateSight`、`allocation`和`templeTasks`仍可作为旧档迁移标识，但新旅程不再进入这些旧版破庙门槛。龙青鱼之后的现有长流程继续可玩；药匣、脚夫、龙青鱼行为反馈、追兵多解法、见闻和离场回响会在破庙纵切后续阶段逐段替换旧线性内容。
 
 支路：
 

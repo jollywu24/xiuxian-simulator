@@ -18,6 +18,7 @@ function inventoryState(overrides = {}) {
     shenSilver: 0,
     alchemyPills: 0,
     templeOpening: { belongingsChecked: false, peachEaten: false },
+    templeExploration: {},
     completedTempleTasks: [],
     inventory: [],
     p0: { started: false, items: {}, wounds: [] },
@@ -25,9 +26,9 @@ function inventoryState(overrides = {}) {
   };
 }
 
-test("陌生开局不会提前泄露随身物，查身后才进入行囊", () => {
-  const hidden = getInventoryItems(inventoryState());
-  assert.deepEqual(hidden, []);
+test("新破庙开局不再要求先点随身物，已知物品可以直接进入行囊", () => {
+  const initial = getInventoryItems(inventoryState());
+  assert.deepEqual(initial.map((item) => item.id), ["family_jade", "blood_letter", "mountain_peach"]);
 
   const known = getInventoryItems(inventoryState({
     templeOpening: { belongingsChecked: true, peachEaten: true },

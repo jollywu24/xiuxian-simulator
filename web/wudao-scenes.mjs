@@ -1,3 +1,5 @@
+import { getTempleAreaView } from "./temple-exploration.mjs?v=20260807.4";
+
 const ASSETS = {
   temple: "./assets/scenes/ruined-temple-stage-v3.webp",
   templeLady: "./assets/scenes/ruined-temple-lady-stage-v3.webp",
@@ -81,7 +83,11 @@ function hasInventory(state, id) {
 }
 
 function templePresentation(screen, state) {
-  const fireTended = Boolean(state.templeOpening?.fireTended) || screen !== "templeWake";
+  const explorationMode = screen === "templeWake";
+  const exploration = explorationMode ? getTempleAreaView(state.templeExploration, state.originId || state.backgroundId) : null;
+  const fireTended = Boolean(state.templeOpening?.fireTended)
+    || Boolean(state.templeExploration?.objectStates?.embers?.actionIds?.includes("tend_embers"))
+    || screen !== "templeWake";
   const fateSeen = Boolean(state.destinyRevealed) || screen !== "templeWake";
   const ladyScreens = new Set(["ladyArrival", "ladyPressure", "ladyTest", "nightTalk", "gameDeath", "quietDeparture", "encounterReward", "mindArt"]);
   const identityKnown = new Set(["encounterReward", "mindArt"]).has(screen);
@@ -105,15 +111,20 @@ function templePresentation(screen, state) {
 
   return {
     id: "ruined_temple",
-    title: "金陵东郊 · 无名破庙",
+    title: explorationMode ? `金陵东郊 · 无名破庙 · ${exploration.area.name}` : "金陵东郊 · 无名破庙",
     image: ladyScreens.has(screen) ? ASSETS.templeLady : ASSETS.temple,
     imageAspect: 1280 / 1000,
     alt: "雨夜破庙内，少年守着余火；供桌山桃、新砌墙面和敞开的庙门分处四方",
-    summary: ladyScreens.has(screen)
+    summary: explorationMode
+      ? exploration.area.summary
+      : ladyScreens.has(screen)
       ? "雨压在残瓦上，门口、火堆和青衣来客之间只隔着几步。"
       : "火堆、供桌和颜色异常的墙面都在眼前；先看清，再决定把今夜交给哪里。",
     tone: screen === "gameDeath" ? "death" : "rain",
-    hotspots: [
+    areaId: exploration?.area.id || null,
+    areaNav: exploration?.areas || [],
+    situationClock: exploration?.clock || null,
+    hotspots: explorationMode ? exploration.objects : [
       {
         id: "embers",
         label: fireTended ? "已经拨亮的余火" : "将熄的余火",

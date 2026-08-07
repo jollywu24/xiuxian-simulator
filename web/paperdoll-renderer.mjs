@@ -1,4 +1,4 @@
-import { resolvePaperDollLayers } from "./paperdoll-system.mjs?v=20260807.3";
+import { resolvePaperDollLayers } from "./paperdoll-system.mjs?v=20260807.4";
 
 const PAPER_DOLL_CANVAS = Object.freeze({ width: 1024, height: 1536 });
 const imageCache = new Map();

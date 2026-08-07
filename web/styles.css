@@ -17547,3 +17547,201 @@ body[data-martial-open="true"] {
   .appearance-footer { right: 20px; bottom: 9px; }
   .appearance-footer .origin-confirm-button { min-width: 194px; min-height: 34px; }
 }
+
+/* Ruined-temple whitebox: three explorable areas, object actions and a visible situation clock. */
+.temple-area-nav {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 12;
+  display: flex;
+  padding: 3px;
+  gap: 2px;
+  border: 1px solid rgba(201, 167, 105, 0.38);
+  background: rgba(6, 12, 14, 0.8);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(5px);
+}
+
+.temple-area-nav button {
+  min-width: 64px;
+  min-height: 34px;
+  padding: 5px 13px;
+  color: #8f9b98;
+  border: 0;
+  border-right: 1px solid rgba(201, 167, 105, 0.18);
+  background: transparent;
+  font-family: var(--font-story);
+  font-size: 13px;
+  letter-spacing: 0.12em;
+}
+
+.temple-area-nav button:last-child { border-right: 0; }
+.temple-area-nav button.visited { color: #c8bda9; }
+.temple-area-nav button.current {
+  color: #f0ce87;
+  background: linear-gradient(180deg, rgba(155, 112, 49, 0.32), rgba(76, 56, 29, 0.18));
+  box-shadow: inset 0 -2px #b68a43;
+}
+
+.temple-situation-clock {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 11;
+  display: grid;
+  width: 118px;
+  min-height: 45px;
+  padding: 7px 10px 8px;
+  gap: 1px;
+  color: #ddd1bf;
+  border: 1px solid rgba(201, 167, 105, 0.34);
+  background: rgba(6, 12, 14, 0.82);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.temple-situation-clock span {
+  color: #a89577;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+}
+
+.temple-situation-clock strong {
+  font-family: var(--font-story);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.temple-situation-clock i {
+  display: block;
+  width: calc(100% * var(--situation-progress, 0));
+  height: 2px;
+  margin-top: 4px;
+  background: #b88942;
+  transition: width 180ms ease;
+}
+
+.temple-situation-clock.footsteps,
+.temple-situation-clock.arrival { border-color: rgba(181, 77, 60, 0.7); }
+.temple-situation-clock.footsteps i,
+.temple-situation-clock.arrival i { background: #c95e4d; }
+
+.scene-inspection-actions {
+  display: grid;
+  margin-top: 8px;
+  gap: 6px;
+}
+
+.scene-inspection-action {
+  display: grid;
+  width: 100%;
+  min-height: 46px;
+  padding: 8px 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  color: #dccdb7;
+  text-align: left;
+  border: 1px solid rgba(194, 151, 83, 0.34);
+  background: rgba(24, 26, 22, 0.92);
+}
+
+.scene-inspection-action:hover,
+.scene-inspection-action:focus-visible {
+  color: #f3ddb0;
+  border-color: rgba(221, 171, 84, 0.72);
+  background: rgba(50, 42, 28, 0.96);
+}
+
+.scene-inspection-action > span { display: grid; gap: 2px; }
+.scene-inspection-action strong {
+  font-size: 13px !important;
+  letter-spacing: 0.04em !important;
+}
+.scene-inspection-action small {
+  margin: 0 !important;
+  padding: 0 !important;
+  color: #9fa9a5 !important;
+  border: 0 !important;
+  font-size: 10px !important;
+  letter-spacing: 0 !important;
+}
+.scene-inspection-action em {
+  color: #d4a657;
+  font-family: var(--font-story);
+  font-size: 10px;
+  font-style: normal;
+  white-space: nowrap;
+}
+
+.scene-inspection-done {
+  margin-top: 8px;
+  padding-top: 8px;
+  color: #8ea09a;
+  border-top: 1px solid rgba(183, 134, 61, 0.22);
+  font-family: var(--font-story);
+  font-size: 11px;
+}
+.scene-inspection-done span { margin-right: 6px; color: #ad8b55; }
+
+.temple-exploration-status {
+  display: grid;
+  margin: 14px 0 16px;
+  grid-template-columns: repeat(3, 1fr);
+  border: 1px solid rgba(199, 159, 88, 0.28);
+  background: rgba(12, 21, 23, 0.72);
+}
+
+.temple-exploration-status > div {
+  display: grid;
+  min-height: 58px;
+  padding: 9px 12px;
+  align-content: center;
+  gap: 3px;
+  border-right: 1px solid rgba(199, 159, 88, 0.2);
+}
+.temple-exploration-status > div:last-child { border-right: 0; }
+.temple-exploration-status span { color: #879894; font-size: 10px; letter-spacing: 0.14em; }
+.temple-exploration-status strong { color: #dcc99f; font-family: var(--font-story); font-size: 15px; font-weight: 500; }
+.temple-exploration-guide { margin-bottom: 16px; }
+
+.world-stage-shell .scene-ruined_temple .scene-inspection.is-visible {
+  pointer-events: auto;
+}
+
+@media (orientation: landscape) and (min-width: 900px) {
+  .world-stage-shell .scene-ruined_temple .scene-inspection {
+    top: auto;
+    bottom: 4.3cqw;
+    left: 37.4cqw;
+    width: 27cqw;
+    max-height: 26cqw;
+    overflow-y: auto;
+    grid-template-rows: auto auto auto auto auto;
+  }
+  .world-stage-shell .scene-ruined_temple .scene-inspection small[data-inspection-status] {
+    margin-bottom: 0;
+  }
+  .world-stage-shell .scene-ruined_temple .scene-inspection [data-inspection-actions] {
+    margin: 0 -1.34cqw -0.72cqw;
+    padding: 0 1.34cqw 0.8cqw;
+    border-top: 0;
+  }
+}
+
+@media (orientation: landscape) and (max-width: 899px) {
+  .temple-area-nav { top: 8px; left: 8px; }
+  .temple-area-nav button { min-width: 47px; min-height: 28px; padding: 3px 7px; font-size: 10px; }
+  .temple-situation-clock { top: 8px; right: 8px; width: 92px; min-height: 36px; padding: 5px 7px; }
+  .temple-situation-clock strong { font-size: 11px; }
+  .world-stage-shell .scene-ruined_temple .scene-inspection {
+    right: 8px;
+    bottom: 48px;
+    left: 8px;
+    max-height: 62%;
+    overflow-y: auto;
+  }
+  .scene-inspection-action { min-height: 39px; padding: 6px 8px; }
+  .temple-exploration-status { margin: 8px 0 10px; }
+  .temple-exploration-status > div { min-height: 44px; padding: 6px 8px; }
+}

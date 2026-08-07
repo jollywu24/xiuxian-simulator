@@ -67,11 +67,13 @@ test("character identity on the ruined-temple stage follows the story reveal", (
   assert.equal(opening.actors.length, 0);
   assert.equal(opening.player.visible, false);
   assert.equal(opening.imageAspect, 1.28);
+  assert.equal(opening.areaId, "hall");
+  assert.deepEqual(opening.areaNav.map((area) => area.id), ["forecourt", "hall", "rear"]);
   assert.deepEqual(Object.fromEntries(opening.hotspots.map((hotspot) => [hotspot.id, [hotspot.x, hotspot.y]])), {
     embers: [51.8, 72.5],
     offering_table: [25.5, 49.5],
-    patched_wall: [54.5, 41],
-    doorway: [77, 44],
+    incense_rack: [26.5, 61.5],
+    deity_statue: [13.5, 50],
   });
   const arrival = getScenePresentation("ladyArrival", state());
   assert.equal(arrival.actors[0].label, "青衣妇人");

@@ -8,7 +8,7 @@ import {
   isSaveObject,
   parseSaveText,
   selectRecoverableSave,
-} from "./save-core.mjs?v=20260807.3";
+} from "./save-core.mjs?v=20260807.4";
 
 function storageKeys(key) {
   return {
