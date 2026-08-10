@@ -80,6 +80,18 @@ test("character identity on the ruined-temple stage follows the story reveal", (
   assert.match(arrival.image, /ruined-temple-lady-stage-v3/);
   assert.deepEqual([arrival.actors[0].x, arrival.actors[0].y], [75.5, 48]);
   assert.equal(getScenePresentation("encounterReward", state()).actors[0].label, "龙青鱼");
+
+  const rearWithPorter = getScenePresentation("templeWake", state({
+    templeExploration: { areaId: "rear", porter: { discovered: true, alive: true } },
+  }));
+  assert.equal(rearWithPorter.actors[0].id, "injured_porter");
+  assert.ok(rearWithPorter.actors[0].actions.some((action) => action.id === "rescue_porter" && !action.disabled));
+
+  const crisis = getScenePresentation("templeCrisis", state({
+    templeExploration: { lady: { arrived: true }, crisis: { active: true } },
+  }));
+  assert.equal(crisis.actors[0].label, "青衣妇人");
+  assert.equal(getScenePresentation("templeDeparture", state()).actors[0].label, "龙青鱼");
 });
 
 test("visual object descriptions react to existing game progress", () => {

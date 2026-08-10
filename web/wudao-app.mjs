@@ -50,8 +50,8 @@ import {
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs?v=20260807.4";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260807.4";
+} from "./wudao-core.mjs?v=20260810.1";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260810.1";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -81,7 +81,7 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260807.4";
+} from "./wudao-p0-core.mjs?v=20260810.1";
 import {
   M4_EVIDENCE,
   M4_METHOD,
@@ -100,7 +100,7 @@ import {
   resolveM4Training,
   resolveMoneyInquiry,
   resolveOldHouseChoice,
-} from "./wudao-p1-core.mjs?v=20260807.4";
+} from "./wudao-p1-core.mjs?v=20260810.1";
 import {
   advanceCombatLabCampaign,
   createCombatLabSession,
@@ -111,14 +111,14 @@ import {
   restartCombatLab,
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
-} from "./combat-lab-core.mjs?v=20260807.4";
+} from "./combat-lab-core.mjs?v=20260810.1";
 import {
   INVENTORY_CAPACITY,
   createInventoryBoard,
   formatSilver,
   getInventoryCategory,
   getInventoryUseState,
-} from "./inventory-core.mjs?v=20260807.4";
+} from "./inventory-core.mjs?v=20260810.1";
 import {
   EQUIPMENT_CAPACITY,
   EQUIPMENT_SLOTS,
@@ -132,7 +132,7 @@ import {
   migrateCharacterVitals,
   migrateEquipmentState,
   unequipEquipmentSlot,
-} from "./character-system.mjs?v=20260807.4";
+} from "./character-system.mjs?v=20260810.1";
 import {
   MARTIAL_MASTERIES,
   breakthroughMartial,
@@ -154,9 +154,9 @@ import {
   trainMartial,
   unequipMartial,
   unlockedMartialNodes,
-} from "./martial-system.mjs?v=20260807.4";
-import { SAVE_STORAGE_KEY } from "./save-core.mjs?v=20260807.4";
-import { createSaveStorage } from "./save-storage.mjs?v=20260807.4";
+} from "./martial-system.mjs?v=20260810.1";
+import { SAVE_STORAGE_KEY } from "./save-core.mjs?v=20260810.1";
+import { createSaveStorage } from "./save-storage.mjs?v=20260810.1";
 import {
   ORIGINS,
   ORIGIN_LADY_INSIGHTS,
@@ -169,7 +169,7 @@ import {
   resolveOriginPersonalEvent,
   resolveOriginPrologueChoice,
   resolveOriginTempleTask,
-} from "./origin-core.mjs?v=20260807.4";
+} from "./origin-core.mjs?v=20260810.1";
 import {
   APPEARANCE_BODIES,
   APPEARANCE_CATALOGS,
@@ -178,9 +178,9 @@ import {
   createAppearanceState,
   cycleAppearance,
   normalizeAppearance,
-} from "./appearance-core.mjs?v=20260807.4";
-import { resolvePaperDollLayers } from "./paperdoll-system.mjs?v=20260807.4";
-import { renderPaperDollCanvases } from "./paperdoll-renderer.mjs?v=20260807.4";
+} from "./appearance-core.mjs?v=20260810.1";
+import { resolvePaperDollLayers } from "./paperdoll-system.mjs?v=20260810.1";
+import { renderPaperDollCanvases } from "./paperdoll-renderer.mjs?v=20260810.1";
 import {
   KNOWLEDGE_CATALOG,
   createKnowledgeBoard,
@@ -190,20 +190,28 @@ import {
   recordKnowledgeFragment,
   resolvePorterEncounter,
   syncKnowledgeFromGameState,
-} from "./knowledge-core.mjs?v=20260807.4";
+} from "./knowledge-core.mjs?v=20260810.1";
 import {
+  beginTempleArrival,
   createTempleExplorationState,
   enterTempleArea,
   getTempleArea,
   getTempleAreaView,
+  getTempleCrisisOptions,
+  getTempleLadyResponses,
   getTempleObjectView,
+  getTempleOutcomeSummary,
   getTempleSituationClock,
   migrateTempleExplorationState,
   revealTempleObject,
+  resolveTempleCasketAction,
+  resolveTempleCrisis,
+  resolveTempleLadyResponse,
   resolveTempleObjectAction,
-} from "./temple-exploration.mjs?v=20260807.4";
+  resolveTemplePorterAction,
+} from "./temple-exploration.mjs?v=20260810.1";
 
-const PAPER_DOLL_ASSET_VERSION = "20260807.4";
+const PAPER_DOLL_ASSET_VERSION = "20260810.1";
 
 const app = document.querySelector("#app");
 const BUILD_SHA = document.documentElement.dataset.buildSha || "dev";
@@ -244,7 +252,7 @@ function legacyFateSeed(saved) {
 
 function createInitialState() {
   return {
-    version: 12,
+    version: 13,
     screen: "landing",
     name: "陈司命",
     appearance: createAppearanceState(),
@@ -347,7 +355,7 @@ function createInitialState() {
 }
 
 function supportsStoredState(saved) {
-  return Boolean(saved && [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].includes(saved.version) && saved.screen);
+  return Boolean(saved && [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].includes(saved.version) && saved.screen);
 }
 
 function loadState(raw) {
@@ -359,7 +367,7 @@ function loadState(raw) {
       ...createInitialState(),
       ...saved,
       ...origin,
-      version: 12,
+      version: 13,
       appearance: normalizeAppearance(saved.appearance),
       p0: migrateP0State(saved.p0),
       m4: migrateM4State(saved.m4),
@@ -368,10 +376,14 @@ function loadState(raw) {
       porterEncounter: createPorterEncounterState(saved.porterEncounter),
       templeExploration: migrateTempleExplorationState(saved),
     };
-    if (["fateSight", "allocation", "originTempleTask"].includes(saved.screen) && !saved.originPrologue?.completed) {
+    if (saved.screen === "templeTasks") {
+      migrated.templeExploration = beginTempleArrival(migrated.templeExploration);
+      migrated.screen = "templeLady";
+    } else if (["fateSight", "allocation", "originTempleTask", "eastRoadPorter"].includes(saved.screen) && !saved.originPrologue?.completed) {
       migrated.screen = "templeWake";
-    } else if (saved.screen === "templeTasks") {
-      migrated.screen = "ladyArrival";
+    } else if (["ladyArrival", "ladyPressure", "ladyTest", "nightTalk", "gameDeath", "quietDeparture"].includes(saved.screen)) {
+      migrated.templeExploration = beginTempleArrival(migrated.templeExploration);
+      migrated.screen = "templeLady";
     }
     migrated.martial = migrateMartialState(saved.martial, migrated);
     migrated.knowledge = syncKnowledgeFromGameState(saved.knowledge, migrated).state;
@@ -486,6 +498,7 @@ function beginOriginJourney() {
   state.hungerLevel = 2;
   state.templeOpening = createTempleOpeningState();
   state.templeExploration = createTempleExplorationState();
+  state.porterEncounter = createPorterEncounterState();
   if (origin.id === "shen_branch") {
     state.inventory = ["branch_waist_token", "copied_fist_manual"];
     state.shenSilver = 2;
@@ -922,12 +935,15 @@ function sceneInspectionActionsHtml(objectId, actions = []) {
   if (!actions.length) return "";
   const available = actions.filter((action) => !action.disabled);
   if (!available.length) return `<div class="scene-inspection-done"><span aria-hidden="true">✓</span>这里能做的事已经做完</div>`;
-  return `<div class="scene-inspection-actions" aria-label="可执行行动">${actions.map((action) => `
-    <button type="button" class="scene-inspection-action" data-action="temple-object-action" data-value="${escapeHtml(`${objectId}|${action.id}`)}" data-choice-title="${escapeHtml(action.title)}" data-choice-source="${escapeHtml(action.meta)}" ${action.disabled ? "disabled" : ""}>
+  return `<div class="scene-inspection-actions" aria-label="可执行行动">${actions.map((action) => {
+    const actionName = action.specialKind === "casket" ? "temple-casket-action" : action.specialKind === "porter" ? "temple-porter-action" : "temple-object-action";
+    const actionValue = action.specialKind ? action.id : `${objectId}|${action.id}`;
+    return `
+    <button type="button" class="scene-inspection-action" data-action="${actionName}" data-value="${escapeHtml(actionValue)}" data-choice-title="${escapeHtml(action.title)}" data-choice-source="${escapeHtml(action.meta)}" ${action.disabled ? "disabled" : ""}>
       <span><strong>${escapeHtml(action.title)}</strong><small>${escapeHtml(action.description)}</small></span>
       <em>${escapeHtml(action.disabled ? action.reason : action.meta)}</em>
     </button>
-  `).join("")}</div>`;
+  `; }).join("")}</div>`;
 }
 
 function sceneVisualHtml() {
@@ -1814,13 +1830,13 @@ function commitCombatMartialUse(resolved, session) {
 }
 
 const TEMPLE_HUD_SCREENS = new Set([
-  "templeWake", "fateSight", "allocation", "originTempleTask", "templeTasks", "ladyArrival", "ladyPressure",
+  "templeWake", "templeLady", "templeCrisis", "templeDeparture", "fateSight", "allocation", "originTempleTask", "templeTasks", "ladyArrival", "ladyPressure",
   "ladyTest", "nightTalk", "gameDeath", "quietDeparture", "encounterReward", "mindArt",
 ]);
 
 function templeClockLabel() {
   if (state.screen === "templeWake") return getTempleSituationClock(state.templeExploration).label;
-  if (["ladyArrival", "ladyPressure", "ladyTest", "nightTalk", "gameDeath"].includes(state.screen)) return "寅时";
+  if (["templeLady", "templeCrisis", "templeDeparture", "ladyArrival", "ladyPressure", "ladyTest", "nightTalk", "gameDeath"].includes(state.screen)) return "寅时";
   if (["quietDeparture", "encounterReward", "mindArt"].includes(state.screen)) return "卯时";
   return "亥时";
 }
@@ -1873,6 +1889,9 @@ function modeLabel() {
     streetOriginRoute: "外港至东郊 · 雨路",
     eastRoadPorter: "金陵东郊 · 雨路遇袭",
     originTempleTask: "金陵东郊 · 暗墙旧物",
+    templeLady: "金陵东郊 · 雨夜来客",
+    templeCrisis: "金陵东郊 · 追兵入庙",
+    templeDeparture: "金陵东郊 · 雨后离庙",
     templeWake: "金陵东郊 · 无名破庙",
     fateSight: "金陵东郊 · 无名破庙",
     allocation: "金陵东郊 · 无名破庙",
@@ -2249,6 +2268,78 @@ function renderTempleWake() {
   `);
 }
 
+function renderTempleLady() {
+  const temple = state.templeExploration;
+  const observations = temple.lady?.observations || [];
+  const responses = getTempleLadyResponses(temple);
+  return gameShell(`
+    ${sceneHeader(
+      "丑时将尽 · 庙门无声而开",
+      "青衣妇人先看见的，是你留下的局面",
+      "她循着药匣和脚印而来。门外还有第二批人，留给你们互相试探的时间只有几句话。",
+    )}
+    <div class="story-copy"><p>湿斗篷掠过门槛。她没有先报姓名，只用目光把火、暗墙、柴堆和伤者逐一量过。</p><p>${escapeHtml(observations.length ? `她看见：${observations.join("；")}。` : "你没有来得及动过庙里的要紧东西，她一时看不出你站在哪一边。")}</p></div>
+    <div class="encounter-ledger">
+      <div><span>她的判断</span><strong>信任 ${Number(temple.lady?.trust || 0)}</strong><p>来自你已经做过的事。</p></div>
+      <div><span>尚未消去</span><strong>戒心 ${Number(temple.lady?.suspicion || 0)}</strong><p>拆封、死人和藏起的心思都会留下痕迹。</p></div>
+      <div><span>欠下的人情</span><strong>${Number(temple.lady?.debt || 0)}</strong><p>不是好感，而是她承认该还的事。</p></div>
+    </div>
+    <div class="action-list">${responses.map((response) => actionCard({
+      action: "temple-lady-response",
+      value: response.id,
+      title: response.title,
+      description: response.description,
+      source: response.meta,
+      meta: "追兵将至",
+      kind: response.id === "show_evidence" ? "special" : response.id === "guard_casket" ? "danger" : "",
+    })).join("")}</div>
+  `);
+}
+
+function renderTempleCrisis() {
+  const options = getTempleCrisisOptions(state.templeExploration, { attributes: state.attributes });
+  return gameShell(`
+    ${sceneHeader(
+      "庙外刀鞘碰上石阶",
+      "追兵不是来问话的",
+      "他们认货签、找药匣，也会顺手灭掉看见过这一切的人。你先前动过的破窗、香架、塌墙和柴堆，现在各自是一条路。",
+    )}
+    <div class="story-copy"><p>三道人影分开堵住庙门与后墙。青衣妇人没有抢着发号施令，只向旁边让了半步：“局是你看出来的。说吧，怎么收？”</p></div>
+    <div class="action-list">${options.map((option) => actionCard({
+      action: "temple-crisis",
+      value: option.id,
+      title: option.title,
+      description: option.description,
+      source: option.meta,
+      meta: option.disabled ? option.reason : option.id === "hold_door" ? "可能负伤" : "改变追兵去向",
+      disabled: option.disabled,
+      kind: option.danger ? "danger" : !option.disabled ? "special" : "",
+    })).join("")}</div>
+  `);
+}
+
+function renderTempleDeparture() {
+  const summary = getTempleOutcomeSummary(state.templeExploration);
+  const methodNames = { drop_rack: "暗火倒架", escape_breach: "塌墙撤离", hide_casket: "藏匣误导", hold_door: "守门迎敌" };
+  const pursuerNames = { driven_off: "退入雨中", bypassed: "扑进空庙", misdirected: "循假痕追远" };
+  return gameShell(`
+    ${sceneHeader(
+      "天色将明 · 雨势渐收",
+      "这座破庙已经不是你进来时的样子",
+      state.templeExploration.crisis?.outcome || "追兵已经离开，余下的人和东西各有去向。",
+    )}
+    <div class="encounter-ledger">
+      <div><span>乌沉药匣</span><strong>${escapeHtml(summary.casket)}</strong><p>封口和归属会跟到沈家。</p></div>
+      <div><span>受伤脚夫</span><strong>${escapeHtml(summary.porter)}</strong><p>${summary.aidSpent ? "你失去一块御寒内衬，下一段路会更冷。" : "你没有为救治付出衣料。"}</p></div>
+      <div><span>追兵</span><strong>${escapeHtml(methodNames[state.templeExploration.crisis?.method] || "去向未明")}</strong><p>${escapeHtml(pursuerNames[summary.pursuers] || "余波未定")}</p></div>
+      <div><span>青衣妇人</span><strong>${escapeHtml(summary.relation)}</strong><p>信任 ${summary.trust} · 戒心 ${summary.suspicion} · 人情 ${summary.debt}</p></div>
+    </div>
+    ${summary.wound ? `<div class="notice-block danger"><strong>伤势带出破庙</strong><br />${summary.wound.severity >= 2 ? "肩头刀伤不轻，之后发力会受牵制。" : "小臂留下一道刀口，尚不妨碍赶路。"}</div>` : ""}
+    <div class="story-copy"><p>她这才报出姓名：龙青鱼，漕帮帮主夫人。水路上敢直呼这三个字的人并不多。</p><p>“今夜的账，不能只让你空手${summary.wound ? "带伤" : "赶路"}。”她并指点向你眉心，要把一幅江鲤行波图留给你。</p></div>
+    <div class="button-row"><button class="primary-button" data-action="accept-temple-outcome">记下今夜，接受她的还礼</button></div>
+  `);
+}
+
 function renderFateSight() {
   const forceCost = templeTaskCost("shen_promise", state.attributes);
   const originId = state.originId || state.backgroundId;
@@ -2322,7 +2413,7 @@ function ladyChoices(stage, action) {
 
 function renderLadyArrival() {
   return gameShell(`
-    ${sceneHeader("寅时二刻 · 破庙门开", "青衣妇人踏进破庙", "她没有受伤，身后也没有追兵。湿透的斗篷下，气息却压得你几乎不敢呼吸。")}
+    ${sceneHeader("寅时二刻 · 破庙门开", "青衣妇人踏进破庙", "她没有受伤，身后的雨幕里暂时不见人影。湿透的斗篷下，气息却压得你几乎不敢呼吸。")}
     <div class="story-copy"><p>她扫过你的破衣、山桃核和墙边碎砖，冷笑一声：“年纪轻轻，便活成了个乞丐。”</p><p>她没有拔刀。真正危险的是，你每一句回答都可能让她改变主意。</p></div>
     <div class="insight-whisper danger-whisper"><span>悟性</span><strong>门外只有她一个人的脚印。</strong></div>
     <div class="action-list">${ladyChoices("first", "lady-choice")}</div>
@@ -3920,6 +4011,9 @@ const renderers = {
   streetOriginRoute: renderOriginPrologue,
   eastRoadPorter: renderEastRoadPorter,
   templeWake: renderTempleWake,
+  templeLady: renderTempleLady,
+  templeCrisis: renderTempleCrisis,
+  templeDeparture: renderTempleDeparture,
   fateSight: renderFateSight,
   allocation: renderAllocation,
   originTempleTask: renderOriginTempleTask,
@@ -4218,25 +4312,40 @@ function recordTempleExplorationChoice(result) {
 
 function finishTempleExplorationWindow() {
   const originId = state.originId || state.backgroundId;
-  const wallState = state.templeExploration?.objectStates?.patched_wall;
-  const foundTaskObject = ["measured", "mapped"].includes(wallState?.stage);
-  if (["shen_branch", "streetborn"].includes(originId) && !state.originPrologue?.completed && foundTaskObject) {
-    state.originPrologue = { ...state.originPrologue, nodeId: "originTempleTask" };
-    return moveTo("originTempleTask");
+  state.templeExploration = beginTempleArrival(state.templeExploration);
+  const casket = state.templeExploration.casket;
+  const porter = state.templeExploration.porter;
+  state.porterEncounter = {
+    encountered: porter.discovered,
+    resolved: Boolean(porter.resolved),
+    choiceId: porter.questioned ? "temple_questioned" : porter.searched ? "temple_searched" : porter.rescued ? "temple_rescued" : porter.abandoned ? "temple_abandoned" : null,
+    rescued: porter.rescued,
+    questioned: porter.questioned,
+    searched: porter.searched,
+    alive: porter.alive !== false,
+  };
+  state.originPrologue = {
+    ...state.originPrologue,
+    completed: true,
+    nodeId: "templeLady",
+    taskState: casket.holder === "player" ? (casket.opened ? "failed_forward" : casket.inspected ? "costly_success" : "success") : "missed",
+    convergenceState: "temple_joined",
+  };
+  const inspectedFact = originId === "streetborn" ? "package_smells_of_medicine" : originId === "mystery" ? "casket_mark_matches_memory" : "box_changed_hands";
+  const openedFact = originId === "streetborn" ? "package_contains_cargo_tokens" : originId === "mystery" ? "casket_contains_burned_roster" : "box_contains_bitter_pills";
+  state.originKnowledge = addUnique(state.originKnowledge, casket.inspected ? [inspectedFact] : []);
+  state.originKnowledge = addUnique(state.originKnowledge, casket.opened ? [openedFact] : []);
+  state.originEchoes = addUnique(state.originEchoes, casket.opened
+    ? [originId === "streetborn" ? "割断红绳，看见匣中货签" : "拆开药匣，看见苦丸与半张货签"]
+    : casket.inspected ? ["查过封口与泥痕，仍把药匣带走"]
+      : casket.holder === "player" ? ["乌沉药匣原样带出破庙"] : ["雨夜没有带走暗墙里的药匣"]);
+  if (casket.holder === "player") {
+    const itemId = casket.opened ? "opened_medicine_box" : "sealed_medicine_box";
+    state.inventory = state.inventory.filter((id) => !["sealed_medicine_box", "opened_medicine_box"].includes(id));
+    state.inventory.push(itemId);
   }
-  if (!state.originPrologue?.completed) {
-    state.originPrologue = {
-      ...state.originPrologue,
-      completed: true,
-      nodeId: "ladyArrival",
-      taskState: ["shen_branch", "streetborn"].includes(originId) ? "missed" : "in_progress",
-      convergenceState: "temple_joined",
-    };
-    if (["shen_branch", "streetborn"].includes(originId)) {
-      state.originEchoes = addUnique(state.originEchoes, "雨夜错过了暗墙里的差事物");
-    }
-  }
-  moveTo("ladyArrival");
+  state.knowledge = syncKnowledgeFromGameState(state.knowledge, state).state;
+  moveTo("templeLady");
 }
 
 function combatOutcomeText(result) {
@@ -4405,7 +4514,7 @@ const handlers = {
   "temple-object-action": (value) => {
     if (state.screen !== "templeWake") return;
     const [objectId, actionId] = String(value || "").split("|");
-    const result = resolveTempleObjectAction(state.templeExploration, objectId, actionId);
+    const result = resolveTempleObjectAction(state.templeExploration, objectId, actionId, state.originId || state.backgroundId);
     if (!result.available) return;
     state.templeExploration = result.state;
     if (actionId === "tend_embers") {
@@ -4429,6 +4538,30 @@ const handlers = {
       cost: result.action.cost,
       phase: result.state.phase,
     });
+    if (result.arrivalTriggered) return finishTempleExplorationWindow();
+    refresh();
+  },
+  "temple-casket-action": (value) => {
+    if (state.screen !== "templeWake") return;
+    const result = resolveTempleCasketAction(state.templeExploration, value, state.originId || state.backgroundId);
+    if (!result.available) return;
+    state.templeExploration = result.state;
+    appendNarrativeOutcome([result.outcome, ...(result.phaseOutcomes || [])]);
+    pendingSceneFeedback = { text: result.action.cost === 1 ? "时辰 +一刻" : `时辰 +${result.action.cost}刻`, tone: "notice", resource: "time" };
+    track("temple_casket_action", { actionId: value, status: state.templeExploration.casket });
+    if (result.arrivalTriggered) return finishTempleExplorationWindow();
+    refresh();
+  },
+  "temple-porter-action": (value) => {
+    if (state.screen !== "templeWake") return;
+    const result = resolveTemplePorterAction(state.templeExploration, value);
+    if (!result.available) return;
+    state.templeExploration = result.state;
+    appendNarrativeOutcome([result.outcome, ...(result.phaseOutcomes || [])]);
+    pendingSceneFeedback = value === "rescue_porter"
+      ? { text: "内衬 -一块", tone: "danger", resource: "inventory" }
+      : { text: result.action.cost ? `时辰 +${result.action.cost}刻` : "活口 · 放弃", tone: "notice", resource: "time" };
+    track("temple_porter_action", { actionId: value, alive: state.templeExploration.porter.alive });
     if (result.arrivalTriggered) return finishTempleExplorationWindow();
     refresh();
   },
@@ -4476,7 +4609,7 @@ const handlers = {
     const actor = scene?.actors.find((item) => item.id === value);
     if (!actor) return;
     const status = actor.state === "allied" ? "关系 · 已亲近" : actor.state === "locked" ? "身份 · 尚未看清" : "身份 · 已察觉";
-    updateSceneInspection("人物", actor.label, actor.detail, "scene-actor", value, status);
+    updateSceneInspection("人物", actor.label, actor.detail, "scene-actor", value, status, actor.actions || []);
   },
   "inspect-route-node": (value) => {
     const route = getRoutePresentation(state.screen, state);
@@ -4868,11 +5001,6 @@ const handlers = {
     );
     if (!applyOriginRuleResult(result)) return;
     track("origin_prologue_choice", { originId: state.originId, screen: state.screen, choice: value });
-    if (result.nextScreen === "templeWake" && ["shenOriginRoad", "streetOriginRoute"].includes(originScreen)) {
-      state.porterEncounter = { ...createPorterEncounterState(), encountered: true };
-      state.originPrologue = { ...state.originPrologue, nodeId: "eastRoadPorter" };
-      return moveTo("eastRoadPorter");
-    }
     moveTo(result.nextScreen);
   },
   "porter-choice": (value) => {
@@ -4977,6 +5105,50 @@ const handlers = {
     refresh();
   },
   "meet-lady": () => moveTo("ladyArrival"),
+  "temple-lady-response": (value) => {
+    if (state.screen !== "templeLady") return;
+    const result = resolveTempleLadyResponse(state.templeExploration, value);
+    if (!result.available) return;
+    state.templeExploration = result.state;
+    appendNarrativeOutcome(result.outcome);
+    track("temple_lady_response", { responseId: value, trust: result.state.lady.trust, suspicion: result.state.lady.suspicion });
+    moveTo("templeCrisis");
+  },
+  "temple-crisis": (value) => {
+    if (state.screen !== "templeCrisis") return;
+    const result = resolveTempleCrisis(state.templeExploration, value, { attributes: state.attributes });
+    if (!result.available) return;
+    state.templeExploration = result.state;
+    if (result.wound && !state.p0.wounds.some((wound) => wound.id === result.wound.id)) state.p0.wounds.push(structuredClone(result.wound));
+    const casket = result.state.casket;
+    state.inventory = state.inventory.filter((id) => !["sealed_medicine_box", "opened_medicine_box"].includes(id));
+    if (!casket.lost && casket.holder === "player") state.inventory.push(casket.opened ? "opened_medicine_box" : "sealed_medicine_box");
+    const porter = result.state.porter;
+    state.porterEncounter = {
+      encountered: porter.discovered,
+      resolved: porter.resolved,
+      choiceId: porter.questioned ? "temple_questioned" : porter.searched ? "temple_searched" : porter.rescued ? "temple_rescued" : "temple_lost",
+      rescued: porter.rescued,
+      questioned: porter.questioned,
+      searched: porter.searched,
+      alive: porter.alive !== false,
+    };
+    state.relationship = getTempleOutcomeSummary(result.state).relation;
+    state.ladyFavor = Math.max(0, result.state.lady.trust * 10 - result.state.lady.suspicion * 5);
+    state.knowledge = syncKnowledgeFromGameState(state.knowledge, state).state;
+    appendNarrativeOutcome(result.outcome);
+    track("temple_crisis_resolved", { method: value, pursuers: result.state.crisis.pursuers, wound: result.wound?.severity || 0 });
+    moveTo("templeDeparture");
+  },
+  "accept-temple-outcome": () => {
+    if (state.screen !== "templeDeparture") return;
+    state.potential += 1500;
+    state.mindArt = MIND_ART.id;
+    state.templeExploration = { ...state.templeExploration, lady: { ...state.templeExploration.lady, identityKnown: true } };
+    state.knowledge = syncKnowledgeFromGameState(state.knowledge, state).state;
+    track("temple_departed", { casket: state.templeExploration.casket, porterAlive: state.templeExploration.porter.alive });
+    moveTo("mindArt");
+  },
   "lady-choice": (value) => {
     const choice = resolveLadyChoice("first", value);
     if (!choice) return;

@@ -70,9 +70,9 @@ export const KNOWLEDGE_CATALOG = Object.freeze({
     summary: "雨夜破庙相逢的青衣女子，水上身法与她掌握的船路都远超寻常江湖客。",
     art: "./assets/knowledge/long-qingyu-v1.webp",
     fragments: Object.freeze([
-      fragment("qingyu_strength", "firsthand", "她独自踏进破庙，气息便压得人难以开口；真正危险的不是雨外追兵，而是她本人。", { sceneId: "ruined_temple", npcId: "long_qingyu", highlights: [["她本人", "danger"]] }),
+      fragment("qingyu_strength", "firsthand", "她踏进破庙便先看火势、活口与退路；追兵堵门时，她仍把如何收局留给你决定。", { sceneId: "ruined_temple", npcId: "long_qingyu", highlights: [["如何收局", "trace"]] }),
       fragment("qingyu_origin_shen", "firsthand", "她鞋底沾着大宅修廊常见的青砖漆灰，入庙前去过一处讲规矩的门庭。", { label: "世家", sceneId: "ruined_temple", highlights: [["青砖漆灰", "trace"]] }),
-      fragment("qingyu_origin_street", "firsthand", "雨声里只有她一道脚步；她没有同伴，也没有人追在门外。", { label: "市井", sceneId: "ruined_temple", highlights: [["没有人追", "trace"]] }),
+      fragment("qingyu_origin_street", "firsthand", "她入庙时故意踩乱门前一段泥印，显然熟悉码头人追货时认脚迹的法子。", { label: "市井", sceneId: "ruined_temple", highlights: [["踩乱泥印", "trace"]] }),
       fragment("qingyu_origin_mystery", "firsthand", "她的目光在半块玉佩上停了半瞬，像是认得断口，却等着你先问。", { label: "残忆", sceneId: "ruined_temple", highlights: [["半块玉佩", "trace"], ["认得断口", "trace"]] }),
       fragment("qingyu_refused_tool", "firsthand", "你拒绝成为她报复旁人的工具，她因此收住了杀机，也肯坐下说完旧事。", { sceneId: "ruined_temple", highlights: [["收住了杀机", "danger"]] }),
       fragment("qingyu_identity", "confirmed", "天明前她说出姓名：龙青鱼，漕帮帮主夫人。", { npcId: "long_qingyu", sceneId: "ruined_temple", highlights: [["龙青鱼", "entity"], ["漕帮帮主夫人", "entity"]] }),
@@ -109,15 +109,32 @@ export const KNOWLEDGE_CATALOG = Object.freeze({
     summary: "一名运药脚夫倒在东郊雨路，散货、追者与沈家货签留下了不同去向。",
     art: "./assets/knowledge/east-road-porter-v1.webp",
     fragments: Object.freeze([
-      fragment("porter_found", "firsthand", "东郊旧墙下，运药脚夫倒在翻散的竹篓旁，追他的人已经隐入雨里。", { sceneId: "east_road", highlights: [["运药脚夫", "entity"], ["追他的人", "danger"]] }),
-      fragment("porter_rescued", "firsthand", "你先把他拖进墙根压住伤口，他保住了性命，也记住了是谁停下脚步。", { sceneId: "east_road", highlights: [["保住了性命", "trace"]] }),
-      fragment("porter_questioned", "hearsay", "脚夫说追者只翻带沈字货签的箱子，对银钱与普通药材都没有兴趣。", { sceneId: "east_road", npcId: "east_road_porter", highlights: [["沈字货签", "entity"], ["追者", "danger"]] }),
-      fragment("porter_cargo_searched", "firsthand", "散货里混着两枚不同泊位的药批签；同一篓货曾在外港换过手。", { sceneId: "east_road", highlights: [["药批签", "trace"], ["外港", "entity"]] }),
-      fragment("porter_lost", "later", "你先追了雨里的脚印。回头时脚夫已经没了气息，只剩货签还能说明他为何被追。", { sceneId: "east_road", highlights: [["没了气息", "danger"], ["货签", "trace"]] }),
+      fragment("porter_found", "firsthand", "破庙后墙的血痕通向湿柴堆，一名运药脚夫倒在翻散的竹篓旁。", { sceneId: "ruined_temple", highlights: [["运药脚夫", "entity"], ["血痕", "danger"]] }),
+      fragment("porter_rescued", "firsthand", "你撕下里衣压住他的伤口，他保住了性命，也记住了是谁停下脚步。", { sceneId: "ruined_temple", highlights: [["保住了性命", "trace"]] }),
+      fragment("porter_questioned", "hearsay", "脚夫说追者只翻带沈字货签的箱子，还提过一艘熄灯逆行的乌篷船。", { sceneId: "ruined_temple", npcId: "east_road_porter", highlights: [["沈字货签", "entity"], ["乌篷船", "trace"]] }),
+      fragment("porter_cargo_searched", "firsthand", "散货里混着两枚不同泊位的药批签；同一篓货曾在外港换过手。", { sceneId: "ruined_temple", highlights: [["药批签", "trace"], ["外港", "entity"]] }),
+      fragment("porter_lost", "later", "门外来人时脚夫已经没了气息，只剩货签还能说明他为何被追。", { sceneId: "ruined_temple", highlights: [["没了气息", "danger"], ["货签", "trace"]] }),
     ]),
     related: Object.freeze([
       { kind: "event", id: "purple_river_night_boat", label: "紫金河夜船" },
       { kind: "place", id: "qinhuai", label: "秦淮外港", routeId: "qinhuai" },
+    ]),
+  }),
+  ruined_temple_pursuit: Object.freeze({
+    id: "ruined_temple_pursuit",
+    type: "event",
+    title: "破庙追兵",
+    summary: "追者循药匣与货签来到破庙，他们认货路留下的规矩，也会灭掉见过交割的人。",
+    art: "./assets/knowledge/medicine-casket-v1.webp",
+    fragments: Object.freeze([
+      fragment("pursuers_seek_casket", "confirmed", "追兵堵住破庙前后出口，开口先问药匣，不问脚夫姓名；他们追的是货，不是私仇。", { sceneId: "ruined_temple", highlights: [["药匣", "entity"], ["追的是货", "trace"]] }),
+      fragment("pursuers_read_marks", "firsthand", "他们会认货签、脚印与封绳，却没有认出藏在柴堆夹层里的药匣。", { sceneId: "ruined_temple", highlights: [["货签", "trace"], ["封绳", "trace"]] }),
+      fragment("pursuers_route_broken", "later", "破庙中的退路或机关让追者失去当夜的货，但这条取货路线已经暴露。", { sceneId: "ruined_temple", highlights: [["取货路线", "danger"]] }),
+    ]),
+    related: Object.freeze([
+      { kind: "event", id: "medicine_casket", label: "乌沉药匣" },
+      { kind: "person", id: "long_qingyu", label: "龙青鱼" },
+      { kind: "place", id: "ruined_temple", label: "东郊破庙", routeId: "temple" },
     ]),
   }),
 });
@@ -307,6 +324,7 @@ export function syncKnowledgeFromGameState(saved, game = {}) {
   };
   const originId = game.originId || game.backgroundId;
   const originFacts = [...(game.originKnowledge || []), ...(game.originPrologue?.discoveredFactIds || [])];
+  const temple = game.templeExploration || {};
   const templeActions = game.templeOpening?.actions || [];
   const hasSeenPeaches = Boolean(game.templeOpening?.peachEaten || templeActions.includes("eat_peach"));
   if (hasSeenPeaches) {
@@ -320,37 +338,43 @@ export function syncKnowledgeFromGameState(saved, game = {}) {
     add("fresh_temple_peaches", "peaches_missed_trace", { mode: "later", sceneId: "ruined_temple", eventId: "mid_autumn_missed" });
   }
 
-  const casketTempleSeen = originId === "shen_branch" && Boolean(game.originPrologue?.completed || hasAny(game.inventory, ["sealed_medicine_box", "opened_medicine_box"]));
+  const casketTempleSeen = Boolean(temple.casket?.discovered || hasAny(game.inventory, ["sealed_medicine_box", "opened_medicine_box"]));
   if (casketTempleSeen) add("medicine_casket", "casket_temple_seen", { sceneId: "ruined_temple", eventId: "origin_temple_task" });
   if (game.caoIdentitySeen) add("medicine_casket", "casket_cao_seen", { sceneId: "shen_danroom", eventId: "cao_arrival" });
-  if (casketTempleSeen) add("medicine_casket", "casket_shen_seal", { sceneId: "ruined_temple", eventId: "origin_temple_task" });
-  if (originId === "streetborn" && game.caoIdentitySeen) add("medicine_casket", "casket_street_cord", { sceneId: "shen_danroom", eventId: "cao_arrival" });
-  if (originId === "mystery" && game.caoIdentitySeen && game.templeOpening?.belongingsChecked) add("medicine_casket", "casket_mystery_mark", { sceneId: "shen_danroom", eventId: "cao_arrival" });
-  if (hasAny(originFacts, ["box_changed_hands", "reported_box_transfer_trace"])) add("medicine_casket", "casket_resealed", { mode: "confirmed", sceneId: "ruined_temple", eventId: "inspect_box_seal" });
-  if (originFacts.includes("box_contains_bitter_pills")) add("medicine_casket", "casket_opened", { sceneId: "ruined_temple", eventId: "open_box" });
+  if (casketTempleSeen && originId === "shen_branch") add("medicine_casket", "casket_shen_seal", { sceneId: "ruined_temple", eventId: "origin_temple_task" });
+  if (casketTempleSeen && originId === "streetborn") add("medicine_casket", "casket_street_cord", { sceneId: "ruined_temple", eventId: "origin_temple_task" });
+  if (casketTempleSeen && originId === "mystery") add("medicine_casket", "casket_mystery_mark", { sceneId: "ruined_temple", eventId: "origin_temple_task" });
+  if (temple.casket?.inspected || hasAny(originFacts, ["box_changed_hands", "reported_box_transfer_trace"])) add("medicine_casket", "casket_resealed", { mode: "confirmed", sceneId: "ruined_temple", eventId: "inspect_box_seal" });
+  if (temple.casket?.opened || originFacts.includes("box_contains_bitter_pills")) add("medicine_casket", "casket_opened", { sceneId: "ruined_temple", eventId: "open_box" });
   if (game.observationChoice === "watch") add("medicine_casket", "casket_cao_residue", { mode: "later", sceneId: "shen_danroom", npcId: "cao_qing", eventId: "dan_observation" });
   if (originFacts.includes("reported_box_transfer_trace")) add("medicine_casket", "casket_shenfu_pause", { mode: "later", sceneId: "shen_side_gate", npcId: "shen_fu", eventId: "origin_return_report" });
 
-  if (game.relationship) {
+  if (game.relationship || temple.lady?.arrived) {
     add("long_qingyu", "qingyu_strength", { sceneId: "ruined_temple", npcId: "long_qingyu", eventId: "lady_arrival" });
     if (originFacts.includes("lady_courtyard_dust")) add("long_qingyu", "qingyu_origin_shen", { sceneId: "ruined_temple", npcId: "long_qingyu" });
     if (originFacts.includes("lady_came_alone")) add("long_qingyu", "qingyu_origin_street", { sceneId: "ruined_temple", npcId: "long_qingyu" });
     if (originFacts.includes("lady_noticed_jade")) add("long_qingyu", "qingyu_origin_mystery", { sceneId: "ruined_temple", npcId: "long_qingyu" });
     if ((game.ladyChoiceLog || []).includes("refuse")) add("long_qingyu", "qingyu_refused_tool", { sceneId: "ruined_temple", npcId: "long_qingyu", eventId: "lady_test" });
-    add("long_qingyu", "qingyu_identity", { mode: "confirmed", sceneId: "ruined_temple", npcId: "long_qingyu", eventId: "night_talk" });
+    if (temple.lady?.identityKnown || (game.relationship && !temple.lady?.arrived)) add("long_qingyu", "qingyu_identity", { mode: "confirmed", sceneId: "ruined_temple", npcId: "long_qingyu", eventId: "night_talk" });
     if (game.mindArt) add("long_qingyu", "qingyu_mind_art", { mode: "later", sceneId: "ruined_temple", npcId: "long_qingyu", eventId: "mind_art_reward" });
   }
 
   const porter = createPorterEncounterState(game.porterEncounter);
-  if (porter.encountered) add("east_road_porter_attack", "porter_found", { sceneId: "east_road", eventId: "east_road_porter" });
-  if (porter.rescued) add("east_road_porter_attack", "porter_rescued", { sceneId: "east_road", eventId: porter.choiceId });
-  if (porter.questioned) add("east_road_porter_attack", "porter_questioned", { mode: "hearsay", sceneId: "east_road", npcId: "east_road_porter", eventId: porter.choiceId });
-  if (porter.searched) add("east_road_porter_attack", "porter_cargo_searched", { sceneId: "east_road", eventId: porter.choiceId });
-  if (porter.encountered && !porter.alive) add("east_road_porter_attack", "porter_lost", { mode: "later", sceneId: "east_road", eventId: porter.choiceId });
+  if (porter.encountered) add("east_road_porter_attack", "porter_found", { sceneId: "ruined_temple", eventId: "temple_porter" });
+  if (porter.rescued) add("east_road_porter_attack", "porter_rescued", { sceneId: "ruined_temple", eventId: porter.choiceId });
+  if (porter.questioned) add("east_road_porter_attack", "porter_questioned", { mode: "hearsay", sceneId: "ruined_temple", npcId: "east_road_porter", eventId: porter.choiceId });
+  if (porter.searched) add("east_road_porter_attack", "porter_cargo_searched", { sceneId: "ruined_temple", eventId: porter.choiceId });
+  if (porter.encountered && !porter.alive) add("east_road_porter_attack", "porter_lost", { mode: "later", sceneId: "ruined_temple", eventId: porter.choiceId });
 
   if (hasAny(originFacts, ["missing_night_boat", "sealed_night_cargo"])) add("purple_river_night_boat", "night_boat_missing", { mode: "hearsay", sceneId: "qinhuai_fish_market", eventId: "origin_fish_market" });
-  if (porter.questioned) add("purple_river_night_boat", "night_boat_porter", { mode: "hearsay", sceneId: "east_road", npcId: "east_road_porter", eventId: porter.choiceId });
+  if (porter.questioned) add("purple_river_night_boat", "night_boat_porter", { mode: "hearsay", sceneId: "ruined_temple", npcId: "east_road_porter", eventId: porter.choiceId });
   if (game.roadTrial === "dive") add("purple_river_night_boat", "night_boat_seen", { mode: "confirmed", sceneId: "purple_gold_river", eventId: "road_trial_dive" });
+
+  if (temple.crisis?.resolved) {
+    add("ruined_temple_pursuit", "pursuers_seek_casket", { mode: "confirmed", sceneId: "ruined_temple", eventId: temple.crisis.method });
+    if (temple.crisis.method === "hide_casket") add("ruined_temple_pursuit", "pursuers_read_marks", { sceneId: "ruined_temple", eventId: temple.crisis.method });
+    if (["drop_rack", "escape_breach", "hide_casket"].includes(temple.crisis.method)) add("ruined_temple_pursuit", "pursuers_route_broken", { mode: "later", sceneId: "ruined_temple", eventId: temple.crisis.method });
+  }
 
   return { state, changes };
 }

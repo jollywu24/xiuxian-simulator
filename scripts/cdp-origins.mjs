@@ -116,32 +116,28 @@ async function createCharacter(originId) {
   await click("start-journey");
 }
 
-async function finishSharedTemple(originId, taskChoice) {
+async function finishSharedTemple(originId, casketChoice) {
   await click("temple-area", "rear");
   await click("inspect-scene-object", "patched_wall");
   await click("temple-object-action", "patched_wall|inspect_wall");
-  await click("inspect-scene-object", "old_well");
-  await click("temple-object-action", "old_well|test_well");
-  await click("inspect-scene-object", "roof_scratches");
-  await click("temple-object-action", "roof_scratches|inspect_scratches");
-  await click("temple-area", "hall");
-  await click("inspect-scene-object", "embers");
-  await click("temple-object-action", "embers|tend_embers");
-  await click("inspect-scene-object", "offering_table");
-  await click("temple-object-action", "offering_table|inspect_offerings");
-  await click("inspect-scene-object", "incense_rack");
-  await click("temple-object-action", "incense_rack|inspect_rack");
-  await click("temple-area", "forecourt");
-  await click("inspect-scene-object", "doorway");
-  await click("temple-object-action", "doorway|listen_at_gate");
-  assert.match(await pageText(), originId === "shen_branch" ? /封药木匣/ : /红绳/);
-  await click("origin-temple-task", taskChoice);
-  await click("lady-choice", "deny_beggar");
-  assert.match(await pageText(), /因爱成恨/);
-  await click("origin-lady-insight");
-  await click("lady-test", "refuse");
-  await click("night-talk", "sincere");
-  await click("receive-mind-art");
+  await click("inspect-scene-object", "patched_wall");
+  await click("temple-object-action", "patched_wall|sound_wall");
+  await click("inspect-scene-object", "patched_wall");
+  await click("temple-casket-action", casketChoice);
+  if (casketChoice === "inspect_casket") {
+    await click("inspect-scene-object", "patched_wall");
+    await click("temple-casket-action", "take_casket_intact");
+  }
+  await click("inspect-scene-object", "blood_trail");
+  await click("temple-object-action", "blood_trail|follow_blood_trail");
+  await click("inspect-scene-actor", "injured_porter");
+  await click("temple-porter-action", "rescue_porter");
+  assert.match(await pageText(), /青衣妇人/);
+  await click("temple-lady-response", "show_evidence");
+  await click("temple-crisis", "hold_door");
+  assert.match(await pageText(), /乌沉药匣|受伤脚夫/);
+  assert.match(await pageText(), /龙青鱼/);
+  await click("accept-temple-outcome");
   await click("to-road-trial");
   await click("road-trial", "dive");
   await click("continue-road");
@@ -199,11 +195,8 @@ await click("origin-prologue-choice", "study_token");
 await click("origin-prologue-choice", "request_writ");
 await click("origin-prologue-choice", "buy_oilcloth");
 await click("origin-prologue-choice", "follow_cart_tracks");
-assert.match(await pageText(), /翻倒的竹篓旁/);
-assert.match(await evaluate(`getComputedStyle(document.querySelector(".scene-canvas")).backgroundImage`), /east-road-porter-v1\.webp/);
-await click("porter-choice", "rescue_question");
 assert.match(await pageText(), /先看清这座庙/);
-await finishSharedTemple("shen_branch", "inspect_box_seal");
+await finishSharedTemple("shen_branch", "inspect_casket");
 await click("open-knowledge");
 assert.equal(await evaluate(`document.querySelectorAll(".knowledge-categories button").length`), 3);
 assert.deepEqual(await evaluate(`[...document.querySelectorAll(".knowledge-categories strong")].map((node) => node.textContent.trim())`), ["全部", "人", "事"]);
@@ -225,7 +218,7 @@ assert.match(await pageText(), /旁支的名字/);
 await click("enter-origin-danroom");
 assert.match(await pageText(), /旁支腰牌/);
 let shenSave = await currentSave();
-assert.equal(shenSave.version, 12);
+assert.equal(shenSave.version, 13);
 assert.deepEqual(shenSave.appearance, DEFAULT_APPEARANCE);
 assert.equal(shenSave.originId, "shen_branch");
 assert.equal(shenSave.originPrologue.taskState, "costly_success");
@@ -241,10 +234,8 @@ await click("origin-prologue-choice", "help_fisher");
 await click("origin-prologue-choice", "inspect_cargo_tag");
 await click("origin-prologue-choice", "take_advance");
 await click("origin-prologue-choice", "take_fisher_route");
-assert.match(await pageText(), /翻倒的竹篓旁/);
-await click("porter-choice", "rescue_search");
 assert.match(await pageText(), /先看清这座庙/);
-await finishSharedTemple("streetborn", "open_package");
+await finishSharedTemple("streetborn", "open_casket");
 assert.match(await pageText(), /红绳已断/);
 await click("origin-delivery-choice", "trade_knowledge");
 assert.match(await pageText(), /一趟跑腿替你换来/);
@@ -267,7 +258,7 @@ const legacy = {
 };
 await writeSaveAndReload(legacy);
 const migrated = await currentSave();
-assert.equal(migrated.version, 12);
+assert.equal(migrated.version, 13);
 assert.deepEqual(migrated.appearance, DEFAULT_APPEARANCE);
 assert.equal(migrated.originId, "shen_branch");
 assert.equal(migrated.originPrologue.completed, true);
@@ -277,7 +268,7 @@ assert.deepEqual(pageErrors, []);
 process.stdout.write(`${JSON.stringify({
   ok: true,
   origins: ["shen_branch", "streetborn", "mystery"],
-  saveVersion: 12,
+  saveVersion: 13,
   responsive: "844x390",
 })}\n`);
 socket.close();

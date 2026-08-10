@@ -197,7 +197,7 @@ export const ORIGIN_LADY_INSIGHTS = {
   streetborn: {
     title: "从雨声里分辨有没有第二道脚步",
     meta: "出身 · 市井子弟",
-    detail: "门外只有她一个人。没有追兵，不代表她没有来意。",
+    detail: "门外眼下只有她一个人的脚印，更远处的雨声却不对。她不是独行，只是比后面的人快了一步。",
     knowledge: "lady_came_alone",
   },
   mystery: {

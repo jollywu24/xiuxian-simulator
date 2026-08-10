@@ -11,7 +11,7 @@ import {
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
   rewindCombatLabDeath,
-} from "./combat-lab-core.mjs?v=20260807.4";
+} from "./combat-lab-core.mjs?v=20260810.1";
 
 const root = document.querySelector("#combat-lab");
 const liveRegion = document.querySelector("#combat-status");

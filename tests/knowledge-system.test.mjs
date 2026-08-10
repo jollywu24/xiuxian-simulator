@@ -81,6 +81,33 @@ test("脚夫遇袭的救人、问话、搜货与失手结果进入不同片段",
   assert.ok(synced.state.items.east_road_porter_attack.fragmentIds.includes("porter_lost"));
 });
 
+test("破庙闭环把药匣、脚夫、龙青鱼和追兵更新成可继续印证的见闻", () => {
+  const porterEncounter = {
+    encountered: true,
+    resolved: true,
+    choiceId: "temple_questioned",
+    rescued: true,
+    questioned: true,
+    searched: true,
+    alive: true,
+  };
+  const templeExploration = {
+    casket: { discovered: true, inspected: true, opened: false, holder: "woodpile", lost: false },
+    porter: { discovered: true, rescued: true, questioned: true, searched: true, alive: true, aidSpent: true },
+    lady: { arrived: true, identityKnown: true, trust: 4, suspicion: 0, debt: 1 },
+    crisis: { resolved: true, method: "hide_casket", pursuers: "misdirected" },
+  };
+  const synced = syncKnowledgeFromGameState(createKnowledgeState(), game({ porterEncounter, templeExploration }));
+  assert.ok(synced.state.items.medicine_casket.fragmentIds.includes("casket_resealed"));
+  assert.ok(synced.state.items.east_road_porter_attack.fragmentIds.includes("porter_questioned"));
+  assert.ok(synced.state.items.long_qingyu.fragmentIds.includes("qingyu_identity"));
+  assert.deepEqual(
+    synced.state.items.ruined_temple_pursuit.fragmentIds,
+    ["pursuers_seek_casket", "pursuers_read_marks", "pursuers_route_broken"],
+  );
+  assert.ok(synced.state.items.purple_river_night_boat.fragmentIds.includes("night_boat_porter"));
+});
+
 test("列表只显示已知条目，只有全部、人、事三类且不暴露完成度", () => {
   const board = createKnowledgeBoard(game(), { category: "person" });
   assert.deepEqual(board.categories.map((entry) => entry.id), ["all", "person", "event"]);

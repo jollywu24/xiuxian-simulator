@@ -1,4 +1,4 @@
-import { ORIGINS } from "./origin-core.mjs?v=20260807.4";
+import { ORIGINS } from "./origin-core.mjs?v=20260810.1";
 
 export const WORLD_FACTS = [
   {

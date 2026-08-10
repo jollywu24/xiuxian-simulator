@@ -1,4 +1,4 @@
-import { getTempleAreaView } from "./temple-exploration.mjs?v=20260807.4";
+import { getTempleAreaView, getTemplePorterView } from "./temple-exploration.mjs?v=20260810.1";
 
 const ASSETS = {
   temple: "./assets/scenes/ruined-temple-stage-v3.webp",
@@ -16,6 +16,9 @@ const EAST_ROAD_SCREENS = new Set(["eastRoadPorter"]);
 
 const TEMPLE_SCREENS = new Set([
   "templeWake",
+  "templeLady",
+  "templeCrisis",
+  "templeDeparture",
   "fateSight",
   "allocation",
   "originTempleTask",
@@ -89,9 +92,14 @@ function templePresentation(screen, state) {
     || Boolean(state.templeExploration?.objectStates?.embers?.actionIds?.includes("tend_embers"))
     || screen !== "templeWake";
   const fateSeen = Boolean(state.destinyRevealed) || screen !== "templeWake";
-  const ladyScreens = new Set(["ladyArrival", "ladyPressure", "ladyTest", "nightTalk", "gameDeath", "quietDeparture", "encounterReward", "mindArt"]);
-  const identityKnown = new Set(["encounterReward", "mindArt"]).has(screen);
+  const ladyScreens = new Set(["templeLady", "templeCrisis", "templeDeparture", "ladyArrival", "ladyPressure", "ladyTest", "nightTalk", "gameDeath", "quietDeparture", "encounterReward", "mindArt"]);
+  const identityKnown = new Set(["templeDeparture", "encounterReward", "mindArt"]).has(screen);
   const actors = [];
+
+  if (explorationMode && exploration.area.id === "rear") {
+    const porter = getTemplePorterView(state.templeExploration);
+    if (porter) actors.push({ ...porter, x: 79, y: 66, kind: "porter" });
+  }
 
   if (ladyScreens.has(screen)) {
     actors.push({
@@ -101,7 +109,9 @@ function templePresentation(screen, state) {
         ? "漕帮帮主夫人。她已经把这一夜的情分与一门水行心法交给你。"
         : screen === "quietDeparture"
           ? "她正踏过门槛离去。这次擦肩之后，再无相遇条件。"
-          : "她没有受伤，也没有追兵。真正危险的是她本人。",
+          : screen === "templeCrisis"
+            ? "她侧身贴着门柱，听着第二批脚步逼近。她没有替你决定要保谁、要留下什么。"
+            : "她循着药匣和追者的脚印而来，进门先看见了你此前留下的一切。",
       x: screen === "quietDeparture" ? 79 : 75.5,
       y: 48,
       kind: "lady",
