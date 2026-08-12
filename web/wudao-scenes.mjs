@@ -1,4 +1,4 @@
-import { getTempleAreaView, getTemplePorterView } from "./temple-exploration.mjs?v=20260810.1";
+import { getTempleAreaView, getTemplePorterView } from "./temple-exploration.mjs?v=20260811.1";
 
 const ASSETS = {
   temple: "./assets/scenes/ruined-temple-stage-v3.webp",

@@ -17684,6 +17684,97 @@ body[data-martial-open="true"] {
 }
 .scene-inspection-done span { margin-right: 6px; color: #ad8b55; }
 
+.scene-context-card {
+  display: grid;
+  min-width: 0;
+  padding: 2px 0 18px;
+  gap: 12px;
+  counter-reset: scene-context-actions;
+}
+
+.scene-context-card > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 9px;
+  color: #b98a48;
+  border-bottom: 1px solid rgba(183, 139, 70, 0.3);
+}
+
+.scene-context-card > header span {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+.scene-context-card > header small {
+  color: #879894;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+.scene-context-card > h1 {
+  margin: 2px 0 0;
+  color: #ddd0ba;
+  font-family: "STKaiti", "KaiTi", "Kaiti SC", var(--font-story);
+  font-size: clamp(22px, 2.25vw, 31px);
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: 0.06em;
+}
+
+.scene-context-card > p {
+  margin: 0;
+  color: #bcb09f;
+  font-family: "STKaiti", "KaiTi", "Kaiti SC", var(--font-story);
+  font-size: clamp(13px, 1.18vw, 16px);
+  line-height: 1.82;
+  letter-spacing: 0.035em;
+}
+
+.scene-context-card .scene-inspection-actions {
+  margin-top: 6px;
+  gap: 8px;
+}
+
+.scene-context-card .scene-inspection-action {
+  position: relative;
+  min-height: 58px;
+  padding: 9px 10px 9px 46px;
+}
+
+.scene-context-card .scene-inspection-action:not(:disabled) { counter-increment: scene-context-actions; }
+
+.scene-context-card .scene-inspection-action:not(:disabled)::before {
+  position: absolute;
+  top: 50%;
+  left: 14px;
+  display: grid;
+  width: 22px;
+  height: 22px;
+  color: #d4a657;
+  border: 1px solid rgba(212, 166, 87, 0.72);
+  border-radius: 50%;
+  content: counter(scene-context-actions);
+  font-family: var(--font-number);
+  font-size: 10px;
+  place-items: center;
+  transform: translateY(-50%);
+}
+
+.scene-context-card .scene-inspection-action:disabled {
+  color: #737b78;
+  border-color: rgba(124, 132, 128, 0.2);
+  background: rgba(17, 20, 19, 0.72);
+  cursor: not-allowed;
+}
+
+.scene-context-card .scene-inspection-action:disabled em,
+.scene-context-card .scene-inspection-action:disabled small {
+  color: #737b78 !important;
+}
+
 .temple-exploration-status {
   display: grid;
   margin: 14px 0 16px;
@@ -17742,6 +17833,13 @@ body[data-martial-open="true"] {
     overflow-y: auto;
   }
   .scene-inspection-action { min-height: 39px; padding: 6px 8px; }
+  .scene-context-card { gap: 8px; padding-bottom: 10px; }
+  .scene-context-card > h1 { font-size: 20px; }
+  .scene-context-card > p { font-size: 12px; line-height: 1.65; }
+  .scene-context-card .scene-inspection-action { min-height: 44px; padding: 6px 7px 6px 38px; }
+  .scene-context-card .scene-inspection-action:not(:disabled)::before { left: 10px; width: 20px; height: 20px; }
+  .scene-context-card .scene-inspection-action strong { font-size: 12px !important; }
+  .scene-context-card .scene-inspection-action small { font-size: 9px !important; }
   .temple-exploration-status { margin: 8px 0 10px; }
   .temple-exploration-status > div { min-height: 44px; padding: 6px 8px; }
 }

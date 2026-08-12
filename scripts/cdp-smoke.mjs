@@ -155,19 +155,16 @@ async function snapshot(label) {
       return { aligned: canvas?.dataset.markersAligned === "true", positions };
     })(),
     sceneInspection: (() => {
-      const shell = document.querySelector(".world-stage-shell")?.getBoundingClientRect();
-      const stage = document.querySelector(".scene-experience")?.getBoundingClientRect();
-      const panel = document.querySelector("[data-scene-inspection]");
-      const rect = panel?.getBoundingClientRect();
-      const line = document.querySelector("[data-scene-inspection-line]");
+      const panel = document.querySelector("[data-scene-context]");
+      const deck = document.querySelector(".narrative-deck");
+      const scene = document.querySelector(".scene-experience");
       return {
-        visible: Boolean(panel?.classList.contains("is-visible")),
+        visible: Boolean(panel),
         text: panel?.innerText?.trim() || "",
         selectedId: document.querySelector(".scene-hotspot.selected")?.dataset.value || "",
-        lineVisible: Boolean(line?.classList.contains("is-visible")),
-        withinScene: Boolean(stage && rect && rect.left >= stage.left - 1 && rect.right <= stage.right + 1 && rect.top >= stage.top - 1 && rect.bottom <= stage.bottom + 1),
-        widthScale: shell?.width && rect ? rect.width / shell.width : 0,
-        heightScale: shell?.width && rect ? rect.height / shell.width : 0,
+        withinNarrative: Boolean(panel && deck?.contains(panel)),
+        withinScene: Boolean(panel && scene?.contains(panel)),
+        actionCount: panel?.querySelectorAll(".scene-inspection-action").length || 0,
       };
     })(),
     sceneFeedback: document.querySelector(".scene-float-feedback")?.textContent?.trim() || "",
@@ -596,26 +593,31 @@ assert.ok(referenceOpening.sceneMarkers.positions.incense_rack[0] > 0.25 && refe
 assert.ok(referenceOpening.sceneMarkers.positions.deity_statue[0] > 0.12 && referenceOpening.sceneMarkers.positions.deity_statue[0] < 0.15);
 await screenshot("wudao-temple-opening-reference-1672x941.png");
 await click("temple-area", "rear");
+const historyBeforeWallInspection = (await snapshot("before-wall-inspection")).narrativeHistoryCount;
 await click("inspect-scene-object", "patched_wall");
 await evaluate(`new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
 const inspectedWall = await snapshot("opening-wall-inspection-1672x941");
 assert.equal(inspectedWall.sceneInspection.visible, true);
 assert.equal(inspectedWall.sceneInspection.selectedId, "patched_wall");
-assert.equal(inspectedWall.sceneInspection.lineVisible, true);
-assert.equal(inspectedWall.sceneInspection.withinScene, true);
-assert.ok(inspectedWall.sceneInspection.widthScale > 0.25 && inspectedWall.sceneInspection.widthScale < 0.29);
-assert.ok(inspectedWall.sceneInspection.heightScale > 0.14 && inspectedWall.sceneInspection.heightScale < 0.5);
-assert.match(inspectedWall.sceneInspection.text, /所见\s*新砌暗墙/);
+assert.equal(inspectedWall.sceneInspection.withinNarrative, true);
+assert.equal(inspectedWall.sceneInspection.withinScene, false);
+assert.ok(inspectedWall.sceneInspection.actionCount >= 1);
+assert.equal(inspectedWall.narrativeHistoryCount, historyBeforeWallInspection);
+assert.match(inspectedWall.sceneInspection.text, /所见[\s\S]*新砌暗墙/);
 assert.match(inspectedWall.sceneInspection.text, /墙灰比别处更深，新旧砖缝对不上/);
 assert.match(inspectedWall.sceneInspection.text, /比较新旧砖缝/);
 assert.match(inspectedWall.sceneInspection.text, /悟性 · 已察觉/);
-assert.match(inspectedWall.currentText, /已见\s*1 \/ 12/);
+await click("inspect-scene-object", "woodpile");
+const switchedShallowContext = await snapshot("opening-shallow-context-switched");
+assert.match(switchedShallowContext.sceneInspection.text, /所见[\s\S]*贴墙湿柴/);
+assert.equal(switchedShallowContext.narrativeHistoryCount, historyBeforeWallInspection);
+await click("inspect-scene-object", "patched_wall");
 await screenshot("wudao-temple-wall-inspection-1672x941.png");
 await clickSceneBlank();
 const blankClosedInspection = await snapshot("opening-wall-inspection-blank-closed");
 assert.equal(blankClosedInspection.sceneInspection.visible, false);
 assert.equal(blankClosedInspection.sceneInspection.selectedId, "");
-assert.equal(blankClosedInspection.sceneInspection.lineVisible, false);
+assert.equal(blankClosedInspection.narrativeHistoryCount, historyBeforeWallInspection);
 await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 622, deviceScaleFactor: 1, mobile: false });
 const shortDesktopOpening = await snapshot("opening-short-desktop");
 assert.ok(shortDesktopOpening.scrollWidth <= 1280);
@@ -647,8 +649,8 @@ await click("inspect-scene-object", "patched_wall");
 await evaluate(`new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
 const phoneLandscapeInspection = await snapshot("opening-wall-inspection-phone-landscape");
 assert.equal(phoneLandscapeInspection.sceneInspection.visible, true);
-assert.equal(phoneLandscapeInspection.sceneInspection.lineVisible, true);
-assert.equal(phoneLandscapeInspection.sceneInspection.withinScene, true);
+assert.equal(phoneLandscapeInspection.sceneInspection.withinNarrative, true);
+assert.equal(phoneLandscapeInspection.sceneInspection.withinScene, false);
 assert.ok(phoneLandscapeInspection.scrollWidth <= 844);
 assert.ok(phoneLandscapeInspection.scrollHeight <= 390);
 await screenshot("wudao-temple-wall-inspection-phone-landscape.png");
@@ -666,6 +668,7 @@ assert.equal(fireChoiceFlow.openingFeed.contextLines, 0);
 assert.equal(fireChoiceFlow.openingFeed.choiceRecords, 1);
 assert.equal(fireChoiceFlow.openingFeed.outcomeLines, 1);
 assert.equal(fireChoiceFlow.openingFeed.currentChoices, 0);
+assert.ok(fireChoiceFlow.narrativeHistoryCount > historyBeforeWallInspection);
 assert.ok(fireChoiceFlow.openingFeed.anchorRatio >= 0 && fireChoiceFlow.openingFeed.anchorRatio < 0.9);
 assert.match(await text(), /炭心重新透红/);
 assert.doesNotMatch(await evaluate(`document.querySelector(".narrative-deck")?.innerText || ""`), /火势\s*12\s*[→-]\s*40/);
@@ -680,7 +683,6 @@ assert.equal(phoneLandscapeChoiceFlow.openingFeed.currentChoices, 0);
 assert.equal(phoneLandscapeChoiceFlow.currentChoicesVisible, false);
 await screenshot("wudao-temple-choice-flow-phone-landscape.png");
 await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
-await click("inspect-scene-object", "embers");
 await click("temple-object-action", "embers|bank_embers");
 await click("inspect-scene-object", "offering_table");
 await click("temple-object-action", "offering_table|inspect_offerings");
@@ -848,7 +850,6 @@ await click("close-martial");
 await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
 await click("inspect-scene-object", "incense_rack");
 await click("temple-object-action", "incense_rack|inspect_rack");
-await click("inspect-scene-object", "incense_rack");
 await click("temple-object-action", "incense_rack|loosen_rack");
 await click("temple-area", "rear");
 await click("inspect-scene-object", "blood_trail");

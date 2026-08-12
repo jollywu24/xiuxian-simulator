@@ -120,12 +120,9 @@ async function finishSharedTemple(originId, casketChoice) {
   await click("temple-area", "rear");
   await click("inspect-scene-object", "patched_wall");
   await click("temple-object-action", "patched_wall|inspect_wall");
-  await click("inspect-scene-object", "patched_wall");
   await click("temple-object-action", "patched_wall|sound_wall");
-  await click("inspect-scene-object", "patched_wall");
   await click("temple-casket-action", casketChoice);
   if (casketChoice === "inspect_casket") {
-    await click("inspect-scene-object", "patched_wall");
     await click("temple-casket-action", "take_casket_intact");
   }
   await click("inspect-scene-object", "blood_trail");
@@ -209,10 +206,11 @@ await click("knowledge-category", "event");
 await click("select-knowledge", "purple_river_night_boat");
 await click("knowledge-related", "place|purple_gold_river|river");
 assert.equal(await evaluate(`document.querySelector(".route-board")?.open`), true);
-await click("open-knowledge-entry", "purple_river_night_boat");
-assert.match(await pageText(), /沿紫金河下水后/);
-await click("close-knowledge");
-assert.match(await pageText(), /封条还在/);
+  await click("open-knowledge-entry", "purple_river_night_boat");
+  assert.match(await pageText(), /沿紫金河下水后/);
+  await click("close-knowledge");
+  await click("inspect-route-node", "river");
+  assert.match(await pageText(), /封条还在/);
 await click("origin-return-choice", "report_trace");
 assert.match(await pageText(), /旁支的名字/);
 await click("enter-origin-danroom");

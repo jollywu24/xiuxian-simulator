@@ -47,7 +47,7 @@ test("the first ruined-temple slice exposes three areas and twelve bounded objec
   assert.equal(getTempleSituationClock(state).remaining, TEMPLE_SITUATION_LIMIT);
 });
 
-test("looking and moving are free, while acting advances the situation", () => {
+test("looking and changing areas are free, while acting advances the situation", () => {
   let state = createTempleExplorationState();
   state = see(state, "embers");
   assert.equal(state.elapsed, 0);

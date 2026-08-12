@@ -50,8 +50,8 @@ import {
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs?v=20260810.1";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260810.1";
+} from "./wudao-core.mjs?v=20260811.1";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260811.1";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -81,7 +81,7 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260810.1";
+} from "./wudao-p0-core.mjs?v=20260811.1";
 import {
   M4_EVIDENCE,
   M4_METHOD,
@@ -100,7 +100,7 @@ import {
   resolveM4Training,
   resolveMoneyInquiry,
   resolveOldHouseChoice,
-} from "./wudao-p1-core.mjs?v=20260810.1";
+} from "./wudao-p1-core.mjs?v=20260811.1";
 import {
   advanceCombatLabCampaign,
   createCombatLabSession,
@@ -111,14 +111,14 @@ import {
   restartCombatLab,
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
-} from "./combat-lab-core.mjs?v=20260810.1";
+} from "./combat-lab-core.mjs?v=20260811.1";
 import {
   INVENTORY_CAPACITY,
   createInventoryBoard,
   formatSilver,
   getInventoryCategory,
   getInventoryUseState,
-} from "./inventory-core.mjs?v=20260810.1";
+} from "./inventory-core.mjs?v=20260811.1";
 import {
   EQUIPMENT_CAPACITY,
   EQUIPMENT_SLOTS,
@@ -132,7 +132,7 @@ import {
   migrateCharacterVitals,
   migrateEquipmentState,
   unequipEquipmentSlot,
-} from "./character-system.mjs?v=20260810.1";
+} from "./character-system.mjs?v=20260811.1";
 import {
   MARTIAL_MASTERIES,
   breakthroughMartial,
@@ -154,9 +154,9 @@ import {
   trainMartial,
   unequipMartial,
   unlockedMartialNodes,
-} from "./martial-system.mjs?v=20260810.1";
-import { SAVE_STORAGE_KEY } from "./save-core.mjs?v=20260810.1";
-import { createSaveStorage } from "./save-storage.mjs?v=20260810.1";
+} from "./martial-system.mjs?v=20260811.1";
+import { SAVE_STORAGE_KEY } from "./save-core.mjs?v=20260811.1";
+import { createSaveStorage } from "./save-storage.mjs?v=20260811.1";
 import {
   ORIGINS,
   ORIGIN_LADY_INSIGHTS,
@@ -169,7 +169,7 @@ import {
   resolveOriginPersonalEvent,
   resolveOriginPrologueChoice,
   resolveOriginTempleTask,
-} from "./origin-core.mjs?v=20260810.1";
+} from "./origin-core.mjs?v=20260811.1";
 import {
   APPEARANCE_BODIES,
   APPEARANCE_CATALOGS,
@@ -178,9 +178,9 @@ import {
   createAppearanceState,
   cycleAppearance,
   normalizeAppearance,
-} from "./appearance-core.mjs?v=20260810.1";
-import { resolvePaperDollLayers } from "./paperdoll-system.mjs?v=20260810.1";
-import { renderPaperDollCanvases } from "./paperdoll-renderer.mjs?v=20260810.1";
+} from "./appearance-core.mjs?v=20260811.1";
+import { resolvePaperDollLayers } from "./paperdoll-system.mjs?v=20260811.1";
+import { renderPaperDollCanvases } from "./paperdoll-renderer.mjs?v=20260811.1";
 import {
   KNOWLEDGE_CATALOG,
   createKnowledgeBoard,
@@ -190,7 +190,7 @@ import {
   recordKnowledgeFragment,
   resolvePorterEncounter,
   syncKnowledgeFromGameState,
-} from "./knowledge-core.mjs?v=20260810.1";
+} from "./knowledge-core.mjs?v=20260811.1";
 import {
   beginTempleArrival,
   createTempleExplorationState,
@@ -209,9 +209,9 @@ import {
   resolveTempleLadyResponse,
   resolveTempleObjectAction,
   resolveTemplePorterAction,
-} from "./temple-exploration.mjs?v=20260810.1";
+} from "./temple-exploration.mjs?v=20260811.1";
 
-const PAPER_DOLL_ASSET_VERSION = "20260810.1";
+const PAPER_DOLL_ASSET_VERSION = "20260811.1";
 
 const app = document.querySelector("#app");
 const BUILD_SHA = document.documentElement.dataset.buildSha || "dev";
@@ -225,6 +225,7 @@ let pendingInventoryFeedback = null;
 let pendingCharacterFeedback = null;
 let pendingMartialFeedback = null;
 let pendingKnowledgeFeedback = null;
+let sceneContext = null;
 const inventoryUi = { open: false, category: "all", selectedId: null };
 const characterUi = { open: false, section: "body", category: "all", selectedId: null, selectedSlot: null };
 const martialUi = { open: false, category: "heart", subtype: "all", selectedId: null, replacing: false };
@@ -558,6 +559,7 @@ function moveTo(screen) {
   characterUi.open = false;
   martialUi.open = false;
   knowledgeUi.open = false;
+  sceneContext = null;
   state.screen = screen;
   saveState();
   render();
@@ -934,8 +936,7 @@ function positionSceneCanvasMarkers(canvas = app.querySelector(".scene-canvas"))
 function sceneInspectionActionsHtml(objectId, actions = []) {
   if (!actions.length) return "";
   const available = actions.filter((action) => !action.disabled);
-  if (!available.length) return `<div class="scene-inspection-done"><span aria-hidden="true">✓</span>这里能做的事已经做完</div>`;
-  return `<div class="scene-inspection-actions" aria-label="可执行行动">${actions.map((action) => {
+  return `<div class="scene-inspection-actions" aria-label="当前对象的行动">${actions.map((action) => {
     const actionName = action.specialKind === "casket" ? "temple-casket-action" : action.specialKind === "porter" ? "temple-porter-action" : "temple-object-action";
     const actionValue = action.specialKind ? action.id : `${objectId}|${action.id}`;
     return `
@@ -943,7 +944,73 @@ function sceneInspectionActionsHtml(objectId, actions = []) {
       <span><strong>${escapeHtml(action.title)}</strong><small>${escapeHtml(action.description)}</small></span>
       <em>${escapeHtml(action.disabled ? action.reason : action.meta)}</em>
     </button>
-  `; }).join("")}</div>`;
+  `; }).join("")}</div>${available.length ? "" : `<div class="scene-inspection-done"><span aria-hidden="true">✓</span>这里能做的事已经做完</div>`}`;
+}
+
+function sceneContextMatches(markerClass, value) {
+  return Boolean(sceneContext
+    && sceneContext.screen === state.screen
+    && sceneContext.markerClass === markerClass
+    && sceneContext.value === value);
+}
+
+function currentSceneContextView() {
+  if (!sceneContext || sceneContext.screen !== state.screen) return null;
+  if (sceneContext.markerClass === "scene-hotspot") {
+    const scene = getScenePresentation(state.screen, state);
+    const item = scene?.hotspots.find((hotspot) => hotspot.id === sceneContext.value);
+    if (!item) return null;
+    return {
+      kind: "所见",
+      title: item.label,
+      detail: item.detail,
+      status: item.id === "patched_wall"
+        ? "悟性 · 已察觉"
+        : item.state === "completed" ? "此处 · 已查明" : "此处 · 已察觉",
+      actions: item.actions || [],
+      value: item.id,
+    };
+  }
+  if (sceneContext.markerClass === "scene-actor") {
+    const scene = getScenePresentation(state.screen, state);
+    const item = scene?.actors.find((actor) => actor.id === sceneContext.value);
+    if (!item) return null;
+    return {
+      kind: "人物",
+      title: item.label,
+      detail: item.detail,
+      status: item.state === "allied" ? "关系 · 已亲近" : item.state === "locked" ? "身份 · 尚未看清" : "身份 · 已察觉",
+      actions: item.actions || [],
+      value: item.id,
+    };
+  }
+  if (sceneContext.markerClass === "route-node") {
+    const route = getRoutePresentation(state.screen, state);
+    const item = route?.nodes.find((node) => node.id === sceneContext.value);
+    if (!item) return null;
+    return {
+      kind: "去处",
+      title: item.label,
+      detail: item.detail,
+      status: item.status === "locked" ? "路径 · 尚未走通" : "路径 · 已知",
+      actions: item.actions || [],
+      value: item.id,
+    };
+  }
+  return null;
+}
+
+function sceneContextHtml() {
+  const context = currentSceneContextView();
+  if (!context) return "";
+  return `
+    <section class="scene-context-card" data-scene-context aria-live="polite">
+      <header><span>${escapeHtml(context.kind)}</span><small>${escapeHtml(context.status)}</small></header>
+      <h1>${escapeHtml(context.title)}</h1>
+      <p>${escapeHtml(context.detail)}</p>
+      ${sceneInspectionActionsHtml(context.value, context.actions)}
+    </section>
+  `;
 }
 
 function sceneVisualHtml() {
@@ -972,26 +1039,24 @@ function sceneVisualHtml() {
         `).join("")}</nav>` : ""}
         ${scene.situationClock ? `<div class="temple-situation-clock ${escapeHtml(scene.situationClock.phase)}" aria-label="${escapeHtml(`${scene.situationClock.label}，${scene.situationClock.phaseLabel}`)}"><span>${escapeHtml(scene.situationClock.label)}</span><strong>${escapeHtml(scene.situationClock.phaseLabel)}</strong><i style="--situation-progress:${Math.min(1, scene.situationClock.elapsed / Math.max(1, state.templeExploration?.limit || 8))}"></i></div>` : ""}
         ${scene.hotspots.map((hotspot) => `
-          <button type="button" class="scene-hotspot ${sceneMarkerState(hotspot.state)}" data-action="inspect-scene-object" data-value="${escapeHtml(hotspot.id)}" data-source-x="${hotspot.x}" data-source-y="${hotspot.y}" style="--marker-x:${hotspot.x}%;--marker-y:${hotspot.y}%" aria-label="查看${escapeHtml(hotspot.label)}" aria-pressed="false">
+          <button type="button" class="scene-hotspot ${sceneMarkerState(hotspot.state)} ${sceneContextMatches("scene-hotspot", hotspot.id) ? "selected" : ""}" data-action="inspect-scene-object" data-value="${escapeHtml(hotspot.id)}" data-source-x="${hotspot.x}" data-source-y="${hotspot.y}" style="--marker-x:${hotspot.x}%;--marker-y:${hotspot.y}%" aria-label="查看${escapeHtml(hotspot.label)}" aria-pressed="${sceneContextMatches("scene-hotspot", hotspot.id) ? "true" : "false"}">
             <span class="scene-hotspot-ring" aria-hidden="true"></span><span class="scene-marker-label">${escapeHtml(hotspot.label)}</span>
           </button>
         `).join("")}
         ${scene.actors.map((actor) => `
-          <button type="button" class="scene-actor ${sceneMarkerState(actor.state)} actor-${escapeHtml(actor.kind)}" data-action="inspect-scene-actor" data-value="${escapeHtml(actor.id)}" data-source-x="${actor.x}" data-source-y="${actor.y}" style="--marker-x:${actor.x}%;--marker-y:${actor.y}%" aria-label="查看${escapeHtml(actor.label)}">
+          <button type="button" class="scene-actor ${sceneMarkerState(actor.state)} actor-${escapeHtml(actor.kind)} ${sceneContextMatches("scene-actor", actor.id) ? "selected" : ""}" data-action="inspect-scene-actor" data-value="${escapeHtml(actor.id)}" data-source-x="${actor.x}" data-source-y="${actor.y}" style="--marker-x:${actor.x}%;--marker-y:${actor.y}%" aria-label="查看${escapeHtml(actor.label)}" aria-pressed="${sceneContextMatches("scene-actor", actor.id) ? "true" : "false"}">
             <span class="actor-silhouette" aria-hidden="true"></span><span class="scene-marker-label">${escapeHtml(actor.label)}</span>
           </button>
         `).join("")}
         ${scene.player?.visible === false ? "" : `<div class="scene-player" data-source-x="${scene.player.x}" data-source-y="${scene.player.y}" style="--marker-x:${scene.player.x}%;--marker-y:${scene.player.y}%" aria-label="${escapeHtml(scene.player.label)}在此"><span aria-hidden="true">命</span><b>${escapeHtml(scene.player.label)}</b></div>`}
       </div>
-      <i class="scene-inspection-line" data-scene-inspection-line aria-hidden="true"></i>
-      <div class="scene-inspection" data-scene-inspection aria-live="polite"><span>眼前</span><strong>${escapeHtml(scene.title)}</strong><p>${escapeHtml(scene.summary)}</p><small data-inspection-status></small><div data-inspection-actions></div></div>
       ${route ? `
         <details class="route-board">
           <summary><span><small>行路图</small><strong>${escapeHtml(route.title)}</strong></span><i>展开</i></summary>
           <div class="route-map" data-route-map>
             <svg class="route-edges" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${routeEdges}</svg>
             ${route.nodes.map((node) => `
-              <button type="button" class="route-node ${["current", "reached", "known", "locked"].includes(node.status) ? node.status : "known"}" data-action="inspect-route-node" data-value="${escapeHtml(node.id)}" style="--node-x:${node.x}%;--node-y:${node.y}%">
+              <button type="button" class="route-node ${["current", "reached", "known", "locked"].includes(node.status) ? node.status : "known"} ${sceneContextMatches("route-node", node.id) ? "selected" : ""}" data-action="inspect-route-node" data-value="${escapeHtml(node.id)}" aria-pressed="${sceneContextMatches("route-node", node.id) ? "true" : "false"}" style="--node-x:${node.x}%;--node-y:${node.y}%">
                 <span aria-hidden="true"></span><b>${escapeHtml(node.label)}</b>
               </button>
             `).join("")}
@@ -1850,6 +1915,7 @@ function hungerLabel() {
 function gameShell(content) {
   const visual = sceneVisualHtml();
   const templeHud = TEMPLE_HUD_SCREENS.has(state.screen);
+  const activeSceneContext = visual ? sceneContextHtml() : "";
   return `
     <main class="game-shell ${visual ? "world-stage-shell" : "story-stage-shell"} screen-${escapeHtml(state.screen)}">
       <header class="topbar">
@@ -1858,7 +1924,7 @@ function gameShell(content) {
         <div class="resource-row">${templeHud ? `<div class="resource fire-resource ${pendingSceneFeedback?.resource === "fire" ? "resource-changed" : ""}" aria-live="polite"><span>火势</span><strong>${Number(state.firePower || 0)}</strong></div><div class="resource hunger-resource ${pendingSceneFeedback?.resource === "hunger" ? "resource-changed" : ""}" aria-live="polite"><span>饥饿</span><strong>${hungerLabel()}</strong></div>` : `<div class="resource"><span>命灯</span><strong>${state.lives}</strong></div><div class="resource"><span>阅历</span><strong>${state.potential}</strong></div>`}</div>
       </header>
       <div class="game-grid">
-        <section class="scene-panel ${visual ? "has-visual-scene" : "narrative-only"}">${visual}<div class="narrative-deck">${narrativeHistoryHtml()}<section class="narrative-current" data-narrative-current>${content}</section></div></section>
+        <section class="scene-panel ${visual ? "has-visual-scene" : "narrative-only"}">${visual}<div class="narrative-deck">${narrativeHistoryHtml()}<section class="narrative-current" data-narrative-current ${activeSceneContext ? "data-scene-context-active=\"true\"" : ""}>${activeSceneContext || content}</section></div></section>
       </div>
       <nav class="utility-dock" aria-label="人物、行囊、武学与见闻">
         <button type="button" class="dock-entry character-panel" data-action="open-character"><span class="dock-glyph glyph-person" aria-hidden="true">人</span><strong>人物</strong></button>
@@ -4142,7 +4208,8 @@ function render() {
     const deck = app.querySelector(".world-stage-shell .narrative-deck");
     const current = deck?.querySelector("[data-narrative-current]");
     const feedAnchor = deck?.querySelector("[data-feed-anchor]");
-    if (deck && feedAnchor) deck.scrollTop = Math.max(0, feedAnchor.offsetTop - deck.clientHeight * 0.24);
+    if (deck && current?.dataset.sceneContextActive === "true") deck.scrollTop = Math.max(0, current.offsetTop - 18);
+    else if (deck && feedAnchor) deck.scrollTop = Math.max(0, feedAnchor.offsetTop - deck.clientHeight * 0.24);
     else if (deck && current) deck.scrollTop = Math.max(0, current.offsetTop - 18);
     if (feedbackWasRendered) {
       const feedback = app.querySelector(".scene-float-feedback");
@@ -4167,71 +4234,17 @@ function render() {
   });
 }
 
-function positionSceneInspectionLine(marker, panel) {
-  const stage = panel.closest(".scene-experience");
-  const line = stage?.querySelector("[data-scene-inspection-line]");
-  if (!line || !marker?.closest(".scene-canvas")) {
-    line?.classList.remove("is-visible");
-    return;
-  }
-  requestAnimationFrame(() => {
-    if (!panel.classList.contains("is-visible") || !marker.classList.contains("selected")) return;
-    const stageRect = stage.getBoundingClientRect();
-    const markerRect = marker.getBoundingClientRect();
-    const panelRect = panel.getBoundingClientRect();
-    const startX = markerRect.left + markerRect.width / 2 - stageRect.left;
-    const startY = markerRect.top + markerRect.height / 2 - stageRect.top;
-    const endX = panelRect.left + panelRect.width * 0.53 - stageRect.left;
-    const endY = panelRect.top - stageRect.top + 1;
-    const deltaX = endX - startX;
-    const deltaY = endY - startY;
-    line.style.setProperty("--inspection-line-x", `${startX}px`);
-    line.style.setProperty("--inspection-line-y", `${startY}px`);
-    line.style.setProperty("--inspection-line-length", `${Math.hypot(deltaX, deltaY)}px`);
-    line.style.setProperty("--inspection-line-angle", `${Math.atan2(deltaY, deltaX)}rad`);
-    line.classList.add("is-visible");
-  });
-}
-
 function closeSceneInspection() {
-  app.querySelectorAll(".scene-hotspot.selected, .scene-actor.selected, .route-node.selected").forEach((marker) => {
-    marker.classList.remove("selected");
-    if (marker.matches("[aria-pressed]")) marker.setAttribute("aria-pressed", "false");
-  });
-  app.querySelector("[data-scene-inspection-line]")?.classList.remove("is-visible");
-  app.querySelector("[data-scene-inspection]")?.classList.remove("is-visible");
+  if (!sceneContext) return false;
+  sceneContext = null;
+  render();
+  return true;
 }
 
-function updateSceneInspection(kind, title, detail, markerClass, value, status = "已察觉", actions = []) {
-  const panel = app.querySelector("[data-scene-inspection]");
-  if (!panel) return;
-  const markers = [...app.querySelectorAll(".scene-hotspot, .scene-actor, .route-node")];
-  const marker = [...app.querySelectorAll(`.${markerClass}`)].find((node) => node.dataset.value === value);
-  const isClosing = Boolean(marker?.classList.contains("selected") && panel.classList.contains("is-visible"));
-  markers.forEach((node) => {
-    node.classList.remove("selected");
-    if (node.matches("[aria-pressed]")) node.setAttribute("aria-pressed", "false");
-  });
-  const line = app.querySelector("[data-scene-inspection-line]");
-  line?.classList.remove("is-visible");
-  if (isClosing) {
-    closeSceneInspection();
-    return;
-  }
-  panel.classList.add("is-visible");
-  const kindNode = panel.querySelector("span");
-  const titleNode = panel.querySelector("strong");
-  const detailNode = panel.querySelector("p");
-  const statusNode = panel.querySelector("[data-inspection-status]");
-  const actionsNode = panel.querySelector("[data-inspection-actions]");
-  if (kindNode) kindNode.textContent = kind;
-  if (titleNode) titleNode.textContent = title;
-  if (detailNode) detailNode.textContent = detail;
-  if (statusNode) statusNode.textContent = status;
-  if (actionsNode) actionsNode.innerHTML = sceneInspectionActionsHtml(value, actions);
-  marker?.classList.add("selected");
-  marker?.setAttribute("aria-pressed", "true");
-  positionSceneInspectionLine(marker, panel);
+function updateSceneInspection(markerClass, value) {
+  const isClosing = sceneContextMatches(markerClass, value);
+  sceneContext = isClosing ? null : { screen: state.screen, markerClass, value };
+  render();
 }
 
 function recordNarrativeChoice(target) {
@@ -4306,6 +4319,28 @@ function recordTempleExplorationChoice(result) {
     choice: result.action.title,
     choiceSource: result.action.cost === 1 ? "耗时一刻" : `耗时${result.action.cost}刻`,
     choiceKind: result.phaseChanged ? "special" : "",
+  };
+  state.narrativeLog = [...(Array.isArray(state.narrativeLog) ? state.narrativeLog : []), record].slice(-64);
+}
+
+function recordTempleSpecialChoice(result, title) {
+  if (!result?.action) return;
+  const area = getTempleArea(state.templeExploration?.areaId);
+  const outcomeLines = [result.outcome, ...(result.phaseOutcomes || [])].filter(Boolean).map((text) => ({
+    type: "narration",
+    speaker: "",
+    role: "outcome",
+    text: String(text).slice(0, 300),
+  }));
+  const record = {
+    id: `${Date.now()}-${state.events.length}`,
+    screen: "templeWake",
+    context: `无名破庙 · ${area.name}`,
+    title,
+    lines: outcomeLines,
+    choice: result.action.title,
+    choiceSource: result.action.cost === 0 ? "当即落定" : result.action.cost === 1 ? "耗时一刻" : `耗时${result.action.cost}刻`,
+    choiceKind: result.phaseOutcomes?.length ? "special" : "",
   };
   state.narrativeLog = [...(Array.isArray(state.narrativeLog) ? state.narrativeLog : []), record].slice(-64);
 }
@@ -4473,29 +4508,24 @@ const handlers = {
     const result = enterTempleArea(state.templeExploration, value);
     if (!result.available || !result.changed) return;
     state.templeExploration = result.state;
+    sceneContext = null;
     track("temple_area_entered", { areaId: value });
     refresh();
   },
   "inspect-scene-object": (value) => {
-    let templeObjectNewlySeen = false;
     if (state.screen === "templeWake") {
       const revealed = revealTempleObject(state.templeExploration, value);
       if (!revealed.available) return;
       state.templeExploration = revealed.state;
       if (revealed.changed) {
-        templeObjectNewlySeen = true;
         track("temple_object_seen", { areaId: state.templeExploration.areaId, objectId: value });
         saveState();
       }
     }
-    if (templeObjectNewlySeen) render();
     const scene = getScenePresentation(state.screen, state);
     const hotspot = scene?.hotspots.find((item) => item.id === value);
     if (!hotspot) return;
-    const status = hotspot.id === "patched_wall"
-      ? "悟性 · 已察觉"
-      : hotspot.state === "completed" ? "此处 · 已查明" : "此处 · 已察觉";
-    updateSceneInspection("所见", hotspot.label, hotspot.detail, "scene-hotspot", value, status, hotspot.actions || []);
+    updateSceneInspection("scene-hotspot", value);
     if (value === "offering_table") {
       const result = recordKnowledgeFragment(state.knowledge, "fresh_temple_peaches", "peaches_seen", { sceneId: "ruined_temple", eventId: "inspect_offering_table" });
       if (result.changed) {
@@ -4546,7 +4576,7 @@ const handlers = {
     const result = resolveTempleCasketAction(state.templeExploration, value, state.originId || state.backgroundId);
     if (!result.available) return;
     state.templeExploration = result.state;
-    appendNarrativeOutcome([result.outcome, ...(result.phaseOutcomes || [])]);
+    recordTempleSpecialChoice(result, "乌沉药匣");
     pendingSceneFeedback = { text: result.action.cost === 1 ? "时辰 +一刻" : `时辰 +${result.action.cost}刻`, tone: "notice", resource: "time" };
     track("temple_casket_action", { actionId: value, status: state.templeExploration.casket });
     if (result.arrivalTriggered) return finishTempleExplorationWindow();
@@ -4557,7 +4587,7 @@ const handlers = {
     const result = resolveTemplePorterAction(state.templeExploration, value);
     if (!result.available) return;
     state.templeExploration = result.state;
-    appendNarrativeOutcome([result.outcome, ...(result.phaseOutcomes || [])]);
+    recordTempleSpecialChoice(result, "受伤脚夫");
     pendingSceneFeedback = value === "rescue_porter"
       ? { text: "内衬 -一块", tone: "danger", resource: "inventory" }
       : { text: result.action.cost ? `时辰 +${result.action.cost}刻` : "活口 · 放弃", tone: "notice", resource: "time" };
@@ -4598,24 +4628,23 @@ const handlers = {
     }
     if (kind !== "place" || !routeId) return;
     knowledgeUi.open = false;
+    sceneContext = { screen: state.screen, markerClass: "route-node", value: routeId };
     render();
     const routeBoard = app.querySelector(".route-board");
     if (!routeBoard) return;
     routeBoard.open = true;
-    [...routeBoard.querySelectorAll(".route-node")].find((node) => node.dataset.value === routeId)?.click();
   },
   "inspect-scene-actor": (value) => {
     const scene = getScenePresentation(state.screen, state);
     const actor = scene?.actors.find((item) => item.id === value);
     if (!actor) return;
-    const status = actor.state === "allied" ? "关系 · 已亲近" : actor.state === "locked" ? "身份 · 尚未看清" : "身份 · 已察觉";
-    updateSceneInspection("人物", actor.label, actor.detail, "scene-actor", value, status, actor.actions || []);
+    updateSceneInspection("scene-actor", value);
   },
   "inspect-route-node": (value) => {
     const route = getRoutePresentation(state.screen, state);
     const node = route?.nodes.find((item) => item.id === value);
     if (!node) return;
-    updateSceneInspection("去处", node.label, node.detail, "route-node", value, node.status === "locked" ? "路径 · 尚未走通" : "路径 · 已知");
+    updateSceneInspection("route-node", value);
   },
   "open-character": () => {
     inventoryUi.open = false;
@@ -6224,6 +6253,7 @@ function resetDebugUiState() {
   pendingCharacterFeedback = null;
   pendingMartialFeedback = null;
   pendingKnowledgeFeedback = null;
+  sceneContext = null;
   Object.assign(inventoryUi, { open: false, category: "all", selectedId: null });
   Object.assign(characterUi, { open: false, section: "body", category: "all", selectedId: null, selectedSlot: null });
   Object.assign(martialUi, { open: false, category: "heart", subtype: "all", selectedId: null, replacing: false, nodeId: null });
@@ -6383,20 +6413,17 @@ document.addEventListener("keydown", (event) => {
     render();
     return;
   }
+  if (event.key === "Escape" && sceneContext) {
+    closeSceneInspection();
+    return;
+  }
   if (event.target.matches("input, textarea") || !/^[1-9]$/.test(event.key)) return;
-  const actions = [...app.querySelectorAll(".action-card:not(:disabled), .inline-button:not(:disabled)")];
+  const actions = [...app.querySelectorAll(".action-card:not(:disabled), .inline-button:not(:disabled), .scene-inspection-action:not(:disabled)")];
   actions[Number(event.key) - 1]?.click();
 });
 
-let sceneInspectionResizeFrame = 0;
 window.addEventListener("resize", () => {
-  cancelAnimationFrame(sceneInspectionResizeFrame);
-  sceneInspectionResizeFrame = requestAnimationFrame(() => {
-    positionSceneCanvasMarkers();
-    const panel = app.querySelector("[data-scene-inspection].is-visible");
-    const marker = app.querySelector(".scene-canvas :is(.scene-hotspot, .scene-actor).selected");
-    if (panel && marker) positionSceneInspectionLine(marker, panel);
-  });
+  requestAnimationFrame(() => positionSceneCanvasMarkers());
 });
 
 window.addEventListener("pagehide", () => {
