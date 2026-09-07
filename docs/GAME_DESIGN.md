@@ -269,7 +269,7 @@ NPC、门派、世家、帮会和朝廷机构属于世界本身，不属于“�
 
 `landing → characterDraft → appearance → 三出身独立序章 → templeWake（三地区／十二对象／八刻局面／药匣／脚夫）→ templeLady（行为反馈）→ templeCrisis（追兵多解法）→ templeDeparture（结果持久化）→ mindArt → roadTrial → roadResult → ending → shenArrival → shenJobs → caoArrival → ... → m4JourneyEnd`
 
-`fateSight`、`allocation`、`templeTasks`、`originTempleTask`与旧龙青鱼连续对话仍可作为旧档迁移标识，但新旅程不再进入这些旧版破庙门槛。版本13会把仍在旧破庙流程中的存档汇入新探索或新来客局面；已经离开破庙的旧档不倒退。
+`fateSight`、`allocation`、`templeTasks`、`originTempleTask`与旧龙青鱼连续对话仍可作为旧档迁移标识，但新旅程不再进入这些旧版破庙门槛。版本14会把仍在旧破庙流程中的存档汇入新探索或新来客局面，并把旧时钟迁入唯一世界时间；已经离开破庙的旧档不倒退。
 
 支路：
 

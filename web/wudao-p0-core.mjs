@@ -1,5 +1,5 @@
-import { P0_ITEMS, P0_LOCATIONS, P0_NPCS, P0_SKILLS, getP0Item, getP0Location, getP0Npc, getP0Skill } from "./content/p0/catalogs.mjs?v=20260811.1";
-import { P0_ARCS, P0_CONTENT_NODES, getP0Arc, getP0Node } from "./content/p0/arcs.mjs?v=20260811.1";
+import { P0_ITEMS, P0_LOCATIONS, P0_NPCS, P0_SKILLS, getP0Item, getP0Location, getP0Npc, getP0Skill } from "./content/p0/catalogs.mjs?v=20260812.1";
+import { P0_ARCS, P0_CONTENT_NODES, getP0Arc, getP0Node } from "./content/p0/arcs.mjs?v=20260812.1";
 
 export { P0_ITEMS, P0_LOCATIONS, P0_NPCS, P0_SKILLS, P0_ARCS, P0_CONTENT_NODES, getP0Item, getP0Location, getP0Npc, getP0Skill, getP0Arc, getP0Node };
 
@@ -46,7 +46,6 @@ export function createP0State() {
     stakeId: null,
     stakeProgress: 0,
     bodyProgress: 0,
-    clock: { year: 427, month: 8, day: 12, segment: "night", weather: "clear" },
     location: "east_pharmacy",
     locationStates: { ruined_temple: "known", monkey_trail: "hidden", ape_water_cave: "hidden" },
     travelOutcome: null,
@@ -71,6 +70,7 @@ export function createP0State() {
 export function migrateP0State(savedP0) {
   const defaults = createP0State();
   const source = savedP0 && typeof savedP0 === "object" ? savedP0 : {};
+  const { clock: _legacyClock, ...sourceWithoutClock } = source;
   const legacyDeathRecords = Array.isArray(source.deathRecords)
     ? source.deathRecords
     : (source.deathMemory || []).map((insight, index) => ({
@@ -83,7 +83,7 @@ export function migrateP0State(savedP0) {
       }));
   return {
     ...defaults,
-    ...source,
+    ...sourceWithoutClock,
     eventStates: { ...defaults.eventStates, ...(source.eventStates || {}) },
     items: { ...defaults.items, ...(source.items || {}) },
     skills: { ...defaults.skills, ...(source.skills || {}) },
@@ -103,7 +103,6 @@ export function migrateP0State(savedP0) {
       yan_jinghong: { ...defaults.relationships.yan_jinghong, ...(source.relationships?.yan_jinghong || {}) },
       temple_monkeys: { ...defaults.relationships.temple_monkeys, ...(source.relationships?.temple_monkeys || {}) },
     },
-    clock: { ...defaults.clock, ...(source.clock || {}) },
     locationStates: { ...defaults.locationStates, ...(source.locationStates || {}) },
   };
 }
@@ -1079,9 +1078,13 @@ export function resolveStakeTraining(p0, context = {}) {
     { id: "stake_first_training", type: "set", path: "stakeProgress", value: 1 },
     { id: "stake_skill_progress", type: "set", path: `skills.${p0.stakeId}.progress`, value: 30 },
     { id: "stake_skill_stage", type: "set", path: `skills.${p0.stakeId}.stage`, value: "learned" },
-    { id: "advance_to_august_fourteen", type: "set", path: "clock", value: { year: 427, month: 8, day: 14, segment: "night", weather: "clear" } },
   ];
-  return { available: true, potentialCost: 120, ...applyEffects(p0, effects) };
+  return {
+    available: true,
+    potentialCost: 120,
+    worldTimeTarget: { year: 427, month: 8, day: 14, shichen: "hai", ke: 0, weather: "clear" },
+    ...applyEffects(p0, effects),
+  };
 }
 
 export function getBodyBreakthroughBoard(p0, context = {}) {
@@ -1099,28 +1102,26 @@ export function resolveBodyBreakthrough(choiceId, p0, context = {}) {
   if (!board.available) return { available: false, board, reason: "突破条件尚未齐备。" };
   if (choiceId === "force") return { available: true, outcome: "death", cause: "强催气血冲断旧伤，桩架散去时心脉也随之停下。", memory: "突破时必须让桩功领着气血走，不能抢在呼吸之前。" };
   if (choiceId !== "steady") return null;
-  return { available: true, outcome: "success", potentialCost: 200, ...applyEffects(p0, [
+  return { available: true, outcome: "success", potentialCost: 200, worldTimeTarget: { year: 427, month: 8, day: 14, shichen: "you", ke: 0, weather: "clear" }, ...applyEffects(p0, [
     { id: "body_stage_progress", type: "set", path: "bodyProgress", value: 1 },
-    { id: "mid_autumn_clock", type: "set", path: "clock", value: { year: 427, month: 8, day: 14, segment: "evening", weather: "clear" } },
   ]) };
 }
 
 export function resolveMidAutumnTravel(routeId, p0, context = {}) {
   const routes = {
-    water: { available: Boolean(context.hasWaterMindArt), outcome: p0.stakeId === "sea_stilling_stake" ? "on_time_fresh" : "on_time", clock: { year: 427, month: 8, day: 15, segment: "dawn", weather: "clear" }, wound: null },
-    road: { available: true, outcome: "late", clock: { year: 427, month: 8, day: 15, segment: "afternoon", weather: "clear" }, wound: null },
-    mountain: { available: true, outcome: p0.stakeId === "deadwood_stake" ? "wounded_stable" : "wounded", clock: { year: 427, month: 8, day: 15, segment: "morning", weather: "clear" }, wound: { id: "mountain_sprain", type: "strain", bodyPart: "leg", severity: p0.stakeId === "deadwood_stake" ? 1 : 3, tags: ["limits_chase"] } },
-    delay: { available: true, outcome: "missed", clock: { year: 427, month: 8, day: 16, segment: "morning", weather: "clear" }, wound: null },
+    water: { available: Boolean(context.hasWaterMindArt), outcome: p0.stakeId === "sea_stilling_stake" ? "on_time_fresh" : "on_time", worldTimeTarget: { year: 427, month: 8, day: 15, shichen: "mao", ke: 0, weather: "clear" }, wound: null },
+    road: { available: true, outcome: "late", worldTimeTarget: { year: 427, month: 8, day: 15, shichen: "shen", ke: 0, weather: "clear" }, wound: null },
+    mountain: { available: true, outcome: p0.stakeId === "deadwood_stake" ? "wounded_stable" : "wounded", worldTimeTarget: { year: 427, month: 8, day: 15, shichen: "chen", ke: 0, weather: "clear" }, wound: { id: "mountain_sprain", type: "strain", bodyPart: "leg", severity: p0.stakeId === "deadwood_stake" ? 1 : 3, tags: ["limits_chase"] } },
+    delay: { available: true, outcome: "missed", worldTimeTarget: { year: 427, month: 8, day: 16, shichen: "chen", ke: 0, weather: "clear" }, wound: null },
   };
   const route = routes[routeId];
   if (!route?.available) return { available: false, reason: "没有能在夜水中借力的心法。" };
   const effects = [
     { id: "mid_autumn_route", type: "set", path: "travelOutcome", value: route.outcome },
-    { id: "mid_autumn_time", type: "set", path: "clock", value: route.clock },
     { id: "arrive_ruined_temple", type: "set", path: "location", value: "ruined_temple" },
   ];
   if (route.wound) effects.push({ id: "mountain_route_wound", type: "wound", wound: route.wound });
-  return { available: true, outcome: route.outcome, onTime: !["late", "missed"].includes(route.outcome), ...applyEffects(p0, effects) };
+  return { available: true, outcome: route.outcome, onTime: !["late", "missed"].includes(route.outcome), worldTimeTarget: route.worldTimeTarget, ...applyEffects(p0, effects) };
 }
 
 export function resolveMonkeyTest(choiceId, p0, context = {}) {

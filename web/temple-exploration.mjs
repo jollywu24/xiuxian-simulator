@@ -1,3 +1,11 @@
+import {
+  DEFAULT_WORLD_TIME,
+  advanceWorldTime,
+  createWorldTime,
+  elapsedKeSince,
+  formatWorldTime,
+} from "./world-time.mjs?v=20260812.1";
+
 const ORIGIN_IDS = new Set(["shen_branch", "streetborn", "mystery"]);
 
 export const TEMPLE_SITUATION_LIMIT = 8;
@@ -202,18 +210,6 @@ export const TEMPLE_OBJECTS = Object.freeze([
 const OBJECT_BY_ID = new Map(TEMPLE_OBJECTS.map((object) => [object.id, object]));
 const ACTION_BY_ID = new Map(Object.values(ACTIONS).map((action) => [action.id, action]));
 
-const TIME_LABELS = Object.freeze([
-  "亥时",
-  "亥时一刻",
-  "亥时二刻",
-  "亥时三刻",
-  "子时",
-  "子时一刻",
-  "子时二刻",
-  "子时三刻",
-  "丑时将尽",
-]);
-
 const PHASE_EVENTS = Object.freeze([
   Object.freeze({ at: 4, id: "driving_rain", text: "雨势忽然压低，檐水连成一道白帘。庙外旧痕正在被冲掉。" }),
   Object.freeze({ at: 7, id: "footsteps", text: "雨声里多出一阵不紧不慢的脚步，正沿东面官道靠近。" }),
@@ -386,7 +382,17 @@ function normalizeCrisis(saved = {}) {
   };
 }
 
-export function createTempleExplorationState(saved = null) {
+function templeTiming(incoming, worldTime = DEFAULT_WORLD_TIME) {
+  const currentTime = createWorldTime(worldTime);
+  const legacyElapsed = Math.min(TEMPLE_SITUATION_LIMIT, Math.max(0, Math.floor(Number(incoming.elapsed || 0))));
+  const enteredAtKe = Number.isFinite(Number(incoming.enteredAtKe))
+    ? Math.max(0, Math.floor(Number(incoming.enteredAtKe)))
+    : Math.max(0, currentTime.totalKe - legacyElapsed);
+  const elapsed = elapsedKeSince(currentTime, enteredAtKe, TEMPLE_SITUATION_LIMIT);
+  return { currentTime, enteredAtKe, elapsed };
+}
+
+export function createTempleExplorationState(saved = null, worldTime = DEFAULT_WORLD_TIME) {
   const incoming = saved && typeof saved === "object" && !Array.isArray(saved) ? saved : {};
   const objectIds = new Set(TEMPLE_OBJECTS.map((object) => object.id));
   const areaIds = new Set(TEMPLE_AREAS.map((area) => area.id));
@@ -400,16 +406,16 @@ export function createTempleExplorationState(saved = null) {
       actionIds: uniqueKnown(prior?.actionIds, allowedActions),
     };
   }
-  const elapsed = Math.min(TEMPLE_SITUATION_LIMIT, Math.max(0, Math.floor(Number(incoming.elapsed || 0))));
+  const timing = templeTiming(incoming, worldTime);
   const areaId = areaIds.has(incoming.areaId) ? incoming.areaId : "hall";
+  const arrivalTriggered = Boolean(incoming.arrivalTriggered || timing.elapsed >= TEMPLE_SITUATION_LIMIT);
   return {
     areaId,
     visitedAreaIds: uniqueKnown(["hall", ...(incoming.visitedAreaIds || [])], areaIds),
     seenObjectIds: uniqueKnown(incoming.seenObjectIds, objectIds),
-    elapsed,
-    limit: TEMPLE_SITUATION_LIMIT,
-    phase: phaseForElapsed(elapsed),
-    arrivalTriggered: Boolean(incoming.arrivalTriggered || elapsed >= TEMPLE_SITUATION_LIMIT),
+    enteredAtKe: timing.enteredAtKe,
+    phase: arrivalTriggered ? "arrival" : phaseForElapsed(timing.elapsed),
+    arrivalTriggered,
     originClueIds: [...new Set(Array.isArray(incoming.originClueIds) ? incoming.originClueIds.filter((item) => typeof item === "string") : [])].slice(0, 12),
     casket: normalizeCasket(incoming.casket),
     porter: normalizePorter(incoming.porter),
@@ -420,12 +426,18 @@ export function createTempleExplorationState(saved = null) {
     actionLog: (Array.isArray(incoming.actionLog) ? incoming.actionLog : [])
       .filter((entry) => entry && ACTION_BY_ID.has(entry.actionId) && OBJECT_BY_ID.has(entry.objectId))
       .slice(-24)
-      .map((entry) => ({ objectId: entry.objectId, actionId: entry.actionId, at: Math.max(0, Number(entry.at || 0)) })),
+      .map((entry) => ({
+        objectId: entry.objectId,
+        actionId: entry.actionId,
+        atKe: Number.isFinite(Number(entry.atKe))
+          ? Math.max(0, Math.floor(Number(entry.atKe)))
+          : timing.enteredAtKe + Math.max(0, Number(entry.at || 0)),
+      })),
   };
 }
 
-export function migrateTempleExplorationState(savedGame = {}) {
-  let existing = createTempleExplorationState(savedGame?.templeExploration);
+export function migrateTempleExplorationState(savedGame = {}, worldTime = DEFAULT_WORLD_TIME) {
+  let existing = createTempleExplorationState(savedGame?.templeExploration, worldTime);
   if (savedGame?.templeExploration) {
     const legacyPorter = savedGame?.porterEncounter;
     if (legacyPorter?.encountered && !existing.porter.discovered) {
@@ -456,13 +468,12 @@ export function migrateTempleExplorationState(savedGame = {}) {
     const prior = state.objectStates[objectId];
     state = {
       ...state,
-      elapsed: Math.min(state.limit, state.elapsed + 1),
       seenObjectIds: [...new Set([...state.seenObjectIds, objectId])],
       objectStates: {
         ...state.objectStates,
         [objectId]: { ...prior, seen: true, stage, actionIds: [...new Set([...prior.actionIds, actionId])] },
       },
-      actionLog: [...state.actionLog, { objectId, actionId, at: Math.min(state.limit, state.elapsed + 1) }],
+      actionLog: [...state.actionLog, { objectId, actionId, atKe: state.enteredAtKe + state.actionLog.length + 1 }],
     };
   };
   if (legacyOpening.fireTended || legacyActions.has("tend_fire")) applyLegacyAction("embers", "tend_embers", "kindled");
@@ -491,20 +502,21 @@ export function migrateTempleExplorationState(savedGame = {}) {
       },
     };
   }
-  const elapsed = Math.min(state.limit, state.elapsed);
-  return { ...state, elapsed, phase: phaseForElapsed(elapsed), arrivalTriggered: elapsed >= state.limit };
+  const elapsed = elapsedKeSince(worldTime, state.enteredAtKe, TEMPLE_SITUATION_LIMIT);
+  return { ...state, phase: phaseForElapsed(elapsed), arrivalTriggered: elapsed >= TEMPLE_SITUATION_LIMIT };
 }
 
 export function getTempleArea(areaId) {
   return TEMPLE_AREAS.find((area) => area.id === areaId) || TEMPLE_AREAS[1];
 }
 
-export function getTempleSituationClock(exploration) {
-  const state = createTempleExplorationState(exploration);
+export function getTempleSituationClock(exploration, worldTime = DEFAULT_WORLD_TIME) {
+  const state = createTempleExplorationState(exploration, worldTime);
+  const elapsed = elapsedKeSince(worldTime, state.enteredAtKe, TEMPLE_SITUATION_LIMIT);
   return {
-    elapsed: state.elapsed,
-    remaining: Math.max(0, state.limit - state.elapsed),
-    label: TIME_LABELS[state.elapsed] || TIME_LABELS.at(-1),
+    elapsed,
+    remaining: Math.max(0, TEMPLE_SITUATION_LIMIT - elapsed),
+    label: formatWorldTime(worldTime).time,
     phase: state.phase,
     phaseLabel: state.phase === "arrival"
       ? "门外有人"
@@ -516,8 +528,8 @@ export function getTempleSituationClock(exploration) {
   };
 }
 
-export function enterTempleArea(exploration, areaId) {
-  const state = createTempleExplorationState(exploration);
+export function enterTempleArea(exploration, areaId, worldTime = DEFAULT_WORLD_TIME) {
+  const state = createTempleExplorationState(exploration, worldTime);
   if (!TEMPLE_AREAS.some((area) => area.id === areaId)) return { available: false, reason: "这条路眼下走不通。", state };
   return {
     available: true,
@@ -530,8 +542,8 @@ export function enterTempleArea(exploration, areaId) {
   };
 }
 
-export function revealTempleObject(exploration, objectId) {
-  const state = createTempleExplorationState(exploration);
+export function revealTempleObject(exploration, objectId, worldTime = DEFAULT_WORLD_TIME) {
+  const state = createTempleExplorationState(exploration, worldTime);
   const object = OBJECT_BY_ID.get(objectId);
   if (!object || object.areaId !== state.areaId) return { available: false, reason: "你在这里看不见那件东西。", state };
   const wasSeen = state.seenObjectIds.includes(objectId);
@@ -590,8 +602,8 @@ function availableActionsForObject(object, objectState) {
     });
 }
 
-export function getTempleObjectView(exploration, objectId, originId = "mystery") {
-  const state = createTempleExplorationState(exploration);
+export function getTempleObjectView(exploration, objectId, originId = "mystery", worldTime = DEFAULT_WORLD_TIME) {
+  const state = createTempleExplorationState(exploration, worldTime);
   const object = OBJECT_BY_ID.get(objectId);
   if (!object) return null;
   const objectState = state.objectStates[object.id];
@@ -625,21 +637,20 @@ export function getTempleObjectView(exploration, objectId, originId = "mystery")
   };
 }
 
-export function getTempleAreaView(exploration, originId = "mystery") {
-  const state = createTempleExplorationState(exploration);
+export function getTempleAreaView(exploration, originId = "mystery", worldTime = DEFAULT_WORLD_TIME) {
+  const state = createTempleExplorationState(exploration, worldTime);
   const area = getTempleArea(state.areaId);
   return {
     area,
     areas: TEMPLE_AREAS.map((entry) => ({ ...entry, current: entry.id === area.id, visited: state.visitedAreaIds.includes(entry.id) })),
     objects: TEMPLE_OBJECTS
       .filter((object) => object.areaId === area.id)
-      .map((object) => getTempleObjectView(state, object.id, originId)),
-    clock: getTempleSituationClock(state),
+      .map((object) => getTempleObjectView(state, object.id, originId, worldTime)),
   };
 }
 
-export function resolveTempleObjectAction(exploration, objectId, actionId, originId = "mystery") {
-  const state = createTempleExplorationState(exploration);
+export function resolveTempleObjectAction(exploration, objectId, actionId, originId = "mystery", worldTime = DEFAULT_WORLD_TIME) {
+  const state = createTempleExplorationState(exploration, worldTime);
   if (state.arrivalTriggered) return { available: false, reason: "门外的脚步已经到了，眼下顾不得再查。", state };
   const object = OBJECT_BY_ID.get(objectId);
   const action = ACTION_BY_ID.get(actionId);
@@ -651,10 +662,12 @@ export function resolveTempleObjectAction(exploration, objectId, actionId, origi
   if (objectState.actionIds.includes(actionId)) return { available: false, reason: "这件事已经做过。", state };
   if (action.requiresStage && objectState.stage !== action.requiresStage) return { available: false, reason: "先查清这件东西。", state };
 
-  const elapsed = Math.min(state.limit, state.elapsed + action.cost);
+  const priorElapsed = elapsedKeSince(worldTime, state.enteredAtKe, TEMPLE_SITUATION_LIMIT);
+  const nextWorldTime = advanceWorldTime(worldTime, action.cost);
+  const elapsed = elapsedKeSince(nextWorldTime, state.enteredAtKe, TEMPLE_SITUATION_LIMIT);
   const previousPhase = state.phase;
   const phase = phaseForElapsed(elapsed);
-  const arrivalTriggered = elapsed >= state.limit;
+  const arrivalTriggered = elapsed >= TEMPLE_SITUATION_LIMIT;
   const nextObjectState = {
     ...objectState,
     seen: true,
@@ -663,12 +676,11 @@ export function resolveTempleObjectAction(exploration, objectId, actionId, origi
   };
   const next = {
     ...state,
-    elapsed,
     phase,
     arrivalTriggered,
     seenObjectIds: [...new Set([...state.seenObjectIds, objectId])],
     objectStates: { ...state.objectStates, [objectId]: nextObjectState },
-    actionLog: [...state.actionLog, { objectId, actionId, at: elapsed }].slice(-24),
+    actionLog: [...state.actionLog, { objectId, actionId, atKe: nextWorldTime.totalKe }].slice(-24),
     originClueIds: ORIGIN_OBJECT_INSIGHTS[originId]?.[objectId]
       ? [...new Set([...state.originClueIds, `${originId}:${objectId}`])]
       : state.originClueIds,
@@ -680,11 +692,12 @@ export function resolveTempleObjectAction(exploration, objectId, actionId, origi
       : state.porter,
   };
   const phaseOutcomes = PHASE_EVENTS
-    .filter((event) => state.elapsed < event.at && elapsed >= event.at)
+    .filter((event) => priorElapsed < event.at && elapsed >= event.at)
     .map((event) => event.text);
   const phaseOutcome = phaseOutcomes.at(-1) || "";
   return {
     available: true,
+    worldTime: nextWorldTime,
     state: next,
     object,
     action,
@@ -696,17 +709,20 @@ export function resolveTempleObjectAction(exploration, objectId, actionId, origi
   };
 }
 
-function advanceSituation(state, cost) {
-  const elapsed = Math.min(state.limit, state.elapsed + Math.max(0, Number(cost || 0)));
+function advanceSituation(state, cost, worldTime) {
+  const priorElapsed = elapsedKeSince(worldTime, state.enteredAtKe, TEMPLE_SITUATION_LIMIT);
+  const nextWorldTime = advanceWorldTime(worldTime, cost);
+  const elapsed = elapsedKeSince(nextWorldTime, state.enteredAtKe, TEMPLE_SITUATION_LIMIT);
   const phase = phaseForElapsed(elapsed);
   return {
-    state: { ...state, elapsed, phase, arrivalTriggered: elapsed >= state.limit },
-    phaseOutcomes: PHASE_EVENTS.filter((event) => state.elapsed < event.at && elapsed >= event.at).map((event) => event.text),
+    state: { ...state, phase, arrivalTriggered: elapsed >= TEMPLE_SITUATION_LIMIT },
+    worldTime: nextWorldTime,
+    phaseOutcomes: PHASE_EVENTS.filter((event) => priorElapsed < event.at && elapsed >= event.at).map((event) => event.text),
   };
 }
 
-export function resolveTempleCasketAction(exploration, actionId, originId = "mystery") {
-  const state = createTempleExplorationState(exploration);
+export function resolveTempleCasketAction(exploration, actionId, originId = "mystery", worldTime = DEFAULT_WORLD_TIME) {
+  const state = createTempleExplorationState(exploration, worldTime);
   const action = CASKET_ACTIONS[actionId];
   if (!action || !state.casket.discovered || state.casket.lost || state.casket.holder === "woodpile") {
     return { available: false, reason: "眼下碰不到那只药匣。", state };
@@ -715,7 +731,7 @@ export function resolveTempleCasketAction(exploration, actionId, originId = "mys
   if (actionId === "inspect_casket" && state.casket.inspected) return { available: false, reason: "封口与泥痕已经看过。", state };
   if (actionId === "take_casket_intact" && (state.casket.holder === "player" || state.casket.opened)) return { available: false, reason: state.casket.opened ? "封口已经拆开。" : "药匣已经在你身上。", state };
   if (actionId === "open_casket" && state.casket.opened) return { available: false, reason: "药匣已经拆开。", state };
-  const advanced = advanceSituation(state, action.cost);
+  const advanced = advanceSituation(state, action.cost, worldTime);
   const casket = {
     ...advanced.state.casket,
     inspected: advanced.state.casket.inspected || actionId === "inspect_casket" || actionId === "open_casket",
@@ -730,6 +746,7 @@ export function resolveTempleCasketAction(exploration, actionId, originId = "mys
   };
   return {
     available: true,
+    worldTime: advanced.worldTime,
     action,
     outcome: outcomes[actionId],
     phaseOutcomes: advanced.phaseOutcomes,
@@ -742,8 +759,8 @@ export function resolveTempleCasketAction(exploration, actionId, originId = "mys
   };
 }
 
-export function getTemplePorterView(exploration) {
-  const state = createTempleExplorationState(exploration);
+export function getTemplePorterView(exploration, worldTime = DEFAULT_WORLD_TIME) {
+  const state = createTempleExplorationState(exploration, worldTime);
   if (!state.porter.discovered) return null;
   const actions = Object.values(PORTER_ACTIONS).map((action) => {
     const completed = action.id === "rescue_porter" ? state.porter.rescued
@@ -773,8 +790,8 @@ export function getTemplePorterView(exploration) {
   };
 }
 
-export function resolveTemplePorterAction(exploration, actionId) {
-  const state = createTempleExplorationState(exploration);
+export function resolveTemplePorterAction(exploration, actionId, worldTime = DEFAULT_WORLD_TIME) {
+  const state = createTempleExplorationState(exploration, worldTime);
   const action = PORTER_ACTIONS[actionId];
   if (!action || !state.porter.discovered || state.porter.alive === false || state.arrivalTriggered) {
     return { available: false, reason: "眼下不能这样处置脚夫。", state };
@@ -786,7 +803,7 @@ export function resolveTemplePorterAction(exploration, actionId) {
     || (actionId === "abandon_porter" && state.porter.abandoned)) {
     return { available: false, reason: "这件事已经做过。", state };
   }
-  const advanced = advanceSituation(state, action.cost);
+  const advanced = advanceSituation(state, action.cost, worldTime);
   const abandoned = actionId === "abandon_porter";
   const porter = {
     ...advanced.state.porter,
@@ -806,6 +823,7 @@ export function resolveTemplePorterAction(exploration, actionId) {
   };
   return {
     available: true,
+    worldTime: advanced.worldTime,
     action,
     outcome: outcomes[actionId],
     phaseOutcomes: advanced.phaseOutcomes,
@@ -814,8 +832,8 @@ export function resolveTemplePorterAction(exploration, actionId) {
   };
 }
 
-export function beginTempleArrival(exploration) {
-  const state = createTempleExplorationState(exploration);
+export function beginTempleArrival(exploration, worldTime = DEFAULT_WORLD_TIME) {
+  const state = createTempleExplorationState(exploration, worldTime);
   const porter = state.porter.discovered && !state.porter.rescued && state.porter.alive !== false
     ? { ...state.porter, alive: false, resolved: true }
     : { ...state.porter, resolved: state.porter.discovered ? true : state.porter.resolved };
@@ -854,7 +872,6 @@ export function beginTempleArrival(exploration) {
   if (porter.questioned) observations.push("脚夫已经说出无灯夜船与追者认货的规矩");
   return {
     ...state,
-    elapsed: state.limit,
     phase: "arrival",
     arrivalTriggered: true,
     porter,

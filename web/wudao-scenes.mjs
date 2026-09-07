@@ -1,4 +1,4 @@
-import { getTempleAreaView, getTemplePorterView } from "./temple-exploration.mjs?v=20260811.1";
+import { getTempleAreaView, getTemplePorterView } from "./temple-exploration.mjs?v=20260812.1";
 
 const ASSETS = {
   temple: "./assets/scenes/ruined-temple-stage-v3.webp",
@@ -87,7 +87,7 @@ function hasInventory(state, id) {
 
 function templePresentation(screen, state) {
   const explorationMode = screen === "templeWake";
-  const exploration = explorationMode ? getTempleAreaView(state.templeExploration, state.originId || state.backgroundId) : null;
+  const exploration = explorationMode ? getTempleAreaView(state.templeExploration, state.originId || state.backgroundId, state.worldTime) : null;
   const fireTended = Boolean(state.templeOpening?.fireTended)
     || Boolean(state.templeExploration?.objectStates?.embers?.actionIds?.includes("tend_embers"))
     || screen !== "templeWake";
@@ -97,7 +97,7 @@ function templePresentation(screen, state) {
   const actors = [];
 
   if (explorationMode && exploration.area.id === "rear") {
-    const porter = getTemplePorterView(state.templeExploration);
+    const porter = getTemplePorterView(state.templeExploration, state.worldTime);
     if (porter) actors.push({ ...porter, x: 79, y: 66, kind: "porter" });
   }
 
@@ -133,7 +133,6 @@ function templePresentation(screen, state) {
     tone: screen === "gameDeath" ? "death" : "rain",
     areaId: exploration?.area.id || null,
     areaNav: exploration?.areas || [],
-    situationClock: exploration?.clock || null,
     hotspots: explorationMode ? exploration.objects : [
       {
         id: "embers",

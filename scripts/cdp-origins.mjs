@@ -192,7 +192,7 @@ await click("origin-prologue-choice", "study_token");
 await click("origin-prologue-choice", "request_writ");
 await click("origin-prologue-choice", "buy_oilcloth");
 await click("origin-prologue-choice", "follow_cart_tracks");
-assert.match(await pageText(), /先看清这座庙/);
+assert.match(await pageText(), /雨从残瓦间漏下来/);
 await finishSharedTemple("shen_branch", "inspect_casket");
 await click("open-knowledge");
 assert.equal(await evaluate(`document.querySelectorAll(".knowledge-categories button").length`), 3);
@@ -206,17 +206,17 @@ await click("knowledge-category", "event");
 await click("select-knowledge", "purple_river_night_boat");
 await click("knowledge-related", "place|purple_gold_river|river");
 assert.equal(await evaluate(`document.querySelector(".route-board")?.open`), true);
-  await click("open-knowledge-entry", "purple_river_night_boat");
-  assert.match(await pageText(), /沿紫金河下水后/);
-  await click("close-knowledge");
-  await click("inspect-route-node", "river");
-  assert.match(await pageText(), /封条还在/);
+await click("open-knowledge-entry", "purple_river_night_boat");
+assert.match(await pageText(), /沿紫金河下水后/);
+await click("close-knowledge");
+await click("inspect-route-node", "river");
+assert.match(await pageText(), /封条还在/);
 await click("origin-return-choice", "report_trace");
 assert.match(await pageText(), /旁支的名字/);
 await click("enter-origin-danroom");
 assert.match(await pageText(), /旁支腰牌/);
 let shenSave = await currentSave();
-assert.equal(shenSave.version, 13);
+assert.equal(shenSave.version, 14);
 assert.deepEqual(shenSave.appearance, DEFAULT_APPEARANCE);
 assert.equal(shenSave.originId, "shen_branch");
 assert.equal(shenSave.originPrologue.taskState, "costly_success");
@@ -232,7 +232,7 @@ await click("origin-prologue-choice", "help_fisher");
 await click("origin-prologue-choice", "inspect_cargo_tag");
 await click("origin-prologue-choice", "take_advance");
 await click("origin-prologue-choice", "take_fisher_route");
-assert.match(await pageText(), /先看清这座庙/);
+assert.match(await pageText(), /雨从残瓦间漏下来/);
 await finishSharedTemple("streetborn", "open_casket");
 assert.match(await pageText(), /红绳已断/);
 await click("origin-delivery-choice", "trade_knowledge");
@@ -256,17 +256,39 @@ const legacy = {
 };
 await writeSaveAndReload(legacy);
 const migrated = await currentSave();
-assert.equal(migrated.version, 13);
+assert.equal(migrated.version, 14);
 assert.deepEqual(migrated.appearance, DEFAULT_APPEARANCE);
 assert.equal(migrated.originId, "shen_branch");
 assert.equal(migrated.originPrologue.completed, true);
 assert.equal(migrated.screen, "shenMeeting");
 
+const legacyTemple = structuredClone(migrated);
+legacyTemple.version = 13;
+legacyTemple.screen = "templeWake";
+delete legacyTemple.worldTime;
+legacyTemple.p0 = {
+  ...legacyTemple.p0,
+  started: false,
+  clock: { year: 427, month: 8, day: 12, segment: "night", weather: "rain" },
+};
+legacyTemple.templeExploration = {
+  ...legacyTemple.templeExploration,
+  elapsed: 4,
+};
+delete legacyTemple.templeExploration.enteredAtKe;
+await writeSaveAndReload(legacyTemple);
+const migratedTemple = await currentSave();
+assert.equal(migratedTemple.version, 14);
+assert.equal("clock" in migratedTemple.p0, false);
+assert.equal("elapsed" in migratedTemple.templeExploration, false);
+assert.equal(migratedTemple.worldTime.totalKe - migratedTemple.templeExploration.enteredAtKe, 4);
+assert.match(await pageText(), /亥时四刻/);
+
 assert.deepEqual(pageErrors, []);
 process.stdout.write(`${JSON.stringify({
   ok: true,
   origins: ["shen_branch", "streetborn", "mystery"],
-  saveVersion: 13,
+  saveVersion: 14,
   responsive: "844x390",
 })}\n`);
 socket.close();

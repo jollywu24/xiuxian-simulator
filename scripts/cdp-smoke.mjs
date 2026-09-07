@@ -168,6 +168,8 @@ async function snapshot(label) {
       };
     })(),
     sceneFeedback: document.querySelector(".scene-float-feedback")?.textContent?.trim() || "",
+    worldTimeText: document.querySelector(".weather-clock small")?.textContent?.trim() || "",
+    sceneClockCount: document.querySelectorAll(".temple-situation-clock").length,
     fireKindled: Boolean(document.querySelector(".scene-canvas.fire-kindled")),
     openingFeed: (() => {
       const deck = document.querySelector(".narrative-deck")?.getBoundingClientRect();
@@ -564,10 +566,13 @@ await screenshot("wudao-appearance-female-look-2.png");
 await click("confirm-appearance");
 await click("select-vow", "path");
 await click("start-journey");
-assert.match(await text(), /先看清这座庙/);
+assert.match(await text(), /雨从残瓦间漏下来/);
+assert.match(await text(), /你是被冷醒的/);
+assert.match(await text(), /炭火已经只剩一点红/);
+assert.match(await text(), /庙外的风一阵紧过一阵/);
 assert.match(await text(), /夜雨/);
 assert.match(await text(), /亥时/);
-assert.match(await text(), /点场景中的物件/);
+assert.doesNotMatch(await text(), /先扫视三处|所在\s*大殿|已见\s*0 \/ 12|余裕|你不可能在来人之前把每件事都查完/);
 assert.match(await text(), /庙前.*大殿.*庙后/s);
 assert.doesNotMatch(await text(), /行录/);
 assert.doesNotMatch(await text(), /现实|论坛|武道局|其他玩家|其它玩家/);
@@ -575,6 +580,7 @@ await screenshot("wudao-temple-opening-desktop.png");
 await send("Emulation.setDeviceMetricsOverride", { width: 1672, height: 941, deviceScaleFactor: 1, mobile: false });
 await evaluate(`new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
 const referenceOpening = await snapshot("opening-reference-1672x941");
+assert.equal(referenceOpening.sceneClockCount, 0);
 assert.ok(referenceOpening.scrollWidth <= 1672);
 assert.ok(referenceOpening.scrollHeight <= 941);
 assert.ok(referenceOpening.shellRatio > 1.775 && referenceOpening.shellRatio < 1.779);
@@ -582,6 +588,8 @@ assert.ok(referenceOpening.sceneShare > 0.66 && referenceOpening.sceneShare < 0.
 assert.ok(referenceOpening.topbarScale > 0.039 && referenceOpening.topbarScale < 0.042);
 assert.deepEqual(referenceOpening.openingActionScale, [0, 0]);
 assert.equal(referenceOpening.currentChoicesVisible, false);
+assert.equal(referenceOpening.openingFeed.contextLines, 4);
+assert.equal(referenceOpening.openingFeed.choiceRecords, 0);
 assert.match(referenceOpening.sceneBackground, /ruined-temple-stage-v3\.webp/);
 assert.ok(referenceOpening.sceneCropFraction < 0.01);
 assert.equal(referenceOpening.sceneMarkers.aligned, true);
@@ -662,12 +670,15 @@ await click("inspect-scene-object", "embers");
 await click("temple-object-action", "embers|tend_embers");
 await evaluate(`new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
 const fireChoiceFlow = await snapshot("temple-fire-choice-flow");
-assert.equal(fireChoiceFlow.sceneFeedback, "时辰 +1刻");
+assert.equal(fireChoiceFlow.sceneFeedback, "一刻过去");
+assert.equal(fireChoiceFlow.worldTimeText, "亥时一刻");
+assert.equal(fireChoiceFlow.sceneClockCount, 0);
 assert.equal(fireChoiceFlow.fireKindled, true);
-assert.equal(fireChoiceFlow.openingFeed.contextLines, 0);
+assert.equal(fireChoiceFlow.openingFeed.contextLines, 4);
 assert.equal(fireChoiceFlow.openingFeed.choiceRecords, 1);
 assert.equal(fireChoiceFlow.openingFeed.outcomeLines, 1);
 assert.equal(fireChoiceFlow.openingFeed.currentChoices, 0);
+assert.match(await evaluate(`document.querySelector(".opening-feed .player-choice:last-of-type")?.innerText || ""`), /亥时一刻 · 耗时一刻/);
 assert.ok(fireChoiceFlow.narrativeHistoryCount > historyBeforeWallInspection);
 assert.ok(fireChoiceFlow.openingFeed.anchorRatio >= 0 && fireChoiceFlow.openingFeed.anchorRatio < 0.9);
 assert.match(await text(), /炭心重新透红/);
@@ -858,8 +869,11 @@ await click("inspect-scene-actor", "injured_porter");
 await click("temple-porter-action", "rescue_porter");
 const arrivalState = JSON.parse(await evaluate(`localStorage.getItem("wudao-high-martial-v1")`));
 assert.equal(arrivalState.templeExploration.phase, "arrival");
-assert.equal(arrivalState.templeExploration.elapsed, 8);
+assert.equal("elapsed" in arrivalState.templeExploration, false);
+assert.equal("clock" in arrivalState.p0, false);
+assert.equal(arrivalState.worldTime.totalKe - arrivalState.templeExploration.enteredAtKe, 8);
 assert.equal(arrivalState.templeExploration.porter.rescued, true);
+assert.equal((await snapshot("lady-arrival-world-time")).worldTimeText, "子时");
 
 const ladyBeforeReveal = await text();
 assert.match(ladyBeforeReveal, /青衣妇人/);
@@ -1231,7 +1245,7 @@ const saved = JSON.parse(savedEntry[1]);
 assert.equal(saved.backgroundId, "mystery");
 assert.equal(saved.originId, "mystery");
 assert.equal(saved.vowId, "path");
-assert.equal(saved.version, 13);
+assert.equal(saved.version, 14);
 assert.deepEqual(saved.appearance, expectedCreatedAppearance);
 assert.equal(saved.fateSeed, "seed-2");
 assert.ok(Array.isArray(saved.narrativeLog));
@@ -1422,7 +1436,7 @@ delete versionFiveSave.equipment;
 delete versionFiveSave.characterVitals;
 await reloadWithSave(versionFiveSave);
 const migratedVersionSeven = JSON.parse(await evaluate(`localStorage.getItem("wudao-high-martial-v1")`));
-assert.equal(migratedVersionSeven.version, 13);
+assert.equal(migratedVersionSeven.version, 14);
 assert.deepEqual(migratedVersionSeven.appearance, expectedCreatedAppearance);
 assert.equal(migratedVersionSeven.equipment.owned.length, 12);
 assert.equal(Object.keys(migratedVersionSeven.equipment.slots).length, 9);
@@ -1578,7 +1592,7 @@ await send("Page.navigate", { url: `${pageOrigin}/?debug=1&seed=debug-interface`
 await waitForApp();
 const debugSnapshot = JSON.parse(await evaluate(`JSON.stringify(window.WudaoDebug?.snapshot())`));
 assert.equal(debugSnapshot.buildSha, "dev");
-assert.equal(debugSnapshot.saveVersion, 13);
+assert.equal(debugSnapshot.saveVersion, 14);
 assert.equal(debugSnapshot.screen, saved.screen);
 const debugStatus = JSON.parse(await evaluate(`JSON.stringify(window.WudaoDebug?.status())`));
 assert.equal(debugStatus.protocolVersion, 1);

@@ -5,24 +5,98 @@ import {
   TEMPLE_AREAS,
   TEMPLE_OBJECTS,
   TEMPLE_SITUATION_LIMIT,
-  beginTempleArrival,
-  createTempleExplorationState,
-  enterTempleArea,
-  getTempleAreaView,
+  beginTempleArrival as beginTempleArrivalRule,
+  createTempleExplorationState as createTempleExplorationStateRule,
+  enterTempleArea as enterTempleAreaRule,
+  getTempleAreaView as getTempleAreaViewRule,
   getTempleCrisisOptions,
   getTempleLadyResponses,
-  getTempleObjectView,
+  getTempleObjectView as getTempleObjectViewRule,
   getTempleOutcomeSummary,
-  getTemplePorterView,
-  getTempleSituationClock,
-  migrateTempleExplorationState,
-  revealTempleObject,
-  resolveTempleCasketAction,
+  getTemplePorterView as getTemplePorterViewRule,
+  getTempleSituationClock as getTempleSituationClockRule,
+  migrateTempleExplorationState as migrateTempleExplorationStateRule,
+  revealTempleObject as revealTempleObjectRule,
+  resolveTempleCasketAction as resolveTempleCasketActionRule,
   resolveTempleCrisis,
   resolveTempleLadyResponse,
-  resolveTempleObjectAction,
-  resolveTemplePorterAction,
+  resolveTempleObjectAction as resolveTempleObjectActionRule,
+  resolveTemplePorterAction as resolveTemplePorterActionRule,
 } from "../web/temple-exploration.mjs";
+import { DEFAULT_WORLD_TIME, advanceWorldTime, createWorldTime, migrateWorldTime } from "../web/world-time.mjs";
+
+const WORLD_TIMES = new WeakMap();
+
+function remember(state, worldTime) {
+  WORLD_TIMES.set(state, createWorldTime(worldTime));
+  return state;
+}
+
+function worldTimeFor(state) {
+  return WORLD_TIMES.get(state) || createWorldTime(DEFAULT_WORLD_TIME);
+}
+
+function createTempleExplorationState(saved = null, worldTime = DEFAULT_WORLD_TIME) {
+  return remember(createTempleExplorationStateRule(saved, worldTime), worldTime);
+}
+
+function migrateTempleExplorationState(savedGame = {}) {
+  const worldTime = migrateWorldTime(savedGame);
+  return remember(migrateTempleExplorationStateRule(savedGame, worldTime), worldTime);
+}
+
+function enterTempleArea(state, areaId) {
+  const worldTime = worldTimeFor(state);
+  const result = enterTempleAreaRule(state, areaId, worldTime);
+  remember(result.state, worldTime);
+  return result;
+}
+
+function revealTempleObject(state, objectId) {
+  const worldTime = worldTimeFor(state);
+  const result = revealTempleObjectRule(state, objectId, worldTime);
+  remember(result.state, worldTime);
+  return result;
+}
+
+function resolveTempleObjectAction(state, objectId, actionId, originId = "mystery") {
+  const result = resolveTempleObjectActionRule(state, objectId, actionId, originId, worldTimeFor(state));
+  if (result.state) remember(result.state, result.worldTime || worldTimeFor(state));
+  return result;
+}
+
+function resolveTempleCasketAction(state, actionId, originId = "mystery") {
+  const result = resolveTempleCasketActionRule(state, actionId, originId, worldTimeFor(state));
+  if (result.state) remember(result.state, result.worldTime || worldTimeFor(state));
+  return result;
+}
+
+function resolveTemplePorterAction(state, actionId) {
+  const result = resolveTemplePorterActionRule(state, actionId, worldTimeFor(state));
+  if (result.state) remember(result.state, result.worldTime || worldTimeFor(state));
+  return result;
+}
+
+function beginTempleArrival(state) {
+  const worldTime = worldTimeFor(state);
+  return remember(beginTempleArrivalRule(state, worldTime), worldTime);
+}
+
+function getTempleAreaView(state, originId = "mystery") {
+  return getTempleAreaViewRule(state, originId, worldTimeFor(state));
+}
+
+function getTempleObjectView(state, objectId, originId = "mystery") {
+  return getTempleObjectViewRule(state, objectId, originId, worldTimeFor(state));
+}
+
+function getTemplePorterView(state) {
+  return getTemplePorterViewRule(state, worldTimeFor(state));
+}
+
+function getTempleSituationClock(state) {
+  return getTempleSituationClockRule(state, worldTimeFor(state));
+}
 
 function see(state, objectId) {
   const result = revealTempleObject(state, objectId);
@@ -45,20 +119,24 @@ test("the first ruined-temple slice exposes three areas and twelve bounded objec
   const state = createTempleExplorationState();
   assert.equal(getTempleAreaView(state).objects.length, 4);
   assert.equal(getTempleSituationClock(state).remaining, TEMPLE_SITUATION_LIMIT);
+  assert.equal("elapsed" in state, false);
+  assert.equal("limit" in state, false);
 });
 
 test("looking and changing areas are free, while acting advances the situation", () => {
   let state = createTempleExplorationState();
   state = see(state, "embers");
-  assert.equal(state.elapsed, 0);
+  assert.equal(getTempleSituationClock(state).elapsed, 0);
   const moved = enterTempleArea(state, "forecourt");
   assert.equal(moved.available, true);
-  assert.equal(moved.state.elapsed, 0);
+  assert.equal(getTempleSituationClock(moved.state).elapsed, 0);
   assert.deepEqual(moved.state.visitedAreaIds, ["hall", "forecourt"]);
 
   state = enterTempleArea(moved.state, "hall").state;
   const result = act(state, "embers", "tend_embers");
-  assert.equal(result.state.elapsed, 1);
+  assert.equal(getTempleSituationClock(result.state).elapsed, 1);
+  assert.equal(getTempleSituationClock(result.state).label, "亥时一刻");
+  assert.equal(result.state.actionLog[0].atKe, result.worldTime.totalKe);
   assert.equal(result.state.objectStates.embers.stage, "kindled");
 });
 
@@ -102,7 +180,7 @@ test("rain and footsteps advance automatically and close the exploration window"
   assert.equal(sawRain, true);
   assert.equal(sawFootsteps, true);
   assert.equal(final.arrivalTriggered, true);
-  assert.equal(state.elapsed, TEMPLE_SITUATION_LIMIT);
+  assert.equal(getTempleSituationClock(state).elapsed, TEMPLE_SITUATION_LIMIT);
   assert.equal(state.phase, "arrival");
   assert.match(final.phaseOutcome, /脚步/);
   assert.equal(resolveTempleObjectAction(state, "broken_window", "brace_window").available, false);
@@ -113,7 +191,7 @@ test("a long action records every situation threshold it crosses", () => {
   state = enterTempleArea(state, "rear").state;
   state = see(state, "roof_scratches");
   const result = act(state, "roof_scratches", "inspect_scratches");
-  assert.equal(result.state.elapsed, 8);
+  assert.equal(getTempleSituationClock(result.state).elapsed, 8);
   assert.equal(result.state.phase, "arrival");
   assert.equal(result.phaseOutcomes.length, 2);
   assert.match(result.phaseOutcomes[0], /脚步/);
@@ -149,7 +227,7 @@ test("legacy temple saves migrate without reviving the old three-action gate", (
   });
   assert.equal(migrated.objectStates.embers.stage, "kindled");
   assert.equal(migrated.objectStates.patched_wall.stage, "measured");
-  assert.ok(migrated.elapsed < migrated.limit);
+  assert.ok(getTempleSituationClock(migrated).elapsed < TEMPLE_SITUATION_LIMIT);
 
   const versionTwelve = migrateTempleExplorationState({
     version: 12,
@@ -216,7 +294,7 @@ test("the injured porter costs time and clothing, then independently yields test
   assert.equal(resolveTemplePorterAction(state, "question_porter").available, false);
 
   const rescued = resolveTemplePorterAction(state, "rescue_porter");
-  assert.equal(rescued.state.elapsed, 3);
+  assert.equal(getTempleSituationClock(rescued.state).elapsed, 3);
   assert.equal(rescued.state.porter.alive, true);
   assert.equal(rescued.state.porter.aidSpent, true);
   const questioned = resolveTemplePorterAction(rescued.state, "question_porter");

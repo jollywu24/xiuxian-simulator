@@ -76,12 +76,11 @@ test("P0内容目录的篇章、跳转和首次兑现均通过校验", () => {
   assert.deepEqual(result, { ok: true, errors: [], nodeCount: 26, arcCount: 3 });
 });
 
-test("版本4存档缺少的版本5字段会由嵌套状态补齐", () => {
+test("版本4存档缺少的版本5字段会由嵌套状态补齐，旧时钟不再留在P0状态", () => {
   const migrated = migrateP0State({ started: true, relationships: { bai_zhiyun: { favor: 7 } }, clock: { day: 15 } });
   assert.equal(migrated.relationships.bai_zhiyun.favor, 7);
   assert.equal(migrated.relationships.bai_zhiyun.suspicion, 5);
-  assert.equal(migrated.clock.day, 15);
-  assert.equal(migrated.clock.year, 427);
+  assert.equal(migrated.clock, undefined);
   assert.deepEqual(migrated.wounds, []);
   assert.deepEqual(migrated.activeMartial, { foundation: null, technique: null, stance: null });
   assert.equal(migrated.assailantPlot.stage, "unknown");
@@ -413,7 +412,7 @@ test("两门桩功会写入不同武学，并在首次修炼后推进日期", ()
   const sea = trainedState("sea_stilling_stake");
   assert.equal(deadwood.skills.deadwood_stake.stage, "learned");
   assert.equal(sea.skills.sea_stilling_stake.stage, "learned");
-  assert.equal(sea.clock.day, 14);
+  assert.equal(sea.clock, undefined);
   assert.equal(sea.stakeProgress, 1);
 });
 

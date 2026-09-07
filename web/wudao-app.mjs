@@ -50,8 +50,8 @@ import {
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs?v=20260811.1";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260811.1";
+} from "./wudao-core.mjs?v=20260812.1";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260812.1";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -81,7 +81,7 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260811.1";
+} from "./wudao-p0-core.mjs?v=20260812.1";
 import {
   M4_EVIDENCE,
   M4_METHOD,
@@ -100,7 +100,7 @@ import {
   resolveM4Training,
   resolveMoneyInquiry,
   resolveOldHouseChoice,
-} from "./wudao-p1-core.mjs?v=20260811.1";
+} from "./wudao-p1-core.mjs?v=20260812.1";
 import {
   advanceCombatLabCampaign,
   createCombatLabSession,
@@ -111,14 +111,14 @@ import {
   restartCombatLab,
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
-} from "./combat-lab-core.mjs?v=20260811.1";
+} from "./combat-lab-core.mjs?v=20260812.1";
 import {
   INVENTORY_CAPACITY,
   createInventoryBoard,
   formatSilver,
   getInventoryCategory,
   getInventoryUseState,
-} from "./inventory-core.mjs?v=20260811.1";
+} from "./inventory-core.mjs?v=20260812.1";
 import {
   EQUIPMENT_CAPACITY,
   EQUIPMENT_SLOTS,
@@ -132,7 +132,7 @@ import {
   migrateCharacterVitals,
   migrateEquipmentState,
   unequipEquipmentSlot,
-} from "./character-system.mjs?v=20260811.1";
+} from "./character-system.mjs?v=20260812.1";
 import {
   MARTIAL_MASTERIES,
   breakthroughMartial,
@@ -154,9 +154,9 @@ import {
   trainMartial,
   unequipMartial,
   unlockedMartialNodes,
-} from "./martial-system.mjs?v=20260811.1";
-import { SAVE_STORAGE_KEY } from "./save-core.mjs?v=20260811.1";
-import { createSaveStorage } from "./save-storage.mjs?v=20260811.1";
+} from "./martial-system.mjs?v=20260812.1";
+import { SAVE_STORAGE_KEY } from "./save-core.mjs?v=20260812.1";
+import { createSaveStorage } from "./save-storage.mjs?v=20260812.1";
 import {
   ORIGINS,
   ORIGIN_LADY_INSIGHTS,
@@ -169,7 +169,7 @@ import {
   resolveOriginPersonalEvent,
   resolveOriginPrologueChoice,
   resolveOriginTempleTask,
-} from "./origin-core.mjs?v=20260811.1";
+} from "./origin-core.mjs?v=20260812.1";
 import {
   APPEARANCE_BODIES,
   APPEARANCE_CATALOGS,
@@ -178,9 +178,9 @@ import {
   createAppearanceState,
   cycleAppearance,
   normalizeAppearance,
-} from "./appearance-core.mjs?v=20260811.1";
-import { resolvePaperDollLayers } from "./paperdoll-system.mjs?v=20260811.1";
-import { renderPaperDollCanvases } from "./paperdoll-renderer.mjs?v=20260811.1";
+} from "./appearance-core.mjs?v=20260812.1";
+import { resolvePaperDollLayers } from "./paperdoll-system.mjs?v=20260812.1";
+import { renderPaperDollCanvases } from "./paperdoll-renderer.mjs?v=20260812.1";
 import {
   KNOWLEDGE_CATALOG,
   createKnowledgeBoard,
@@ -190,7 +190,7 @@ import {
   recordKnowledgeFragment,
   resolvePorterEncounter,
   syncKnowledgeFromGameState,
-} from "./knowledge-core.mjs?v=20260811.1";
+} from "./knowledge-core.mjs?v=20260812.1";
 import {
   beginTempleArrival,
   createTempleExplorationState,
@@ -209,9 +209,16 @@ import {
   resolveTempleLadyResponse,
   resolveTempleObjectAction,
   resolveTemplePorterAction,
-} from "./temple-exploration.mjs?v=20260811.1";
+} from "./temple-exploration.mjs?v=20260812.1";
+import {
+  DEFAULT_WORLD_TIME,
+  calendarToTotalKe,
+  createWorldTime,
+  formatWorldTime,
+  migrateWorldTime,
+} from "./world-time.mjs?v=20260812.1";
 
-const PAPER_DOLL_ASSET_VERSION = "20260811.1";
+const PAPER_DOLL_ASSET_VERSION = "20260812.1";
 
 const app = document.querySelector("#app");
 const BUILD_SHA = document.documentElement.dataset.buildSha || "dev";
@@ -253,7 +260,7 @@ function legacyFateSeed(saved) {
 
 function createInitialState() {
   return {
-    version: 13,
+    version: 14,
     screen: "landing",
     name: "陈司命",
     appearance: createAppearanceState(),
@@ -283,7 +290,8 @@ function createInitialState() {
     characterVitals: createCharacterVitals(),
     martial: migrateMartialState(null, { potential: 0 }),
     templeOpening: createTempleOpeningState(),
-    templeExploration: createTempleExplorationState(),
+    worldTime: createWorldTime(DEFAULT_WORLD_TIME),
+    templeExploration: createTempleExplorationState(null, DEFAULT_WORLD_TIME),
     completedTempleTasks: [],
     templeLog: [],
     ladyChoiceLog: [],
@@ -356,7 +364,7 @@ function createInitialState() {
 }
 
 function supportsStoredState(saved) {
-  return Boolean(saved && [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].includes(saved.version) && saved.screen);
+  return Boolean(saved && [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].includes(saved.version) && saved.screen);
 }
 
 function loadState(raw) {
@@ -364,26 +372,28 @@ function loadState(raw) {
     const saved = JSON.parse(raw);
     if (!supportsStoredState(saved)) return null;
     const origin = migrateOriginState(saved);
+    const worldTime = migrateWorldTime(saved);
     const migrated = {
       ...createInitialState(),
       ...saved,
       ...origin,
-      version: 13,
+      version: 14,
+      worldTime,
       appearance: normalizeAppearance(saved.appearance),
       p0: migrateP0State(saved.p0),
       m4: migrateM4State(saved.m4),
       equipment: migrateEquipmentState(saved.equipment),
       characterVitals: migrateCharacterVitals(saved.characterVitals),
       porterEncounter: createPorterEncounterState(saved.porterEncounter),
-      templeExploration: migrateTempleExplorationState(saved),
+      templeExploration: migrateTempleExplorationState(saved, worldTime),
     };
     if (saved.screen === "templeTasks") {
-      migrated.templeExploration = beginTempleArrival(migrated.templeExploration);
+      migrated.templeExploration = beginTempleArrival(migrated.templeExploration, migrated.worldTime);
       migrated.screen = "templeLady";
     } else if (["fateSight", "allocation", "originTempleTask", "eastRoadPorter"].includes(saved.screen) && !saved.originPrologue?.completed) {
       migrated.screen = "templeWake";
     } else if (["ladyArrival", "ladyPressure", "ladyTest", "nightTalk", "gameDeath", "quietDeparture"].includes(saved.screen)) {
-      migrated.templeExploration = beginTempleArrival(migrated.templeExploration);
+      migrated.templeExploration = beginTempleArrival(migrated.templeExploration, migrated.worldTime);
       migrated.screen = "templeLady";
     }
     migrated.martial = migrateMartialState(saved.martial, migrated);
@@ -498,7 +508,8 @@ function beginOriginJourney() {
   state.peaches = 3;
   state.hungerLevel = 2;
   state.templeOpening = createTempleOpeningState();
-  state.templeExploration = createTempleExplorationState();
+  state.worldTime = createWorldTime(DEFAULT_WORLD_TIME);
+  state.templeExploration = createTempleExplorationState({ enteredAtKe: state.worldTime.totalKe }, state.worldTime);
   state.porterEncounter = createPorterEncounterState();
   if (origin.id === "shen_branch") {
     state.inventory = ["branch_waist_token", "copied_fist_manual"];
@@ -554,6 +565,30 @@ function track(name, data = {}) {
   state.events.push({ name, at: Date.now(), ...data });
 }
 
+const TEMPLE_ARRIVAL_RECORD_ID = "temple-arrival";
+
+function ensureTempleArrivalNarrative(target = state) {
+  const log = Array.isArray(target.narrativeLog) ? target.narrativeLog : [];
+  if (log.some((record) => record.id === TEMPLE_ARRIVAL_RECORD_ID)) return false;
+  target.narrativeLog = [{
+    id: TEMPLE_ARRIVAL_RECORD_ID,
+    screen: "templeWake",
+    context: "金陵东郊 · 无名破庙",
+    timeLabel: formatWorldTime(target.worldTime || DEFAULT_WORLD_TIME).time,
+    title: "雨夜入庙",
+    lines: [
+      { type: "narration", speaker: "", role: "context", text: "雨从残瓦间漏下来。" },
+      { type: "narration", speaker: "", role: "context", text: "你是被冷醒的。" },
+      { type: "narration", speaker: "", role: "context", text: "炭火已经只剩一点红。" },
+      { type: "narration", speaker: "", role: "context", text: "庙外的风一阵紧过一阵。" },
+    ],
+    choice: "",
+    choiceSource: "",
+    choiceKind: "",
+  }, ...log.slice(-63)];
+  return true;
+}
+
 function moveTo(screen) {
   inventoryUi.open = false;
   characterUi.open = false;
@@ -561,6 +596,7 @@ function moveTo(screen) {
   knowledgeUi.open = false;
   sceneContext = null;
   state.screen = screen;
+  if (screen === "templeWake") ensureTempleArrivalNarrative();
   saveState();
   render();
   window.scrollTo({ top: 0, behavior: "instant" });
@@ -576,9 +612,7 @@ function shenAttributePool() {
 }
 
 function p0ClockText() {
-  const clock = state.p0?.clock || createP0State().clock;
-  const segments = { dawn: "卯时", morning: "辰时", afternoon: "申时", evening: "酉时", night: "亥时" };
-  return `大曜${clock.year}年八月${clock.day}日 · ${segments[clock.segment] || "夜"}`;
+  return formatWorldTime(state.worldTime, { includeDate: true }).full;
 }
 
 function p0RelationLabel(id) {
@@ -836,15 +870,17 @@ function narrativeLineHtml(line, className = "") {
 }
 
 function openingNarrativeHistoryHtml(records) {
-  const firstContext = (records[0]?.lines || []).filter((line) => line.role !== "outcome").slice(-3);
+  const arrival = records.find((record) => record.id === TEMPLE_ARRIVAL_RECORD_ID);
+  const firstContext = (arrival?.lines || records[0]?.lines || []).filter((line) => line.role !== "outcome").slice(-4);
+  const actionRecords = records.filter((record) => record.choice);
   return `
     <section class="narrative-history opening-feed" aria-label="雨夜破庙的当前经过">
-      <div class="opening-feed-context">${firstContext.map((line) => narrativeLineHtml(line)).join("")}</div>
-      ${records.map((record, index) => {
+      <div class="opening-feed-context" ${actionRecords.length ? "" : "data-feed-anchor"}>${firstContext.map((line) => narrativeLineHtml(line)).join("")}</div>
+      ${actionRecords.map((record, index) => {
         const outcomes = (record.lines || []).filter((line) => line.role === "outcome");
         return `
-          <article class="narrative-entry ${record.choiceKind === "special" ? "important" : record.choiceKind === "danger" ? "danger" : ""}" ${index === records.length - 1 ? "data-feed-anchor" : ""}>
-            <p class="player-choice"><strong>你</strong><span>${escapeHtml(record.choice)}</span>${record.choiceSource ? `<small>${escapeHtml(record.choiceSource)}</small>` : ""}</p>
+          <article class="narrative-entry ${record.choiceKind === "special" ? "important" : record.choiceKind === "danger" ? "danger" : ""}" ${index === actionRecords.length - 1 ? "data-feed-anchor" : ""}>
+            <p class="player-choice"><strong>你</strong><span>${escapeHtml(record.choice)}</span>${record.timeLabel || record.choiceSource ? `<small>${escapeHtml([record.timeLabel, record.choiceSource].filter(Boolean).join(" · "))}</small>` : ""}</p>
             <div class="narrative-outcome">${outcomes.map((line) => narrativeLineHtml(line, "outcome-line")).join("")}</div>
           </article>
         `;
@@ -864,10 +900,10 @@ function narrativeHistoryHtml() {
       <div class="narrative-history-heading"><span>此前</span><strong>已经发生</strong></div>
       ${records.map((record) => `
         <article class="narrative-entry ${record.choiceKind === "special" ? "important" : record.choiceKind === "danger" ? "danger" : ""}">
-          <span class="narrative-context">${escapeHtml(record.context)}</span>
+          <span class="narrative-context">${escapeHtml([record.context, record.timeLabel].filter(Boolean).join(" · "))}</span>
           <h2>${escapeHtml(record.title)}</h2>
           ${(record.lines || []).filter((line) => line.role !== "outcome").map((line) => narrativeLineHtml(line)).join("")}
-          <p class="player-choice"><strong>你</strong><span>${escapeHtml(record.choice)}</span>${record.choiceSource ? `<small>${escapeHtml(record.choiceSource)}</small>` : ""}</p>
+          ${record.choice ? `<p class="player-choice"><strong>你</strong><span>${escapeHtml(record.choice)}</span>${record.choiceSource ? `<small>${escapeHtml(record.choiceSource)}</small>` : ""}</p>` : ""}
           ${(record.lines || []).filter((line) => line.role === "outcome").map((line) => narrativeLineHtml(line, "outcome-line")).join("")}
         </article>
       `).join("")}
@@ -1037,7 +1073,6 @@ function sceneVisualHtml() {
         ${scene.areaNav?.length ? `<nav class="temple-area-nav" aria-label="破庙区域">${scene.areaNav.map((area) => `
           <button type="button" class="${area.current ? "current" : ""} ${area.visited ? "visited" : ""}" data-action="temple-area" data-value="${escapeHtml(area.id)}" ${area.current ? "aria-current=\"location\"" : ""}><span>${escapeHtml(area.short)}</span></button>
         `).join("")}</nav>` : ""}
-        ${scene.situationClock ? `<div class="temple-situation-clock ${escapeHtml(scene.situationClock.phase)}" aria-label="${escapeHtml(`${scene.situationClock.label}，${scene.situationClock.phaseLabel}`)}"><span>${escapeHtml(scene.situationClock.label)}</span><strong>${escapeHtml(scene.situationClock.phaseLabel)}</strong><i style="--situation-progress:${Math.min(1, scene.situationClock.elapsed / Math.max(1, state.templeExploration?.limit || 8))}"></i></div>` : ""}
         ${scene.hotspots.map((hotspot) => `
           <button type="button" class="scene-hotspot ${sceneMarkerState(hotspot.state)} ${sceneContextMatches("scene-hotspot", hotspot.id) ? "selected" : ""}" data-action="inspect-scene-object" data-value="${escapeHtml(hotspot.id)}" data-source-x="${hotspot.x}" data-source-y="${hotspot.y}" style="--marker-x:${hotspot.x}%;--marker-y:${hotspot.y}%" aria-label="查看${escapeHtml(hotspot.label)}" aria-pressed="${sceneContextMatches("scene-hotspot", hotspot.id) ? "true" : "false"}">
             <span class="scene-hotspot-ring" aria-hidden="true"></span><span class="scene-marker-label">${escapeHtml(hotspot.label)}</span>
@@ -1900,10 +1935,7 @@ const TEMPLE_HUD_SCREENS = new Set([
 ]);
 
 function templeClockLabel() {
-  if (state.screen === "templeWake") return getTempleSituationClock(state.templeExploration).label;
-  if (["templeLady", "templeCrisis", "templeDeparture", "ladyArrival", "ladyPressure", "ladyTest", "nightTalk", "gameDeath"].includes(state.screen)) return "寅时";
-  if (["quietDeparture", "encounterReward", "mindArt"].includes(state.screen)) return "卯时";
-  return "亥时";
+  return formatWorldTime(state.worldTime).time;
 }
 
 function hungerLabel() {
@@ -2306,31 +2338,9 @@ function renderOriginTempleTask() {
 }
 
 function renderTempleWake() {
-  const exploration = getTempleAreaView(state.templeExploration, state.originId || state.backgroundId);
-  const clock = exploration.clock;
-  const hasActed = state.templeExploration.actionLog.length > 0;
-  const seenCount = state.templeExploration.seenObjectIds.length;
-  const phaseCopy = clock.phase === "footsteps"
-    ? "雨里已经有脚步靠近。你至多还能做最后一件利落的事。"
-    : clock.phase === "driving_rain"
-      ? "雨势正在抹掉庙外痕迹。深查一件东西，便可能错过另一件。"
-      : "先扫视三处，再决定哪些东西值得花时间动手。";
+  ensureTempleArrivalNarrative();
   return gameShell(`
-    ${sceneHeader(
-      `${clock.label} · ${exploration.area.name}`,
-      hasActed ? "雨夜不会等你查完" : "先看清这座庙",
-      phaseCopy,
-    )}
-    <div class="temple-exploration-status" aria-label="破庙局面">
-      <div><span>所在</span><strong>${escapeHtml(exploration.area.name)}</strong></div>
-      <div><span>已见</span><strong>${seenCount} / 12</strong></div>
-      <div><span>余裕</span><strong>${clock.remaining > 0 ? `${clock.remaining}刻` : "脚步已至"}</strong></div>
-    </div>
-    <div class="story-copy temple-exploration-guide">
-      <p>点场景中的物件，只是看见；在“所见”里决定是否细查、修整或拆取，才会让时辰往前走。</p>
-      <p>庙前能听来路，大殿能动火与陈设，庙后藏着新痕。你不可能在来人之前把每件事都查完。</p>
-    </div>
-    <div class="insight-whisper ${clock.phase === "footsteps" ? "danger-whisper" : ""}"><span>局面</span><strong>${escapeHtml(clock.phaseLabel)}</strong></div>
+    <h1 class="sr-only">雨夜破庙</h1>
   `);
 }
 
@@ -4318,6 +4328,7 @@ function recordTempleExplorationChoice(result) {
     lines: outcomeLines,
     choice: result.action.title,
     choiceSource: result.action.cost === 1 ? "耗时一刻" : `耗时${result.action.cost}刻`,
+    timeLabel: formatWorldTime(result.worldTime || state.worldTime).time,
     choiceKind: result.phaseChanged ? "special" : "",
   };
   state.narrativeLog = [...(Array.isArray(state.narrativeLog) ? state.narrativeLog : []), record].slice(-64);
@@ -4340,6 +4351,7 @@ function recordTempleSpecialChoice(result, title) {
     lines: outcomeLines,
     choice: result.action.title,
     choiceSource: result.action.cost === 0 ? "当即落定" : result.action.cost === 1 ? "耗时一刻" : `耗时${result.action.cost}刻`,
+    timeLabel: result.action.cost > 0 ? formatWorldTime(result.worldTime || state.worldTime).time : "",
     choiceKind: result.phaseOutcomes?.length ? "special" : "",
   };
   state.narrativeLog = [...(Array.isArray(state.narrativeLog) ? state.narrativeLog : []), record].slice(-64);
@@ -4347,7 +4359,7 @@ function recordTempleSpecialChoice(result, title) {
 
 function finishTempleExplorationWindow() {
   const originId = state.originId || state.backgroundId;
-  state.templeExploration = beginTempleArrival(state.templeExploration);
+  state.templeExploration = beginTempleArrival(state.templeExploration, state.worldTime);
   const casket = state.templeExploration.casket;
   const porter = state.templeExploration.porter;
   state.porterEncounter = {
@@ -4505,7 +4517,7 @@ function openKnowledgeEntry(entryId = null, category = "all") {
 const handlers = {
   "temple-area": (value) => {
     if (state.screen !== "templeWake") return;
-    const result = enterTempleArea(state.templeExploration, value);
+    const result = enterTempleArea(state.templeExploration, value, state.worldTime);
     if (!result.available || !result.changed) return;
     state.templeExploration = result.state;
     sceneContext = null;
@@ -4514,7 +4526,7 @@ const handlers = {
   },
   "inspect-scene-object": (value) => {
     if (state.screen === "templeWake") {
-      const revealed = revealTempleObject(state.templeExploration, value);
+      const revealed = revealTempleObject(state.templeExploration, value, state.worldTime);
       if (!revealed.available) return;
       state.templeExploration = revealed.state;
       if (revealed.changed) {
@@ -4544,9 +4556,10 @@ const handlers = {
   "temple-object-action": (value) => {
     if (state.screen !== "templeWake") return;
     const [objectId, actionId] = String(value || "").split("|");
-    const result = resolveTempleObjectAction(state.templeExploration, objectId, actionId, state.originId || state.backgroundId);
+    const result = resolveTempleObjectAction(state.templeExploration, objectId, actionId, state.originId || state.backgroundId, state.worldTime);
     if (!result.available) return;
     state.templeExploration = result.state;
+    state.worldTime = result.worldTime;
     if (actionId === "tend_embers") {
       state.templeOpening = { ...state.templeOpening, fireTended: true, actions: addUnique(state.templeOpening?.actions, "tend_fire") };
       state.firePower = Math.max(40, Number(state.firePower || 0));
@@ -4557,7 +4570,7 @@ const handlers = {
     }
     recordTempleExplorationChoice(result);
     pendingSceneFeedback = {
-      text: result.phaseChanged ? getTempleSituationClock(result.state).phaseLabel : `时辰 +${result.action.cost}刻`,
+      text: result.phaseChanged ? getTempleSituationClock(result.state, state.worldTime).phaseLabel : result.action.cost === 1 ? "一刻过去" : `${result.action.cost}刻过去`,
       tone: result.phaseChanged ? "notice" : "gain",
       resource: "time",
     };
@@ -4573,24 +4586,26 @@ const handlers = {
   },
   "temple-casket-action": (value) => {
     if (state.screen !== "templeWake") return;
-    const result = resolveTempleCasketAction(state.templeExploration, value, state.originId || state.backgroundId);
+    const result = resolveTempleCasketAction(state.templeExploration, value, state.originId || state.backgroundId, state.worldTime);
     if (!result.available) return;
     state.templeExploration = result.state;
+    state.worldTime = result.worldTime;
     recordTempleSpecialChoice(result, "乌沉药匣");
-    pendingSceneFeedback = { text: result.action.cost === 1 ? "时辰 +一刻" : `时辰 +${result.action.cost}刻`, tone: "notice", resource: "time" };
+    pendingSceneFeedback = { text: result.action.cost === 1 ? "一刻过去" : `${result.action.cost}刻过去`, tone: "notice", resource: "time" };
     track("temple_casket_action", { actionId: value, status: state.templeExploration.casket });
     if (result.arrivalTriggered) return finishTempleExplorationWindow();
     refresh();
   },
   "temple-porter-action": (value) => {
     if (state.screen !== "templeWake") return;
-    const result = resolveTemplePorterAction(state.templeExploration, value);
+    const result = resolveTemplePorterAction(state.templeExploration, value, state.worldTime);
     if (!result.available) return;
     state.templeExploration = result.state;
+    state.worldTime = result.worldTime;
     recordTempleSpecialChoice(result, "受伤脚夫");
     pendingSceneFeedback = value === "rescue_porter"
       ? { text: "内衬 -一块", tone: "danger", resource: "inventory" }
-      : { text: result.action.cost ? `时辰 +${result.action.cost}刻` : "活口 · 放弃", tone: "notice", resource: "time" };
+      : { text: result.action.cost ? (result.action.cost === 1 ? "一刻过去" : `${result.action.cost}刻过去`) : "活口 · 放弃", tone: "notice", resource: "time" };
     track("temple_porter_action", { actionId: value, alive: state.templeExploration.porter.alive });
     if (result.arrivalTriggered) return finishTempleExplorationWindow();
     refresh();
@@ -5815,6 +5830,10 @@ const handlers = {
     if (state.screen !== "shenChapterEnding" || state.alchemyPills !== RETURN_SPRING_BREW.successPills || state.p0.started) return;
     state.p0 = createP0State();
     state.p0.started = true;
+    state.worldTime = createWorldTime({
+      totalKe: calendarToTotalKe({ year: 427, month: 8, day: 12, shichen: "hai", ke: 0 }),
+      weather: "clear",
+    });
     state.p0.items.return_spring_pill = Number(state.alchemyPills || 0);
     state.p0.eventStates.third_lady_summons = { status: "active" };
     state.p0.relationships.cao_qing.favor = state.caoFavor;
@@ -6000,6 +6019,10 @@ const handlers = {
     const result = resolveStakeTraining(state.p0, { potential: state.potential });
     if (!result?.available) return;
     state.p0 = result.state;
+    state.worldTime = createWorldTime({
+      totalKe: calendarToTotalKe(result.worldTimeTarget),
+      weather: result.worldTimeTarget.weather,
+    });
     state.potential -= result.potentialCost;
     state.p0.checkpoint = null;
     state.p0.checkpoint = structuredClone(state.p0);
@@ -6012,6 +6035,10 @@ const handlers = {
     if (!result?.available) return;
     if (result.outcome === "death") return handleP0Death(result.cause, result.memory, "bodyBreakthrough", "forced_body_breakthrough");
     state.p0 = result.state;
+    state.worldTime = createWorldTime({
+      totalKe: calendarToTotalKe(result.worldTimeTarget),
+      weather: result.worldTimeTarget.weather,
+    });
     state.potential -= result.potentialCost;
     state.martialStage = "body";
     state.martial = migrateMartialState(state.martial, state);
@@ -6072,6 +6099,10 @@ const handlers = {
     const result = resolveMidAutumnTravel(value, state.p0, { hasWaterMindArt: state.mindArt === MIND_ART.id });
     if (!result?.available) return;
     state.p0 = result.state;
+    state.worldTime = createWorldTime({
+      totalKe: calendarToTotalKe(result.worldTimeTarget),
+      weather: result.worldTimeTarget.weather,
+    });
     if (value === "water") {
       commitMartialUse({
         martialId: "fish_leap_art",

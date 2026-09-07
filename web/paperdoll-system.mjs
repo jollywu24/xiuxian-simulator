@@ -5,7 +5,7 @@ import {
   appearanceHeadAsset,
   appearancePart,
   normalizeAppearance,
-} from "./appearance-core.mjs?v=20260811.1";
+} from "./appearance-core.mjs?v=20260812.1";
 
 export const PAPER_DOLL_LAYER_ORDER = Object.freeze({
   backAccessory: 5,

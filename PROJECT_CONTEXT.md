@@ -43,6 +43,7 @@ npm run test:browser
 
 | 要修改的内容 | 首要代码 | 对应测试／文档 |
 | --- | --- | --- |
+| 唯一世界时间、十二时辰八刻、跨日与旧时钟迁移 | `web/world-time.mjs`、`web/wudao-app.mjs` | `tests/world-time.test.mjs`、`docs/systems/06_WORLD_TIME_INVESTIGATION.md` |
 | 世界、人物、五维、破庙、沈家前段 | `web/wudao-core.mjs` | `tests/wudao.test.mjs`、`docs/STORY_BIBLE.md` |
 | 雨夜破庙P0闭环：三地区、十二对象、药匣、脚夫、人物反馈、追兵多解法、见闻与离场 | `web/temple-exploration.mjs`、`web/knowledge-core.mjs`、`web/wudao-scenes.mjs`、`web/wudao-app.mjs` | `tests/temple-exploration.test.mjs`、`tests/knowledge-system.test.mjs`、`scripts/cdp-smoke.mjs`、`scripts/cdp-origins.mjs`、`docs/systems/14_RUINED_TEMPLE_VERTICAL_SLICE.md` |
 | 三出身、独立序章与旧ID迁移 | `web/origin-core.mjs` | `tests/origin-system.test.mjs`、`scripts/cdp-origins.mjs`、`docs/systems/11_ORIGIN_PROLOGUES.md` |
