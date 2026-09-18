@@ -1,6 +1,13 @@
 export const RELEASE_CONTRACT_VERSION = 10;
 
 export const RELEASE_ENTRY_RESOURCES = Object.freeze([
+  { path: "world3d.mjs", contentType: "text/javascript", minBytes: 1024 },
+  { path: "world3d-models.mjs", contentType: "text/javascript", minBytes: 1024 },
+  { path: "world3d-layout.mjs", contentType: "text/javascript", minBytes: 1024 },
+  { path: "world3d.css", contentType: "text/css", minBytes: 1024 },
+  { path: "vendor/three/three.module.js", contentType: "text/javascript", minBytes: 10000 },
+  { path: "vendor/three/three.core.js", contentType: "text/javascript", minBytes: 10000 },
+  { path: "vendor/three/OrbitControls.js", contentType: "text/javascript", minBytes: 1000 },
   { path: "index.html", contentType: "text/html", minBytes: 256 },
   { path: "styles.css", contentType: "text/css", minBytes: 1024 },
   { path: "appearance.css", contentType: "text/css", minBytes: 1024 },
@@ -9,6 +16,8 @@ export const RELEASE_ENTRY_RESOURCES = Object.freeze([
 ]);
 
 export const RELEASE_CRITICAL_ASSETS = Object.freeze([
+  { path: "assets/world3d/temple-stone-v1.webp", contentType: "image/webp", minBytes: 1024 },
+  { path: "assets/world3d/temple-timber-v1.webp", contentType: "image/webp", minBytes: 1024 },
   { path: "assets/origins/shen-west-courtyard-v1.webp", contentType: "image/webp", minBytes: 1024 },
   { path: "assets/origins/qinhuai-fish-market-v1.webp", contentType: "image/webp", minBytes: 1024 },
   { path: "assets/creation-v1/origin-shen-branch-v1.webp", contentType: "image/webp", minBytes: 1024 },

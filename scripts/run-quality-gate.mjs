@@ -6,6 +6,9 @@ const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url))
 
 const syntaxTargets = [
   "web/wudao-app.mjs",
+  "web/world3d.mjs",
+  "web/world3d-models.mjs",
+  "web/world3d-layout.mjs",
   "web/origin-core.mjs",
   "web/wudao-core.mjs",
   "web/wudao-p0-core.mjs",
@@ -18,6 +21,12 @@ const syntaxTargets = [
   "scripts/cdp-online-smoke.mjs",
   "scripts/verify-release-assets.mjs",
   "scripts/smoke-deployed.mjs",
+  "tools/sandbox-s0/core.mjs",
+  "tools/sandbox-s0/domain.mjs",
+  "tools/sandbox-s0/renderer.mjs",
+  "tools/sandbox-s0/app.mjs",
+  "scripts/sandbox/serve-s0.mjs",
+  "scripts/sandbox/validate-s0.mjs",
 ];
 
 const sharedSteps = [
@@ -28,6 +37,7 @@ const sharedSteps = [
   })),
   { name: "Rule and contract tests", command: process.execPath, args: ["--test"] },
   { name: "Story content validation", command: process.execPath, args: ["scripts/validate-p0-content.mjs"] },
+  { name: "Sandbox S0 data and scope validation", command: process.execPath, args: ["scripts/sandbox/validate-s0.mjs"] },
   { name: "Release resource contract", command: process.execPath, args: ["scripts/verify-release-assets.mjs"] },
 ];
 

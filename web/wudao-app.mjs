@@ -50,8 +50,8 @@ import {
   canLearnFishingRod,
   reallocateExistingAttributes,
   templeTaskCost,
-} from "./wudao-core.mjs?v=20260812.1";
-import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260812.1";
+} from "./wudao-core.mjs?v=20260910.1";
+import { getRoutePresentation, getScenePresentation } from "./wudao-scenes.mjs?v=20260910.1";
 import {
   P0_STAKES,
   createDeathRecord,
@@ -81,7 +81,7 @@ import {
   resolveThirdLadyTreatment,
   resolveWoundTreatment,
   chooseStake,
-} from "./wudao-p0-core.mjs?v=20260812.1";
+} from "./wudao-p0-core.mjs?v=20260910.1";
 import {
   M4_EVIDENCE,
   M4_METHOD,
@@ -100,7 +100,7 @@ import {
   resolveM4Training,
   resolveMoneyInquiry,
   resolveOldHouseChoice,
-} from "./wudao-p1-core.mjs?v=20260812.1";
+} from "./wudao-p1-core.mjs?v=20260910.1";
 import {
   advanceCombatLabCampaign,
   createCombatLabSession,
@@ -111,14 +111,14 @@ import {
   restartCombatLab,
   resolveCombatLabAction,
   resolveCombatLabEnemyAction,
-} from "./combat-lab-core.mjs?v=20260812.1";
+} from "./combat-lab-core.mjs?v=20260910.1";
 import {
   INVENTORY_CAPACITY,
   createInventoryBoard,
   formatSilver,
   getInventoryCategory,
   getInventoryUseState,
-} from "./inventory-core.mjs?v=20260812.1";
+} from "./inventory-core.mjs?v=20260910.1";
 import {
   EQUIPMENT_CAPACITY,
   EQUIPMENT_SLOTS,
@@ -132,7 +132,7 @@ import {
   migrateCharacterVitals,
   migrateEquipmentState,
   unequipEquipmentSlot,
-} from "./character-system.mjs?v=20260812.1";
+} from "./character-system.mjs?v=20260910.1";
 import {
   MARTIAL_MASTERIES,
   breakthroughMartial,
@@ -154,9 +154,9 @@ import {
   trainMartial,
   unequipMartial,
   unlockedMartialNodes,
-} from "./martial-system.mjs?v=20260812.1";
-import { SAVE_STORAGE_KEY } from "./save-core.mjs?v=20260812.1";
-import { createSaveStorage } from "./save-storage.mjs?v=20260812.1";
+} from "./martial-system.mjs?v=20260910.1";
+import { SAVE_STORAGE_KEY } from "./save-core.mjs?v=20260910.1";
+import { createSaveStorage } from "./save-storage.mjs?v=20260910.1";
 import {
   ORIGINS,
   ORIGIN_LADY_INSIGHTS,
@@ -169,7 +169,7 @@ import {
   resolveOriginPersonalEvent,
   resolveOriginPrologueChoice,
   resolveOriginTempleTask,
-} from "./origin-core.mjs?v=20260812.1";
+} from "./origin-core.mjs?v=20260910.1";
 import {
   APPEARANCE_BODIES,
   APPEARANCE_CATALOGS,
@@ -178,9 +178,9 @@ import {
   createAppearanceState,
   cycleAppearance,
   normalizeAppearance,
-} from "./appearance-core.mjs?v=20260812.1";
-import { resolvePaperDollLayers } from "./paperdoll-system.mjs?v=20260812.1";
-import { renderPaperDollCanvases } from "./paperdoll-renderer.mjs?v=20260812.1";
+} from "./appearance-core.mjs?v=20260910.1";
+import { resolvePaperDollLayers } from "./paperdoll-system.mjs?v=20260910.1";
+import { renderPaperDollCanvases } from "./paperdoll-renderer.mjs?v=20260910.1";
 import {
   KNOWLEDGE_CATALOG,
   createKnowledgeBoard,
@@ -190,7 +190,7 @@ import {
   recordKnowledgeFragment,
   resolvePorterEncounter,
   syncKnowledgeFromGameState,
-} from "./knowledge-core.mjs?v=20260812.1";
+} from "./knowledge-core.mjs?v=20260910.1";
 import {
   beginTempleArrival,
   createTempleExplorationState,
@@ -209,14 +209,14 @@ import {
   resolveTempleLadyResponse,
   resolveTempleObjectAction,
   resolveTemplePorterAction,
-} from "./temple-exploration.mjs?v=20260812.1";
+} from "./temple-exploration.mjs?v=20260910.1";
 import {
   DEFAULT_WORLD_TIME,
   calendarToTotalKe,
   createWorldTime,
   formatWorldTime,
   migrateWorldTime,
-} from "./world-time.mjs?v=20260812.1";
+} from "./world-time.mjs?v=20260910.1";
 
 const PAPER_DOLL_ASSET_VERSION = "20260812.1";
 
@@ -1049,8 +1049,56 @@ function sceneContextHtml() {
   `;
 }
 
-function sceneVisualHtml() {
+// Keep the narrative engine authoritative; the 3D layer owns only presentation.
+let threeWorld = null;
+let threeLoading = null;
+let worldView = 'three';
+try { worldView = localStorage.getItem('wudao-world-view') === 'flat' ? 'flat' : 'three'; } catch {}
+
+function currentWorldPresentation() {
   const scene = getScenePresentation(state.screen, state);
+  if (scene) return scene;
+  if (state.screen === 'landing') return { ...getScenePresentation('templeWake', state), landing: true, hotspots: [], actors: [] };
+  if (screenMode() === 'neutral' || worldView === 'flat') return null;
+  const temple = /templeOffering|monkey|apeWater|midAutumnDeparture|p0JourneyEnd/.test(state.screen);
+  const alley = /Ambush|Kill|assailant|Tracking|House|Confrontation/.test(state.screen);
+  const sample = getScenePresentation(temple ? 'templeWake' : alley ? 'm4Tracking' : 'danObservation', state);
+  return { ...sample, title: modeLabel(), hotspots: [], actors: [], areaNav: [], areaId: null };
+}
+
+function syncThreeWorld() {
+  const host = app.querySelector('[data-world3d-host]');
+  if (worldView !== 'three' || !host) { threeWorld?.attach(null); return; }
+  const attach = () => {
+    const currentHost = app.querySelector('[data-world3d-host]');
+    const scene = currentWorldPresentation();
+    if (worldView === 'three' && currentHost && scene) threeWorld.attach(currentHost, scene, state, sceneContext);
+  };
+  if (threeWorld) { attach(); return; }
+  if (threeLoading) return;
+  threeLoading = import('./world3d.mjs?v=20260910.1').then(({ createWorldRenderer }) => {
+    threeWorld = createWorldRenderer({
+      onAction(action, value) {
+        if (!['temple-area', 'inspect-scene-object', 'inspect-scene-actor'].includes(action)) return;
+        handlers[action]?.(value);
+      },
+      onClose: closeSceneInspection,
+      onFallback(message) {
+        worldView = 'flat';
+        if (message) pendingSceneFeedback = { text: message, tone: 'notice' };
+        render();
+      },
+    });
+    attach();
+  }).catch((error) => {
+    console.warn('3D world unavailable; retaining the original scene.', error);
+    worldView = 'flat';
+    render();
+  }).finally(() => { threeLoading = null; });
+}
+
+function sceneVisualHtml() {
+  const scene = currentWorldPresentation();
   if (!scene) return "";
   const route = getRoutePresentation(state.screen, state);
   const routeById = Object.fromEntries((route?.nodes || []).map((node) => [node.id, node]));
@@ -1067,7 +1115,8 @@ function sceneVisualHtml() {
 
   return `
     <section class="scene-experience scene-${escapeHtml(scene.id)} ${scene.areaId ? `scene-area-${escapeHtml(scene.areaId)}` : ""}" aria-label="${escapeHtml(scene.title)}">
-      <div class="scene-canvas tone-${escapeHtml(scene.tone)} ${scene.id === "ruined_temple" && (state.templeOpening?.fireTended || state.templeExploration?.objectStates?.embers?.actionIds?.includes("tend_embers")) ? "fire-kindled" : ""}" data-scene-id="${escapeHtml(scene.id)}" data-scene-aspect="${Number(scene.imageAspect || 0)}" role="img" aria-label="${escapeHtml(scene.alt)}" style="--scene-image:url('${escapeHtml(scene.image)}')">
+      <div class="scene-canvas tone-${escapeHtml(scene.tone)} ${scene.id === "ruined_temple" && (state.templeOpening?.fireTended || state.templeExploration?.objectStates?.embers?.actionIds?.includes("tend_embers")) ? "fire-kindled" : ""}" data-scene-id="${escapeHtml(scene.id)}" data-scene-aspect="${Number(scene.imageAspect || 0)}" role="${worldView === 'three' ? 'group' : 'img'}" aria-label="${escapeHtml(scene.alt)}" style="--scene-image:url('${escapeHtml(scene.image)}')">
+        ${worldView === 'three' ? '<div class="world3d-slot" data-world3d-host></div>' : ''}
         <div class="scene-vignette" aria-hidden="true"></div>
         ${sceneFeedbackHtml()}
         ${scene.areaNav?.length ? `<nav class="temple-area-nav" aria-label="破庙区域">${scene.areaNav.map((area) => `
@@ -1953,6 +2002,7 @@ function gameShell(content) {
       <header class="topbar">
         ${templeHud ? `<div class="weather-clock" aria-label="夜雨，${templeClockLabel()}"><span class="weather-mark" aria-hidden="true"><i></i></span><span><strong>夜雨</strong><small>${templeClockLabel()}</small></span></div>` : `<div class="brand-mini"><span class="brand-seal">武</span><span>大曜江湖</span></div>`}
         <div class="mode-badge">${escapeHtml(modeLabel())}</div>
+        ${worldView === 'flat' ? '<button class="world-view-toggle" data-action="enable-three-world">立体画卷</button>' : ''}
         <div class="resource-row">${templeHud ? `<div class="resource fire-resource ${pendingSceneFeedback?.resource === "fire" ? "resource-changed" : ""}" aria-live="polite"><span>火势</span><strong>${Number(state.firePower || 0)}</strong></div><div class="resource hunger-resource ${pendingSceneFeedback?.resource === "hunger" ? "resource-changed" : ""}" aria-live="polite"><span>饥饿</span><strong>${hungerLabel()}</strong></div>` : `<div class="resource"><span>命灯</span><strong>${state.lives}</strong></div><div class="resource"><span>阅历</span><strong>${state.potential}</strong></div>`}</div>
       </header>
       <div class="game-grid">
@@ -2086,18 +2136,20 @@ function modeLabel() {
 }
 
 function renderLanding() {
-  return setupShell(`
-    <div class="title-lockup wudao-title">
-      <div class="fate-ring"><span class="fate-glyph">武</span></div>
+  return `<main class="world-launch">
+    <div class="world-launch-scene">${worldView === 'three' ? '<div class="world3d-slot" data-world3d-host></div>' : ''}</div>
+    <span class="world-launch-seal" aria-hidden="true">大曜江湖</span>
+    <section class="world-launch-copy">
       <p class="eyebrow">大曜四百二十七年 · 金陵</p>
-      <h1>武道</h1>
-      <p class="subtitle">金陵水陆交汇，门庭、帮会与官府各守一套规矩。<br />今夜的一场雨，会把三个不同来处的人引向同一座破庙。</p>
-      <div class="button-row">
-        <button class="primary-button" data-action="new-journey">踏入金陵</button>
-        ${savedState && savedState.screen !== "landing" ? `<button class="secondary-button" data-action="continue-journey">继续 · ${escapeHtml(savedState.name)}</button>` : ""}
+      <h1>武道</h1><div class="world-chapter">雨夜破庙</div>
+      <p>冷雨落入残瓦。炭火将熄，<br>庙门外，脚步声正近。</p>
+      <div class="world-launch-actions">
+        ${savedState && savedState.screen !== 'landing' ? `<button data-action="continue-journey">接续前程 · ${escapeHtml(savedState.name)}</button>` : '<button data-action="wake-in-three-world">从破庙醒来</button>'}
+        <button data-action="new-journey">选择此生来处</button>
       </div>
-    </div>
-  `, true);
+    </section>
+    <p class="world-launch-foot">一人一程 · 看清眼前，再作抉择</p>
+  </main>`;
 }
 
 function renderWorldIntro() {
@@ -4206,6 +4258,7 @@ function render() {
   const martialFeedbackWasRendered = Boolean(pendingMartialFeedback?.text);
   const knowledgeFeedbackWasRendered = Boolean(pendingKnowledgeFeedback?.text);
   app.innerHTML = renderer();
+  syncThreeWorld();
   void renderPaperDollCanvases(app, { assetVersion: PAPER_DOLL_ASSET_VERSION });
   document.documentElement.dataset.appReady = "true";
   pendingSceneFeedback = null;
@@ -4515,6 +4568,19 @@ function openKnowledgeEntry(entryId = null, category = "all") {
 }
 
 const handlers = {
+  "enable-three-world": () => {
+    worldView = 'three';
+    try { localStorage.setItem('wudao-world-view', 'three'); } catch {}
+    render();
+  },
+  "wake-in-three-world": () => {
+    // Use the same origin initialization as a fully created mystery character.
+    if (savedState && savedState.screen !== 'landing') return;
+    state = createInitialState();
+    state.originId = 'mystery';
+    state.backgroundId = 'mystery';
+    beginOriginJourney();
+  },
   "temple-area": (value) => {
     if (state.screen !== "templeWake") return;
     const result = enterTempleArea(state.templeExploration, value, state.worldTime);
@@ -6382,6 +6448,30 @@ function installDebugInterface() {
     value: api,
   });
 }
+
+function visibleWorldButtons() {
+  return [...app.querySelectorAll('.narrative-current [data-action], .temple-area-nav [data-action], .world-launch-actions [data-action]')]
+    .filter(button => !button.disabled && button.getClientRects().length > 0);
+}
+
+function readVisibleWorld() {
+  const scene = currentWorldPresentation();
+  return {
+    place: scene?.title || modeLabel(),
+    objects: [...(scene?.hotspots || []), ...(scene?.actors || [])].map(({id,label}) => ({id,label})),
+    actions: visibleWorldButtons().map(button => ({action:button.dataset.action, value:button.dataset.value || '', label:button.textContent.trim()})),
+  };
+}
+
+void import('./world3d-agent.mjs?v=20260910.1').then(({registerWorldTools}) => registerWorldTools({
+  read: readVisibleWorld,
+  act(action, value) {
+    const button = visibleWorldButtons().find(item => item.dataset.action === action && (item.dataset.value || '') === value);
+    if (!button) throw new Error('This action is not currently available.');
+    button.click();
+    return readVisibleWorld();
+  },
+})).catch(() => {});
 
 app.addEventListener("click", (event) => {
   const target = event.target.closest("[data-action]");

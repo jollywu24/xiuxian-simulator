@@ -2,3 +2,6 @@
 .edge-*/
 .server-*.log
 .tmp/
+node_modules/
+dist/
+.sites-runtime/

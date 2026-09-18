@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "regions": [
+    {"id":"region.jinling-east","name":"金陵东郊","hook":"水路生计与药材失窃","entry":"初始开放","revisit":"查明药材去向后开放渡船与夜间引荐"},
+    {"id":"region.qixia-ridge","name":"栖霞山道","hook":"山门考核与护送","entry":"东郊道路开放；可绕行旧山路","revisit":"入门、退门改变驻地服务和巡山态度"},
+    {"id":"region.qinhuai-city","name":"秦淮城坊","hook":"商路、官府与证据","entry":"渡船或陆路入城；被通缉需作保","revisit":"地方案件改变货价修正和联系人"},
+    {"id":"region.lin-an-water","name":"临安水路","hook":"漕运、暗渡与同伴旧债","entry":"掌握船路消息并取得渡江条件","revisit":"势力选择改变渡口权限与救援"},
+    {"id":"region.canglan-gorge","name":"沧澜峡","hook":"遗迹、师承与世界线收束","entry":"取得两条地区线索；不要求加入特定门派","revisit":"人物与门派结局在此留下回响"}
+  ],
+  "routes": [
+    {"id":"route.east-ridge","from":"region.jinling-east","to":"region.qixia-ridge","timeKe":12,"risk":"山道伏击","alternative":"可付向导费或凭轻功走近路"},
+    {"id":"route.east-city","from":"region.jinling-east","to":"region.qinhuai-city","timeKe":8,"risk":"渡口盘查","alternative":"陆路增加四刻；作保可解通缉通行问题"},
+    {"id":"route.ridge-city","from":"region.qixia-ridge","to":"region.qinhuai-city","timeKe":16,"risk":"负伤与补给","alternative":"驿站休息分段抵达"},
+    {"id":"route.city-water","from":"region.qinhuai-city","to":"region.lin-an-water","timeKe":24,"risk":"水路追踪","alternative":"护航、藏身货船或取得通行凭据"},
+    {"id":"route.ridge-gorge","from":"region.qixia-ridge","to":"region.canglan-gorge","timeKe":32,"risk":"险路与师承冲突","alternative":"用两地见闻取得向导帮助"},
+    {"id":"route.water-gorge","from":"region.lin-an-water","to":"region.canglan-gorge","timeKe":24,"risk":"封渡","alternative":"调停、夜渡或返山路"}
+  ],
+  "maps": [
+    {"id":"map.qinghe-courtyard","name":"青河渡口","regionId":"region.jinling-east","kind":"street","width":10,"height":7,"blocked":[[4,3],[4,4],[7,1]],"neighbors":["map.qinghe-inn","map.qinghe-clinic","map.east-road"],"status":"s0-sample"},
+    {"id":"map.qinghe-inn","name":"青河客栈","regionId":"region.jinling-east","kind":"interior","neighbors":["map.qinghe-courtyard"],"status":"planned"},
+    {"id":"map.qinghe-clinic","name":"渡口医馆","regionId":"region.jinling-east","kind":"interior","neighbors":["map.qinghe-courtyard"],"status":"planned"},
+    {"id":"map.east-road","name":"金陵东路","regionId":"region.jinling-east","kind":"wild","neighbors":["map.qinghe-courtyard","map.qinghe-school","map.reed-hideout"],"status":"planned"},
+    {"id":"map.qinghe-school","name":"青河武馆","regionId":"region.jinling-east","kind":"faction","neighbors":["map.east-road"],"status":"planned"},
+    {"id":"map.reed-hideout","name":"芦荡藏货处","regionId":"region.jinling-east","kind":"dungeon","neighbors":["map.east-road"],"status":"planned"}
+  ],
+  "factions": [
+    {"id":"faction.qinghe-school","name":"青河武馆","joinable":true,"status":"s0-definition"},
+    {"id":"faction.ridge-school","name":"栖霞剑院","joinable":true,"status":"planned"},
+    {"id":"faction.water-school","name":"听潮门","joinable":true,"status":"planned"},
+    {"id":"faction.herb-school","name":"百草山房","joinable":true,"status":"planned"},
+    {"id":"faction.ferry-guild","name":"青河船行","joinable":false,"status":"planned"},
+    {"id":"faction.jinling-office","name":"金陵府衙","joinable":false,"status":"planned"}
+  ],
+  "actors": [
+    {"id":"actor.chen-siming","name":"陈司命","side":"party","role":"剑客","color":"#496c75","position":[2,4],"maxHp":38,"strength":7,"agility":6,"reduction":1,"skillId":"skill.straight-sword","factionId":"faction.qinghe-school","mapId":"map.qinghe-courtyard","lifePolicy":"player","appearance":"swordsman"},
+    {"id":"actor.lin-zhi","name":"林芷","side":"party","role":"医者","color":"#8c9572","position":[1,5],"maxHp":30,"strength":5,"agility":7,"reduction":0,"skillId":"skill.healing-hand","factionId":"faction.herb-school","mapId":"map.qinghe-courtyard","lifePolicy":"protected","appearance":"healer"},
+    {"id":"actor.lu-zhou","name":"陆舟","side":"party","role":"棍客","color":"#ab8b53","position":[2,6],"maxHp":44,"strength":8,"agility":4,"reduction":2,"skillId":"skill.long-staff","factionId":"faction.qinghe-school","mapId":"map.qinghe-courtyard","lifePolicy":"ordinary","appearance":"staff"},
+    {"id":"actor.yan-qiu","name":"燕秋","side":"party","role":"暗器","color":"#967780","position":[1,3],"maxHp":29,"strength":5,"agility":8,"reduction":0,"skillId":"skill.flying-needle","factionId":"faction.water-school","mapId":"map.qinghe-courtyard","lifePolicy":"ordinary","appearance":"ranged"},
+    {"id":"actor.guard-blade","name":"持刀护院","side":"enemy","role":"近卫","color":"#934c42","position":[7,4],"maxHp":25,"strength":5,"agility":5,"reduction":1,"skillId":"skill.straight-sword","factionId":"faction.ferry-guild","mapId":"map.qinghe-courtyard","lifePolicy":"ordinary","appearance":"swordsman"},
+    {"id":"actor.guard-staff","name":"长棍护院","side":"enemy","role":"拦路","color":"#795741","position":[7,6],"maxHp":30,"strength":6,"agility":4,"reduction":1,"skillId":"skill.long-staff","factionId":"faction.ferry-guild","mapId":"map.qinghe-courtyard","lifePolicy":"ordinary","appearance":"staff"},
+    {"id":"actor.guard-bow","name":"弓手护院","side":"enemy","role":"远程","color":"#89564e","position":[8,2],"maxHp":22,"strength":4,"agility":6,"reduction":0,"skillId":"skill.flying-needle","factionId":"faction.ferry-guild","mapId":"map.qinghe-courtyard","lifePolicy":"ordinary","appearance":"ranged"}
+  ],
+  "skills": [
+    {"id":"skill.straight-sword","name":"直取中门","category":"technique","kind":"melee","range":1,"cost":2,"power":3,"effect":"damage","assetId":"asset.sword-arc"},
+    {"id":"skill.long-staff","name":"长棍拦江","category":"technique","kind":"melee","range":2,"cost":2,"power":2,"effect":"damage","assetId":"asset.staff-trail"},
+    {"id":"skill.flying-needle","name":"飞针点穴","category":"technique","kind":"ranged","range":4,"cost":2,"power":1,"effect":"damage","assetId":"asset.needle-trail"},
+    {"id":"skill.healing-hand","name":"止血扶伤","category":"technique","kind":"support","range":3,"cost":2,"power":8,"effect":"heal","assetId":"asset.heal-ring"}
+  ],
+  "items": [
+    {"id":"item.qinghe-manual","name":"青河拳谱","kind":"manual","unique":true},
+    {"id":"item.healing-herb","name":"止血草","kind":"material","unique":false}
+  ],
+  "quests": [
+    {"id":"quest.missing-manual","name":"失落的拳谱","mapId":"map.qinghe-courtyard","actorIds":["actor.chen-siming","actor.guard-blade"],"itemIds":["item.qinghe-manual"],"eventIds":["event.manual-returned"],"rewardKey":"reward.missing-manual.once","fallback":"持有人缺席时由船行账簿提供去向；结算人死亡则交给继任管事","status":"planned"}
+  ],
+  "events": [
+    {"id":"event.manual-returned","name":"拳谱归还","questId":"quest.missing-manual","status":"planned"}
+  ],
+  "assets": [
+    {"id":"asset.party-motion-atlas","kind":"atlas","source":"art_source/sandbox-s0/v1/party-motion-atlas-v1.png"},
+    {"id":"asset.qinghe-courtyard","kind":"backdrop","source":"art_source/sandbox-s0/v1/qinghe-courtyard-v1.png"},
+    {"id":"asset.sword-arc","kind":"procedural","source":"tools/sandbox-s0/renderer.mjs"},
+    {"id":"asset.staff-trail","kind":"procedural","source":"tools/sandbox-s0/renderer.mjs"},
+    {"id":"asset.needle-trail","kind":"procedural","source":"tools/sandbox-s0/renderer.mjs"},
+    {"id":"asset.heal-ring","kind":"procedural","source":"tools/sandbox-s0/renderer.mjs"}
+  ]
+}

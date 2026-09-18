@@ -1,0 +1,294 @@
+{
+  "version": 1,
+  "note": "设计占位清单，除青河渡口样板外没有宣称地图已制作。",
+  "maps": [
+    {
+      "id": "map.qinghe-courtyard",
+      "name": "青河渡口",
+      "regionId": "region.jinling-east",
+      "kind": "street",
+      "stage": "S1",
+      "status": "s0-sample"
+    },
+    {
+      "id": "map.qinghe-inn",
+      "name": "青河客栈",
+      "regionId": "region.jinling-east",
+      "kind": "interior",
+      "stage": "S1",
+      "status": "planned"
+    },
+    {
+      "id": "map.qinghe-clinic",
+      "name": "渡口医馆",
+      "regionId": "region.jinling-east",
+      "kind": "interior",
+      "stage": "S1",
+      "status": "planned"
+    },
+    {
+      "id": "map.east-road",
+      "name": "金陵东路",
+      "regionId": "region.jinling-east",
+      "kind": "wild",
+      "stage": "S1",
+      "status": "planned"
+    },
+    {
+      "id": "map.qinghe-school",
+      "name": "青河武馆",
+      "regionId": "region.jinling-east",
+      "kind": "faction",
+      "stage": "S1",
+      "status": "planned"
+    },
+    {
+      "id": "map.reed-hideout",
+      "name": "芦荡藏货处",
+      "regionId": "region.jinling-east",
+      "kind": "dungeon",
+      "stage": "S1",
+      "status": "planned"
+    },
+    {
+      "id": "map.ridge-market",
+      "name": "栖霞山集",
+      "regionId": "region.qixia-ridge",
+      "kind": "street",
+      "stage": "S2/S3",
+      "status": "planned"
+    },
+    {
+      "id": "map.qinhuai-market",
+      "name": "秦淮市街",
+      "regionId": "region.qinhuai-city",
+      "kind": "street",
+      "stage": "S2/S3",
+      "status": "planned"
+    },
+    {
+      "id": "map.canal-port",
+      "name": "临安船埠",
+      "regionId": "region.lin-an-water",
+      "kind": "street",
+      "stage": "S2/S3",
+      "status": "planned"
+    },
+    {
+      "id": "map.gorge-settlement",
+      "name": "峡口聚落",
+      "regionId": "region.canglan-gorge",
+      "kind": "street",
+      "stage": "S2/S3",
+      "status": "planned"
+    },
+    {
+      "id": "map.south-gate",
+      "name": "金陵南门",
+      "regionId": "region.qinhuai-city",
+      "kind": "street",
+      "stage": "S2/S3",
+      "status": "planned"
+    },
+    {
+      "id": "map.ridge-inn",
+      "name": "山路驿舍",
+      "regionId": "region.qixia-ridge",
+      "kind": "interior",
+      "stage": "S2/S3",
+      "status": "planned"
+    },
+    {
+      "id": "map.city-teahouse",
+      "name": "秦淮茶楼",
+      "regionId": "region.qinhuai-city",
+      "kind": "interior",
+      "stage": "S2/S3",
+      "status": "planned"
+    },
+    {
+      "id": "map.city-records",
+      "name": "府衙案牍房",
+      "regionId": "region.qinhuai-city",
+      "kind": "interior",
+      "stage": "S2/S3",
+      "status": "planned"
+    },
+    {
+      "id": "map.canal-warehouse",
+      "name": "船行仓房",
+      "regionId": "region.lin-an-water",
+      "kind": "interior",
+      "stage": "S2/S3",
+      "status": "planned"
+    },
+    {
+      "id": "map.canal-tavern",
+      "name": "临水酒家",
+      "regionId": "region.lin-an-water",
+      "kind": "interior",
+      "stage": "S2/S3",
+      "status": "planned"
+    },
+    {
+      "id": "map.gorge-shrine",
+      "name": "峡口旧祠",
+      "regionId": "region.canglan-gorge",
+      "kind": "interior",
+      "stage": "S2/S3",
+      "status": "planned"
+    },
+    {
+      "id": "map.ridge-path",
+      "name": "栖霞正道",
+      "regionId": "region.qixia-ridge",
+      "kind": "wild",
+      "stage": "S2/S3",
+      "status": "planned"
+    },
+    {
+      "id": "map.ridge-shortcut",
+      "name": "旧山近路",
+      "regionId": "region.qixia-ridge",
+      "kind": "wild",
+      "stage": "S2/S3",
+      "status": "planned"
+    },
+    {
+      "id": "map.city-outskirts",
+      "name": "金陵城郊",
+      "regionId": "region.qinhuai-city",
+      "kind": "wild",
+      "stage": "S2/S3",
+      "status": "planned"
+    },
+    {
+      "id": "map.canal-bank",
+      "name": "临安堤岸",
+      "regionId": "region.lin-an-water",
+      "kind": "wild",
+      "stage": "S2/S3",
+      "status": "planned"
+    },
+    {
+      "id": "map.reed-water",
+      "name": "芦苇水道",
+      "regionId": "region.lin-an-water",
+      "kind": "wild",
+      "stage": "S2/S3",
+      "status": "planned"
+    },
+    {
+      "id": "map.gorge-road",
+      "name": "沧澜栈道",
+      "regionId": "region.canglan-gorge",
+      "kind": "wild",
+      "stage": "S2/S3",
+      "status": "planned"
+    },
+    {
+      "id": "map.gorge-forest",
+      "name": "峡中林地",
+      "regionId": "region.canglan-gorge",
+      "kind": "wild",
+      "stage": "S2/S3",
+      "status": "planned"
+    },
+    {
+      "id": "map.ridge-school",
+      "name": "栖霞剑院",
+      "regionId": "region.qixia-ridge",
+      "kind": "faction",
+      "stage": "S2/S3",
+      "status": "planned"
+    },
+    {
+      "id": "map.water-school",
+      "name": "听潮门庭",
+      "regionId": "region.lin-an-water",
+      "kind": "faction",
+      "stage": "S2/S3",
+      "status": "planned"
+    },
+    {
+      "id": "map.herb-school",
+      "name": "百草山房",
+      "regionId": "region.qixia-ridge",
+      "kind": "faction",
+      "stage": "S2/S3",
+      "status": "planned"
+    },
+    {
+      "id": "map.ferry-guild",
+      "name": "船行总堂",
+      "regionId": "region.lin-an-water",
+      "kind": "faction",
+      "stage": "S2/S3",
+      "status": "planned"
+    },
+    {
+      "id": "map.jinling-office",
+      "name": "金陵府衙",
+      "regionId": "region.qinhuai-city",
+      "kind": "faction",
+      "stage": "S2/S3",
+      "status": "planned"
+    },
+    {
+      "id": "map.ridge-camp",
+      "name": "山匪旧营",
+      "regionId": "region.qixia-ridge",
+      "kind": "dungeon",
+      "stage": "S2/S3",
+      "status": "planned"
+    },
+    {
+      "id": "map.ridge-cave",
+      "name": "石壁暗洞",
+      "regionId": "region.qixia-ridge",
+      "kind": "dungeon",
+      "stage": "S2/S3",
+      "status": "planned"
+    },
+    {
+      "id": "map.city-cellar",
+      "name": "城坊暗窖",
+      "regionId": "region.qinhuai-city",
+      "kind": "dungeon",
+      "stage": "S2/S3",
+      "status": "planned"
+    },
+    {
+      "id": "map.city-prison",
+      "name": "府牢内道",
+      "regionId": "region.qinhuai-city",
+      "kind": "dungeon",
+      "stage": "S2/S3",
+      "status": "planned"
+    },
+    {
+      "id": "map.canal-wreck",
+      "name": "沉舟浅滩",
+      "regionId": "region.lin-an-water",
+      "kind": "dungeon",
+      "stage": "S2/S3",
+      "status": "planned"
+    },
+    {
+      "id": "map.gorge-ruin",
+      "name": "沧澜旧址",
+      "regionId": "region.canglan-gorge",
+      "kind": "dungeon",
+      "stage": "S2/S3",
+      "status": "planned"
+    },
+    {
+      "id": "map.gorge-vault",
+      "name": "峡底石室",
+      "regionId": "region.canglan-gorge",
+      "kind": "dungeon",
+      "stage": "S2/S3",
+      "status": "planned"
+    }
+  ]
+}

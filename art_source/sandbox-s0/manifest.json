@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "assets": [
+    {
+      "file": "art_source/sandbox-s0/v1/qinghe-courtyard-v1.png",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "sha256": "f47d97213c06f6de1592234901d2b9841052d8457959cfd1b192609d51e41f97",
+      "source": "OpenAI image generation; original prompts; 2026-09-16",
+      "status": "S0 calibration sample; not production animation set"
+    },
+    {
+      "file": "art_source/sandbox-s0/v1/party-motion-atlas-v1.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "sha256": "944ebc1559b58594a68daec224c92c99621552e9ddd3c5e54b06a6594f858013",
+      "source": "OpenAI image generation; original prompts; 2026-09-16",
+      "status": "S0 calibration sample; not production animation set"
+    }
+  ]
+}

@@ -4,7 +4,7 @@ import {
   createWorldTime,
   elapsedKeSince,
   formatWorldTime,
-} from "./world-time.mjs?v=20260812.1";
+} from "./world-time.mjs?v=20260910.1";
 
 const ORIGIN_IDS = new Set(["shen_branch", "streetborn", "mystery"]);
 

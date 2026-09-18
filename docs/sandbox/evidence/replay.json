@@ -1,0 +1,32 @@
+{
+  "capturedAt": "2026-09-17T04:03:23.090Z",
+  "cases": [
+    {
+      "name": "四人独立行动点",
+      "pass": true,
+      "detail": "只扣移动者一点"
+    },
+    {
+      "name": "阻挡与失败原子性",
+      "pass": true,
+      "detail": "木箱格拒绝且不扣费"
+    },
+    {
+      "name": "记录还原",
+      "pass": true,
+      "detail": "恢复角色、位置和行动"
+    },
+    {
+      "name": "固定因果与敌方回合",
+      "pass": true,
+      "detail": "相同输入结果一致"
+    },
+    {
+      "name": "撤退结算",
+      "pass": true,
+      "detail": "一刻结算，原存档不参与"
+    }
+  ],
+  "pass": true,
+  "runtimeErrors": []
+}

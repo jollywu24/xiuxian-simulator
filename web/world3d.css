@@ -1,0 +1,79 @@
+:root { --world-ink:#0c1b24; --world-gold:#dac18e; --world-line:rgba(189,215,217,.22); }
+.world3d-slot,.world3d-runtime {position:absolute;inset:0;width:100%;height:100%;overflow:hidden;}
+.world3d-slot {z-index:2;pointer-events:none;}
+.world3d-slot[data-ready="true"] {pointer-events:auto;}
+.world3d-canvas {display:block;width:100%;height:100%;outline:0;touch-action:none;}
+.world3d-canvas:focus-visible {outline:2px solid var(--world-gold);outline-offset:-3px;}
+.world3d-runtime {isolation:isolate;}
+.world3d-runtime [hidden] {display:none!important;}
+.has-world3d>.scene-hotspot,.has-world3d>.scene-actor,.has-world3d>.scene-player,.has-world3d>.scene-vignette {display:none!important;}
+.has-world3d::before,.has-world3d::after {display:none!important;}
+.has-world3d {background:#192e3a!important;}
+.has-world3d>.temple-area-nav {z-index:7;left:50%!important;top:18px!important;bottom:auto!important;transform:translateX(-50%);width:max-content;max-width:calc(100% - 30px);background:rgba(10,24,31,.8);backdrop-filter:blur(12px);border:1px solid var(--world-line);padding:4px;gap:3px;}
+.has-world3d>.temple-area-nav button {min-width:68px;font-size:14px;min-height:34px;border:0;color:#bfd0d3;background:transparent;}
+.has-world3d>.temple-area-nav button.current {color:#f3dab0;background:#344342;}
+.world3d-place {position:absolute;left:24px;top:23px;pointer-events:none;display:grid;gap:7px;color:#ede5d3;text-shadow:0 2px 12px #07131c;}
+.world3d-place small {font-size:12px;letter-spacing:.14em;color:#b7cbd0;}
+.world3d-place strong {font:500 25px/1.3 'Noto Serif SC','Songti SC',serif;letter-spacing:.12em;}
+.has-world3d .world3d-place {top:78px;}
+.world3d-tools {position:absolute;right:15px;bottom:53px;display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;max-width:calc(100% - 28px);}
+.world3d-tools button {appearance:none;border:1px solid var(--world-line);background:rgba(10,24,31,.78);color:#c7d7d8;padding:7px 10px;font:inherit;font-size:12px;line-height:1.4;cursor:pointer;backdrop-filter:blur(8px);border-radius:3px;}
+.world3d-tools button:hover,.world3d-tools button:focus-visible {color:#ffe8bb;border-color:#a99870;}
+.world3d-hint {position:absolute;bottom:16px;left:0;width:100%;display:flex;gap:16px;justify-content:center;color:#c4d2d6;font-size:12px;pointer-events:none;text-shadow:0 2px 4px #000;}
+.world3d-hint kbd {font:inherit;color:#eee3c8;border:1px solid #798e92;padding:2px 5px;background:#182a32a8;border-radius:3px;}
+.world3d-labels {position:absolute;inset:0;pointer-events:none;}
+.world3d-marker {position:absolute;transform:translate(-50%,-100%);pointer-events:auto;white-space:nowrap;border:1px solid rgba(191,218,218,.26);background:rgba(12,29,36,.83);box-shadow:0 3px 14px #09151c38;color:#c6d8d8;padding:7px 11px 7px 24px;font:inherit;font-size:14px;line-height:1.3;border-radius:2px;cursor:pointer;transition:background .18s,color .18s;}
+.world3d-marker::before {content:'';position:absolute;left:9px;top:50%;width:5px;height:5px;transform:translateY(-50%) rotate(45deg);border:1px solid #c9bb94;}
+.world3d-marker::after {content:'';position:absolute;left:50%;top:100%;height:16px;width:1px;background:linear-gradient(#b6cfcd99,transparent);}
+.world3d-marker:hover,.world3d-marker:focus-visible,.world3d-marker.selected {border-color:#d6bd86;background:rgba(57,56,43,.92);color:#ffe4aa;outline:none;z-index:3;}
+.world3d-marker.nearby::before {background:#dbc998;}
+.world3d-marker.resolved {color:#bdc2b3;}
+.world3d-near {position:absolute;bottom:100px;left:50%;transform:translateX(-50%);max-width:90%;border:1px solid #b79f6b;color:#f4d8a5;background:#152b34e8;padding:10px 18px;font:inherit;font-size:14px;border-radius:3px;cursor:pointer;white-space:normal;}
+.world3d-stick {display:none;}
+.world-view-toggle {color:#cfbd91;border:1px solid var(--world-line);background:#1b3037;padding:6px 12px;font:inherit;font-size:14px;cursor:pointer;}
+.world-launch {position:relative;min-height:100svh;height:100svh;overflow:hidden;background:#122632;color:#ebdfc7;}
+.world-launch-scene {position:absolute;inset:0;background:linear-gradient(90deg,#0b1c29d9,#18313e33),url('./assets/scenes/ruined-temple-stage-v3.webp') center/cover;}
+.world-launch::after {content:'';position:absolute;inset:0;background:linear-gradient(90deg,#081b29e8 0%,#0c2334bd 26%,#12293610 66%),linear-gradient(0deg,#091926b3,transparent 28%);pointer-events:none;z-index:3;}
+.world-launch-copy {position:absolute;left:7%;top:50%;transform:translateY(-50%);z-index:5;width:350px;max-width:42%;}
+.world-launch-copy .eyebrow {color:#b9ced3;font-size:14px;letter-spacing:.2em;margin:0 0 18px;}
+.world-launch-copy h1 {font:500 clamp(64px,9vw,112px)/1.3 'Noto Serif SC','Songti SC',serif;letter-spacing:.18em;color:#f1e4c7;margin:0 0 4px;text-shadow:0 4px 22px #03101c7a;}
+.world-launch-copy .world-chapter {display:flex;align-items:center;gap:13px;letter-spacing:.24em;font:500 22px/1.5 serif;color:#d3b987;margin:7px 0 27px;}
+.world-chapter::before {content:'';width:34px;height:1px;background:#c8ad78;}
+.world-launch-copy p {font-size:16px;line-height:1.9;color:#adc4ce;max-width:300px;}
+.world-launch-actions {display:grid;gap:10px;margin-top:28px;max-width:270px;}
+.world-launch-actions button {font:inherit;font-size:16px;padding:14px 20px;min-height:49px;letter-spacing:.1em;border:1px solid #8e8b76;color:#eee0c0;background:#152d3bb8;text-align:left;cursor:pointer;transition:background .2s;}
+.world-launch-actions button:first-child {background:#c6ac76;color:#172630;border-color:#d6bd89;}
+.world-launch-actions button:hover {background:#30434b;}
+.world-launch-actions button:first-child:hover {background:#e2c995;}
+.world-launch-actions button:focus-visible {outline:2px solid #fae2ae;outline-offset:4px;}
+.world-launch-foot {position:absolute;bottom:27px;left:7%;z-index:5;color:#a1b7bd;font-size:12px;letter-spacing:.10em;}
+.world-launch-seal {position:absolute;right:5%;top:32px;z-index:5;border:1px solid #8d6055;color:#d7a285;font:18px/1.6 serif;writing-mode:vertical-rl;letter-spacing:.2em;padding:9px 6px;}
+.is-landing .world3d-place,.is-landing .world3d-hint,.is-landing .world3d-tools,.is-landing .world3d-labels,.is-landing .world3d-stick {display:none!important;}
+.world3d-slot:not([data-ready="true"])::after {content:'山雨渐近';position:absolute;right:25px;bottom:22px;color:#d0ddd9;font-size:14px;}
+@media (pointer:coarse) {
+  .world3d-stick {display:grid;place-items:center;position:absolute;bottom:51px;left:19px;width:76px;height:76px;border:1px solid #b6cdcc58;border-radius:50%;background:#10273265;touch-action:none;}
+  .world3d-stick span {display:block;width:30px;height:30px;background:#cedad77a;border:1px solid #d1e5dfb3;border-radius:50%;}
+  .world3d-hint span:first-child {display:none;}
+  .world3d-near {left:auto;right:14px;transform:none;bottom:92px;font-size:13px;max-width:60%;}
+}
+@media(max-height:550px) and (orientation:landscape) {
+  .world3d-place {left:14px!important;top:58px!important;gap:3px;}
+  .world3d-place small {font-size:12px;}
+  .world3d-place strong {font-size:18px;}
+  .has-world3d>.temple-area-nav {top:10px!important;}
+  .world3d-tools {right:9px;bottom:34px;gap:3px;}
+  .world3d-tools button {padding:5px 7px;font-size:12px;}
+  .world3d-hint {bottom:10px;gap:8px;font-size:12px;}
+  .world3d-marker {font-size:12px;padding:5px 8px 5px 20px;}
+  .world3d-near {bottom:75px;padding:7px 12px;}
+  .world-launch-copy {max-width:44%;top:48%;}
+  .world-launch-copy h1 {font-size:64px;line-height:1.05;}
+  .world-launch-copy .eyebrow {font-size:12px;margin-bottom:12px;}
+  .world-launch-copy .world-chapter {font-size:18px;margin:7px 0 13px;}
+  .world-launch-copy p {font-size:14px;line-height:1.6;margin:0;}
+  .world-launch-actions {margin-top:15px;gap:7px;}
+  .world-launch-actions button {min-height:37px;padding:8px 14px;font-size:14px;}
+  .world-launch-foot {bottom:13px;}
+}
+@media(max-width:600px) and (orientation:portrait) {.world-launch{display:none;}}
+@media(prefers-reduced-motion:reduce) {.world3d-runtime *{transition:none!important;}}

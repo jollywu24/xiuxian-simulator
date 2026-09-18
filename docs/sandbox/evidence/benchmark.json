@@ -1,0 +1,52 @@
+{
+  "capturedAt": "2026-09-16T11:23:36.397Z",
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+  "viewport": [
+    1363,
+    936
+  ],
+  "devicePixelRatio": 1,
+  "hardwareConcurrency": 5,
+  "weather": "day",
+  "sceneActors": 7,
+  "results": [
+    {
+      "backend": "canvas",
+      "sceneSize": [
+        1600,
+        900
+      ],
+      "stressActors": 0,
+      "frames": 180,
+      "drawCpuMedianMs": 0.1,
+      "drawCpuP95Ms": 0.1,
+      "frameIntervalMedianMs": null,
+      "frameIntervalP95Ms": null,
+      "gpuRenderer": null,
+      "note": "固定180次绘制提交的CPU耗时；不测GPU完成时间，不换算FPS。",
+      "sampleMode": "synchronous-cpu-submit"
+    },
+    {
+      "backend": "canvas",
+      "sceneSize": [
+        1600,
+        900
+      ],
+      "stressActors": 96,
+      "frames": 180,
+      "drawCpuMedianMs": 0.2,
+      "drawCpuP95Ms": 0.3,
+      "frameIntervalMedianMs": null,
+      "frameIntervalP95Ms": null,
+      "gpuRenderer": null,
+      "note": "固定180次绘制提交的CPU耗时；不测GPU完成时间，不换算FPS。",
+      "sampleMode": "synchronous-cpu-submit"
+    },
+    {
+      "backend": "webgl",
+      "available": false,
+      "reason": "当前设备未能创建 WebGL2，Canvas2D 可正常运行。"
+    }
+  ],
+  "caveat": "这是当前云端浏览器的局部CPU绘制提交实测；不代表目标 Windows 独显或完整游戏帧率。远端浏览器会限制rAF推进，故不发布FPS。"
+}

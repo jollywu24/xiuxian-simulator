@@ -1,0 +1,11 @@
+{
+  "pass": true,
+  "entities": 44,
+  "packages": 192,
+  "required": 185,
+  "s0": 11,
+  "tiledObjects": 6,
+  "tiledImportCpuMeanMs": 0.0045,
+  "caveat": "导入CPU耗时不等于策划编辑效率；没有第二名制作者的可用性结论。",
+  "errors": []
+}

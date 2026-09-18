@@ -1,0 +1,11 @@
+{
+ "type":"map","version":"1.10","tiledversion":"1.11.2","orientation":"orthogonal","renderorder":"right-down","width":10,"height":7,"tilewidth":64,"tileheight":64,"infinite":false,"nextlayerid":2,"nextobjectid":8,
+ "layers":[{"id":1,"name":"S0 objects","type":"objectgroup","visible":true,"opacity":1,"x":0,"y":0,"objects":[
+  {"id":1,"name":"主角出生点","type":"spawn","x":128,"y":256,"width":0,"height":0,"point":true,"properties":[{"name":"stableId","type":"string","value":"object.hero-spawn"},{"name":"targetId","type":"string","value":"actor.chen-siming"}]},
+  {"id":2,"name":"木箱甲","type":"blocker","x":256,"y":192,"width":64,"height":64,"properties":[{"name":"stableId","type":"string","value":"object.crate-a"}]},
+  {"id":3,"name":"木箱乙","type":"blocker","x":256,"y":256,"width":64,"height":64,"properties":[{"name":"stableId","type":"string","value":"object.crate-b"}]},
+  {"id":4,"name":"木箱丙","type":"blocker","x":448,"y":64,"width":64,"height":64,"properties":[{"name":"stableId","type":"string","value":"object.crate-c"}]},
+  {"id":5,"name":"医馆方向","type":"exit","x":576,"y":128,"width":64,"height":64,"properties":[{"name":"stableId","type":"string","value":"object.clinic-exit"},{"name":"targetId","type":"string","value":"map.qinghe-clinic"}]},
+  {"id":6,"name":"拳谱线索","type":"interaction","x":448,"y":256,"width":64,"height":64,"properties":[{"name":"stableId","type":"string","value":"object.manual-clue"},{"name":"targetId","type":"string","value":"quest.missing-manual"}]}
+ ]}]
+}

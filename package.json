@@ -4,6 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "node scripts/sandbox/serve-s0.mjs",
+    "serve:s0": "node scripts/sandbox/serve-s0.mjs",
+    "validate:s0": "node scripts/sandbox/validate-s0.mjs",
+    "test:s0": "node --test tests/sandbox-s0.test.mjs",
     "test": "node --test",
     "verify": "node scripts/run-quality-gate.mjs release",
     "verify:quick": "node scripts/run-quality-gate.mjs quick",
@@ -15,6 +19,11 @@
     "smoke:appearance": "node scripts/run-browser-regression.mjs appearance",
     "smoke:online": "node scripts/run-browser-regression.mjs online",
     "test:browser": "node scripts/run-browser-regression.mjs all",
-    "serve": "node scripts/serve-web.mjs"
-  }
+    "serve": "node scripts/serve-web.mjs",
+    "build": "node scripts/build-three-site.mjs"
+  },
+  "dependencies": {
+    "three": "0.186.0"
+  },
+  "packageManager": "pnpm@11.19.0"
 }

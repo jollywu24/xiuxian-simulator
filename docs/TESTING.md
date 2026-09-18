@@ -1,5 +1,9 @@
 # 自动化测试与浏览器回归
 
+## 沙盒S0验证入口
+
+`npm run test:s0`执行S0纯规则与损坏记录用例；`npm run validate:s0`验证Schema、稳定ID、引用、地图名册、阶段门及192工作包依赖。两者已纳入`verify:quick`。`npm run serve:s0`提供独立工作台，底部“运行验收演练”生成5项浏览器命令演练报告。三视口检查、人工操作与CPU采样的边界见[sandbox/S0_ACCEPTANCE.md](sandbox/S0_ACCEPTANCE.md)。完整旧版浏览器回归和目标Windows硬件测试仍各自独立，不能被S0命令演练替代。
+
 本文只负责测试入口、覆盖层级、浏览器回归结构和失败定位。系统规则写在`docs/systems/`，发布过程写在`docs/RELEASE.md`，调试状态接口写在`docs/DEBUGGING.md`。
 
 ## 1. 三层验证策略

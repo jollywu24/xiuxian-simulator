@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "date": "2026-09-17",
+  "stage": "S0",
+  "implementationDelivered": true,
+  "stageGatePassed": false,
+  "openGates": [
+    {
+      "id": "G01",
+      "package": "A07",
+      "reason": "目标Windows设备／GPU总帧时、桌面包和真实制作者效率未实测",
+      "ownerRole": "技术负责人＋制作人",
+      "protocol": "docs/sandbox/S0_TECHNICAL.md"
+    }
+  ],
+  "packages": [
+    {
+      "id": "A01",
+      "document": "docs/sandbox/S0_PRODUCT_RULES.md",
+      "status": "delivery-verified",
+      "scope": "S0交付判据；不代表未来生产系统已实现"
+    },
+    {
+      "id": "A02",
+      "document": "docs/sandbox/S0_PRODUCT_RULES.md",
+      "status": "delivery-verified",
+      "scope": "S0交付判据；不代表未来生产系统已实现"
+    },
+    {
+      "id": "A03",
+      "document": "docs/sandbox/S0_PRODUCT_RULES.md",
+      "status": "delivery-verified",
+      "scope": "S0交付判据；不代表未来生产系统已实现"
+    },
+    {
+      "id": "A04",
+      "document": "docs/sandbox/S0_COMBAT.md",
+      "status": "delivery-verified",
+      "scope": "S0交付判据；不代表未来生产系统已实现"
+    },
+    {
+      "id": "A05",
+      "document": "docs/sandbox/S0_VISUAL.md",
+      "status": "delivery-verified",
+      "scope": "S0交付判据；不代表未来生产系统已实现"
+    },
+    {
+      "id": "A06",
+      "document": "docs/sandbox/S0_CONTENT_WORLD.md",
+      "status": "delivery-verified",
+      "scope": "S0交付判据；不代表未来生产系统已实现"
+    },
+    {
+      "id": "A07",
+      "document": "docs/sandbox/S0_TECHNICAL.md",
+      "status": "external-validation-pending",
+      "scope": "S0交付判据；不代表未来生产系统已实现"
+    },
+    {
+      "id": "A08",
+      "document": "docs/sandbox/S0_PRODUCTION.md",
+      "status": "delivery-verified",
+      "scope": "S0交付判据；不代表未来生产系统已实现"
+    },
+    {
+      "id": "B01",
+      "document": "docs/sandbox/S0_CONTENT_WORLD.md",
+      "status": "delivery-verified",
+      "scope": "S0交付判据；不代表未来生产系统已实现"
+    },
+    {
+      "id": "T01",
+      "document": "docs/sandbox/S0_TECHNICAL.md",
+      "status": "delivery-verified",
+      "scope": "S0交付判据；不代表未来生产系统已实现"
+    },
+    {
+      "id": "V01",
+      "document": "docs/sandbox/S0_ACCEPTANCE.md",
+      "status": "delivery-verified",
+      "scope": "S0交付判据；不代表未来生产系统已实现"
+    }
+  ]
+}

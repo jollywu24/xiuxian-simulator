@@ -1,0 +1,6985 @@
+{
+  "version": 1,
+  "source": "Wudao_Sandbox_Breakdown.xlsx / 任务清单 / 2026-09-16",
+  "note": "首发验收规格，不表示所有任务已经实现。个人负责人尚未任命；角色责任已明确。",
+  "packages": [
+    {
+      "id": "A01",
+      "module": "产品与规则边界",
+      "name": "产品定位与体验支柱",
+      "delivery": "定位文档、目标玩家、体验支柱及排除项",
+      "acceptance": "能用一段话说明江湖自由度、战斗与叙事的关系",
+      "dependencies": [],
+      "stage": "S0",
+      "priority": "必需",
+      "accountableRole": "制作人／主策",
+      "approach": "新增",
+      "status": "delivery-verified",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "对照当前S0基线、旧版事实和192工作包清单。",
+        "steps": [
+          "建立并检查交付样本：定位文档、目标玩家、体验支柱及排除项",
+          "逐条核对交付中的规则、排除项、平台和责任是否有明确决定。",
+          "构造一项新增需求，确认能判定纳入、替换或拒绝，并找到对应验收者。",
+          "对照本包判据逐项判定：能用一段话说明江湖自由度、战斗与叙事的关系"
+        ],
+        "expected": "能用一段话说明江湖自由度、战斗与叙事的关系",
+        "evidencePath": "docs/sandbox/evidence/A01.md",
+        "reviewerRole": "制作人／主策＋QA",
+        "executed": true
+      },
+      "riskIds": [
+        "scope",
+        "staffing"
+      ]
+    },
+    {
+      "id": "A02",
+      "module": "产品与规则边界",
+      "name": "首发平台与商业边界",
+      "delivery": "PC单机基线、目标设备、发行方式与版本边界",
+      "acceptance": "联网、付费、跨平台需求有明确取舍，不进入隐性范围",
+      "dependencies": [
+        "A01"
+      ],
+      "stage": "S0",
+      "priority": "必需",
+      "accountableRole": "制作人／主策",
+      "approach": "新增",
+      "status": "delivery-verified",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "对照当前S0基线、旧版事实和192工作包清单。",
+        "steps": [
+          "建立并检查交付样本：PC单机基线、目标设备、发行方式与版本边界",
+          "逐条核对交付中的规则、排除项、平台和责任是否有明确决定。",
+          "构造一项新增需求，确认能判定纳入、替换或拒绝，并找到对应验收者。",
+          "对照本包判据逐项判定：联网、付费、跨平台需求有明确取舍，不进入隐性范围"
+        ],
+        "expected": "联网、付费、跨平台需求有明确取舍，不进入隐性范围",
+        "evidencePath": "docs/sandbox/evidence/A02.md",
+        "reviewerRole": "制作人／主策＋QA",
+        "executed": true
+      },
+      "riskIds": [
+        "scope",
+        "staffing"
+      ]
+    },
+    {
+      "id": "A03",
+      "module": "产品与规则边界",
+      "name": "世界自由度规则",
+      "delivery": "可攻击对象、死亡保护、犯罪、入门退门与任务中断规则",
+      "acceptance": "每项自由行为写出限制和可见反馈",
+      "dependencies": [
+        "A01"
+      ],
+      "stage": "S0",
+      "priority": "必需",
+      "accountableRole": "制作人／主策",
+      "approach": "新增",
+      "status": "delivery-verified",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "对照当前S0基线、旧版事实和192工作包清单。",
+        "steps": [
+          "建立并检查交付样本：可攻击对象、死亡保护、犯罪、入门退门与任务中断规则",
+          "逐条核对交付中的规则、排除项、平台和责任是否有明确决定。",
+          "构造一项新增需求，确认能判定纳入、替换或拒绝，并找到对应验收者。",
+          "对照本包判据逐项判定：每项自由行为写出限制和可见反馈"
+        ],
+        "expected": "每项自由行为写出限制和可见反馈",
+        "evidencePath": "docs/sandbox/evidence/A03.md",
+        "reviewerRole": "制作人／主策＋QA",
+        "executed": true
+      },
+      "riskIds": [
+        "scope",
+        "staffing"
+      ]
+    },
+    {
+      "id": "A04",
+      "module": "产品与规则边界",
+      "name": "战斗与队伍定标",
+      "delivery": "一种主战斗制式、四人上限、战场尺度、操作草案",
+      "acceptance": "用灰盒比较后签定规则，停止并行维护两套正式战斗",
+      "dependencies": [
+        "A01"
+      ],
+      "stage": "S0",
+      "priority": "必需",
+      "accountableRole": "制作人／主策",
+      "approach": "新增",
+      "status": "delivery-verified",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "对照当前S0基线、旧版事实和192工作包清单。",
+        "steps": [
+          "建立并检查交付样本：一种主战斗制式、四人上限、战场尺度、操作草案",
+          "逐条核对交付中的规则、排除项、平台和责任是否有明确决定。",
+          "构造一项新增需求，确认能判定纳入、替换或拒绝，并找到对应验收者。",
+          "对照本包判据逐项判定：用灰盒比较后签定规则，停止并行维护两套正式战斗"
+        ],
+        "expected": "用灰盒比较后签定规则，停止并行维护两套正式战斗",
+        "evidencePath": "docs/sandbox/evidence/A04.md",
+        "reviewerRole": "制作人／主策＋QA",
+        "executed": true
+      },
+      "riskIds": [
+        "scope",
+        "staffing"
+      ]
+    },
+    {
+      "id": "A05",
+      "module": "产品与规则边界",
+      "name": "视觉定标与资产样板",
+      "delivery": "视角、角色比例、材质语言、色板、昼夜与战斗样片",
+      "acceptance": "同一场景通过静帧、移动与战斗三个状态评审",
+      "dependencies": [
+        "A01"
+      ],
+      "stage": "S0",
+      "priority": "必需",
+      "accountableRole": "制作人／主策",
+      "approach": "新增",
+      "status": "delivery-verified",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "对照当前S0基线、旧版事实和192工作包清单。",
+        "steps": [
+          "建立并检查交付样本：视角、角色比例、材质语言、色板、昼夜与战斗样片",
+          "逐条核对交付中的规则、排除项、平台和责任是否有明确决定。",
+          "构造一项新增需求，确认能判定纳入、替换或拒绝，并找到对应验收者。",
+          "对照本包判据逐项判定：同一场景通过静帧、移动与战斗三个状态评审"
+        ],
+        "expected": "同一场景通过静帧、移动与战斗三个状态评审",
+        "evidencePath": "docs/sandbox/evidence/A05.md",
+        "reviewerRole": "制作人／主策＋QA",
+        "executed": true
+      },
+      "riskIds": [
+        "scope",
+        "staffing"
+      ]
+    },
+    {
+      "id": "A06",
+      "module": "产品与规则边界",
+      "name": "内容口径与首发清单",
+      "delivery": "地图、任务包、NPC、武学、动画的计数口径及预算基线",
+      "acceptance": "内容表无重复计数，切片与首发范围可区分",
+      "dependencies": [
+        "A03",
+        "A04",
+        "A05"
+      ],
+      "stage": "S0",
+      "priority": "必需",
+      "accountableRole": "制作人／主策",
+      "approach": "新增",
+      "status": "delivery-verified",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "对照当前S0基线、旧版事实和192工作包清单。",
+        "steps": [
+          "建立并检查交付样本：地图、任务包、NPC、武学、动画的计数口径及预算基线",
+          "逐条核对交付中的规则、排除项、平台和责任是否有明确决定。",
+          "构造一项新增需求，确认能判定纳入、替换或拒绝，并找到对应验收者。",
+          "对照本包判据逐项判定：内容表无重复计数，切片与首发范围可区分"
+        ],
+        "expected": "内容表无重复计数，切片与首发范围可区分",
+        "evidencePath": "docs/sandbox/evidence/A06.md",
+        "reviewerRole": "制作人／主策＋QA",
+        "executed": true
+      },
+      "riskIds": [
+        "scope",
+        "staffing"
+      ]
+    },
+    {
+      "id": "A07",
+      "module": "产品与规则边界",
+      "name": "引擎与迁移决策",
+      "delivery": "目标设备实测、内容编辑效率、团队能力和迁移成本对照",
+      "acceptance": "选择一种生产路线；重用规则与重写代码的边界落表",
+      "dependencies": [
+        "A02",
+        "A04",
+        "A05"
+      ],
+      "stage": "S0",
+      "priority": "必需",
+      "accountableRole": "制作人／主策",
+      "approach": "新增",
+      "status": "external-validation-pending",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "对照当前S0基线、旧版事实和192工作包清单。",
+        "steps": [
+          "建立并检查交付样本：目标设备实测、内容编辑效率、团队能力和迁移成本对照",
+          "逐条核对交付中的规则、排除项、平台和责任是否有明确决定。",
+          "构造一项新增需求，确认能判定纳入、替换或拒绝，并找到对应验收者。",
+          "对照本包判据逐项判定：选择一种生产路线；重用规则与重写代码的边界落表"
+        ],
+        "expected": "选择一种生产路线；重用规则与重写代码的边界落表",
+        "evidencePath": "docs/sandbox/evidence/A07.md",
+        "reviewerRole": "制作人／主策＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "scope",
+        "staffing"
+      ]
+    },
+    {
+      "id": "A08",
+      "module": "产品与规则边界",
+      "name": "制作组织与变更管理",
+      "delivery": "负责人矩阵、风险台账、阶段门、变更与验收流程",
+      "acceptance": "每项新增需求写明替换范围、成本及验收人",
+      "dependencies": [
+        "A06",
+        "A07"
+      ],
+      "stage": "S0",
+      "priority": "必需",
+      "accountableRole": "制作人／主策",
+      "approach": "新增",
+      "status": "delivery-verified",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "对照当前S0基线、旧版事实和192工作包清单。",
+        "steps": [
+          "建立并检查交付样本：负责人矩阵、风险台账、阶段门、变更与验收流程",
+          "逐条核对交付中的规则、排除项、平台和责任是否有明确决定。",
+          "构造一项新增需求，确认能判定纳入、替换或拒绝，并找到对应验收者。",
+          "对照本包判据逐项判定：每项新增需求写明替换范围、成本及验收人"
+        ],
+        "expected": "每项新增需求写明替换范围、成本及验收人",
+        "evidencePath": "docs/sandbox/evidence/A08.md",
+        "reviewerRole": "制作人／主策＋QA",
+        "executed": true
+      },
+      "riskIds": [
+        "scope",
+        "staffing"
+      ]
+    },
+    {
+      "id": "B01",
+      "module": "世界与地图",
+      "name": "世界地理与交通网络",
+      "delivery": "区域、城镇、野外、据点、道路和势力分布图",
+      "acceptance": "每区域有独特玩法、交通成本、入口和回访理由",
+      "dependencies": [
+        "A03",
+        "A06"
+      ],
+      "stage": "S0",
+      "priority": "必需",
+      "accountableRole": "关卡策划／场景程序",
+      "approach": "新增",
+      "status": "delivery-verified",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "地图配置包含出生点、双向出口、至少一个障碍和一个事件前后变体。",
+        "steps": [
+          "建立并检查交付样本：区域、城镇、野外、据点、道路和势力分布图",
+          "从每个合法入口进入，走到全部目标点并返回；再从出口反向进入。",
+          "把出口设为封闭、同伴放在窄门、改变事件阶段；检查拒绝原因、替代路线与遮挡。",
+          "对照本包判据逐项判定：每区域有独特玩法、交通成本、入口和回访理由"
+        ],
+        "expected": "每区域有独特玩法、交通成本、入口和回访理由",
+        "evidencePath": "docs/sandbox/evidence/B01.md",
+        "reviewerRole": "关卡策划／场景程序＋QA",
+        "executed": true
+      },
+      "riskIds": [
+        "quest-order",
+        "content-cost"
+      ]
+    },
+    {
+      "id": "B02",
+      "module": "世界与地图",
+      "name": "统一场景描述格式",
+      "delivery": "边界、碰撞、出口、交互点、出生点、地表与遮挡数据",
+      "acceptance": "同一份数据被运行时、编辑器和校验器读取",
+      "dependencies": [
+        "A07",
+        "T01"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "关卡策划／场景程序",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "地图配置包含出生点、双向出口、至少一个障碍和一个事件前后变体。",
+        "steps": [
+          "建立并检查交付样本：边界、碰撞、出口、交互点、出生点、地表与遮挡数据",
+          "从每个合法入口进入，走到全部目标点并返回；再从出口反向进入。",
+          "把出口设为封闭、同伴放在窄门、改变事件阶段；检查拒绝原因、替代路线与遮挡。",
+          "对照本包判据逐项判定：同一份数据被运行时、编辑器和校验器读取"
+        ],
+        "expected": "同一份数据被运行时、编辑器和校验器读取",
+        "evidencePath": "docs/sandbox/evidence/B02.md",
+        "reviewerRole": "关卡策划／场景程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order",
+        "content-cost"
+      ]
+    },
+    {
+      "id": "B03",
+      "module": "世界与地图",
+      "name": "角色漫游与碰撞",
+      "delivery": "主角移动、寻路、跟随、楼层限制和脱困逻辑",
+      "acceptance": "窄门、台阶、遮挡后、切场景均无稳定卡死点",
+      "dependencies": [
+        "B02",
+        "A04"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "关卡策划／场景程序",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "地图配置包含出生点、双向出口、至少一个障碍和一个事件前后变体。",
+        "steps": [
+          "建立并检查交付样本：主角移动、寻路、跟随、楼层限制和脱困逻辑",
+          "从每个合法入口进入，走到全部目标点并返回；再从出口反向进入。",
+          "把出口设为封闭、同伴放在窄门、改变事件阶段；检查拒绝原因、替代路线与遮挡。",
+          "对照本包判据逐项判定：窄门、台阶、遮挡后、切场景均无稳定卡死点"
+        ],
+        "expected": "窄门、台阶、遮挡后、切场景均无稳定卡死点",
+        "evidencePath": "docs/sandbox/evidence/B03.md",
+        "reviewerRole": "关卡策划／场景程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order",
+        "content-cost"
+      ]
+    },
+    {
+      "id": "B04",
+      "module": "世界与地图",
+      "name": "跨地图旅行与进入规则",
+      "delivery": "地图出口、世界旅行、路程时间、通行权限",
+      "acceptance": "旅行扣时一次；无法进入时解释原因并给替代路线",
+      "dependencies": [
+        "B03",
+        "D02"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "关卡策划／场景程序",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "地图配置包含出生点、双向出口、至少一个障碍和一个事件前后变体。",
+        "steps": [
+          "建立并检查交付样本：地图出口、世界旅行、路程时间、通行权限",
+          "从每个合法入口进入，走到全部目标点并返回；再从出口反向进入。",
+          "把出口设为封闭、同伴放在窄门、改变事件阶段；检查拒绝原因、替代路线与遮挡。",
+          "对照本包判据逐项判定：旅行扣时一次；无法进入时解释原因并给替代路线"
+        ],
+        "expected": "旅行扣时一次；无法进入时解释原因并给替代路线",
+        "evidencePath": "docs/sandbox/evidence/B04.md",
+        "reviewerRole": "关卡策划／场景程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order",
+        "content-cost"
+      ]
+    },
+    {
+      "id": "B05",
+      "module": "世界与地图",
+      "name": "室内外与遮挡方案",
+      "delivery": "屋顶隐藏、前景淡出、可进入建筑和镜头边界",
+      "acceptance": "角色、出口和互动对象不被长期遮住",
+      "dependencies": [
+        "B03",
+        "A05"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "关卡策划／场景程序",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "地图配置包含出生点、双向出口、至少一个障碍和一个事件前后变体。",
+        "steps": [
+          "建立并检查交付样本：屋顶隐藏、前景淡出、可进入建筑和镜头边界",
+          "从每个合法入口进入，走到全部目标点并返回；再从出口反向进入。",
+          "把出口设为封闭、同伴放在窄门、改变事件阶段；检查拒绝原因、替代路线与遮挡。",
+          "对照本包判据逐项判定：角色、出口和互动对象不被长期遮住"
+        ],
+        "expected": "角色、出口和互动对象不被长期遮住",
+        "evidencePath": "docs/sandbox/evidence/B05.md",
+        "reviewerRole": "关卡策划／场景程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order",
+        "content-cost"
+      ]
+    },
+    {
+      "id": "B06",
+      "module": "世界与地图",
+      "name": "单镇及周边灰盒",
+      "delivery": "镇街、客栈、医馆、郊野、门派前院和敌据点六张地图",
+      "acceptance": "所有主路径、返回路线和任务交接可完整走通",
+      "dependencies": [
+        "B04",
+        "B05"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "关卡策划／场景程序",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "地图配置包含出生点、双向出口、至少一个障碍和一个事件前后变体。",
+        "steps": [
+          "建立并检查交付样本：镇街、客栈、医馆、郊野、门派前院和敌据点六张地图",
+          "从每个合法入口进入，走到全部目标点并返回；再从出口反向进入。",
+          "把出口设为封闭、同伴放在窄门、改变事件阶段；检查拒绝原因、替代路线与遮挡。",
+          "对照本包判据逐项判定：所有主路径、返回路线和任务交接可完整走通"
+        ],
+        "expected": "所有主路径、返回路线和任务交接可完整走通",
+        "evidencePath": "docs/sandbox/evidence/B06.md",
+        "reviewerRole": "关卡策划／场景程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order",
+        "content-cost"
+      ]
+    },
+    {
+      "id": "B07",
+      "module": "世界与地图",
+      "name": "区域地图与兴趣点组织",
+      "delivery": "多个聚落、近路、秘密入口、危险区和地标布点规范",
+      "acceptance": "探索每段有决策或发现；避免长时间无交互赶路",
+      "dependencies": [
+        "B06",
+        "K01"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "关卡策划／场景程序",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "地图配置包含出生点、双向出口、至少一个障碍和一个事件前后变体。",
+        "steps": [
+          "建立并检查交付样本：多个聚落、近路、秘密入口、危险区和地标布点规范",
+          "从每个合法入口进入，走到全部目标点并返回；再从出口反向进入。",
+          "把出口设为封闭、同伴放在窄门、改变事件阶段；检查拒绝原因、替代路线与遮挡。",
+          "对照本包判据逐项判定：探索每段有决策或发现；避免长时间无交互赶路"
+        ],
+        "expected": "探索每段有决策或发现；避免长时间无交互赶路",
+        "evidencePath": "docs/sandbox/evidence/B07.md",
+        "reviewerRole": "关卡策划／场景程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order",
+        "content-cost"
+      ]
+    },
+    {
+      "id": "B08",
+      "module": "世界与地图",
+      "name": "环境叙事与回访变化",
+      "delivery": "事件前后场景层、势力旗帜、店铺状态和破坏痕迹",
+      "acceptance": "事件变化在地图、对话、服务三个层面一致",
+      "dependencies": [
+        "B07",
+        "D05"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "关卡策划／场景程序",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "地图配置包含出生点、双向出口、至少一个障碍和一个事件前后变体。",
+        "steps": [
+          "建立并检查交付样本：事件前后场景层、势力旗帜、店铺状态和破坏痕迹",
+          "从每个合法入口进入，走到全部目标点并返回；再从出口反向进入。",
+          "把出口设为封闭、同伴放在窄门、改变事件阶段；检查拒绝原因、替代路线与遮挡。",
+          "对照本包判据逐项判定：事件变化在地图、对话、服务三个层面一致"
+        ],
+        "expected": "事件变化在地图、对话、服务三个层面一致",
+        "evidencePath": "docs/sandbox/evidence/B08.md",
+        "reviewerRole": "关卡策划／场景程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order",
+        "content-cost"
+      ]
+    },
+    {
+      "id": "B09",
+      "module": "世界与地图",
+      "name": "首发地图制作与验收",
+      "delivery": "按内容规模表量产地图、边界、照明和事件层",
+      "acceptance": "逐图完成导航、遮挡、性能、任务点与资源检查",
+      "dependencies": [
+        "B08",
+        "O07",
+        "U02"
+      ],
+      "stage": "S3",
+      "priority": "必需",
+      "accountableRole": "关卡策划／场景程序",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "地图配置包含出生点、双向出口、至少一个障碍和一个事件前后变体。",
+        "steps": [
+          "建立并检查交付样本：按内容规模表量产地图、边界、照明和事件层",
+          "从每个合法入口进入，走到全部目标点并返回；再从出口反向进入。",
+          "把出口设为封闭、同伴放在窄门、改变事件阶段；检查拒绝原因、替代路线与遮挡。",
+          "对照本包判据逐项判定：逐图完成导航、遮挡、性能、任务点与资源检查"
+        ],
+        "expected": "逐图完成导航、遮挡、性能、任务点与资源检查",
+        "evidencePath": "docs/sandbox/evidence/B09.md",
+        "reviewerRole": "关卡策划／场景程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order",
+        "content-cost"
+      ]
+    },
+    {
+      "id": "C01",
+      "module": "通用行动与交互",
+      "name": "交互动词与目标分类",
+      "delivery": "交谈、观察、赠礼、交易、切磋、邀请等目标矩阵",
+      "acceptance": "目标不支持的动作有规则与反馈，避免假按钮",
+      "dependencies": [
+        "A03",
+        "T01"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "系统策划／玩法程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "一个合法目标、一个不支持动作的目标；资源分别取不足、刚好和充足。",
+        "steps": [
+          "建立并检查交付样本：交谈、观察、赠礼、交易、切磋、邀请等目标矩阵",
+          "分别执行成功、条件不足和目标失效动作，比较时间、资源、关系与结果。",
+          "同一奖励动作连点两次，再存读档重试；确认拒绝不扣费、奖励只发一次。",
+          "对照本包判据逐项判定：目标不支持的动作有规则与反馈，避免假按钮"
+        ],
+        "expected": "目标不支持的动作有规则与反馈，避免假按钮",
+        "evidencePath": "docs/sandbox/evidence/C01.md",
+        "reviewerRole": "系统策划／玩法程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state",
+        "quest-order"
+      ]
+    },
+    {
+      "id": "C02",
+      "module": "通用行动与交互",
+      "name": "条件查询与失败原因",
+      "delivery": "条件表达式、锁定原因、价格和风险预览",
+      "acceptance": "显示条件与实际执行共用同一判断来源",
+      "dependencies": [
+        "C01",
+        "T03"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "系统策划／玩法程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "一个合法目标、一个不支持动作的目标；资源分别取不足、刚好和充足。",
+        "steps": [
+          "建立并检查交付样本：条件表达式、锁定原因、价格和风险预览",
+          "分别执行成功、条件不足和目标失效动作，比较时间、资源、关系与结果。",
+          "同一奖励动作连点两次，再存读档重试；确认拒绝不扣费、奖励只发一次。",
+          "对照本包判据逐项判定：显示条件与实际执行共用同一判断来源"
+        ],
+        "expected": "显示条件与实际执行共用同一判断来源",
+        "evidencePath": "docs/sandbox/evidence/C02.md",
+        "reviewerRole": "系统策划／玩法程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state",
+        "quest-order"
+      ]
+    },
+    {
+      "id": "C03",
+      "module": "通用行动与交互",
+      "name": "行动成本与原子提交",
+      "delivery": "时间、钱、道具和关系的一次性提交与失败回滚",
+      "acceptance": "资源不足、连点或中途失败不会部分扣费或重复发奖",
+      "dependencies": [
+        "C02",
+        "T02"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "系统策划／玩法程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "一个合法目标、一个不支持动作的目标；资源分别取不足、刚好和充足。",
+        "steps": [
+          "建立并检查交付样本：时间、钱、道具和关系的一次性提交与失败回滚",
+          "分别执行成功、条件不足和目标失效动作，比较时间、资源、关系与结果。",
+          "同一奖励动作连点两次，再存读档重试；确认拒绝不扣费、奖励只发一次。",
+          "对照本包判据逐项判定：资源不足、连点或中途失败不会部分扣费或重复发奖"
+        ],
+        "expected": "资源不足、连点或中途失败不会部分扣费或重复发奖",
+        "evidencePath": "docs/sandbox/evidence/C03.md",
+        "reviewerRole": "系统策划／玩法程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state",
+        "quest-order"
+      ]
+    },
+    {
+      "id": "C04",
+      "module": "通用行动与交互",
+      "name": "对话与观察交互",
+      "delivery": "交谈入口、可见线索、上下文选项和信息记录",
+      "acceptance": "观察不泄漏玩家尚未掌握的幕后状态",
+      "dependencies": [
+        "C03",
+        "E01"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "系统策划／玩法程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "一个合法目标、一个不支持动作的目标；资源分别取不足、刚好和充足。",
+        "steps": [
+          "建立并检查交付样本：交谈入口、可见线索、上下文选项和信息记录",
+          "分别执行成功、条件不足和目标失效动作，比较时间、资源、关系与结果。",
+          "同一奖励动作连点两次，再存读档重试；确认拒绝不扣费、奖励只发一次。",
+          "对照本包判据逐项判定：观察不泄漏玩家尚未掌握的幕后状态"
+        ],
+        "expected": "观察不泄漏玩家尚未掌握的幕后状态",
+        "evidencePath": "docs/sandbox/evidence/C04.md",
+        "reviewerRole": "系统策划／玩法程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state",
+        "quest-order"
+      ]
+    },
+    {
+      "id": "C05",
+      "module": "通用行动与交互",
+      "name": "获取与归属交互",
+      "delivery": "拾取、容器、赠予、买卖和归还的统一物品变更",
+      "acceptance": "物品来源、所有者与任务标记全程保留",
+      "dependencies": [
+        "C03",
+        "L01"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "系统策划／玩法程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "一个合法目标、一个不支持动作的目标；资源分别取不足、刚好和充足。",
+        "steps": [
+          "建立并检查交付样本：拾取、容器、赠予、买卖和归还的统一物品变更",
+          "分别执行成功、条件不足和目标失效动作，比较时间、资源、关系与结果。",
+          "同一奖励动作连点两次，再存读档重试；确认拒绝不扣费、奖励只发一次。",
+          "对照本包判据逐项判定：物品来源、所有者与任务标记全程保留"
+        ],
+        "expected": "物品来源、所有者与任务标记全程保留",
+        "evidencePath": "docs/sandbox/evidence/C05.md",
+        "reviewerRole": "系统策划／玩法程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state",
+        "quest-order"
+      ]
+    },
+    {
+      "id": "C06",
+      "module": "通用行动与交互",
+      "name": "武力与秘密行动",
+      "delivery": "威胁、偷取、潜入、切磋、攻击的风险及结果接口",
+      "acceptance": "挑战、犯罪和击杀事件明确区分，可被系统订阅",
+      "dependencies": [
+        "C03",
+        "N01",
+        "I01"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "系统策划／玩法程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "一个合法目标、一个不支持动作的目标；资源分别取不足、刚好和充足。",
+        "steps": [
+          "建立并检查交付样本：威胁、偷取、潜入、切磋、攻击的风险及结果接口",
+          "分别执行成功、条件不足和目标失效动作，比较时间、资源、关系与结果。",
+          "同一奖励动作连点两次，再存读档重试；确认拒绝不扣费、奖励只发一次。",
+          "对照本包判据逐项判定：挑战、犯罪和击杀事件明确区分，可被系统订阅"
+        ],
+        "expected": "挑战、犯罪和击杀事件明确区分，可被系统订阅",
+        "evidencePath": "docs/sandbox/evidence/C06.md",
+        "reviewerRole": "系统策划／玩法程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state",
+        "quest-order"
+      ]
+    },
+    {
+      "id": "C07",
+      "module": "通用行动与交互",
+      "name": "场景能力交互",
+      "delivery": "攀爬、轻功越障、机关、疗伤、破门等能力检定",
+      "acceptance": "同一障碍支持设计过的替代路径，失败有退路",
+      "dependencies": [
+        "C03",
+        "H07",
+        "B06"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "系统策划／玩法程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "一个合法目标、一个不支持动作的目标；资源分别取不足、刚好和充足。",
+        "steps": [
+          "建立并检查交付样本：攀爬、轻功越障、机关、疗伤、破门等能力检定",
+          "分别执行成功、条件不足和目标失效动作，比较时间、资源、关系与结果。",
+          "同一奖励动作连点两次，再存读档重试；确认拒绝不扣费、奖励只发一次。",
+          "对照本包判据逐项判定：同一障碍支持设计过的替代路径，失败有退路"
+        ],
+        "expected": "同一障碍支持设计过的替代路径，失败有退路",
+        "evidencePath": "docs/sandbox/evidence/C07.md",
+        "reviewerRole": "系统策划／玩法程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state",
+        "quest-order"
+      ]
+    },
+    {
+      "id": "C08",
+      "module": "通用行动与交互",
+      "name": "多解事件样板",
+      "delivery": "一本秘籍的拜师、交易、结交、偷取等路径样板",
+      "acceptance": "各路径成本、后果不同；不可重复领取同一唯一物品",
+      "dependencies": [
+        "C04",
+        "C05",
+        "C06",
+        "F03",
+        "J03"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "系统策划／玩法程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "一个合法目标、一个不支持动作的目标；资源分别取不足、刚好和充足。",
+        "steps": [
+          "建立并检查交付样本：一本秘籍的拜师、交易、结交、偷取等路径样板",
+          "分别执行成功、条件不足和目标失效动作，比较时间、资源、关系与结果。",
+          "同一奖励动作连点两次，再存读档重试；确认拒绝不扣费、奖励只发一次。",
+          "对照本包判据逐项判定：各路径成本、后果不同；不可重复领取同一唯一物品"
+        ],
+        "expected": "各路径成本、后果不同；不可重复领取同一唯一物品",
+        "evidencePath": "docs/sandbox/evidence/C08.md",
+        "reviewerRole": "系统策划／玩法程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state",
+        "quest-order"
+      ]
+    },
+    {
+      "id": "D01",
+      "module": "时间与世界演化",
+      "name": "世界时钟与暂停规则",
+      "delivery": "统一时间单位、推进来源、菜单暂停及事件时间戳",
+      "acceptance": "菜单、战斗、旅行、休息不会出现两套时间",
+      "dependencies": [
+        "A03",
+        "T02"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "系统程序／系统策划",
+      "approach": "扩展",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "同一存档分别处于事件前一刻、触发刻和后一刻。",
+        "steps": [
+          "建立并检查交付样本：统一时间单位、推进来源、菜单暂停及事件时间戳",
+          "单步推进和一次跨多日到同一时刻，比较NPC、服务和事件结果。",
+          "打开菜单停留、进入战斗、旅行后读档；确认只有权威时钟推进且无重发。",
+          "对照本包判据逐项判定：菜单、战斗、旅行、休息不会出现两套时间"
+        ],
+        "expected": "菜单、战斗、旅行、休息不会出现两套时间",
+        "evidencePath": "docs/sandbox/evidence/D01.md",
+        "reviewerRole": "系统程序／系统策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "D02",
+      "module": "时间与世界演化",
+      "name": "行动耗时与预警",
+      "delivery": "旅行、休息、练功、制作耗时及限时任务提示",
+      "acceptance": "关键耗时行动提前提示；读档不重扣时间",
+      "dependencies": [
+        "D01"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "系统程序／系统策划",
+      "approach": "扩展",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "同一存档分别处于事件前一刻、触发刻和后一刻。",
+        "steps": [
+          "建立并检查交付样本：旅行、休息、练功、制作耗时及限时任务提示",
+          "单步推进和一次跨多日到同一时刻，比较NPC、服务和事件结果。",
+          "打开菜单停留、进入战斗、旅行后读档；确认只有权威时钟推进且无重发。",
+          "对照本包判据逐项判定：关键耗时行动提前提示；读档不重扣时间"
+        ],
+        "expected": "关键耗时行动提前提示；读档不重扣时间",
+        "evidencePath": "docs/sandbox/evidence/D02.md",
+        "reviewerRole": "系统程序／系统策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "D03",
+      "module": "时间与世界演化",
+      "name": "NPC日程与离屏更新",
+      "delivery": "时段、地点、活动、事件中断与离屏批量结算",
+      "acceptance": "NPC按规则出现；离屏无需逐帧模拟仍保持一致",
+      "dependencies": [
+        "D01",
+        "E01",
+        "B02"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "系统程序／系统策划",
+      "approach": "扩展",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "同一存档分别处于事件前一刻、触发刻和后一刻。",
+        "steps": [
+          "建立并检查交付样本：时段、地点、活动、事件中断与离屏批量结算",
+          "单步推进和一次跨多日到同一时刻，比较NPC、服务和事件结果。",
+          "打开菜单停留、进入战斗、旅行后读档；确认只有权威时钟推进且无重发。",
+          "对照本包判据逐项判定：NPC按规则出现；离屏无需逐帧模拟仍保持一致"
+        ],
+        "expected": "NPC按规则出现；离屏无需逐帧模拟仍保持一致",
+        "evidencePath": "docs/sandbox/evidence/D03.md",
+        "reviewerRole": "系统程序／系统策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "D04",
+      "module": "时间与世界演化",
+      "name": "事件调度与优先级",
+      "delivery": "未来事件队列、重复周期、取消与冲突优先级",
+      "acceptance": "跨多日、读旧档和一次跳时不会漏发或重发事件",
+      "dependencies": [
+        "D01",
+        "T03"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "系统程序／系统策划",
+      "approach": "扩展",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "同一存档分别处于事件前一刻、触发刻和后一刻。",
+        "steps": [
+          "建立并检查交付样本：未来事件队列、重复周期、取消与冲突优先级",
+          "单步推进和一次跨多日到同一时刻，比较NPC、服务和事件结果。",
+          "打开菜单停留、进入战斗、旅行后读档；确认只有权威时钟推进且无重发。",
+          "对照本包判据逐项判定：跨多日、读旧档和一次跳时不会漏发或重发事件"
+        ],
+        "expected": "跨多日、读旧档和一次跳时不会漏发或重发事件",
+        "evidencePath": "docs/sandbox/evidence/D04.md",
+        "reviewerRole": "系统程序／系统策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "D05",
+      "module": "时间与世界演化",
+      "name": "世界事件阶段状态",
+      "delivery": "门派冲突、封路、追捕等有限状态及区域触发器",
+      "acceptance": "状态变化可解释、可存档，受玩家选择和门槛控制",
+      "dependencies": [
+        "D04",
+        "F01",
+        "J02"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "系统程序／系统策划",
+      "approach": "扩展",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "同一存档分别处于事件前一刻、触发刻和后一刻。",
+        "steps": [
+          "建立并检查交付样本：门派冲突、封路、追捕等有限状态及区域触发器",
+          "单步推进和一次跨多日到同一时刻，比较NPC、服务和事件结果。",
+          "打开菜单停留、进入战斗、旅行后读档；确认只有权威时钟推进且无重发。",
+          "对照本包判据逐项判定：状态变化可解释、可存档，受玩家选择和门槛控制"
+        ],
+        "expected": "状态变化可解释、可存档，受玩家选择和门槛控制",
+        "evidencePath": "docs/sandbox/evidence/D05.md",
+        "reviewerRole": "系统程序／系统策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "D06",
+      "module": "时间与世界演化",
+      "name": "物资与服务刷新",
+      "delivery": "商店库存、委托、采集和NPC服务刷新规则",
+      "acceptance": "同一时间窗口只刷新一次，不通过读档刷无限资源",
+      "dependencies": [
+        "D04",
+        "L03"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "系统程序／系统策划",
+      "approach": "扩展",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "同一存档分别处于事件前一刻、触发刻和后一刻。",
+        "steps": [
+          "建立并检查交付样本：商店库存、委托、采集和NPC服务刷新规则",
+          "单步推进和一次跨多日到同一时刻，比较NPC、服务和事件结果。",
+          "打开菜单停留、进入战斗、旅行后读档；确认只有权威时钟推进且无重发。",
+          "对照本包判据逐项判定：同一时间窗口只刷新一次，不通过读档刷无限资源"
+        ],
+        "expected": "同一时间窗口只刷新一次，不通过读档刷无限资源",
+        "evidencePath": "docs/sandbox/evidence/D06.md",
+        "reviewerRole": "系统程序／系统策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "D07",
+      "module": "时间与世界演化",
+      "name": "世界演化可读性",
+      "delivery": "传闻、公告、地图标记和回顾日志",
+      "acceptance": "玩家能理解世界变化的原因、时间与影响范围",
+      "dependencies": [
+        "D05",
+        "D06",
+        "R04"
+      ],
+      "stage": "S3",
+      "priority": "必需",
+      "accountableRole": "系统程序／系统策划",
+      "approach": "扩展",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "同一存档分别处于事件前一刻、触发刻和后一刻。",
+        "steps": [
+          "建立并检查交付样本：传闻、公告、地图标记和回顾日志",
+          "单步推进和一次跨多日到同一时刻，比较NPC、服务和事件结果。",
+          "打开菜单停留、进入战斗、旅行后读档；确认只有权威时钟推进且无重发。",
+          "对照本包判据逐项判定：玩家能理解世界变化的原因、时间与影响范围"
+        ],
+        "expected": "玩家能理解世界变化的原因、时间与影响范围",
+        "evidencePath": "docs/sandbox/evidence/D07.md",
+        "reviewerRole": "系统程序／系统策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "E01",
+      "module": "NPC与社交",
+      "name": "NPC统一档案",
+      "delivery": "身份、阵营、生命状态、技能、物品、日程和对话入口",
+      "acceptance": "每个命名NPC只有一个稳定ID和权威状态",
+      "dependencies": [
+        "T01",
+        "A03"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "叙事系统策划／程序",
+      "approach": "扩展",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "一个已相识NPC、一个陌生NPC、一个缺席或失踪NPC，关系处于门槛两侧。",
+        "steps": [
+          "建立并检查交付样本：身份、阵营、生命状态、技能、物品、日程和对话入口",
+          "执行本包互动并查看对话、服务、关系和已知信息的变化。",
+          "改变目击状态、死亡或入队，再进入同一互动；检查信息边界和替代联络。",
+          "对照本包判据逐项判定：每个命名NPC只有一个稳定ID和权威状态"
+        ],
+        "expected": "每个命名NPC只有一个稳定ID和权威状态",
+        "evidencePath": "docs/sandbox/evidence/E01.md",
+        "reviewerRole": "叙事系统策划／程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order"
+      ]
+    },
+    {
+      "id": "E02",
+      "module": "NPC与社交",
+      "name": "关系维度与阈值",
+      "delivery": "好感、信任、人情、警惕的用途与阈值",
+      "acceptance": "每个维度改变至少一种实际互动，避免纯装饰数值",
+      "dependencies": [
+        "E01",
+        "C03"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "叙事系统策划／程序",
+      "approach": "扩展",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "一个已相识NPC、一个陌生NPC、一个缺席或失踪NPC，关系处于门槛两侧。",
+        "steps": [
+          "建立并检查交付样本：好感、信任、人情、警惕的用途与阈值",
+          "执行本包互动并查看对话、服务、关系和已知信息的变化。",
+          "改变目击状态、死亡或入队，再进入同一互动；检查信息边界和替代联络。",
+          "对照本包判据逐项判定：每个维度改变至少一种实际互动，避免纯装饰数值"
+        ],
+        "expected": "每个维度改变至少一种实际互动，避免纯装饰数值",
+        "evidencePath": "docs/sandbox/evidence/E02.md",
+        "reviewerRole": "叙事系统策划／程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order"
+      ]
+    },
+    {
+      "id": "E03",
+      "module": "NPC与社交",
+      "name": "记忆与信息掌握",
+      "delivery": "目击、承诺、赠礼、恩怨及消息来源记录",
+      "acceptance": "NPC只基于已知信息作反应，防止全世界自动知情",
+      "dependencies": [
+        "E01",
+        "T03"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "叙事系统策划／程序",
+      "approach": "扩展",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "一个已相识NPC、一个陌生NPC、一个缺席或失踪NPC，关系处于门槛两侧。",
+        "steps": [
+          "建立并检查交付样本：目击、承诺、赠礼、恩怨及消息来源记录",
+          "执行本包互动并查看对话、服务、关系和已知信息的变化。",
+          "改变目击状态、死亡或入队，再进入同一互动；检查信息边界和替代联络。",
+          "对照本包判据逐项判定：NPC只基于已知信息作反应，防止全世界自动知情"
+        ],
+        "expected": "NPC只基于已知信息作反应，防止全世界自动知情",
+        "evidencePath": "docs/sandbox/evidence/E03.md",
+        "reviewerRole": "叙事系统策划／程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order"
+      ]
+    },
+    {
+      "id": "E04",
+      "module": "NPC与社交",
+      "name": "赠礼请求与请教",
+      "delivery": "偏好、重复衰减、请求条件、切磋与请教反馈",
+      "acceptance": "赠礼无法低成本无限刷满；授艺条件可以查明",
+      "dependencies": [
+        "E02",
+        "H01"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "叙事系统策划／程序",
+      "approach": "扩展",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "一个已相识NPC、一个陌生NPC、一个缺席或失踪NPC，关系处于门槛两侧。",
+        "steps": [
+          "建立并检查交付样本：偏好、重复衰减、请求条件、切磋与请教反馈",
+          "执行本包互动并查看对话、服务、关系和已知信息的变化。",
+          "改变目击状态、死亡或入队，再进入同一互动；检查信息边界和替代联络。",
+          "对照本包判据逐项判定：赠礼无法低成本无限刷满；授艺条件可以查明"
+        ],
+        "expected": "赠礼无法低成本无限刷满；授艺条件可以查明",
+        "evidencePath": "docs/sandbox/evidence/E04.md",
+        "reviewerRole": "叙事系统策划／程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order"
+      ]
+    },
+    {
+      "id": "E05",
+      "module": "NPC与社交",
+      "name": "关系解锁的服务",
+      "delivery": "折扣、作保、情报、引荐和协助接口",
+      "acceptance": "同一关系门槛在界面、对话与执行结果一致",
+      "dependencies": [
+        "E02",
+        "C02"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "叙事系统策划／程序",
+      "approach": "扩展",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "一个已相识NPC、一个陌生NPC、一个缺席或失踪NPC，关系处于门槛两侧。",
+        "steps": [
+          "建立并检查交付样本：折扣、作保、情报、引荐和协助接口",
+          "执行本包互动并查看对话、服务、关系和已知信息的变化。",
+          "改变目击状态、死亡或入队，再进入同一互动；检查信息边界和替代联络。",
+          "对照本包判据逐项判定：同一关系门槛在界面、对话与执行结果一致"
+        ],
+        "expected": "同一关系门槛在界面、对话与执行结果一致",
+        "evidencePath": "docs/sandbox/evidence/E05.md",
+        "reviewerRole": "叙事系统策划／程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order"
+      ]
+    },
+    {
+      "id": "E06",
+      "module": "NPC与社交",
+      "name": "社交冲突与修复",
+      "delivery": "失信、道歉、赔偿、偿还人情及敌意消退",
+      "acceptance": "关系有可理解的修复途径，极端后果提前告知",
+      "dependencies": [
+        "E03",
+        "N04"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "叙事系统策划／程序",
+      "approach": "扩展",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "一个已相识NPC、一个陌生NPC、一个缺席或失踪NPC，关系处于门槛两侧。",
+        "steps": [
+          "建立并检查交付样本：失信、道歉、赔偿、偿还人情及敌意消退",
+          "执行本包互动并查看对话、服务、关系和已知信息的变化。",
+          "改变目击状态、死亡或入队，再进入同一互动；检查信息边界和替代联络。",
+          "对照本包判据逐项判定：关系有可理解的修复途径，极端后果提前告知"
+        ],
+        "expected": "关系有可理解的修复途径，极端后果提前告知",
+        "evidencePath": "docs/sandbox/evidence/E06.md",
+        "reviewerRole": "叙事系统策划／程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order"
+      ]
+    },
+    {
+      "id": "E07",
+      "module": "NPC与社交",
+      "name": "生死失踪与替代联络",
+      "delivery": "死亡、被捕、离城、隐居和继任者状态",
+      "acceptance": "关键目标死亡后任务替换、关闭或结算，不悬空",
+      "dependencies": [
+        "E01",
+        "J05"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "叙事系统策划／程序",
+      "approach": "扩展",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "一个已相识NPC、一个陌生NPC、一个缺席或失踪NPC，关系处于门槛两侧。",
+        "steps": [
+          "建立并检查交付样本：死亡、被捕、离城、隐居和继任者状态",
+          "执行本包互动并查看对话、服务、关系和已知信息的变化。",
+          "改变目击状态、死亡或入队，再进入同一互动；检查信息边界和替代联络。",
+          "对照本包判据逐项判定：关键目标死亡后任务替换、关闭或结算，不悬空"
+        ],
+        "expected": "关键目标死亡后任务替换、关闭或结算，不悬空",
+        "evidencePath": "docs/sandbox/evidence/E07.md",
+        "reviewerRole": "叙事系统策划／程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order"
+      ]
+    },
+    {
+      "id": "E08",
+      "module": "NPC与社交",
+      "name": "背景人物与群像层级",
+      "delivery": "背景NPC模板、环境对话及重要度分层",
+      "acceptance": "背景人群丰富场景且不承担未经实现的复杂承诺",
+      "dependencies": [
+        "E01",
+        "D03",
+        "P02"
+      ],
+      "stage": "S3",
+      "priority": "必需",
+      "accountableRole": "叙事系统策划／程序",
+      "approach": "扩展",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "一个已相识NPC、一个陌生NPC、一个缺席或失踪NPC，关系处于门槛两侧。",
+        "steps": [
+          "建立并检查交付样本：背景NPC模板、环境对话及重要度分层",
+          "执行本包互动并查看对话、服务、关系和已知信息的变化。",
+          "改变目击状态、死亡或入队，再进入同一互动；检查信息边界和替代联络。",
+          "对照本包判据逐项判定：背景人群丰富场景且不承担未经实现的复杂承诺"
+        ],
+        "expected": "背景人群丰富场景且不承担未经实现的复杂承诺",
+        "evidencePath": "docs/sandbox/evidence/E08.md",
+        "reviewerRole": "叙事系统策划／程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order"
+      ]
+    },
+    {
+      "id": "E09",
+      "module": "NPC与社交",
+      "name": "命名NPC内容生产",
+      "delivery": "人物小传、利益、关系网、对话、日程和事件表",
+      "acceptance": "每个命名NPC至少有可玩关系或任务用途",
+      "dependencies": [
+        "E04",
+        "E05",
+        "E06",
+        "E07",
+        "U03"
+      ],
+      "stage": "S3",
+      "priority": "必需",
+      "accountableRole": "叙事系统策划／程序",
+      "approach": "扩展",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "一个已相识NPC、一个陌生NPC、一个缺席或失踪NPC，关系处于门槛两侧。",
+        "steps": [
+          "建立并检查交付样本：人物小传、利益、关系网、对话、日程和事件表",
+          "执行本包互动并查看对话、服务、关系和已知信息的变化。",
+          "改变目击状态、死亡或入队，再进入同一互动；检查信息边界和替代联络。",
+          "对照本包判据逐项判定：每个命名NPC至少有可玩关系或任务用途"
+        ],
+        "expected": "每个命名NPC至少有可玩关系或任务用途",
+        "evidencePath": "docs/sandbox/evidence/E09.md",
+        "reviewerRole": "叙事系统策划／程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order"
+      ]
+    },
+    {
+      "id": "F01",
+      "module": "门派与势力",
+      "name": "势力模型与立场",
+      "delivery": "门派、商会、官府等实体、领地、外交和资源标签",
+      "acceptance": "玩家声望、NPC私交与势力立场分开存储",
+      "dependencies": [
+        "T01",
+        "A03"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "系统策划／叙事策划",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "未入门、已入门、退门、敌对四份状态，包含完成和未完成门派任务。",
+        "steps": [
+          "建立并检查交付样本：门派、商会、官府等实体、领地、外交和资源标签",
+          "从资格不足到通过考核，逐项核对身份、服务、武学与奖励。",
+          "退门或改变立场后重访，检查权限回收、任务结算和保留内容。",
+          "对照本包判据逐项判定：玩家声望、NPC私交与势力立场分开存储"
+        ],
+        "expected": "玩家声望、NPC私交与势力立场分开存储",
+        "evidencePath": "docs/sandbox/evidence/F01.md",
+        "reviewerRole": "系统策划／叙事策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order",
+        "scope"
+      ]
+    },
+    {
+      "id": "F02",
+      "module": "门派与势力",
+      "name": "门派差异与身份",
+      "delivery": "武学流派、价值观、服务、禁忌和晋升路线",
+      "acceptance": "每个门派带来独特玩法或抉择，不仅数值换色",
+      "dependencies": [
+        "F01",
+        "H01"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "系统策划／叙事策划",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "未入门、已入门、退门、敌对四份状态，包含完成和未完成门派任务。",
+        "steps": [
+          "建立并检查交付样本：武学流派、价值观、服务、禁忌和晋升路线",
+          "从资格不足到通过考核，逐项核对身份、服务、武学与奖励。",
+          "退门或改变立场后重访，检查权限回收、任务结算和保留内容。",
+          "对照本包判据逐项判定：每个门派带来独特玩法或抉择，不仅数值换色"
+        ],
+        "expected": "每个门派带来独特玩法或抉择，不仅数值换色",
+        "evidencePath": "docs/sandbox/evidence/F02.md",
+        "reviewerRole": "系统策划／叙事策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order",
+        "scope"
+      ]
+    },
+    {
+      "id": "F03",
+      "module": "门派与势力",
+      "name": "入门与试炼",
+      "delivery": "资格、介绍人、考核、拜师、初始身份和奖励",
+      "acceptance": "非战斗与战斗入门路径按设计可完成，无重复授奖",
+      "dependencies": [
+        "F02",
+        "C03",
+        "J01"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "系统策划／叙事策划",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "未入门、已入门、退门、敌对四份状态，包含完成和未完成门派任务。",
+        "steps": [
+          "建立并检查交付样本：资格、介绍人、考核、拜师、初始身份和奖励",
+          "从资格不足到通过考核，逐项核对身份、服务、武学与奖励。",
+          "退门或改变立场后重访，检查权限回收、任务结算和保留内容。",
+          "对照本包判据逐项判定：非战斗与战斗入门路径按设计可完成，无重复授奖"
+        ],
+        "expected": "非战斗与战斗入门路径按设计可完成，无重复授奖",
+        "evidencePath": "docs/sandbox/evidence/F03.md",
+        "reviewerRole": "系统策划／叙事策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order",
+        "scope"
+      ]
+    },
+    {
+      "id": "F04",
+      "module": "门派与势力",
+      "name": "贡献与晋升",
+      "delivery": "贡献来源、支出、等级、权限和周转规则",
+      "acceptance": "贡献不被同一行动无限刷取；晋升有具体权限变化",
+      "dependencies": [
+        "F03",
+        "L02"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "系统策划／叙事策划",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "未入门、已入门、退门、敌对四份状态，包含完成和未完成门派任务。",
+        "steps": [
+          "建立并检查交付样本：贡献来源、支出、等级、权限和周转规则",
+          "从资格不足到通过考核，逐项核对身份、服务、武学与奖励。",
+          "退门或改变立场后重访，检查权限回收、任务结算和保留内容。",
+          "对照本包判据逐项判定：贡献不被同一行动无限刷取；晋升有具体权限变化"
+        ],
+        "expected": "贡献不被同一行动无限刷取；晋升有具体权限变化",
+        "evidencePath": "docs/sandbox/evidence/F04.md",
+        "reviewerRole": "系统策划／叙事策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order",
+        "scope"
+      ]
+    },
+    {
+      "id": "F05",
+      "module": "门派与势力",
+      "name": "授艺与师承",
+      "delivery": "师傅、武学、关系、贡献和境界的组合条件",
+      "acceptance": "UI准确解释缺少条件；师傅缺席时有合理处理",
+      "dependencies": [
+        "F03",
+        "E04",
+        "H03"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "系统策划／叙事策划",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "未入门、已入门、退门、敌对四份状态，包含完成和未完成门派任务。",
+        "steps": [
+          "建立并检查交付样本：师傅、武学、关系、贡献和境界的组合条件",
+          "从资格不足到通过考核，逐项核对身份、服务、武学与奖励。",
+          "退门或改变立场后重访，检查权限回收、任务结算和保留内容。",
+          "对照本包判据逐项判定：UI准确解释缺少条件；师傅缺席时有合理处理"
+        ],
+        "expected": "UI准确解释缺少条件；师傅缺席时有合理处理",
+        "evidencePath": "docs/sandbox/evidence/F05.md",
+        "reviewerRole": "系统策划／叙事策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order",
+        "scope"
+      ]
+    },
+    {
+      "id": "F06",
+      "module": "门派与势力",
+      "name": "门派职责与专属任务",
+      "delivery": "差事、教义冲突、禁地和门派主线模板",
+      "acceptance": "任务结果影响声望、服务或后续门派状态",
+      "dependencies": [
+        "F04",
+        "J03"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "系统策划／叙事策划",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "未入门、已入门、退门、敌对四份状态，包含完成和未完成门派任务。",
+        "steps": [
+          "建立并检查交付样本：差事、教义冲突、禁地和门派主线模板",
+          "从资格不足到通过考核，逐项核对身份、服务、武学与奖励。",
+          "退门或改变立场后重访，检查权限回收、任务结算和保留内容。",
+          "对照本包判据逐项判定：任务结果影响声望、服务或后续门派状态"
+        ],
+        "expected": "任务结果影响声望、服务或后续门派状态",
+        "evidencePath": "docs/sandbox/evidence/F06.md",
+        "reviewerRole": "系统策划／叙事策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order",
+        "scope"
+      ]
+    },
+    {
+      "id": "F07",
+      "module": "门派与势力",
+      "name": "退门叛门与兼修",
+      "delivery": "退出、逐出、追责、秘籍归属和兼修限制",
+      "acceptance": "已学武学、装备权限与敌对关系均有明确结算",
+      "dependencies": [
+        "F04",
+        "F05",
+        "N03"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "系统策划／叙事策划",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "未入门、已入门、退门、敌对四份状态，包含完成和未完成门派任务。",
+        "steps": [
+          "建立并检查交付样本：退出、逐出、追责、秘籍归属和兼修限制",
+          "从资格不足到通过考核，逐项核对身份、服务、武学与奖励。",
+          "退门或改变立场后重访，检查权限回收、任务结算和保留内容。",
+          "对照本包判据逐项判定：已学武学、装备权限与敌对关系均有明确结算"
+        ],
+        "expected": "已学武学、装备权限与敌对关系均有明确结算",
+        "evidencePath": "docs/sandbox/evidence/F07.md",
+        "reviewerRole": "系统策划／叙事策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order",
+        "scope"
+      ]
+    },
+    {
+      "id": "F08",
+      "module": "门派与势力",
+      "name": "势力冲突与选择",
+      "delivery": "结盟、敌对、调停和阵营路线事件",
+      "acceptance": "立场变化有局部影响与传播，不无条件全图敌对",
+      "dependencies": [
+        "F01",
+        "D05",
+        "E03"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "系统策划／叙事策划",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "未入门、已入门、退门、敌对四份状态，包含完成和未完成门派任务。",
+        "steps": [
+          "建立并检查交付样本：结盟、敌对、调停和阵营路线事件",
+          "从资格不足到通过考核，逐项核对身份、服务、武学与奖励。",
+          "退门或改变立场后重访，检查权限回收、任务结算和保留内容。",
+          "对照本包判据逐项判定：立场变化有局部影响与传播，不无条件全图敌对"
+        ],
+        "expected": "立场变化有局部影响与传播，不无条件全图敌对",
+        "evidencePath": "docs/sandbox/evidence/F08.md",
+        "reviewerRole": "系统策划／叙事策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order",
+        "scope"
+      ]
+    },
+    {
+      "id": "F09",
+      "module": "门派与势力",
+      "name": "首发门派与势力内容",
+      "delivery": "四个可加入门派及两个其他主要势力的完整内容",
+      "acceptance": "逐派验证入门、晋升、授艺、退出与结局",
+      "dependencies": [
+        "F06",
+        "F07",
+        "F08",
+        "U04"
+      ],
+      "stage": "S3",
+      "priority": "必需",
+      "accountableRole": "系统策划／叙事策划",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "未入门、已入门、退门、敌对四份状态，包含完成和未完成门派任务。",
+        "steps": [
+          "建立并检查交付样本：四个可加入门派及两个其他主要势力的完整内容",
+          "从资格不足到通过考核，逐项核对身份、服务、武学与奖励。",
+          "退门或改变立场后重访，检查权限回收、任务结算和保留内容。",
+          "对照本包判据逐项判定：逐派验证入门、晋升、授艺、退出与结局"
+        ],
+        "expected": "逐派验证入门、晋升、授艺、退出与结局",
+        "evidencePath": "docs/sandbox/evidence/F09.md",
+        "reviewerRole": "系统策划／叙事策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order",
+        "scope"
+      ]
+    },
+    {
+      "id": "G01",
+      "module": "队友与队伍",
+      "name": "队伍模型与角色所有权",
+      "delivery": "最多四人队伍、候补、唯一NPC身份与装备归属",
+      "acceptance": "入队NPC不会同时留在原场景或复制随身物品",
+      "dependencies": [
+        "E01",
+        "A04",
+        "T02"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "战斗策划／角色程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "1人和4人队伍、负伤同伴、携带唯一物品的同伴。",
+        "steps": [
+          "建立并检查交付样本：最多四人队伍、候补、唯一NPC身份与装备归属",
+          "招募、满员替换、离队、再次相逢，比较人物ID、装备、物品和任务状态。",
+          "在战斗、转图和剧情离队边界重复，检查不丢失人物且限制有提示。",
+          "对照本包判据逐项判定：入队NPC不会同时留在原场景或复制随身物品"
+        ],
+        "expected": "入队NPC不会同时留在原场景或复制随身物品",
+        "evidencePath": "docs/sandbox/evidence/G01.md",
+        "reviewerRole": "战斗策划／角色程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "G02",
+      "module": "队友与队伍",
+      "name": "招募离队与重聚",
+      "delivery": "招募条件、主动离队、暂离、回归与所在位置",
+      "acceptance": "任务中离队、满队邀请和读档均有确定结果",
+      "dependencies": [
+        "G01",
+        "E02",
+        "C03"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "战斗策划／角色程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "1人和4人队伍、负伤同伴、携带唯一物品的同伴。",
+        "steps": [
+          "建立并检查交付样本：招募条件、主动离队、暂离、回归与所在位置",
+          "招募、满员替换、离队、再次相逢，比较人物ID、装备、物品和任务状态。",
+          "在战斗、转图和剧情离队边界重复，检查不丢失人物且限制有提示。",
+          "对照本包判据逐项判定：任务中离队、满队邀请和读档均有确定结果"
+        ],
+        "expected": "任务中离队、满队邀请和读档均有确定结果",
+        "evidencePath": "docs/sandbox/evidence/G02.md",
+        "reviewerRole": "战斗策划／角色程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "G03",
+      "module": "队友与队伍",
+      "name": "同伴操控与战斗接入",
+      "delivery": "每位队员独立属性、技能、行动和受伤状态",
+      "acceptance": "四名队员都能完整行动，不只提供一次辅助",
+      "dependencies": [
+        "G01",
+        "I02",
+        "H02"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "战斗策划／角色程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "1人和4人队伍、负伤同伴、携带唯一物品的同伴。",
+        "steps": [
+          "建立并检查交付样本：每位队员独立属性、技能、行动和受伤状态",
+          "招募、满员替换、离队、再次相逢，比较人物ID、装备、物品和任务状态。",
+          "在战斗、转图和剧情离队边界重复，检查不丢失人物且限制有提示。",
+          "对照本包判据逐项判定：四名队员都能完整行动，不只提供一次辅助"
+        ],
+        "expected": "四名队员都能完整行动，不只提供一次辅助",
+        "evidencePath": "docs/sandbox/evidence/G03.md",
+        "reviewerRole": "战斗策划／角色程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "G04",
+      "module": "队友与队伍",
+      "name": "队友目标与冲突",
+      "delivery": "同伴立场、底线、争执、劝解和信任事件",
+      "acceptance": "冲突有征兆与处理窗口，不无提示移除关键战力",
+      "dependencies": [
+        "G02",
+        "E03",
+        "J03"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "战斗策划／角色程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "1人和4人队伍、负伤同伴、携带唯一物品的同伴。",
+        "steps": [
+          "建立并检查交付样本：同伴立场、底线、争执、劝解和信任事件",
+          "招募、满员替换、离队、再次相逢，比较人物ID、装备、物品和任务状态。",
+          "在战斗、转图和剧情离队边界重复，检查不丢失人物且限制有提示。",
+          "对照本包判据逐项判定：冲突有征兆与处理窗口，不无提示移除关键战力"
+        ],
+        "expected": "冲突有征兆与处理窗口，不无提示移除关键战力",
+        "evidencePath": "docs/sandbox/evidence/G04.md",
+        "reviewerRole": "战斗策划／角色程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "G05",
+      "module": "队友与队伍",
+      "name": "营地与休整",
+      "delivery": "休息、治疗、队伍整备、营地对话和存取入口",
+      "acceptance": "休整扣时、恢复、事件和受伤状态一起正确结算",
+      "dependencies": [
+        "G02",
+        "D02",
+        "R03"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "战斗策划／角色程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "1人和4人队伍、负伤同伴、携带唯一物品的同伴。",
+        "steps": [
+          "建立并检查交付样本：休息、治疗、队伍整备、营地对话和存取入口",
+          "招募、满员替换、离队、再次相逢，比较人物ID、装备、物品和任务状态。",
+          "在战斗、转图和剧情离队边界重复，检查不丢失人物且限制有提示。",
+          "对照本包判据逐项判定：休整扣时、恢复、事件和受伤状态一起正确结算"
+        ],
+        "expected": "休整扣时、恢复、事件和受伤状态一起正确结算",
+        "evidencePath": "docs/sandbox/evidence/G05.md",
+        "reviewerRole": "战斗策划／角色程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "G06",
+      "module": "队友与队伍",
+      "name": "同伴剧情与结局",
+      "delivery": "八位同伴的个人线、队内互动和结局条件",
+      "acceptance": "缺席、离队、敌对与死亡时剧情能收束",
+      "dependencies": [
+        "G04",
+        "J05",
+        "J08"
+      ],
+      "stage": "S3",
+      "priority": "必需",
+      "accountableRole": "战斗策划／角色程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "1人和4人队伍、负伤同伴、携带唯一物品的同伴。",
+        "steps": [
+          "建立并检查交付样本：八位同伴的个人线、队内互动和结局条件",
+          "招募、满员替换、离队、再次相逢，比较人物ID、装备、物品和任务状态。",
+          "在战斗、转图和剧情离队边界重复，检查不丢失人物且限制有提示。",
+          "对照本包判据逐项判定：缺席、离队、敌对与死亡时剧情能收束"
+        ],
+        "expected": "缺席、离队、敌对与死亡时剧情能收束",
+        "evidencePath": "docs/sandbox/evidence/G06.md",
+        "reviewerRole": "战斗策划／角色程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "G07",
+      "module": "队友与队伍",
+      "name": "队伍行走与编队",
+      "delivery": "跟随、集合、窄路处理、队员选择和初始布阵",
+      "acceptance": "场景切换无丢人；战场人数与探索队伍一致",
+      "dependencies": [
+        "G01",
+        "B03",
+        "I03"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "战斗策划／角色程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "1人和4人队伍、负伤同伴、携带唯一物品的同伴。",
+        "steps": [
+          "建立并检查交付样本：跟随、集合、窄路处理、队员选择和初始布阵",
+          "招募、满员替换、离队、再次相逢，比较人物ID、装备、物品和任务状态。",
+          "在战斗、转图和剧情离队边界重复，检查不丢失人物且限制有提示。",
+          "对照本包判据逐项判定：场景切换无丢人；战场人数与探索队伍一致"
+        ],
+        "expected": "场景切换无丢人；战场人数与探索队伍一致",
+        "evidencePath": "docs/sandbox/evidence/G07.md",
+        "reviewerRole": "战斗策划／角色程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "G08",
+      "module": "队友与队伍",
+      "name": "队友全流程回归",
+      "delivery": "独行到满队、装备调整、离队、再入队存档样本",
+      "acceptance": "人物、物品、关系、任务与战斗状态没有分叉",
+      "dependencies": [
+        "G03",
+        "G05",
+        "G07",
+        "V03"
+      ],
+      "stage": "S3",
+      "priority": "必需",
+      "accountableRole": "战斗策划／角色程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "1人和4人队伍、负伤同伴、携带唯一物品的同伴。",
+        "steps": [
+          "建立并检查交付样本：独行到满队、装备调整、离队、再入队存档样本",
+          "招募、满员替换、离队、再次相逢，比较人物ID、装备、物品和任务状态。",
+          "在战斗、转图和剧情离队边界重复，检查不丢失人物且限制有提示。",
+          "对照本包判据逐项判定：人物、物品、关系、任务与战斗状态没有分叉"
+        ],
+        "expected": "人物、物品、关系、任务与战斗状态没有分叉",
+        "evidencePath": "docs/sandbox/evidence/G08.md",
+        "reviewerRole": "战斗策划／角色程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "H01",
+      "module": "成长与武学",
+      "name": "武学分类与构筑框架",
+      "delivery": "招式、心法、轻功、锻体及兵器标签和互斥规则",
+      "acceptance": "每类承担不同决策；初步构筑有强项和代价",
+      "dependencies": [
+        "A04",
+        "T01"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "数值策划／战斗程序",
+      "approach": "扩展",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "同一角色在境界或学习门槛的前后，空装配与满装配两种状态。",
+        "steps": [
+          "建立并检查交付样本：招式、心法、轻功、锻体及兵器标签和互斥规则",
+          "学习、装配并在战斗与一项非战斗局面实际使用该能力。",
+          "移除装备、资源不足和读档后重复，比较预览与最终派生值。",
+          "对照本包判据逐项判定：每类承担不同决策；初步构筑有强项和代价"
+        ],
+        "expected": "每类承担不同决策；初步构筑有强项和代价",
+        "evidencePath": "docs/sandbox/evidence/H01.md",
+        "reviewerRole": "数值策划／战斗程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "H02",
+      "module": "成长与武学",
+      "name": "角色属性与数值管线",
+      "delivery": "基础属性、派生属性、装备、状态和武学修正顺序",
+      "acceptance": "UI与战斗共用计算，能追溯属性来源",
+      "dependencies": [
+        "H01",
+        "T02"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "数值策划／战斗程序",
+      "approach": "扩展",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "同一角色在境界或学习门槛的前后，空装配与满装配两种状态。",
+        "steps": [
+          "建立并检查交付样本：基础属性、派生属性、装备、状态和武学修正顺序",
+          "学习、装配并在战斗与一项非战斗局面实际使用该能力。",
+          "移除装备、资源不足和读档后重复，比较预览与最终派生值。",
+          "对照本包判据逐项判定：UI与战斗共用计算，能追溯属性来源"
+        ],
+        "expected": "UI与战斗共用计算，能追溯属性来源",
+        "evidencePath": "docs/sandbox/evidence/H02.md",
+        "reviewerRole": "数值策划／战斗程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "H03",
+      "module": "成长与武学",
+      "name": "习得与修炼",
+      "delivery": "秘籍、师承、见闻、练功、熟练度和突破条件",
+      "acceptance": "所有来源调用统一授予逻辑，失败不吞材料",
+      "dependencies": [
+        "H01",
+        "C03"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "数值策划／战斗程序",
+      "approach": "扩展",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "同一角色在境界或学习门槛的前后，空装配与满装配两种状态。",
+        "steps": [
+          "建立并检查交付样本：秘籍、师承、见闻、练功、熟练度和突破条件",
+          "学习、装配并在战斗与一项非战斗局面实际使用该能力。",
+          "移除装备、资源不足和读档后重复，比较预览与最终派生值。",
+          "对照本包判据逐项判定：所有来源调用统一授予逻辑，失败不吞材料"
+        ],
+        "expected": "所有来源调用统一授予逻辑，失败不吞材料",
+        "evidencePath": "docs/sandbox/evidence/H03.md",
+        "reviewerRole": "数值策划／战斗程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "H04",
+      "module": "成长与武学",
+      "name": "内功经脉与资源",
+      "delivery": "气血、内力、经脉分支及内功切换规则",
+      "acceptance": "恢复、上限、封穴和转换无无限循环构筑",
+      "dependencies": [
+        "H02",
+        "H03"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "数值策划／战斗程序",
+      "approach": "扩展",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "同一角色在境界或学习门槛的前后，空装配与满装配两种状态。",
+        "steps": [
+          "建立并检查交付样本：气血、内力、经脉分支及内功切换规则",
+          "学习、装配并在战斗与一项非战斗局面实际使用该能力。",
+          "移除装备、资源不足和读档后重复，比较预览与最终派生值。",
+          "对照本包判据逐项判定：恢复、上限、封穴和转换无无限循环构筑"
+        ],
+        "expected": "恢复、上限、封穴和转换无无限循环构筑",
+        "evidencePath": "docs/sandbox/evidence/H04.md",
+        "reviewerRole": "数值策划／战斗程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "H05",
+      "module": "成长与武学",
+      "name": "招式与连携规则",
+      "delivery": "范围、消耗、冷却、武器要求和队伍连携数据",
+      "acceptance": "技能描述与实际目标、伤害和状态一致",
+      "dependencies": [
+        "H02",
+        "I02"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "数值策划／战斗程序",
+      "approach": "扩展",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "同一角色在境界或学习门槛的前后，空装配与满装配两种状态。",
+        "steps": [
+          "建立并检查交付样本：范围、消耗、冷却、武器要求和队伍连携数据",
+          "学习、装配并在战斗与一项非战斗局面实际使用该能力。",
+          "移除装备、资源不足和读档后重复，比较预览与最终派生值。",
+          "对照本包判据逐项判定：技能描述与实际目标、伤害和状态一致"
+        ],
+        "expected": "技能描述与实际目标、伤害和状态一致",
+        "evidencePath": "docs/sandbox/evidence/H05.md",
+        "reviewerRole": "数值策划／战斗程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "H06",
+      "module": "成长与武学",
+      "name": "轻功与行动方式",
+      "delivery": "闪避、位移、越障及探索门槛",
+      "acceptance": "战斗位移与地图越障边界清楚，不穿非法地形",
+      "dependencies": [
+        "H02",
+        "B03",
+        "I03"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "数值策划／战斗程序",
+      "approach": "扩展",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "同一角色在境界或学习门槛的前后，空装配与满装配两种状态。",
+        "steps": [
+          "建立并检查交付样本：闪避、位移、越障及探索门槛",
+          "学习、装配并在战斗与一项非战斗局面实际使用该能力。",
+          "移除装备、资源不足和读档后重复，比较预览与最终派生值。",
+          "对照本包判据逐项判定：战斗位移与地图越障边界清楚，不穿非法地形"
+        ],
+        "expected": "战斗位移与地图越障边界清楚，不穿非法地形",
+        "evidencePath": "docs/sandbox/evidence/H06.md",
+        "reviewerRole": "数值策划／战斗程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "H07",
+      "module": "成长与武学",
+      "name": "武学对探索的影响",
+      "delivery": "疗伤、感知、破障、隐藏路线和检定接口",
+      "acceptance": "构筑至少在战斗外创造一项可见选择",
+      "dependencies": [
+        "H03",
+        "C02"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "数值策划／战斗程序",
+      "approach": "扩展",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "同一角色在境界或学习门槛的前后，空装配与满装配两种状态。",
+        "steps": [
+          "建立并检查交付样本：疗伤、感知、破障、隐藏路线和检定接口",
+          "学习、装配并在战斗与一项非战斗局面实际使用该能力。",
+          "移除装备、资源不足和读档后重复，比较预览与最终派生值。",
+          "对照本包判据逐项判定：构筑至少在战斗外创造一项可见选择"
+        ],
+        "expected": "构筑至少在战斗外创造一项可见选择",
+        "evidencePath": "docs/sandbox/evidence/H07.md",
+        "reviewerRole": "数值策划／战斗程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "H08",
+      "module": "成长与武学",
+      "name": "成长速度与重修",
+      "delivery": "经验来源、境界曲线、洗点、重复训练与落后追赶",
+      "acceptance": "不强迫挂机刷取；错误构筑有可理解的修复途径",
+      "dependencies": [
+        "H03",
+        "H04",
+        "L02"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "数值策划／战斗程序",
+      "approach": "扩展",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "同一角色在境界或学习门槛的前后，空装配与满装配两种状态。",
+        "steps": [
+          "建立并检查交付样本：经验来源、境界曲线、洗点、重复训练与落后追赶",
+          "学习、装配并在战斗与一项非战斗局面实际使用该能力。",
+          "移除装备、资源不足和读档后重复，比较预览与最终派生值。",
+          "对照本包判据逐项判定：不强迫挂机刷取；错误构筑有可理解的修复途径"
+        ],
+        "expected": "不强迫挂机刷取；错误构筑有可理解的修复途径",
+        "evidencePath": "docs/sandbox/evidence/H08.md",
+        "reviewerRole": "数值策划／战斗程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "H09",
+      "module": "成长与武学",
+      "name": "首发武学数据量产",
+      "delivery": "六十条武学及说明、图标、表现引用和测试组合",
+      "acceptance": "每条有获得途径、独特用途、表现与回归案例",
+      "dependencies": [
+        "H05",
+        "H06",
+        "H08",
+        "U05"
+      ],
+      "stage": "S3",
+      "priority": "必需",
+      "accountableRole": "数值策划／战斗程序",
+      "approach": "扩展",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "同一角色在境界或学习门槛的前后，空装配与满装配两种状态。",
+        "steps": [
+          "建立并检查交付样本：六十条武学及说明、图标、表现引用和测试组合",
+          "学习、装配并在战斗与一项非战斗局面实际使用该能力。",
+          "移除装备、资源不足和读档后重复，比较预览与最终派生值。",
+          "对照本包判据逐项判定：每条有获得途径、独特用途、表现与回归案例"
+        ],
+        "expected": "每条有获得途径、独特用途、表现与回归案例",
+        "evidencePath": "docs/sandbox/evidence/H09.md",
+        "reviewerRole": "数值策划／战斗程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "I01",
+      "module": "战斗",
+      "name": "主战斗规则与输赢边界",
+      "delivery": "行动资源、回合、退场、投降、逃跑和战斗类型",
+      "acceptance": "切磋、缉拿和生死战有不同结算",
+      "dependencies": [
+        "A04",
+        "T02"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "战斗策划／程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "固定种子的四人战场，含近战、远程、治疗、障碍和退路。",
+        "steps": [
+          "建立并检查交付样本：行动资源、回合、退场、投降、逃跑和战斗类型",
+          "执行走位、出手、守势、敌方行动直到胜利；分别复现战败和撤退。",
+          "检查射程边界、AP恰好与不足、死亡目标和读档重放，核对预览与结算。",
+          "对照本包判据逐项判定：切磋、缉拿和生死战有不同结算"
+        ],
+        "expected": "切磋、缉拿和生死战有不同结算",
+        "evidencePath": "docs/sandbox/evidence/I01.md",
+        "reviewerRole": "战斗策划／程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state",
+        "hardware"
+      ]
+    },
+    {
+      "id": "I02",
+      "module": "战斗",
+      "name": "独立角色与技能执行",
+      "delivery": "队员、敌人、状态、技能目标和原子行动接口",
+      "acceptance": "同一输入和随机种子可重放并得到一致结算",
+      "dependencies": [
+        "I01",
+        "H02",
+        "T04"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "战斗策划／程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "固定种子的四人战场，含近战、远程、治疗、障碍和退路。",
+        "steps": [
+          "建立并检查交付样本：队员、敌人、状态、技能目标和原子行动接口",
+          "执行走位、出手、守势、敌方行动直到胜利；分别复现战败和撤退。",
+          "检查射程边界、AP恰好与不足、死亡目标和读档重放，核对预览与结算。",
+          "对照本包判据逐项判定：同一输入和随机种子可重放并得到一致结算"
+        ],
+        "expected": "同一输入和随机种子可重放并得到一致结算",
+        "evidencePath": "docs/sandbox/evidence/I02.md",
+        "reviewerRole": "战斗策划／程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state",
+        "hardware"
+      ]
+    },
+    {
+      "id": "I03",
+      "module": "战斗",
+      "name": "战场网格与空间规则",
+      "delivery": "地形、阻挡、占位、路径、射程、视线和入场点",
+      "acceptance": "预览和结算路径一致；无非法重叠和穿障",
+      "dependencies": [
+        "I01",
+        "B02"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "战斗策划／程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "固定种子的四人战场，含近战、远程、治疗、障碍和退路。",
+        "steps": [
+          "建立并检查交付样本：地形、阻挡、占位、路径、射程、视线和入场点",
+          "执行走位、出手、守势、敌方行动直到胜利；分别复现战败和撤退。",
+          "检查射程边界、AP恰好与不足、死亡目标和读档重放，核对预览与结算。",
+          "对照本包判据逐项判定：预览和结算路径一致；无非法重叠和穿障"
+        ],
+        "expected": "预览和结算路径一致；无非法重叠和穿障",
+        "evidencePath": "docs/sandbox/evidence/I03.md",
+        "reviewerRole": "战斗策划／程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state",
+        "hardware"
+      ]
+    },
+    {
+      "id": "I04",
+      "module": "战斗",
+      "name": "行动预览与信息解释",
+      "delivery": "移动范围、命中或结果区间、克制、队列和战斗日志",
+      "acceptance": "信息足以判断行动风险，隐藏信息不误显示",
+      "dependencies": [
+        "I02",
+        "I03",
+        "R01"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "战斗策划／程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "固定种子的四人战场，含近战、远程、治疗、障碍和退路。",
+        "steps": [
+          "建立并检查交付样本：移动范围、命中或结果区间、克制、队列和战斗日志",
+          "执行走位、出手、守势、敌方行动直到胜利；分别复现战败和撤退。",
+          "检查射程边界、AP恰好与不足、死亡目标和读档重放，核对预览与结算。",
+          "对照本包判据逐项判定：信息足以判断行动风险，隐藏信息不误显示"
+        ],
+        "expected": "信息足以判断行动风险，隐藏信息不误显示",
+        "evidencePath": "docs/sandbox/evidence/I04.md",
+        "reviewerRole": "战斗策划／程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state",
+        "hardware"
+      ]
+    },
+    {
+      "id": "I05",
+      "module": "战斗",
+      "name": "敌方AI与敌人定位",
+      "delivery": "冲锋、控制、远程、辅助及目标评分策略",
+      "acceptance": "各类型有可识别行为，不靠单纯属性堆高区分",
+      "dependencies": [
+        "I02",
+        "I03"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "战斗策划／程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "固定种子的四人战场，含近战、远程、治疗、障碍和退路。",
+        "steps": [
+          "建立并检查交付样本：冲锋、控制、远程、辅助及目标评分策略",
+          "执行走位、出手、守势、敌方行动直到胜利；分别复现战败和撤退。",
+          "检查射程边界、AP恰好与不足、死亡目标和读档重放，核对预览与结算。",
+          "对照本包判据逐项判定：各类型有可识别行为，不靠单纯属性堆高区分"
+        ],
+        "expected": "各类型有可识别行为，不靠单纯属性堆高区分",
+        "evidencePath": "docs/sandbox/evidence/I05.md",
+        "reviewerRole": "战斗策划／程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state",
+        "hardware"
+      ]
+    },
+    {
+      "id": "I06",
+      "module": "战斗",
+      "name": "场景进战与战后返回",
+      "delivery": "探索转战斗、布阵、援军、撤退和原地返回",
+      "acceptance": "NPC位置、事件状态与伤亡结果回写世界一次",
+      "dependencies": [
+        "I02",
+        "I03",
+        "B06"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "战斗策划／程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "固定种子的四人战场，含近战、远程、治疗、障碍和退路。",
+        "steps": [
+          "建立并检查交付样本：探索转战斗、布阵、援军、撤退和原地返回",
+          "执行走位、出手、守势、敌方行动直到胜利；分别复现战败和撤退。",
+          "检查射程边界、AP恰好与不足、死亡目标和读档重放，核对预览与结算。",
+          "对照本包判据逐项判定：NPC位置、事件状态与伤亡结果回写世界一次"
+        ],
+        "expected": "NPC位置、事件状态与伤亡结果回写世界一次",
+        "evidencePath": "docs/sandbox/evidence/I06.md",
+        "reviewerRole": "战斗策划／程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state",
+        "hardware"
+      ]
+    },
+    {
+      "id": "I07",
+      "module": "战斗",
+      "name": "伤势与失败代价",
+      "delivery": "轻伤、重伤、俘虏、损失和可恢复失败流程",
+      "acceptance": "非生死战失败可继续游戏，关键风险提前提示",
+      "dependencies": [
+        "I01",
+        "G01",
+        "L01"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "战斗策划／程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "固定种子的四人战场，含近战、远程、治疗、障碍和退路。",
+        "steps": [
+          "建立并检查交付样本：轻伤、重伤、俘虏、损失和可恢复失败流程",
+          "执行走位、出手、守势、敌方行动直到胜利；分别复现战败和撤退。",
+          "检查射程边界、AP恰好与不足、死亡目标和读档重放，核对预览与结算。",
+          "对照本包判据逐项判定：非生死战失败可继续游戏，关键风险提前提示"
+        ],
+        "expected": "非生死战失败可继续游戏，关键风险提前提示",
+        "evidencePath": "docs/sandbox/evidence/I07.md",
+        "reviewerRole": "战斗策划／程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state",
+        "hardware"
+      ]
+    },
+    {
+      "id": "I08",
+      "module": "战斗",
+      "name": "战斗地形与交互物",
+      "delivery": "高低差简化、掩体、机关、危险区和可破坏物",
+      "acceptance": "每种地形实际影响选择且不制造永久卡局",
+      "dependencies": [
+        "I03",
+        "C01"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "战斗策划／程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "固定种子的四人战场，含近战、远程、治疗、障碍和退路。",
+        "steps": [
+          "建立并检查交付样本：高低差简化、掩体、机关、危险区和可破坏物",
+          "执行走位、出手、守势、敌方行动直到胜利；分别复现战败和撤退。",
+          "检查射程边界、AP恰好与不足、死亡目标和读档重放，核对预览与结算。",
+          "对照本包判据逐项判定：每种地形实际影响选择且不制造永久卡局"
+        ],
+        "expected": "每种地形实际影响选择且不制造永久卡局",
+        "evidencePath": "docs/sandbox/evidence/I08.md",
+        "reviewerRole": "战斗策划／程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state",
+        "hardware"
+      ]
+    },
+    {
+      "id": "I09",
+      "module": "战斗",
+      "name": "控制驱散与连携平衡",
+      "delivery": "异常状态叠加、免疫、反制、打断和组合上限",
+      "acceptance": "不存在无需成本的永久控制或无限行动循环",
+      "dependencies": [
+        "I02",
+        "H05"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "战斗策划／程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "固定种子的四人战场，含近战、远程、治疗、障碍和退路。",
+        "steps": [
+          "建立并检查交付样本：异常状态叠加、免疫、反制、打断和组合上限",
+          "执行走位、出手、守势、敌方行动直到胜利；分别复现战败和撤退。",
+          "检查射程边界、AP恰好与不足、死亡目标和读档重放，核对预览与结算。",
+          "对照本包判据逐项判定：不存在无需成本的永久控制或无限行动循环"
+        ],
+        "expected": "不存在无需成本的永久控制或无限行动循环",
+        "evidencePath": "docs/sandbox/evidence/I09.md",
+        "reviewerRole": "战斗策划／程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state",
+        "hardware"
+      ]
+    },
+    {
+      "id": "I10",
+      "module": "战斗",
+      "name": "精英与首领机制",
+      "delivery": "十二种常规敌人原型与六个首领的行为包",
+      "acceptance": "首领有预告、应对和恢复窗口，读招不靠试错背板",
+      "dependencies": [
+        "I05",
+        "I08",
+        "I09",
+        "Q02"
+      ],
+      "stage": "S3",
+      "priority": "必需",
+      "accountableRole": "战斗策划／程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "固定种子的四人战场，含近战、远程、治疗、障碍和退路。",
+        "steps": [
+          "建立并检查交付样本：十二种常规敌人原型与六个首领的行为包",
+          "执行走位、出手、守势、敌方行动直到胜利；分别复现战败和撤退。",
+          "检查射程边界、AP恰好与不足、死亡目标和读档重放，核对预览与结算。",
+          "对照本包判据逐项判定：首领有预告、应对和恢复窗口，读招不靠试错背板"
+        ],
+        "expected": "首领有预告、应对和恢复窗口，读招不靠试错背板",
+        "evidencePath": "docs/sandbox/evidence/I10.md",
+        "reviewerRole": "战斗策划／程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state",
+        "hardware"
+      ]
+    },
+    {
+      "id": "I11",
+      "module": "战斗",
+      "name": "战斗表现与操作磨合",
+      "delivery": "动画事件、音效、特效、镜头、节奏和跳过选项",
+      "acceptance": "快速模式保持事件顺序；表现不改变逻辑结果",
+      "dependencies": [
+        "I04",
+        "P04",
+        "Q03",
+        "S02"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "战斗策划／程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "固定种子的四人战场，含近战、远程、治疗、障碍和退路。",
+        "steps": [
+          "建立并检查交付样本：动画事件、音效、特效、镜头、节奏和跳过选项",
+          "执行走位、出手、守势、敌方行动直到胜利；分别复现战败和撤退。",
+          "检查射程边界、AP恰好与不足、死亡目标和读档重放，核对预览与结算。",
+          "对照本包判据逐项判定：快速模式保持事件顺序；表现不改变逻辑结果"
+        ],
+        "expected": "快速模式保持事件顺序；表现不改变逻辑结果",
+        "evidencePath": "docs/sandbox/evidence/I11.md",
+        "reviewerRole": "战斗策划／程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state",
+        "hardware"
+      ]
+    },
+    {
+      "id": "I12",
+      "module": "战斗",
+      "name": "遭遇制作与整体平衡",
+      "delivery": "各区战斗配置、奖励、难度与队伍构筑矩阵",
+      "acceptance": "独行、不同门派与合理弱配队均有完成路径",
+      "dependencies": [
+        "I06",
+        "I07",
+        "I10",
+        "I11",
+        "V06"
+      ],
+      "stage": "S3",
+      "priority": "必需",
+      "accountableRole": "战斗策划／程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "固定种子的四人战场，含近战、远程、治疗、障碍和退路。",
+        "steps": [
+          "建立并检查交付样本：各区战斗配置、奖励、难度与队伍构筑矩阵",
+          "执行走位、出手、守势、敌方行动直到胜利；分别复现战败和撤退。",
+          "检查射程边界、AP恰好与不足、死亡目标和读档重放，核对预览与结算。",
+          "对照本包判据逐项判定：独行、不同门派与合理弱配队均有完成路径"
+        ],
+        "expected": "独行、不同门派与合理弱配队均有完成路径",
+        "evidencePath": "docs/sandbox/evidence/I12.md",
+        "reviewerRole": "战斗策划／程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state",
+        "hardware"
+      ]
+    },
+    {
+      "id": "J01",
+      "module": "任务与叙事",
+      "name": "任务状态与目标组件",
+      "delivery": "未发现、进行、完成、失败、关闭及多类目标",
+      "acceptance": "任务可被战斗外行动推进，不只依赖剧情按钮",
+      "dependencies": [
+        "T01",
+        "T03",
+        "A03"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "叙事策划／任务程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "每个任务包的未接、进行、完成、失败状态，包含唯一目标物。",
+        "steps": [
+          "建立并检查交付样本：未发现、进行、完成、失败、关闭及多类目标",
+          "依次走通正常与各替代解法，核对目标、代价、回流和奖励。",
+          "提前取物、晚接、NPC入队或死亡、超时、重复交付，检查有收口且不重复奖。",
+          "对照本包判据逐项判定：任务可被战斗外行动推进，不只依赖剧情按钮"
+        ],
+        "expected": "任务可被战斗外行动推进，不只依赖剧情按钮",
+        "evidencePath": "docs/sandbox/evidence/J01.md",
+        "reviewerRole": "叙事策划／任务程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order",
+        "content-cost"
+      ]
+    },
+    {
+      "id": "J02",
+      "module": "任务与叙事",
+      "name": "世界主线与区域开放",
+      "delivery": "世界矛盾、章节门槛、线索入口与路线汇合规则",
+      "acceptance": "主线提供方向，同时允许区域内不同完成顺序",
+      "dependencies": [
+        "J01",
+        "B01"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "叙事策划／任务程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "每个任务包的未接、进行、完成、失败状态，包含唯一目标物。",
+        "steps": [
+          "建立并检查交付样本：世界矛盾、章节门槛、线索入口与路线汇合规则",
+          "依次走通正常与各替代解法，核对目标、代价、回流和奖励。",
+          "提前取物、晚接、NPC入队或死亡、超时、重复交付，检查有收口且不重复奖。",
+          "对照本包判据逐项判定：主线提供方向，同时允许区域内不同完成顺序"
+        ],
+        "expected": "主线提供方向，同时允许区域内不同完成顺序",
+        "evidencePath": "docs/sandbox/evidence/J02.md",
+        "reviewerRole": "叙事策划／任务程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order",
+        "content-cost"
+      ]
+    },
+    {
+      "id": "J03",
+      "module": "任务与叙事",
+      "name": "多解任务与后果表",
+      "delivery": "目标、条件、事件、排他、代价、结果和延迟后果",
+      "acceptance": "每个重点任务至少验证设计过的两条可完成路径",
+      "dependencies": [
+        "J01",
+        "C03",
+        "E02"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "叙事策划／任务程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "每个任务包的未接、进行、完成、失败状态，包含唯一目标物。",
+        "steps": [
+          "建立并检查交付样本：目标、条件、事件、排他、代价、结果和延迟后果",
+          "依次走通正常与各替代解法，核对目标、代价、回流和奖励。",
+          "提前取物、晚接、NPC入队或死亡、超时、重复交付，检查有收口且不重复奖。",
+          "对照本包判据逐项判定：每个重点任务至少验证设计过的两条可完成路径"
+        ],
+        "expected": "每个重点任务至少验证设计过的两条可完成路径",
+        "evidencePath": "docs/sandbox/evidence/J03.md",
+        "reviewerRole": "叙事策划／任务程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order",
+        "content-cost"
+      ]
+    },
+    {
+      "id": "J04",
+      "module": "任务与叙事",
+      "name": "对话图与演出触发",
+      "delivery": "条件对白、选择、跳转、插话、镜头及跳过接口",
+      "acceptance": "退出重进、跳过和存读档不会重复执行效果",
+      "dependencies": [
+        "J01",
+        "C04",
+        "S01"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "叙事策划／任务程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "每个任务包的未接、进行、完成、失败状态，包含唯一目标物。",
+        "steps": [
+          "建立并检查交付样本：条件对白、选择、跳转、插话、镜头及跳过接口",
+          "依次走通正常与各替代解法，核对目标、代价、回流和奖励。",
+          "提前取物、晚接、NPC入队或死亡、超时、重复交付，检查有收口且不重复奖。",
+          "对照本包判据逐项判定：退出重进、跳过和存读档不会重复执行效果"
+        ],
+        "expected": "退出重进、跳过和存读档不会重复执行效果",
+        "evidencePath": "docs/sandbox/evidence/J04.md",
+        "reviewerRole": "叙事策划／任务程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order",
+        "content-cost"
+      ]
+    },
+    {
+      "id": "J05",
+      "module": "任务与叙事",
+      "name": "失效兜底与替代路径",
+      "delivery": "目标死亡、入队、离城、敌对及提前拿物品的处理",
+      "acceptance": "所有硬依赖都能替代、结算或明确终止",
+      "dependencies": [
+        "J01",
+        "E01",
+        "G01"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "叙事策划／任务程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "每个任务包的未接、进行、完成、失败状态，包含唯一目标物。",
+        "steps": [
+          "建立并检查交付样本：目标死亡、入队、离城、敌对及提前拿物品的处理",
+          "依次走通正常与各替代解法，核对目标、代价、回流和奖励。",
+          "提前取物、晚接、NPC入队或死亡、超时、重复交付，检查有收口且不重复奖。",
+          "对照本包判据逐项判定：所有硬依赖都能替代、结算或明确终止"
+        ],
+        "expected": "所有硬依赖都能替代、结算或明确终止",
+        "evidencePath": "docs/sandbox/evidence/J05.md",
+        "reviewerRole": "叙事策划／任务程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order",
+        "content-cost"
+      ]
+    },
+    {
+      "id": "J06",
+      "module": "任务与叙事",
+      "name": "互斥冲突与承诺追踪",
+      "delivery": "争用NPC、唯一物品、地点阶段与承诺优先级",
+      "acceptance": "互斥路线可解释，重要承诺不被低优先事件覆盖",
+      "dependencies": [
+        "J03",
+        "T03"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "叙事策划／任务程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "每个任务包的未接、进行、完成、失败状态，包含唯一目标物。",
+        "steps": [
+          "建立并检查交付样本：争用NPC、唯一物品、地点阶段与承诺优先级",
+          "依次走通正常与各替代解法，核对目标、代价、回流和奖励。",
+          "提前取物、晚接、NPC入队或死亡、超时、重复交付，检查有收口且不重复奖。",
+          "对照本包判据逐项判定：互斥路线可解释，重要承诺不被低优先事件覆盖"
+        ],
+        "expected": "互斥路线可解释，重要承诺不被低优先事件覆盖",
+        "evidencePath": "docs/sandbox/evidence/J06.md",
+        "reviewerRole": "叙事策划／任务程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order",
+        "content-cost"
+      ]
+    },
+    {
+      "id": "J07",
+      "module": "任务与叙事",
+      "name": "任务提示与线索推理",
+      "delivery": "日志、线索来源、地图范围和可选辅助提示",
+      "acceptance": "不强迫查攻略；能区分事实、传言和未验证猜测",
+      "dependencies": [
+        "J01",
+        "K02",
+        "R04"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "叙事策划／任务程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "每个任务包的未接、进行、完成、失败状态，包含唯一目标物。",
+        "steps": [
+          "建立并检查交付样本：日志、线索来源、地图范围和可选辅助提示",
+          "依次走通正常与各替代解法，核对目标、代价、回流和奖励。",
+          "提前取物、晚接、NPC入队或死亡、超时、重复交付，检查有收口且不重复奖。",
+          "对照本包判据逐项判定：不强迫查攻略；能区分事实、传言和未验证猜测"
+        ],
+        "expected": "不强迫查攻略；能区分事实、传言和未验证猜测",
+        "evidencePath": "docs/sandbox/evidence/J07.md",
+        "reviewerRole": "叙事策划／任务程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order",
+        "content-cost"
+      ]
+    },
+    {
+      "id": "J08",
+      "module": "任务与叙事",
+      "name": "结局与后日谈",
+      "delivery": "人物、门派、区域和主角结局变量及汇总规则",
+      "acceptance": "结局能追溯到选择，不出现互相矛盾的终局描述",
+      "dependencies": [
+        "J02",
+        "J06",
+        "F01"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "叙事策划／任务程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "每个任务包的未接、进行、完成、失败状态，包含唯一目标物。",
+        "steps": [
+          "建立并检查交付样本：人物、门派、区域和主角结局变量及汇总规则",
+          "依次走通正常与各替代解法，核对目标、代价、回流和奖励。",
+          "提前取物、晚接、NPC入队或死亡、超时、重复交付，检查有收口且不重复奖。",
+          "对照本包判据逐项判定：结局能追溯到选择，不出现互相矛盾的终局描述"
+        ],
+        "expected": "结局能追溯到选择，不出现互相矛盾的终局描述",
+        "evidencePath": "docs/sandbox/evidence/J08.md",
+        "reviewerRole": "叙事策划／任务程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order",
+        "content-cost"
+      ]
+    },
+    {
+      "id": "J09",
+      "module": "任务与叙事",
+      "name": "首发叙事内容量产",
+      "delivery": "世界线、门派线、地方线和同伴线的八十八个任务包",
+      "acceptance": "每包有起止、分支、奖励、异常态和演出验收",
+      "dependencies": [
+        "J03",
+        "J04",
+        "J05",
+        "J06",
+        "J08",
+        "U04"
+      ],
+      "stage": "S3",
+      "priority": "必需",
+      "accountableRole": "叙事策划／任务程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "每个任务包的未接、进行、完成、失败状态，包含唯一目标物。",
+        "steps": [
+          "建立并检查交付样本：世界线、门派线、地方线和同伴线的八十八个任务包",
+          "依次走通正常与各替代解法，核对目标、代价、回流和奖励。",
+          "提前取物、晚接、NPC入队或死亡、超时、重复交付，检查有收口且不重复奖。",
+          "对照本包判据逐项判定：每包有起止、分支、奖励、异常态和演出验收"
+        ],
+        "expected": "每包有起止、分支、奖励、异常态和演出验收",
+        "evidencePath": "docs/sandbox/evidence/J09.md",
+        "reviewerRole": "叙事策划／任务程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order",
+        "content-cost"
+      ]
+    },
+    {
+      "id": "J10",
+      "module": "任务与叙事",
+      "name": "文本校对与可本地化",
+      "delivery": "术语表、文本键、长度限制、标点和翻译上下文",
+      "acceptance": "不在代码内散落正文；变量替换与长文本布局正确",
+      "dependencies": [
+        "J04",
+        "U04",
+        "R07"
+      ],
+      "stage": "S3",
+      "priority": "必需",
+      "accountableRole": "叙事策划／任务程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "每个任务包的未接、进行、完成、失败状态，包含唯一目标物。",
+        "steps": [
+          "建立并检查交付样本：术语表、文本键、长度限制、标点和翻译上下文",
+          "依次走通正常与各替代解法，核对目标、代价、回流和奖励。",
+          "提前取物、晚接、NPC入队或死亡、超时、重复交付，检查有收口且不重复奖。",
+          "对照本包判据逐项判定：不在代码内散落正文；变量替换与长文本布局正确"
+        ],
+        "expected": "不在代码内散落正文；变量替换与长文本布局正确",
+        "evidencePath": "docs/sandbox/evidence/J10.md",
+        "reviewerRole": "叙事策划／任务程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order",
+        "content-cost"
+      ]
+    },
+    {
+      "id": "K01",
+      "module": "奇遇与探索",
+      "name": "探索奖励层次",
+      "delivery": "地标、宝物、见闻、近路和能力门槛的布点规则",
+      "acceptance": "探索回报包含信息或路径，避免只投放通用材料",
+      "dependencies": [
+        "B01",
+        "H01"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "关卡／叙事策划",
+      "approach": "扩展",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "未发现、已发现、已结算的兴趣点，能力条件处于门槛两侧。",
+        "steps": [
+          "建立并检查交付样本：地标、宝物、见闻、近路和能力门槛的布点规则",
+          "从线索到发现再到探索奖励完整走通，并检查不依赖隐藏未揭示信息。",
+          "重复触发、离区回访和读档，核对发现记录、唯一奖励与替代路径。",
+          "对照本包判据逐项判定：探索回报包含信息或路径，避免只投放通用材料"
+        ],
+        "expected": "探索回报包含信息或路径，避免只投放通用材料",
+        "evidencePath": "docs/sandbox/evidence/K01.md",
+        "reviewerRole": "关卡／叙事策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order"
+      ]
+    },
+    {
+      "id": "K02",
+      "module": "奇遇与探索",
+      "name": "传闻与情报来源",
+      "delivery": "传闻池、来源可信度、验证、过期与记录",
+      "acceptance": "未知线索不直接变成地图精确答案",
+      "dependencies": [
+        "E01",
+        "J01"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "关卡／叙事策划",
+      "approach": "扩展",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "未发现、已发现、已结算的兴趣点，能力条件处于门槛两侧。",
+        "steps": [
+          "建立并检查交付样本：传闻池、来源可信度、验证、过期与记录",
+          "从线索到发现再到探索奖励完整走通，并检查不依赖隐藏未揭示信息。",
+          "重复触发、离区回访和读档，核对发现记录、唯一奖励与替代路径。",
+          "对照本包判据逐项判定：未知线索不直接变成地图精确答案"
+        ],
+        "expected": "未知线索不直接变成地图精确答案",
+        "evidencePath": "docs/sandbox/evidence/K02.md",
+        "reviewerRole": "关卡／叙事策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order"
+      ]
+    },
+    {
+      "id": "K03",
+      "module": "奇遇与探索",
+      "name": "奇遇模板与触发池",
+      "delivery": "地形、时间、人物、声望和冷却的组合触发",
+      "acceptance": "同一奇遇不无限重复；触发前可复现条件",
+      "dependencies": [
+        "K01",
+        "D04",
+        "J03"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "关卡／叙事策划",
+      "approach": "扩展",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "未发现、已发现、已结算的兴趣点，能力条件处于门槛两侧。",
+        "steps": [
+          "建立并检查交付样本：地形、时间、人物、声望和冷却的组合触发",
+          "从线索到发现再到探索奖励完整走通，并检查不依赖隐藏未揭示信息。",
+          "重复触发、离区回访和读档，核对发现记录、唯一奖励与替代路径。",
+          "对照本包判据逐项判定：同一奇遇不无限重复；触发前可复现条件"
+        ],
+        "expected": "同一奇遇不无限重复；触发前可复现条件",
+        "evidencePath": "docs/sandbox/evidence/K03.md",
+        "reviewerRole": "关卡／叙事策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order"
+      ]
+    },
+    {
+      "id": "K04",
+      "module": "奇遇与探索",
+      "name": "秘密与解谜",
+      "delivery": "机关、暗号、环境线索和多步解谜模板",
+      "acceptance": "提示梯度、退出重入和提前解谜均能处理",
+      "dependencies": [
+        "K01",
+        "C07"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "关卡／叙事策划",
+      "approach": "扩展",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "未发现、已发现、已结算的兴趣点，能力条件处于门槛两侧。",
+        "steps": [
+          "建立并检查交付样本：机关、暗号、环境线索和多步解谜模板",
+          "从线索到发现再到探索奖励完整走通，并检查不依赖隐藏未揭示信息。",
+          "重复触发、离区回访和读档，核对发现记录、唯一奖励与替代路径。",
+          "对照本包判据逐项判定：提示梯度、退出重入和提前解谜均能处理"
+        ],
+        "expected": "提示梯度、退出重入和提前解谜均能处理",
+        "evidencePath": "docs/sandbox/evidence/K04.md",
+        "reviewerRole": "关卡／叙事策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order"
+      ]
+    },
+    {
+      "id": "K05",
+      "module": "奇遇与探索",
+      "name": "野外危险与遭遇",
+      "delivery": "道路风险、伏击、天气影响和可绕行路线",
+      "acceptance": "风险能被侦察或准备缓解，不靠随机惩罚拖时长",
+      "dependencies": [
+        "K01",
+        "I06",
+        "D02"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "关卡／叙事策划",
+      "approach": "扩展",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "未发现、已发现、已结算的兴趣点，能力条件处于门槛两侧。",
+        "steps": [
+          "建立并检查交付样本：道路风险、伏击、天气影响和可绕行路线",
+          "从线索到发现再到探索奖励完整走通，并检查不依赖隐藏未揭示信息。",
+          "重复触发、离区回访和读档，核对发现记录、唯一奖励与替代路径。",
+          "对照本包判据逐项判定：风险能被侦察或准备缓解，不靠随机惩罚拖时长"
+        ],
+        "expected": "风险能被侦察或准备缓解，不靠随机惩罚拖时长",
+        "evidencePath": "docs/sandbox/evidence/K05.md",
+        "reviewerRole": "关卡／叙事策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order"
+      ]
+    },
+    {
+      "id": "K06",
+      "module": "奇遇与探索",
+      "name": "探索发现与收藏记录",
+      "delivery": "地图发现、图鉴、秘密点、见闻和已完成标记",
+      "acceptance": "记录与世界状态同步，不重复发奖或永久丢标记",
+      "dependencies": [
+        "K02",
+        "R04",
+        "C03"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "关卡／叙事策划",
+      "approach": "扩展",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "未发现、已发现、已结算的兴趣点，能力条件处于门槛两侧。",
+        "steps": [
+          "建立并检查交付样本：地图发现、图鉴、秘密点、见闻和已完成标记",
+          "从线索到发现再到探索奖励完整走通，并检查不依赖隐藏未揭示信息。",
+          "重复触发、离区回访和读档，核对发现记录、唯一奖励与替代路径。",
+          "对照本包判据逐项判定：记录与世界状态同步，不重复发奖或永久丢标记"
+        ],
+        "expected": "记录与世界状态同步，不重复发奖或永久丢标记",
+        "evidencePath": "docs/sandbox/evidence/K06.md",
+        "reviewerRole": "关卡／叙事策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order"
+      ]
+    },
+    {
+      "id": "K07",
+      "module": "奇遇与探索",
+      "name": "首发探索内容布置",
+      "delivery": "三十个秘密点及十二类奇遇模板的区域配置",
+      "acceptance": "位置、触发频率、奖励与叙事节奏完成实玩校验",
+      "dependencies": [
+        "K03",
+        "K04",
+        "K05",
+        "K06",
+        "U02"
+      ],
+      "stage": "S3",
+      "priority": "必需",
+      "accountableRole": "关卡／叙事策划",
+      "approach": "扩展",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "未发现、已发现、已结算的兴趣点，能力条件处于门槛两侧。",
+        "steps": [
+          "建立并检查交付样本：三十个秘密点及十二类奇遇模板的区域配置",
+          "从线索到发现再到探索奖励完整走通，并检查不依赖隐藏未揭示信息。",
+          "重复触发、离区回访和读档，核对发现记录、唯一奖励与替代路径。",
+          "对照本包判据逐项判定：位置、触发频率、奖励与叙事节奏完成实玩校验"
+        ],
+        "expected": "位置、触发频率、奖励与叙事节奏完成实玩校验",
+        "evidencePath": "docs/sandbox/evidence/K07.md",
+        "reviewerRole": "关卡／叙事策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order"
+      ]
+    },
+    {
+      "id": "L01",
+      "module": "经济与物品",
+      "name": "统一物品与实例模型",
+      "delivery": "装备、消耗品、材料、秘籍、任务物品及唯一实例",
+      "acceptance": "背包、装备、商店和任务引用同一物品源",
+      "dependencies": [
+        "T01",
+        "T02"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "数值策划／系统程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "库存空／满、钱不足／刚好、任务物与普通物、商店刷新前后。",
+        "steps": [
+          "建立并检查交付样本：装备、消耗品、材料、秘籍、任务物品及唯一实例",
+          "获取、移动、消耗、买入、卖出并逐笔核对归属、数量和金钱。",
+          "重复交易、读档、超容量与唯一物品转移，检查无复制与负库存。",
+          "对照本包判据逐项判定：背包、装备、商店和任务引用同一物品源"
+        ],
+        "expected": "背包、装备、商店和任务引用同一物品源",
+        "evidencePath": "docs/sandbox/evidence/L01.md",
+        "reviewerRole": "数值策划／系统程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "L02",
+      "module": "经济与物品",
+      "name": "经济产出消耗模型",
+      "delivery": "货币来源、治疗、交通、修炼、制作和装备支出表",
+      "acceptance": "切片与中期均有合理用途，不强迫重复刷钱",
+      "dependencies": [
+        "L01",
+        "A06"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "数值策划／系统程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "库存空／满、钱不足／刚好、任务物与普通物、商店刷新前后。",
+        "steps": [
+          "建立并检查交付样本：货币来源、治疗、交通、修炼、制作和装备支出表",
+          "获取、移动、消耗、买入、卖出并逐笔核对归属、数量和金钱。",
+          "重复交易、读档、超容量与唯一物品转移，检查无复制与负库存。",
+          "对照本包判据逐项判定：切片与中期均有合理用途，不强迫重复刷钱"
+        ],
+        "expected": "切片与中期均有合理用途，不强迫重复刷钱",
+        "evidencePath": "docs/sandbox/evidence/L02.md",
+        "reviewerRole": "数值策划／系统程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "L03",
+      "module": "经济与物品",
+      "name": "商店与库存",
+      "delivery": "商人清单、限量库存、补货、价格和购回规则",
+      "acceptance": "买卖原子提交；补货、读档和重复点击无复制漏洞",
+      "dependencies": [
+        "L01",
+        "C03",
+        "D01"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "数值策划／系统程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "库存空／满、钱不足／刚好、任务物与普通物、商店刷新前后。",
+        "steps": [
+          "建立并检查交付样本：商人清单、限量库存、补货、价格和购回规则",
+          "获取、移动、消耗、买入、卖出并逐笔核对归属、数量和金钱。",
+          "重复交易、读档、超容量与唯一物品转移，检查无复制与负库存。",
+          "对照本包判据逐项判定：买卖原子提交；补货、读档和重复点击无复制漏洞"
+        ],
+        "expected": "买卖原子提交；补货、读档和重复点击无复制漏洞",
+        "evidencePath": "docs/sandbox/evidence/L03.md",
+        "reviewerRole": "数值策划／系统程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "L04",
+      "module": "经济与物品",
+      "name": "装备与强化选择",
+      "delivery": "装备部位、品质、词条、修理或强化取舍",
+      "acceptance": "装备提升有构筑选择，不以无限随机词条膨胀内容",
+      "dependencies": [
+        "L01",
+        "H02"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "数值策划／系统程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "库存空／满、钱不足／刚好、任务物与普通物、商店刷新前后。",
+        "steps": [
+          "建立并检查交付样本：装备部位、品质、词条、修理或强化取舍",
+          "获取、移动、消耗、买入、卖出并逐笔核对归属、数量和金钱。",
+          "重复交易、读档、超容量与唯一物品转移，检查无复制与负库存。",
+          "对照本包判据逐项判定：装备提升有构筑选择，不以无限随机词条膨胀内容"
+        ],
+        "expected": "装备提升有构筑选择，不以无限随机词条膨胀内容",
+        "evidencePath": "docs/sandbox/evidence/L04.md",
+        "reviewerRole": "数值策划／系统程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "L05",
+      "module": "经济与物品",
+      "name": "奖励与掉落表",
+      "delivery": "战利品、固定奖励、随机种子、归属和防重复策略",
+      "acceptance": "剧情唯一物品有保底；关键奖励不被随机掉落替代",
+      "dependencies": [
+        "L01",
+        "T04",
+        "J01"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "数值策划／系统程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "库存空／满、钱不足／刚好、任务物与普通物、商店刷新前后。",
+        "steps": [
+          "建立并检查交付样本：战利品、固定奖励、随机种子、归属和防重复策略",
+          "获取、移动、消耗、买入、卖出并逐笔核对归属、数量和金钱。",
+          "重复交易、读档、超容量与唯一物品转移，检查无复制与负库存。",
+          "对照本包判据逐项判定：剧情唯一物品有保底；关键奖励不被随机掉落替代"
+        ],
+        "expected": "剧情唯一物品有保底；关键奖励不被随机掉落替代",
+        "evidencePath": "docs/sandbox/evidence/L05.md",
+        "reviewerRole": "数值策划／系统程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "L06",
+      "module": "经济与物品",
+      "name": "所有权与赃物",
+      "delivery": "个人、门派、公共物、赃物和销赃数据",
+      "acceptance": "偷取、归还、没收、死亡掉落保留合法来源链",
+      "dependencies": [
+        "L01",
+        "N01",
+        "C05"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "数值策划／系统程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "库存空／满、钱不足／刚好、任务物与普通物、商店刷新前后。",
+        "steps": [
+          "建立并检查交付样本：个人、门派、公共物、赃物和销赃数据",
+          "获取、移动、消耗、买入、卖出并逐笔核对归属、数量和金钱。",
+          "重复交易、读档、超容量与唯一物品转移，检查无复制与负库存。",
+          "对照本包判据逐项判定：偷取、归还、没收、死亡掉落保留合法来源链"
+        ],
+        "expected": "偷取、归还、没收、死亡掉落保留合法来源链",
+        "evidencePath": "docs/sandbox/evidence/L06.md",
+        "reviewerRole": "数值策划／系统程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "L07",
+      "module": "经济与物品",
+      "name": "地区差价与服务",
+      "delivery": "有限价格修正、声望折扣、稀缺性和服务权限",
+      "acceptance": "可交易但不存在无成本即时买卖闭环套利",
+      "dependencies": [
+        "L02",
+        "L03",
+        "F01"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "数值策划／系统程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "库存空／满、钱不足／刚好、任务物与普通物、商店刷新前后。",
+        "steps": [
+          "建立并检查交付样本：有限价格修正、声望折扣、稀缺性和服务权限",
+          "获取、移动、消耗、买入、卖出并逐笔核对归属、数量和金钱。",
+          "重复交易、读档、超容量与唯一物品转移，检查无复制与负库存。",
+          "对照本包判据逐项判定：可交易但不存在无成本即时买卖闭环套利"
+        ],
+        "expected": "可交易但不存在无成本即时买卖闭环套利",
+        "evidencePath": "docs/sandbox/evidence/L07.md",
+        "reviewerRole": "数值策划／系统程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "L08",
+      "module": "经济与物品",
+      "name": "物品与奖励量产",
+      "delivery": "六十件装备、二十消耗品、二十四材料及奖励配置",
+      "acceptance": "每件有图标、说明、来源、用途和经济检查",
+      "dependencies": [
+        "L04",
+        "L05",
+        "L06",
+        "L07",
+        "U05"
+      ],
+      "stage": "S3",
+      "priority": "必需",
+      "accountableRole": "数值策划／系统程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "库存空／满、钱不足／刚好、任务物与普通物、商店刷新前后。",
+        "steps": [
+          "建立并检查交付样本：六十件装备、二十消耗品、二十四材料及奖励配置",
+          "获取、移动、消耗、买入、卖出并逐笔核对归属、数量和金钱。",
+          "重复交易、读档、超容量与唯一物品转移，检查无复制与负库存。",
+          "对照本包判据逐项判定：每件有图标、说明、来源、用途和经济检查"
+        ],
+        "expected": "每件有图标、说明、来源、用途和经济检查",
+        "evidencePath": "docs/sandbox/evidence/L08.md",
+        "reviewerRole": "数值策划／系统程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "M01",
+      "module": "生活技艺",
+      "name": "生活技艺范围与用途",
+      "delivery": "医术、炼药、烹饪、采集的首发选择及产出关系",
+      "acceptance": "每项服务战斗、探索或关系，避免独立进度条堆砌",
+      "dependencies": [
+        "A06",
+        "L02",
+        "H07"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "系统／关卡策划",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "有配方／无配方、材料不足／刚好、技艺门槛两侧。",
+        "steps": [
+          "建立并检查交付样本：医术、炼药、烹饪、采集的首发选择及产出关系",
+          "在对应服务点执行制作或采集，核对材料、时间、产物和成长。",
+          "取消、重复提交、库存满和跨刷新时刻，确认不重复产出且失败不部分扣费。",
+          "对照本包判据逐项判定：每项服务战斗、探索或关系，避免独立进度条堆砌"
+        ],
+        "expected": "每项服务战斗、探索或关系，避免独立进度条堆砌",
+        "evidencePath": "docs/sandbox/evidence/M01.md",
+        "reviewerRole": "系统／关卡策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "M02",
+      "module": "生活技艺",
+      "name": "采集点与材料回收",
+      "delivery": "资源点、采集成本、工具、归属和刷新",
+      "acceptance": "重复进出地图不刷新资源；偷采纳入归属规则",
+      "dependencies": [
+        "M01",
+        "C05",
+        "D06"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "系统／关卡策划",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "有配方／无配方、材料不足／刚好、技艺门槛两侧。",
+        "steps": [
+          "建立并检查交付样本：资源点、采集成本、工具、归属和刷新",
+          "在对应服务点执行制作或采集，核对材料、时间、产物和成长。",
+          "取消、重复提交、库存满和跨刷新时刻，确认不重复产出且失败不部分扣费。",
+          "对照本包判据逐项判定：重复进出地图不刷新资源；偷采纳入归属规则"
+        ],
+        "expected": "重复进出地图不刷新资源；偷采纳入归属规则",
+        "evidencePath": "docs/sandbox/evidence/M02.md",
+        "reviewerRole": "系统／关卡策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "M03",
+      "module": "生活技艺",
+      "name": "制作配方与批量操作",
+      "delivery": "配方、材料、产物、时间和批量上限",
+      "acceptance": "材料校验和提交原子化；批量制造可预览成本",
+      "dependencies": [
+        "M01",
+        "L01",
+        "C03"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "系统／关卡策划",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "有配方／无配方、材料不足／刚好、技艺门槛两侧。",
+        "steps": [
+          "建立并检查交付样本：配方、材料、产物、时间和批量上限",
+          "在对应服务点执行制作或采集，核对材料、时间、产物和成长。",
+          "取消、重复提交、库存满和跨刷新时刻，确认不重复产出且失败不部分扣费。",
+          "对照本包判据逐项判定：材料校验和提交原子化；批量制造可预览成本"
+        ],
+        "expected": "材料校验和提交原子化；批量制造可预览成本",
+        "evidencePath": "docs/sandbox/evidence/M03.md",
+        "reviewerRole": "系统／关卡策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "M04",
+      "module": "生活技艺",
+      "name": "医术与疗伤事件",
+      "delivery": "诊断、疗伤、伤势门槛、NPC救治和回报",
+      "acceptance": "医术可改变任务或关系，不仅恢复一条数值",
+      "dependencies": [
+        "M01",
+        "E02",
+        "I07"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "系统／关卡策划",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "有配方／无配方、材料不足／刚好、技艺门槛两侧。",
+        "steps": [
+          "建立并检查交付样本：诊断、疗伤、伤势门槛、NPC救治和回报",
+          "在对应服务点执行制作或采集，核对材料、时间、产物和成长。",
+          "取消、重复提交、库存满和跨刷新时刻，确认不重复产出且失败不部分扣费。",
+          "对照本包判据逐项判定：医术可改变任务或关系，不仅恢复一条数值"
+        ],
+        "expected": "医术可改变任务或关系，不仅恢复一条数值",
+        "evidencePath": "docs/sandbox/evidence/M04.md",
+        "reviewerRole": "系统／关卡策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "M05",
+      "module": "生活技艺",
+      "name": "烹饪与药物差异",
+      "delivery": "战前准备、持续增益、即时治疗和叠加限制",
+      "acceptance": "增益互斥和持续时间在UI清楚，无无限叠加",
+      "dependencies": [
+        "M03",
+        "H02"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "系统／关卡策划",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "有配方／无配方、材料不足／刚好、技艺门槛两侧。",
+        "steps": [
+          "建立并检查交付样本：战前准备、持续增益、即时治疗和叠加限制",
+          "在对应服务点执行制作或采集，核对材料、时间、产物和成长。",
+          "取消、重复提交、库存满和跨刷新时刻，确认不重复产出且失败不部分扣费。",
+          "对照本包判据逐项判定：增益互斥和持续时间在UI清楚，无无限叠加"
+        ],
+        "expected": "增益互斥和持续时间在UI清楚，无无限叠加",
+        "evidencePath": "docs/sandbox/evidence/M05.md",
+        "reviewerRole": "系统／关卡策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "M06",
+      "module": "生活技艺",
+      "name": "技艺成长与传授",
+      "delivery": "配方发现、师傅传授、使用成长及瓶颈",
+      "acceptance": "主要配方不依赖大量无意义重复加工",
+      "dependencies": [
+        "M03",
+        "F05",
+        "H08"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "系统／关卡策划",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "有配方／无配方、材料不足／刚好、技艺门槛两侧。",
+        "steps": [
+          "建立并检查交付样本：配方发现、师傅传授、使用成长及瓶颈",
+          "在对应服务点执行制作或采集，核对材料、时间、产物和成长。",
+          "取消、重复提交、库存满和跨刷新时刻，确认不重复产出且失败不部分扣费。",
+          "对照本包判据逐项判定：主要配方不依赖大量无意义重复加工"
+        ],
+        "expected": "主要配方不依赖大量无意义重复加工",
+        "evidencePath": "docs/sandbox/evidence/M06.md",
+        "reviewerRole": "系统／关卡策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "M07",
+      "module": "生活技艺",
+      "name": "首发配方与技艺关卡",
+      "delivery": "十六张配方及配套任务、资源点和使用场景",
+      "acceptance": "每条生产链具备原料来源、实际用途与回归案例",
+      "dependencies": [
+        "M02",
+        "M04",
+        "M05",
+        "M06",
+        "U05"
+      ],
+      "stage": "S3",
+      "priority": "必需",
+      "accountableRole": "系统／关卡策划",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "有配方／无配方、材料不足／刚好、技艺门槛两侧。",
+        "steps": [
+          "建立并检查交付样本：十六张配方及配套任务、资源点和使用场景",
+          "在对应服务点执行制作或采集，核对材料、时间、产物和成长。",
+          "取消、重复提交、库存满和跨刷新时刻，确认不重复产出且失败不部分扣费。",
+          "对照本包判据逐项判定：每条生产链具备原料来源、实际用途与回归案例"
+        ],
+        "expected": "每条生产链具备原料来源、实际用途与回归案例",
+        "evidencePath": "docs/sandbox/evidence/M07.md",
+        "reviewerRole": "系统／关卡策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "N01",
+      "module": "身份与治安",
+      "name": "所有权与犯罪判定",
+      "delivery": "侵入、偷盗、伤人、杀人及合法挑战的事件分类",
+      "acceptance": "同一行为按地点、目标和许可作一致判定",
+      "dependencies": [
+        "A03",
+        "E01",
+        "F01"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "系统策划／程序",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "有目击／无目击、不同地域、轻罪／重罪的独立存档。",
+        "steps": [
+          "建立并检查交付样本：侵入、偷盗、伤人、杀人及合法挑战的事件分类",
+          "执行本包行为后进入服务点和关卡，核对知情范围、处罚与反馈。",
+          "赔偿、投案或完成设计退路后回访，检查限制解除并保留必要历史。",
+          "对照本包判据逐项判定：同一行为按地点、目标和许可作一致判定"
+        ],
+        "expected": "同一行为按地点、目标和许可作一致判定",
+        "evidencePath": "docs/sandbox/evidence/N01.md",
+        "reviewerRole": "系统策划／程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order"
+      ]
+    },
+    {
+      "id": "N02",
+      "module": "身份与治安",
+      "name": "目击与信息传播",
+      "delivery": "视线、距离、举报、消息传播范围与证据",
+      "acceptance": "无人知晓的行为不立即全图通缉，有证据链可查",
+      "dependencies": [
+        "N01",
+        "E03",
+        "B02"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "系统策划／程序",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "有目击／无目击、不同地域、轻罪／重罪的独立存档。",
+        "steps": [
+          "建立并检查交付样本：视线、距离、举报、消息传播范围与证据",
+          "执行本包行为后进入服务点和关卡，核对知情范围、处罚与反馈。",
+          "赔偿、投案或完成设计退路后回访，检查限制解除并保留必要历史。",
+          "对照本包判据逐项判定：无人知晓的行为不立即全图通缉，有证据链可查"
+        ],
+        "expected": "无人知晓的行为不立即全图通缉，有证据链可查",
+        "evidencePath": "docs/sandbox/evidence/N02.md",
+        "reviewerRole": "系统策划／程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order"
+      ]
+    },
+    {
+      "id": "N03",
+      "module": "身份与治安",
+      "name": "通缉与势力追责",
+      "delivery": "地区热度、追捕、门派追责及出入口限制",
+      "acceptance": "私人恩怨、地方治安与门派敌对不被混成一个值",
+      "dependencies": [
+        "N02",
+        "F01"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "系统策划／程序",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "有目击／无目击、不同地域、轻罪／重罪的独立存档。",
+        "steps": [
+          "建立并检查交付样本：地区热度、追捕、门派追责及出入口限制",
+          "执行本包行为后进入服务点和关卡，核对知情范围、处罚与反馈。",
+          "赔偿、投案或完成设计退路后回访，检查限制解除并保留必要历史。",
+          "对照本包判据逐项判定：私人恩怨、地方治安与门派敌对不被混成一个值"
+        ],
+        "expected": "私人恩怨、地方治安与门派敌对不被混成一个值",
+        "evidencePath": "docs/sandbox/evidence/N03.md",
+        "reviewerRole": "系统策划／程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order"
+      ]
+    },
+    {
+      "id": "N04",
+      "module": "身份与治安",
+      "name": "赔偿投案与赎罪",
+      "delivery": "赔偿、坐牢、作保、任务补偿和敌意消退",
+      "acceptance": "玩家能了解代价和解除条件，避免无解敌对档",
+      "dependencies": [
+        "N03",
+        "C03",
+        "D02"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "系统策划／程序",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "有目击／无目击、不同地域、轻罪／重罪的独立存档。",
+        "steps": [
+          "建立并检查交付样本：赔偿、坐牢、作保、任务补偿和敌意消退",
+          "执行本包行为后进入服务点和关卡，核对知情范围、处罚与反馈。",
+          "赔偿、投案或完成设计退路后回访，检查限制解除并保留必要历史。",
+          "对照本包判据逐项判定：玩家能了解代价和解除条件，避免无解敌对档"
+        ],
+        "expected": "玩家能了解代价和解除条件，避免无解敌对档",
+        "evidencePath": "docs/sandbox/evidence/N04.md",
+        "reviewerRole": "系统策划／程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order"
+      ]
+    },
+    {
+      "id": "N05",
+      "module": "身份与治安",
+      "name": "身份伪装与权限",
+      "delivery": "首发身份凭据、通行牌及有限伪装规则",
+      "acceptance": "凭据获取、失效、识破和禁区服务一致",
+      "dependencies": [
+        "N01",
+        "C02"
+      ],
+      "stage": "S2",
+      "priority": "增强",
+      "accountableRole": "系统策划／程序",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "有目击／无目击、不同地域、轻罪／重罪的独立存档。",
+        "steps": [
+          "建立并检查交付样本：首发身份凭据、通行牌及有限伪装规则",
+          "执行本包行为后进入服务点和关卡，核对知情范围、处罚与反馈。",
+          "赔偿、投案或完成设计退路后回访，检查限制解除并保留必要历史。",
+          "对照本包判据逐项判定：凭据获取、失效、识破和禁区服务一致"
+        ],
+        "expected": "凭据获取、失效、识破和禁区服务一致",
+        "evidencePath": "docs/sandbox/evidence/N05.md",
+        "reviewerRole": "系统策划／程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order"
+      ]
+    },
+    {
+      "id": "N06",
+      "module": "身份与治安",
+      "name": "治安压力测试",
+      "delivery": "跨区犯罪、目击者死亡、被捕和读档案例",
+      "acceptance": "案件归属、赃物没收、时间和任务后果一致",
+      "dependencies": [
+        "N03",
+        "N04",
+        "L06",
+        "V03"
+      ],
+      "stage": "S3",
+      "priority": "必需",
+      "accountableRole": "系统策划／程序",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "有目击／无目击、不同地域、轻罪／重罪的独立存档。",
+        "steps": [
+          "建立并检查交付样本：跨区犯罪、目击者死亡、被捕和读档案例",
+          "执行本包行为后进入服务点和关卡，核对知情范围、处罚与反馈。",
+          "赔偿、投案或完成设计退路后回访，检查限制解除并保留必要历史。",
+          "对照本包判据逐项判定：案件归属、赃物没收、时间和任务后果一致"
+        ],
+        "expected": "案件归属、赃物没收、时间和任务后果一致",
+        "evidencePath": "docs/sandbox/evidence/N06.md",
+        "reviewerRole": "系统策划／程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "quest-order"
+      ]
+    },
+    {
+      "id": "O01",
+      "module": "场景美术",
+      "name": "视觉规范与场景标杆",
+      "delivery": "构图、色彩、线条、材质、镜头和可交互层规范",
+      "acceptance": "一张实际运行的昼夜场景达到团队认可的质量标杆",
+      "dependencies": [
+        "A05",
+        "A07",
+        "B02"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "美术指导／场景美术",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "同一地图的昼夜雨、事件前后、前景遮挡与全部入口。",
+        "steps": [
+          "建立并检查交付样本：构图、色彩、线条、材质、镜头和可交互层规范",
+          "在桌面与横屏进入并走过地标、窄路、屋内外和出口。",
+          "叠加角色与战斗特效，检查透视、锚点、可读性、帧时与资源缺失。",
+          "对照本包判据逐项判定：一张实际运行的昼夜场景达到团队认可的质量标杆"
+        ],
+        "expected": "一张实际运行的昼夜场景达到团队认可的质量标杆",
+        "evidencePath": "docs/sandbox/evidence/O01.md",
+        "reviewerRole": "美术指导／场景美术＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "art-consistency",
+        "hardware"
+      ]
+    },
+    {
+      "id": "O02",
+      "module": "场景美术",
+      "name": "模块化场景套件",
+      "delivery": "建筑、地面、墙体、屋顶、植被与街景组件",
+      "acceptance": "统一尺寸、锚点、拼接、遮挡和材质，不露接缝",
+      "dependencies": [
+        "O01",
+        "B05"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "美术指导／场景美术",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "同一地图的昼夜雨、事件前后、前景遮挡与全部入口。",
+        "steps": [
+          "建立并检查交付样本：建筑、地面、墙体、屋顶、植被与街景组件",
+          "在桌面与横屏进入并走过地标、窄路、屋内外和出口。",
+          "叠加角色与战斗特效，检查透视、锚点、可读性、帧时与资源缺失。",
+          "对照本包判据逐项判定：统一尺寸、锚点、拼接、遮挡和材质，不露接缝"
+        ],
+        "expected": "统一尺寸、锚点、拼接、遮挡和材质，不露接缝",
+        "evidencePath": "docs/sandbox/evidence/O02.md",
+        "reviewerRole": "美术指导／场景美术＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "art-consistency",
+        "hardware"
+      ]
+    },
+    {
+      "id": "O03",
+      "module": "场景美术",
+      "name": "交互物与状态变体",
+      "delivery": "门、箱子、药炉、机关、告示和破坏前后状态",
+      "acceptance": "美术状态与可交互状态一致，不依赖文本补救",
+      "dependencies": [
+        "O01",
+        "C01"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "美术指导／场景美术",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "同一地图的昼夜雨、事件前后、前景遮挡与全部入口。",
+        "steps": [
+          "建立并检查交付样本：门、箱子、药炉、机关、告示和破坏前后状态",
+          "在桌面与横屏进入并走过地标、窄路、屋内外和出口。",
+          "叠加角色与战斗特效，检查透视、锚点、可读性、帧时与资源缺失。",
+          "对照本包判据逐项判定：美术状态与可交互状态一致，不依赖文本补救"
+        ],
+        "expected": "美术状态与可交互状态一致，不依赖文本补救",
+        "evidencePath": "docs/sandbox/evidence/O03.md",
+        "reviewerRole": "美术指导／场景美术＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "art-consistency",
+        "hardware"
+      ]
+    },
+    {
+      "id": "O04",
+      "module": "场景美术",
+      "name": "光照天气与昼夜",
+      "delivery": "日夜色板、雨雾、局部光源和室内外过渡",
+      "acceptance": "暗部可读；天气不遮住战斗提示与出口",
+      "dependencies": [
+        "O01",
+        "D01"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "美术指导／场景美术",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "同一地图的昼夜雨、事件前后、前景遮挡与全部入口。",
+        "steps": [
+          "建立并检查交付样本：日夜色板、雨雾、局部光源和室内外过渡",
+          "在桌面与横屏进入并走过地标、窄路、屋内外和出口。",
+          "叠加角色与战斗特效，检查透视、锚点、可读性、帧时与资源缺失。",
+          "对照本包判据逐项判定：暗部可读；天气不遮住战斗提示与出口"
+        ],
+        "expected": "暗部可读；天气不遮住战斗提示与出口",
+        "evidencePath": "docs/sandbox/evidence/O04.md",
+        "reviewerRole": "美术指导／场景美术＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "art-consistency",
+        "hardware"
+      ]
+    },
+    {
+      "id": "O05",
+      "module": "场景美术",
+      "name": "多区域风格与地标",
+      "delivery": "五区域生态、建筑语汇、材质和远景设计",
+      "acceptance": "区域一眼可区分，仍保持同一游戏的比例和色彩规则",
+      "dependencies": [
+        "O02",
+        "B07"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "美术指导／场景美术",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "同一地图的昼夜雨、事件前后、前景遮挡与全部入口。",
+        "steps": [
+          "建立并检查交付样本：五区域生态、建筑语汇、材质和远景设计",
+          "在桌面与横屏进入并走过地标、窄路、屋内外和出口。",
+          "叠加角色与战斗特效，检查透视、锚点、可读性、帧时与资源缺失。",
+          "对照本包判据逐项判定：区域一眼可区分，仍保持同一游戏的比例和色彩规则"
+        ],
+        "expected": "区域一眼可区分，仍保持同一游戏的比例和色彩规则",
+        "evidencePath": "docs/sandbox/evidence/O05.md",
+        "reviewerRole": "美术指导／场景美术＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "art-consistency",
+        "hardware"
+      ]
+    },
+    {
+      "id": "O06",
+      "module": "场景美术",
+      "name": "资源切片与性能预算",
+      "delivery": "图集、分层、压缩、遮挡、加载和内存限制",
+      "acceptance": "目标设备下切图、行走和战斗没有明显资源抖动",
+      "dependencies": [
+        "O02",
+        "T06"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "美术指导／场景美术",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "同一地图的昼夜雨、事件前后、前景遮挡与全部入口。",
+        "steps": [
+          "建立并检查交付样本：图集、分层、压缩、遮挡、加载和内存限制",
+          "在桌面与横屏进入并走过地标、窄路、屋内外和出口。",
+          "叠加角色与战斗特效，检查透视、锚点、可读性、帧时与资源缺失。",
+          "对照本包判据逐项判定：目标设备下切图、行走和战斗没有明显资源抖动"
+        ],
+        "expected": "目标设备下切图、行走和战斗没有明显资源抖动",
+        "evidencePath": "docs/sandbox/evidence/O06.md",
+        "reviewerRole": "美术指导／场景美术＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "art-consistency",
+        "hardware"
+      ]
+    },
+    {
+      "id": "O07",
+      "module": "场景美术",
+      "name": "场景量产审核流水线",
+      "delivery": "命名、导入预设、场景检查、审美评审与返修规则",
+      "acceptance": "每张地图经过运行时而非仅原画截图验收",
+      "dependencies": [
+        "O03",
+        "O04",
+        "O05",
+        "O06",
+        "U02"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "美术指导／场景美术",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "同一地图的昼夜雨、事件前后、前景遮挡与全部入口。",
+        "steps": [
+          "建立并检查交付样本：命名、导入预设、场景检查、审美评审与返修规则",
+          "在桌面与横屏进入并走过地标、窄路、屋内外和出口。",
+          "叠加角色与战斗特效，检查透视、锚点、可读性、帧时与资源缺失。",
+          "对照本包判据逐项判定：每张地图经过运行时而非仅原画截图验收"
+        ],
+        "expected": "每张地图经过运行时而非仅原画截图验收",
+        "evidencePath": "docs/sandbox/evidence/O07.md",
+        "reviewerRole": "美术指导／场景美术＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "art-consistency",
+        "hardware"
+      ]
+    },
+    {
+      "id": "P01",
+      "module": "角色与动画",
+      "name": "角色设计与比例标杆",
+      "delivery": "主角、同伴、敌人和背景人物的轮廓及尺寸规范",
+      "acceptance": "缩到实际游戏镜头后仍能辨认阵营、武器和方向",
+      "dependencies": [
+        "A05",
+        "A04"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "角色美术／动画／TA",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "单角色全方向全动作预览表，含武器、受击和倒地状态。",
+        "steps": [
+          "建立并检查交付样本：主角、同伴、敌人和背景人物的轮廓及尺寸规范",
+          "逐格播放待机、走、跑、出手、受击和倒地，检查手脚、武器、透明边及锚点。",
+          "实际移动、换向、装备组合和受击打断，检查漂移、穿插与缺帧。",
+          "对照本包判据逐项判定：缩到实际游戏镜头后仍能辨认阵营、武器和方向"
+        ],
+        "expected": "缩到实际游戏镜头后仍能辨认阵营、武器和方向",
+        "evidencePath": "docs/sandbox/evidence/P01.md",
+        "reviewerRole": "角色美术／动画／TA＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "art-consistency",
+        "content-cost"
+      ]
+    },
+    {
+      "id": "P02",
+      "module": "角色与动画",
+      "name": "角色骨架与模块复用",
+      "delivery": "体型族、服装层、配件、武器、方向和遮挡协议",
+      "acceptance": "复用后不穿帮；镜像不会错误交换不对称武器和服装",
+      "dependencies": [
+        "P01",
+        "A07"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "角色美术／动画／TA",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "单角色全方向全动作预览表，含武器、受击和倒地状态。",
+        "steps": [
+          "建立并检查交付样本：体型族、服装层、配件、武器、方向和遮挡协议",
+          "逐格播放待机、走、跑、出手、受击和倒地，检查手脚、武器、透明边及锚点。",
+          "实际移动、换向、装备组合和受击打断，检查漂移、穿插与缺帧。",
+          "对照本包判据逐项判定：复用后不穿帮；镜像不会错误交换不对称武器和服装"
+        ],
+        "expected": "复用后不穿帮；镜像不会错误交换不对称武器和服装",
+        "evidencePath": "docs/sandbox/evidence/P02.md",
+        "reviewerRole": "角色美术／动画／TA＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "art-consistency",
+        "content-cost"
+      ]
+    },
+    {
+      "id": "P03",
+      "module": "角色与动画",
+      "name": "探索动作集",
+      "delivery": "待机、行走、奔跑、互动、打坐、受伤和倒地",
+      "acceptance": "移动速度与步频匹配，各方向过渡无跳帧错位",
+      "dependencies": [
+        "P02",
+        "B03"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "角色美术／动画／TA",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "单角色全方向全动作预览表，含武器、受击和倒地状态。",
+        "steps": [
+          "建立并检查交付样本：待机、行走、奔跑、互动、打坐、受伤和倒地",
+          "逐格播放待机、走、跑、出手、受击和倒地，检查手脚、武器、透明边及锚点。",
+          "实际移动、换向、装备组合和受击打断，检查漂移、穿插与缺帧。",
+          "对照本包判据逐项判定：移动速度与步频匹配，各方向过渡无跳帧错位"
+        ],
+        "expected": "移动速度与步频匹配，各方向过渡无跳帧错位",
+        "evidencePath": "docs/sandbox/evidence/P03.md",
+        "reviewerRole": "角色美术／动画／TA＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "art-consistency",
+        "content-cost"
+      ]
+    },
+    {
+      "id": "P04",
+      "module": "角色与动画",
+      "name": "战斗动作与事件点",
+      "delivery": "起手、蓄力、攻击、受击、格挡、闪避和死亡动作",
+      "acceptance": "命中事件、武器轨迹和伤害时间一致，可控制播放速度",
+      "dependencies": [
+        "P02",
+        "I02"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "角色美术／动画／TA",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "单角色全方向全动作预览表，含武器、受击和倒地状态。",
+        "steps": [
+          "建立并检查交付样本：起手、蓄力、攻击、受击、格挡、闪避和死亡动作",
+          "逐格播放待机、走、跑、出手、受击和倒地，检查手脚、武器、透明边及锚点。",
+          "实际移动、换向、装备组合和受击打断，检查漂移、穿插与缺帧。",
+          "对照本包判据逐项判定：命中事件、武器轨迹和伤害时间一致，可控制播放速度"
+        ],
+        "expected": "命中事件、武器轨迹和伤害时间一致，可控制播放速度",
+        "evidencePath": "docs/sandbox/evidence/P04.md",
+        "reviewerRole": "角色美术／动画／TA＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "art-consistency",
+        "content-cost"
+      ]
+    },
+    {
+      "id": "P05",
+      "module": "角色与动画",
+      "name": "兵器流派与首领专属",
+      "delivery": "剑刀拳棍等动作族及首领特殊动作",
+      "acceptance": "动作族区别来自姿态、节奏和接触方式，避免全员换皮",
+      "dependencies": [
+        "P04",
+        "H05",
+        "I05"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "角色美术／动画／TA",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "单角色全方向全动作预览表，含武器、受击和倒地状态。",
+        "steps": [
+          "建立并检查交付样本：剑刀拳棍等动作族及首领特殊动作",
+          "逐格播放待机、走、跑、出手、受击和倒地，检查手脚、武器、透明边及锚点。",
+          "实际移动、换向、装备组合和受击打断，检查漂移、穿插与缺帧。",
+          "对照本包判据逐项判定：动作族区别来自姿态、节奏和接触方式，避免全员换皮"
+        ],
+        "expected": "动作族区别来自姿态、节奏和接触方式，避免全员换皮",
+        "evidencePath": "docs/sandbox/evidence/P05.md",
+        "reviewerRole": "角色美术／动画／TA＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "art-consistency",
+        "content-cost"
+      ]
+    },
+    {
+      "id": "P06",
+      "module": "角色与动画",
+      "name": "肖像与表情演出",
+      "delivery": "主要人物头像、情绪差分、对话构图和表情触发",
+      "acceptance": "肖像与场景角色一致；表情符合上下文且有回退方案",
+      "dependencies": [
+        "P01",
+        "J04"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "角色美术／动画／TA",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "单角色全方向全动作预览表，含武器、受击和倒地状态。",
+        "steps": [
+          "建立并检查交付样本：主要人物头像、情绪差分、对话构图和表情触发",
+          "逐格播放待机、走、跑、出手、受击和倒地，检查手脚、武器、透明边及锚点。",
+          "实际移动、换向、装备组合和受击打断，检查漂移、穿插与缺帧。",
+          "对照本包判据逐项判定：肖像与场景角色一致；表情符合上下文且有回退方案"
+        ],
+        "expected": "肖像与场景角色一致；表情符合上下文且有回退方案",
+        "evidencePath": "docs/sandbox/evidence/P06.md",
+        "reviewerRole": "角色美术／动画／TA＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "art-consistency",
+        "content-cost"
+      ]
+    },
+    {
+      "id": "P07",
+      "module": "角色与动画",
+      "name": "角色量产与整体验收",
+      "delivery": "命名NPC、同伴、敌人与背景人群的完整运行资产",
+      "acceptance": "逐个检查方向、动作、材质、受击、遮挡和缺失状态",
+      "dependencies": [
+        "P03",
+        "P05",
+        "P06",
+        "U06"
+      ],
+      "stage": "S3",
+      "priority": "必需",
+      "accountableRole": "角色美术／动画／TA",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "单角色全方向全动作预览表，含武器、受击和倒地状态。",
+        "steps": [
+          "建立并检查交付样本：命名NPC、同伴、敌人与背景人群的完整运行资产",
+          "逐格播放待机、走、跑、出手、受击和倒地，检查手脚、武器、透明边及锚点。",
+          "实际移动、换向、装备组合和受击打断，检查漂移、穿插与缺帧。",
+          "对照本包判据逐项判定：逐个检查方向、动作、材质、受击、遮挡和缺失状态"
+        ],
+        "expected": "逐个检查方向、动作、材质、受击、遮挡和缺失状态",
+        "evidencePath": "docs/sandbox/evidence/P07.md",
+        "reviewerRole": "角色美术／动画／TA＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "art-consistency",
+        "content-cost"
+      ]
+    },
+    {
+      "id": "Q01",
+      "module": "战斗特效",
+      "name": "特效风格与信息分层",
+      "delivery": "己方敌方、范围、危险、命中和控制的表现规范",
+      "acceptance": "信息不能只靠颜色，弱视和低特效模式仍能辨识",
+      "dependencies": [
+        "A05",
+        "I04"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "特效／TA",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "固定战场中近战、远程、治疗、群体和同时受击场景。",
+        "steps": [
+          "建立并检查交付样本：己方敌方、范围、危险、命中和控制的表现规范",
+          "逐项对齐预备、命中、收招及规则事件时间，检查目标和范围可读。",
+          "同时多次触发、遮挡、低画质与减少动态效果，检查峰值与残留。",
+          "对照本包判据逐项判定：信息不能只靠颜色，弱视和低特效模式仍能辨识"
+        ],
+        "expected": "信息不能只靠颜色，弱视和低特效模式仍能辨识",
+        "evidencePath": "docs/sandbox/evidence/Q01.md",
+        "reviewerRole": "特效／TA＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "hardware",
+        "art-consistency"
+      ]
+    },
+    {
+      "id": "Q02",
+      "module": "战斗特效",
+      "name": "攻击与预警模板",
+      "delivery": "剑气、拳劲、刀光、暗器、蓄力和落点模板",
+      "acceptance": "预警覆盖范围与实际判定一致，不被装饰特效掩盖",
+      "dependencies": [
+        "Q01",
+        "I02"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "特效／TA",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "固定战场中近战、远程、治疗、群体和同时受击场景。",
+        "steps": [
+          "建立并检查交付样本：剑气、拳劲、刀光、暗器、蓄力和落点模板",
+          "逐项对齐预备、命中、收招及规则事件时间，检查目标和范围可读。",
+          "同时多次触发、遮挡、低画质与减少动态效果，检查峰值与残留。",
+          "对照本包判据逐项判定：预警覆盖范围与实际判定一致，不被装饰特效掩盖"
+        ],
+        "expected": "预警覆盖范围与实际判定一致，不被装饰特效掩盖",
+        "evidencePath": "docs/sandbox/evidence/Q02.md",
+        "reviewerRole": "特效／TA＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "hardware",
+        "art-consistency"
+      ]
+    },
+    {
+      "id": "Q03",
+      "module": "战斗特效",
+      "name": "命中反馈与镜头",
+      "delivery": "击中、格挡、暴击、破防、震动、停顿和镜头强度",
+      "acceptance": "反馈可调，逻辑不依赖镜头或动画时长",
+      "dependencies": [
+        "Q01",
+        "P04"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "特效／TA",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "固定战场中近战、远程、治疗、群体和同时受击场景。",
+        "steps": [
+          "建立并检查交付样本：击中、格挡、暴击、破防、震动、停顿和镜头强度",
+          "逐项对齐预备、命中、收招及规则事件时间，检查目标和范围可读。",
+          "同时多次触发、遮挡、低画质与减少动态效果，检查峰值与残留。",
+          "对照本包判据逐项判定：反馈可调，逻辑不依赖镜头或动画时长"
+        ],
+        "expected": "反馈可调，逻辑不依赖镜头或动画时长",
+        "evidencePath": "docs/sandbox/evidence/Q03.md",
+        "reviewerRole": "特效／TA＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "hardware",
+        "art-consistency"
+      ]
+    },
+    {
+      "id": "Q04",
+      "module": "战斗特效",
+      "name": "状态与环境特效",
+      "delivery": "中毒、灼烧、护体、治疗、机关和危险地形",
+      "acceptance": "层叠后仍能辨认人物和地面，过期效果立即清理",
+      "dependencies": [
+        "Q02",
+        "I09"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "特效／TA",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "固定战场中近战、远程、治疗、群体和同时受击场景。",
+        "steps": [
+          "建立并检查交付样本：中毒、灼烧、护体、治疗、机关和危险地形",
+          "逐项对齐预备、命中、收招及规则事件时间，检查目标和范围可读。",
+          "同时多次触发、遮挡、低画质与减少动态效果，检查峰值与残留。",
+          "对照本包判据逐项判定：层叠后仍能辨认人物和地面，过期效果立即清理"
+        ],
+        "expected": "层叠后仍能辨认人物和地面，过期效果立即清理",
+        "evidencePath": "docs/sandbox/evidence/Q04.md",
+        "reviewerRole": "特效／TA＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "hardware",
+        "art-consistency"
+      ]
+    },
+    {
+      "id": "Q05",
+      "module": "战斗特效",
+      "name": "武学特效参数化",
+      "delivery": "颜色、轨迹、范围、等级和动作事件的配置体系",
+      "acceptance": "共用模板保留流派识别，不为每条武学复制整套资源",
+      "dependencies": [
+        "Q02",
+        "H05",
+        "U05"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "特效／TA",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "固定战场中近战、远程、治疗、群体和同时受击场景。",
+        "steps": [
+          "建立并检查交付样本：颜色、轨迹、范围、等级和动作事件的配置体系",
+          "逐项对齐预备、命中、收招及规则事件时间，检查目标和范围可读。",
+          "同时多次触发、遮挡、低画质与减少动态效果，检查峰值与残留。",
+          "对照本包判据逐项判定：共用模板保留流派识别，不为每条武学复制整套资源"
+        ],
+        "expected": "共用模板保留流派识别，不为每条武学复制整套资源",
+        "evidencePath": "docs/sandbox/evidence/Q05.md",
+        "reviewerRole": "特效／TA＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "hardware",
+        "art-consistency"
+      ]
+    },
+    {
+      "id": "Q06",
+      "module": "战斗特效",
+      "name": "特效预算与量产审核",
+      "delivery": "同屏上限、粒子回收、过绘、降级和资源检查",
+      "acceptance": "满队群攻加天气时仍满足目标帧率与辨识度",
+      "dependencies": [
+        "Q03",
+        "Q04",
+        "Q05",
+        "T06"
+      ],
+      "stage": "S3",
+      "priority": "必需",
+      "accountableRole": "特效／TA",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "固定战场中近战、远程、治疗、群体和同时受击场景。",
+        "steps": [
+          "建立并检查交付样本：同屏上限、粒子回收、过绘、降级和资源检查",
+          "逐项对齐预备、命中、收招及规则事件时间，检查目标和范围可读。",
+          "同时多次触发、遮挡、低画质与减少动态效果，检查峰值与残留。",
+          "对照本包判据逐项判定：满队群攻加天气时仍满足目标帧率与辨识度"
+        ],
+        "expected": "满队群攻加天气时仍满足目标帧率与辨识度",
+        "evidencePath": "docs/sandbox/evidence/Q06.md",
+        "reviewerRole": "特效／TA＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "hardware",
+        "art-consistency"
+      ]
+    },
+    {
+      "id": "R01",
+      "module": "界面与操作",
+      "name": "输入与焦点框架",
+      "delivery": "键鼠、手柄、重绑、焦点、模态窗口和取消层级",
+      "acceptance": "全流程可用一种输入设备完成，焦点不丢失",
+      "dependencies": [
+        "A02",
+        "A04",
+        "A07"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "UX／UI／客户端程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "桌面1280×720、横屏844×390、竖屏390×844与长文本状态。",
+        "steps": [
+          "建立并检查交付样本：键鼠、手柄、重绑、焦点、模态窗口和取消层级",
+          "按实际操作顺序打开、切换、确认、取消并返回，检查焦点与状态。",
+          "使用键盘、鼠标和异常条件，检查无横向溢出、误触或关键说明截断。",
+          "对照本包判据逐项判定：全流程可用一种输入设备完成，焦点不丢失"
+        ],
+        "expected": "全流程可用一种输入设备完成，焦点不丢失",
+        "evidencePath": "docs/sandbox/evidence/R01.md",
+        "reviewerRole": "UX／UI／客户端程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "hardware"
+      ]
+    },
+    {
+      "id": "R02",
+      "module": "界面与操作",
+      "name": "探索HUD与交互提示",
+      "delivery": "小地图、时间、队伍、附近动作和危险提示",
+      "acceptance": "常用动作触达短；不遮挡人物和场景主要信息",
+      "dependencies": [
+        "R01",
+        "C02",
+        "D01"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "UX／UI／客户端程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "桌面1280×720、横屏844×390、竖屏390×844与长文本状态。",
+        "steps": [
+          "建立并检查交付样本：小地图、时间、队伍、附近动作和危险提示",
+          "按实际操作顺序打开、切换、确认、取消并返回，检查焦点与状态。",
+          "使用键盘、鼠标和异常条件，检查无横向溢出、误触或关键说明截断。",
+          "对照本包判据逐项判定：常用动作触达短；不遮挡人物和场景主要信息"
+        ],
+        "expected": "常用动作触达短；不遮挡人物和场景主要信息",
+        "evidencePath": "docs/sandbox/evidence/R02.md",
+        "reviewerRole": "UX／UI／客户端程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "hardware"
+      ]
+    },
+    {
+      "id": "R03",
+      "module": "界面与操作",
+      "name": "角色背包与整备",
+      "delivery": "角色页、装备比较、筛选、排序、批量操作与队伍切换",
+      "acceptance": "装备来源和属性变化清楚，误卖关键物可防止或恢复",
+      "dependencies": [
+        "R01",
+        "L01",
+        "H02",
+        "G01"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "UX／UI／客户端程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "桌面1280×720、横屏844×390、竖屏390×844与长文本状态。",
+        "steps": [
+          "建立并检查交付样本：角色页、装备比较、筛选、排序、批量操作与队伍切换",
+          "按实际操作顺序打开、切换、确认、取消并返回，检查焦点与状态。",
+          "使用键盘、鼠标和异常条件，检查无横向溢出、误触或关键说明截断。",
+          "对照本包判据逐项判定：装备来源和属性变化清楚，误卖关键物可防止或恢复"
+        ],
+        "expected": "装备来源和属性变化清楚，误卖关键物可防止或恢复",
+        "evidencePath": "docs/sandbox/evidence/R03.md",
+        "reviewerRole": "UX／UI／客户端程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "hardware"
+      ]
+    },
+    {
+      "id": "R04",
+      "module": "界面与操作",
+      "name": "世界地图任务与知识",
+      "delivery": "区域地图、日志、传闻、人物关系和检索界面",
+      "acceptance": "信息说明来源和更新时间，能从任务找到相关地图范围",
+      "dependencies": [
+        "R01",
+        "J01",
+        "K02"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "UX／UI／客户端程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "桌面1280×720、横屏844×390、竖屏390×844与长文本状态。",
+        "steps": [
+          "建立并检查交付样本：区域地图、日志、传闻、人物关系和检索界面",
+          "按实际操作顺序打开、切换、确认、取消并返回，检查焦点与状态。",
+          "使用键盘、鼠标和异常条件，检查无横向溢出、误触或关键说明截断。",
+          "对照本包判据逐项判定：信息说明来源和更新时间，能从任务找到相关地图范围"
+        ],
+        "expected": "信息说明来源和更新时间，能从任务找到相关地图范围",
+        "evidencePath": "docs/sandbox/evidence/R04.md",
+        "reviewerRole": "UX／UI／客户端程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "hardware"
+      ]
+    },
+    {
+      "id": "R05",
+      "module": "界面与操作",
+      "name": "门派交易与生活技艺UI",
+      "delivery": "门派权限、商店、修炼、制作和治疗服务界面",
+      "acceptance": "成本、耗时、条件、结果在提交前可见",
+      "dependencies": [
+        "R03",
+        "F04",
+        "L03",
+        "M03"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "UX／UI／客户端程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "桌面1280×720、横屏844×390、竖屏390×844与长文本状态。",
+        "steps": [
+          "建立并检查交付样本：门派权限、商店、修炼、制作和治疗服务界面",
+          "按实际操作顺序打开、切换、确认、取消并返回，检查焦点与状态。",
+          "使用键盘、鼠标和异常条件，检查无横向溢出、误触或关键说明截断。",
+          "对照本包判据逐项判定：成本、耗时、条件、结果在提交前可见"
+        ],
+        "expected": "成本、耗时、条件、结果在提交前可见",
+        "evidencePath": "docs/sandbox/evidence/R05.md",
+        "reviewerRole": "UX／UI／客户端程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "hardware"
+      ]
+    },
+    {
+      "id": "R06",
+      "module": "界面与操作",
+      "name": "新手引导与渐进解锁",
+      "delivery": "开局十分钟、首战、首次出门、拜师和失败指导",
+      "acceptance": "玩家能自然学会移动、交互和战斗，教程不依赖一次弹窗",
+      "dependencies": [
+        "R02",
+        "R03",
+        "I04",
+        "J07"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "UX／UI／客户端程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "桌面1280×720、横屏844×390、竖屏390×844与长文本状态。",
+        "steps": [
+          "建立并检查交付样本：开局十分钟、首战、首次出门、拜师和失败指导",
+          "按实际操作顺序打开、切换、确认、取消并返回，检查焦点与状态。",
+          "使用键盘、鼠标和异常条件，检查无横向溢出、误触或关键说明截断。",
+          "对照本包判据逐项判定：玩家能自然学会移动、交互和战斗，教程不依赖一次弹窗"
+        ],
+        "expected": "玩家能自然学会移动、交互和战斗，教程不依赖一次弹窗",
+        "evidencePath": "docs/sandbox/evidence/R06.md",
+        "reviewerRole": "UX／UI／客户端程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "hardware"
+      ]
+    },
+    {
+      "id": "R07",
+      "module": "界面与操作",
+      "name": "可读性与无障碍",
+      "delivery": "字号、对比、字幕、色弱提示、震动开关和提示强度",
+      "acceptance": "小屏与目标分辨率可读；所有重要声音有视觉信息",
+      "dependencies": [
+        "R01",
+        "A05"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "UX／UI／客户端程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "桌面1280×720、横屏844×390、竖屏390×844与长文本状态。",
+        "steps": [
+          "建立并检查交付样本：字号、对比、字幕、色弱提示、震动开关和提示强度",
+          "按实际操作顺序打开、切换、确认、取消并返回，检查焦点与状态。",
+          "使用键盘、鼠标和异常条件，检查无横向溢出、误触或关键说明截断。",
+          "对照本包判据逐项判定：小屏与目标分辨率可读；所有重要声音有视觉信息"
+        ],
+        "expected": "小屏与目标分辨率可读；所有重要声音有视觉信息",
+        "evidencePath": "docs/sandbox/evidence/R07.md",
+        "reviewerRole": "UX／UI／客户端程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "hardware"
+      ]
+    },
+    {
+      "id": "R08",
+      "module": "界面与操作",
+      "name": "全流程体验走查",
+      "delivery": "操作步数、重复劳动、等待、卡点和错误提示整改",
+      "acceptance": "主路径无无意义确认；常用操作符合阶段体验目标",
+      "dependencies": [
+        "R04",
+        "R05",
+        "R06",
+        "R07",
+        "V05"
+      ],
+      "stage": "S3",
+      "priority": "必需",
+      "accountableRole": "UX／UI／客户端程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "桌面1280×720、横屏844×390、竖屏390×844与长文本状态。",
+        "steps": [
+          "建立并检查交付样本：操作步数、重复劳动、等待、卡点和错误提示整改",
+          "按实际操作顺序打开、切换、确认、取消并返回，检查焦点与状态。",
+          "使用键盘、鼠标和异常条件，检查无横向溢出、误触或关键说明截断。",
+          "对照本包判据逐项判定：主路径无无意义确认；常用操作符合阶段体验目标"
+        ],
+        "expected": "主路径无无意义确认；常用操作符合阶段体验目标",
+        "evidencePath": "docs/sandbox/evidence/R08.md",
+        "reviewerRole": "UX／UI／客户端程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "hardware"
+      ]
+    },
+    {
+      "id": "S01",
+      "module": "声音与演出",
+      "name": "演出系统与可跳过事件",
+      "delivery": "镜头、站位、对白、音频和事件结束恢复协议",
+      "acceptance": "跳过演出仍执行应有状态变更，角色控制必定归还",
+      "dependencies": [
+        "A05",
+        "T03",
+        "B03"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "音频／叙事演出",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "环境、音乐、战斗总线独立，含暂停和连续切场景。",
+        "steps": [
+          "建立并检查交付样本：镜头、站位、对白、音频和事件结束恢复协议",
+          "听取每种状态及转场，检查动作同步、空间层次和响度。",
+          "重复进出、暂停恢复、静音、连续群攻，确认无叠播与残留。",
+          "对照本包判据逐项判定：跳过演出仍执行应有状态变更，角色控制必定归还"
+        ],
+        "expected": "跳过演出仍执行应有状态变更，角色控制必定归还",
+        "evidencePath": "docs/sandbox/evidence/S01.md",
+        "reviewerRole": "音频／叙事演出＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "content-cost",
+        "asset-rights"
+      ]
+    },
+    {
+      "id": "S02",
+      "module": "声音与演出",
+      "name": "战斗音效与材质反馈",
+      "delivery": "兵器、命中、格挡、脚步、地表和技能音效库",
+      "acceptance": "音效与接触事件同步，连续群攻不会音量失控",
+      "dependencies": [
+        "P04",
+        "I02"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "音频／叙事演出",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "环境、音乐、战斗总线独立，含暂停和连续切场景。",
+        "steps": [
+          "建立并检查交付样本：兵器、命中、格挡、脚步、地表和技能音效库",
+          "听取每种状态及转场，检查动作同步、空间层次和响度。",
+          "重复进出、暂停恢复、静音、连续群攻，确认无叠播与残留。",
+          "对照本包判据逐项判定：音效与接触事件同步，连续群攻不会音量失控"
+        ],
+        "expected": "音效与接触事件同步，连续群攻不会音量失控",
+        "evidencePath": "docs/sandbox/evidence/S02.md",
+        "reviewerRole": "音频／叙事演出＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "content-cost",
+        "asset-rights"
+      ]
+    },
+    {
+      "id": "S03",
+      "module": "声音与演出",
+      "name": "环境声与空间层次",
+      "delivery": "城镇、山林、室内、雨夜和人群环境声及过渡",
+      "acceptance": "切场景、昼夜变化和暂停时正确混音与退出",
+      "dependencies": [
+        "B06",
+        "D01"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "音频／叙事演出",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "环境、音乐、战斗总线独立，含暂停和连续切场景。",
+        "steps": [
+          "建立并检查交付样本：城镇、山林、室内、雨夜和人群环境声及过渡",
+          "听取每种状态及转场，检查动作同步、空间层次和响度。",
+          "重复进出、暂停恢复、静音、连续群攻，确认无叠播与残留。",
+          "对照本包判据逐项判定：切场景、昼夜变化和暂停时正确混音与退出"
+        ],
+        "expected": "切场景、昼夜变化和暂停时正确混音与退出",
+        "evidencePath": "docs/sandbox/evidence/S03.md",
+        "reviewerRole": "音频／叙事演出＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "content-cost",
+        "asset-rights"
+      ]
+    },
+    {
+      "id": "S04",
+      "module": "声音与演出",
+      "name": "音乐与情绪状态",
+      "delivery": "区域主题、战斗、紧张、探索及事件转场规则",
+      "acceptance": "状态变化平滑，无频繁重启或两首音乐叠播",
+      "dependencies": [
+        "S01",
+        "I06"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "音频／叙事演出",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "环境、音乐、战斗总线独立，含暂停和连续切场景。",
+        "steps": [
+          "建立并检查交付样本：区域主题、战斗、紧张、探索及事件转场规则",
+          "听取每种状态及转场，检查动作同步、空间层次和响度。",
+          "重复进出、暂停恢复、静音、连续群攻，确认无叠播与残留。",
+          "对照本包判据逐项判定：状态变化平滑，无频繁重启或两首音乐叠播"
+        ],
+        "expected": "状态变化平滑，无频繁重启或两首音乐叠播",
+        "evidencePath": "docs/sandbox/evidence/S04.md",
+        "reviewerRole": "音频／叙事演出＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "content-cost",
+        "asset-rights"
+      ]
+    },
+    {
+      "id": "S05",
+      "module": "声音与演出",
+      "name": "关键剧情演出与语音范围",
+      "delivery": "首发重点演出清单、分镜及部分语音预算决策",
+      "acceptance": "只承诺已排期的演出和语音，文本修改成本明确",
+      "dependencies": [
+        "S01",
+        "J04",
+        "P06"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "音频／叙事演出",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "环境、音乐、战斗总线独立，含暂停和连续切场景。",
+        "steps": [
+          "建立并检查交付样本：首发重点演出清单、分镜及部分语音预算决策",
+          "听取每种状态及转场，检查动作同步、空间层次和响度。",
+          "重复进出、暂停恢复、静音、连续群攻，确认无叠播与残留。",
+          "对照本包判据逐项判定：只承诺已排期的演出和语音，文本修改成本明确"
+        ],
+        "expected": "只承诺已排期的演出和语音，文本修改成本明确",
+        "evidencePath": "docs/sandbox/evidence/S05.md",
+        "reviewerRole": "音频／叙事演出＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "content-cost",
+        "asset-rights"
+      ]
+    },
+    {
+      "id": "S06",
+      "module": "声音与演出",
+      "name": "音量设置与资产验收",
+      "delivery": "总线、响度、字幕、静音、授权信息及资源检查",
+      "acceptance": "长时间游玩无明显音量疲劳，缺失或重复播放可定位",
+      "dependencies": [
+        "S02",
+        "S03",
+        "S04",
+        "S05",
+        "R07"
+      ],
+      "stage": "S3",
+      "priority": "必需",
+      "accountableRole": "音频／叙事演出",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "环境、音乐、战斗总线独立，含暂停和连续切场景。",
+        "steps": [
+          "建立并检查交付样本：总线、响度、字幕、静音、授权信息及资源检查",
+          "听取每种状态及转场，检查动作同步、空间层次和响度。",
+          "重复进出、暂停恢复、静音、连续群攻，确认无叠播与残留。",
+          "对照本包判据逐项判定：长时间游玩无明显音量疲劳，缺失或重复播放可定位"
+        ],
+        "expected": "长时间游玩无明显音量疲劳，缺失或重复播放可定位",
+        "evidencePath": "docs/sandbox/evidence/S06.md",
+        "reviewerRole": "音频／叙事演出＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "content-cost",
+        "asset-rights"
+      ]
+    },
+    {
+      "id": "T01",
+      "module": "数据与架构",
+      "name": "领域数据与稳定ID",
+      "delivery": "角色、地图、物品、门派、任务、事件的ID和引用规范",
+      "acceptance": "数据不依附剧情画面名，引用可全量校验",
+      "dependencies": [
+        "A03",
+        "A07"
+      ],
+      "stage": "S0",
+      "priority": "必需",
+      "accountableRole": "技术负责人／系统程序",
+      "approach": "重构",
+      "status": "delivery-verified",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "最小世界快照、合法命令、非法命令和一份旧版或损坏记录。",
+        "steps": [
+          "建立并检查交付样本：角色、地图、物品、门派、任务、事件的ID和引用规范",
+          "脱离渲染层运行命令并重放，比较状态、事件与奖励幂等键。",
+          "注入坏引用、重复ID、失败写入或版本不符，检查错误定位和上一有效状态。",
+          "对照本包判据逐项判定：数据不依附剧情画面名，引用可全量校验"
+        ],
+        "expected": "数据不依附剧情画面名，引用可全量校验",
+        "evidencePath": "docs/sandbox/evidence/T01.md",
+        "reviewerRole": "技术负责人／系统程序＋QA",
+        "executed": true
+      },
+      "riskIds": [
+        "duplicate-state",
+        "hardware"
+      ]
+    },
+    {
+      "id": "T02",
+      "module": "数据与架构",
+      "name": "权威世界状态与命令层",
+      "delivery": "纯规则层、状态仓库、查询、命令、事务及表现适配",
+      "acceptance": "渲染不直接改世界；命令校验和提交能独立运行",
+      "dependencies": [
+        "T01"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "技术负责人／系统程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "最小世界快照、合法命令、非法命令和一份旧版或损坏记录。",
+        "steps": [
+          "建立并检查交付样本：纯规则层、状态仓库、查询、命令、事务及表现适配",
+          "脱离渲染层运行命令并重放，比较状态、事件与奖励幂等键。",
+          "注入坏引用、重复ID、失败写入或版本不符，检查错误定位和上一有效状态。",
+          "对照本包判据逐项判定：渲染不直接改世界；命令校验和提交能独立运行"
+        ],
+        "expected": "渲染不直接改世界；命令校验和提交能独立运行",
+        "evidencePath": "docs/sandbox/evidence/T02.md",
+        "reviewerRole": "技术负责人／系统程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state",
+        "hardware"
+      ]
+    },
+    {
+      "id": "T03",
+      "module": "数据与架构",
+      "name": "条件效果与事件服务",
+      "delivery": "可组合条件、效果、事件日志、订阅和幂等键",
+      "acceptance": "循环触发可控；重放和读档不重复奖励",
+      "dependencies": [
+        "T02"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "技术负责人／系统程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "最小世界快照、合法命令、非法命令和一份旧版或损坏记录。",
+        "steps": [
+          "建立并检查交付样本：可组合条件、效果、事件日志、订阅和幂等键",
+          "脱离渲染层运行命令并重放，比较状态、事件与奖励幂等键。",
+          "注入坏引用、重复ID、失败写入或版本不符，检查错误定位和上一有效状态。",
+          "对照本包判据逐项判定：循环触发可控；重放和读档不重复奖励"
+        ],
+        "expected": "循环触发可控；重放和读档不重复奖励",
+        "evidencePath": "docs/sandbox/evidence/T03.md",
+        "reviewerRole": "技术负责人／系统程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state",
+        "hardware"
+      ]
+    },
+    {
+      "id": "T04",
+      "module": "数据与架构",
+      "name": "随机源与重放",
+      "delivery": "分域随机种子、命令记录和可重现故障存档",
+      "acceptance": "相同版本与输入可复现关键战斗、掉落及世界事件",
+      "dependencies": [
+        "T02"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "技术负责人／系统程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "最小世界快照、合法命令、非法命令和一份旧版或损坏记录。",
+        "steps": [
+          "建立并检查交付样本：分域随机种子、命令记录和可重现故障存档",
+          "脱离渲染层运行命令并重放，比较状态、事件与奖励幂等键。",
+          "注入坏引用、重复ID、失败写入或版本不符，检查错误定位和上一有效状态。",
+          "对照本包判据逐项判定：相同版本与输入可复现关键战斗、掉落及世界事件"
+        ],
+        "expected": "相同版本与输入可复现关键战斗、掉落及世界事件",
+        "evidencePath": "docs/sandbox/evidence/T04.md",
+        "reviewerRole": "技术负责人／系统程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state",
+        "hardware"
+      ]
+    },
+    {
+      "id": "T05",
+      "module": "数据与架构",
+      "name": "存档迁移与恢复",
+      "delivery": "版本化状态、自动存档、备份、迁移器和失败恢复",
+      "acceptance": "旧样本可迁移；写入中断不损坏上一份有效存档",
+      "dependencies": [
+        "T02",
+        "T04",
+        "A02"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "技术负责人／系统程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "最小世界快照、合法命令、非法命令和一份旧版或损坏记录。",
+        "steps": [
+          "建立并检查交付样本：版本化状态、自动存档、备份、迁移器和失败恢复",
+          "脱离渲染层运行命令并重放，比较状态、事件与奖励幂等键。",
+          "注入坏引用、重复ID、失败写入或版本不符，检查错误定位和上一有效状态。",
+          "对照本包判据逐项判定：旧样本可迁移；写入中断不损坏上一份有效存档"
+        ],
+        "expected": "旧样本可迁移；写入中断不损坏上一份有效存档",
+        "evidencePath": "docs/sandbox/evidence/T05.md",
+        "reviewerRole": "技术负责人／系统程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state",
+        "hardware"
+      ]
+    },
+    {
+      "id": "T06",
+      "module": "数据与架构",
+      "name": "资源加载与性能观测",
+      "delivery": "分区加载、图集、缓存、帧时、内存和诊断指标",
+      "acceptance": "目标硬件预算有实测报告，资源可定位到地图与角色",
+      "dependencies": [
+        "A07",
+        "T01"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "技术负责人／系统程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "最小世界快照、合法命令、非法命令和一份旧版或损坏记录。",
+        "steps": [
+          "建立并检查交付样本：分区加载、图集、缓存、帧时、内存和诊断指标",
+          "脱离渲染层运行命令并重放，比较状态、事件与奖励幂等键。",
+          "注入坏引用、重复ID、失败写入或版本不符，检查错误定位和上一有效状态。",
+          "对照本包判据逐项判定：目标硬件预算有实测报告，资源可定位到地图与角色"
+        ],
+        "expected": "目标硬件预算有实测报告，资源可定位到地图与角色",
+        "evidencePath": "docs/sandbox/evidence/T06.md",
+        "reviewerRole": "技术负责人／系统程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state",
+        "hardware"
+      ]
+    },
+    {
+      "id": "T07",
+      "module": "数据与架构",
+      "name": "构建与持续集成",
+      "delivery": "规则测试、数据校验、资源检查、可安装包和版本号",
+      "acceptance": "每次候选包有可追溯源码、数据及资源版本",
+      "dependencies": [
+        "T01",
+        "A08"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "技术负责人／系统程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "最小世界快照、合法命令、非法命令和一份旧版或损坏记录。",
+        "steps": [
+          "建立并检查交付样本：规则测试、数据校验、资源检查、可安装包和版本号",
+          "脱离渲染层运行命令并重放，比较状态、事件与奖励幂等键。",
+          "注入坏引用、重复ID、失败写入或版本不符，检查错误定位和上一有效状态。",
+          "对照本包判据逐项判定：每次候选包有可追溯源码、数据及资源版本"
+        ],
+        "expected": "每次候选包有可追溯源码、数据及资源版本",
+        "evidencePath": "docs/sandbox/evidence/T07.md",
+        "reviewerRole": "技术负责人／系统程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state",
+        "hardware"
+      ]
+    },
+    {
+      "id": "T08",
+      "module": "数据与架构",
+      "name": "旧内容迁移与兼容策略",
+      "delivery": "旧存档字段、剧情模块、规则数据和废弃代码映射",
+      "acceptance": "逐项标记迁移、重写或退役；不混用旧新双重状态源",
+      "dependencies": [
+        "T02",
+        "T05",
+        "J01"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "技术负责人／系统程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "最小世界快照、合法命令、非法命令和一份旧版或损坏记录。",
+        "steps": [
+          "建立并检查交付样本：旧存档字段、剧情模块、规则数据和废弃代码映射",
+          "脱离渲染层运行命令并重放，比较状态、事件与奖励幂等键。",
+          "注入坏引用、重复ID、失败写入或版本不符，检查错误定位和上一有效状态。",
+          "对照本包判据逐项判定：逐项标记迁移、重写或退役；不混用旧新双重状态源"
+        ],
+        "expected": "逐项标记迁移、重写或退役；不混用旧新双重状态源",
+        "evidencePath": "docs/sandbox/evidence/T08.md",
+        "reviewerRole": "技术负责人／系统程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state",
+        "hardware"
+      ]
+    },
+    {
+      "id": "T09",
+      "module": "数据与架构",
+      "name": "调试与发布诊断",
+      "delivery": "状态查看、命令控制台、事件轨迹、错误档和版本诊断",
+      "acceptance": "QA可导出最小复现；玩家隐私字段不进入非必要日志",
+      "dependencies": [
+        "T03",
+        "T04",
+        "T05"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "技术负责人／系统程序",
+      "approach": "重构",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "最小世界快照、合法命令、非法命令和一份旧版或损坏记录。",
+        "steps": [
+          "建立并检查交付样本：状态查看、命令控制台、事件轨迹、错误档和版本诊断",
+          "脱离渲染层运行命令并重放，比较状态、事件与奖励幂等键。",
+          "注入坏引用、重复ID、失败写入或版本不符，检查错误定位和上一有效状态。",
+          "对照本包判据逐项判定：QA可导出最小复现；玩家隐私字段不进入非必要日志"
+        ],
+        "expected": "QA可导出最小复现；玩家隐私字段不进入非必要日志",
+        "evidencePath": "docs/sandbox/evidence/T09.md",
+        "reviewerRole": "技术负责人／系统程序＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "duplicate-state",
+        "hardware"
+      ]
+    },
+    {
+      "id": "U01",
+      "module": "内容制作工具",
+      "name": "内容表与自动校验",
+      "delivery": "结构化数据表、字段约束、引用校验和导出器",
+      "acceptance": "缺失ID、环形依赖和非法枚举在构建前可发现",
+      "dependencies": [
+        "T01",
+        "T07"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "工具程序／技术策划",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "一份通过的内容样本和分别缺ID、错引用、重复奖励的坏样本。",
+        "steps": [
+          "建立并检查交付样本：结构化数据表、字段约束、引用校验和导出器",
+          "不改主程序编辑内容并导出，在运行时重载核对变化。",
+          "依次导入坏样本，确认构建前报具体定位；交另一制作者复做并记实际耗时。",
+          "对照本包判据逐项判定：缺失ID、环形依赖和非法枚举在构建前可发现"
+        ],
+        "expected": "缺失ID、环形依赖和非法枚举在构建前可发现",
+        "evidencePath": "docs/sandbox/evidence/U01.md",
+        "reviewerRole": "工具程序／技术策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "tool-cost",
+        "staffing"
+      ]
+    },
+    {
+      "id": "U02",
+      "module": "内容制作工具",
+      "name": "地图与交互配置工具",
+      "delivery": "碰撞、遮挡、出口、NPC点、任务触发和天气预览",
+      "acceptance": "策划可独立改场景并在运行时预览，无需改主程序",
+      "dependencies": [
+        "U01",
+        "B02"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "工具程序／技术策划",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "一份通过的内容样本和分别缺ID、错引用、重复奖励的坏样本。",
+        "steps": [
+          "建立并检查交付样本：碰撞、遮挡、出口、NPC点、任务触发和天气预览",
+          "不改主程序编辑内容并导出，在运行时重载核对变化。",
+          "依次导入坏样本，确认构建前报具体定位；交另一制作者复做并记实际耗时。",
+          "对照本包判据逐项判定：策划可独立改场景并在运行时预览，无需改主程序"
+        ],
+        "expected": "策划可独立改场景并在运行时预览，无需改主程序",
+        "evidencePath": "docs/sandbox/evidence/U02.md",
+        "reviewerRole": "工具程序／技术策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "tool-cost",
+        "staffing"
+      ]
+    },
+    {
+      "id": "U03",
+      "module": "内容制作工具",
+      "name": "NPC日程与关系工具",
+      "delivery": "人物档案、日程时间轴、位置预览和关系条件编辑",
+      "acceptance": "可快速定位NPC为什么缺席、拒绝或敌对",
+      "dependencies": [
+        "U01",
+        "E01",
+        "D03"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "工具程序／技术策划",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "一份通过的内容样本和分别缺ID、错引用、重复奖励的坏样本。",
+        "steps": [
+          "建立并检查交付样本：人物档案、日程时间轴、位置预览和关系条件编辑",
+          "不改主程序编辑内容并导出，在运行时重载核对变化。",
+          "依次导入坏样本，确认构建前报具体定位；交另一制作者复做并记实际耗时。",
+          "对照本包判据逐项判定：可快速定位NPC为什么缺席、拒绝或敌对"
+        ],
+        "expected": "可快速定位NPC为什么缺席、拒绝或敌对",
+        "evidencePath": "docs/sandbox/evidence/U03.md",
+        "reviewerRole": "工具程序／技术策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "tool-cost",
+        "staffing"
+      ]
+    },
+    {
+      "id": "U04",
+      "module": "内容制作工具",
+      "name": "任务对白与分支工具",
+      "delivery": "任务图、对话条件、排他、奖励、失效和分支检查",
+      "acceptance": "能发现不可达节点、悬空任务及重复奖励风险",
+      "dependencies": [
+        "U01",
+        "J01",
+        "T03"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "工具程序／技术策划",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "一份通过的内容样本和分别缺ID、错引用、重复奖励的坏样本。",
+        "steps": [
+          "建立并检查交付样本：任务图、对话条件、排他、奖励、失效和分支检查",
+          "不改主程序编辑内容并导出，在运行时重载核对变化。",
+          "依次导入坏样本，确认构建前报具体定位；交另一制作者复做并记实际耗时。",
+          "对照本包判据逐项判定：能发现不可达节点、悬空任务及重复奖励风险"
+        ],
+        "expected": "能发现不可达节点、悬空任务及重复奖励风险",
+        "evidencePath": "docs/sandbox/evidence/U04.md",
+        "reviewerRole": "工具程序／技术策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "tool-cost",
+        "staffing"
+      ]
+    },
+    {
+      "id": "U05",
+      "module": "内容制作工具",
+      "name": "技能物品与经济工具",
+      "delivery": "技能范围预览、属性计算、掉落和商店配置编辑",
+      "acceptance": "修改可预览并校验，数值策划无需编写业务代码",
+      "dependencies": [
+        "U01",
+        "H01",
+        "L01"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "工具程序／技术策划",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "一份通过的内容样本和分别缺ID、错引用、重复奖励的坏样本。",
+        "steps": [
+          "建立并检查交付样本：技能范围预览、属性计算、掉落和商店配置编辑",
+          "不改主程序编辑内容并导出，在运行时重载核对变化。",
+          "依次导入坏样本，确认构建前报具体定位；交另一制作者复做并记实际耗时。",
+          "对照本包判据逐项判定：修改可预览并校验，数值策划无需编写业务代码"
+        ],
+        "expected": "修改可预览并校验，数值策划无需编写业务代码",
+        "evidencePath": "docs/sandbox/evidence/U05.md",
+        "reviewerRole": "工具程序／技术策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "tool-cost",
+        "staffing"
+      ]
+    },
+    {
+      "id": "U06",
+      "module": "内容制作工具",
+      "name": "资产导入与自动预览",
+      "delivery": "锚点、图集、命名、方向、动作、事件和授权信息检查",
+      "acceptance": "批量导入后可播放全部方向与状态，缺项自动报错",
+      "dependencies": [
+        "U01",
+        "P02",
+        "O02"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "工具程序／技术策划",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "一份通过的内容样本和分别缺ID、错引用、重复奖励的坏样本。",
+        "steps": [
+          "建立并检查交付样本：锚点、图集、命名、方向、动作、事件和授权信息检查",
+          "不改主程序编辑内容并导出，在运行时重载核对变化。",
+          "依次导入坏样本，确认构建前报具体定位；交另一制作者复做并记实际耗时。",
+          "对照本包判据逐项判定：批量导入后可播放全部方向与状态，缺项自动报错"
+        ],
+        "expected": "批量导入后可播放全部方向与状态，缺项自动报错",
+        "evidencePath": "docs/sandbox/evidence/U06.md",
+        "reviewerRole": "工具程序／技术策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "tool-cost",
+        "staffing"
+      ]
+    },
+    {
+      "id": "U07",
+      "module": "内容制作工具",
+      "name": "QA场景与状态快照",
+      "delivery": "任意地区、队伍、关系、时间和剧情阶段的测试入口",
+      "acceptance": "复杂事件可一步构造，无需反复从头游玩",
+      "dependencies": [
+        "T09",
+        "U01"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "工具程序／技术策划",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "一份通过的内容样本和分别缺ID、错引用、重复奖励的坏样本。",
+        "steps": [
+          "建立并检查交付样本：任意地区、队伍、关系、时间和剧情阶段的测试入口",
+          "不改主程序编辑内容并导出，在运行时重载核对变化。",
+          "依次导入坏样本，确认构建前报具体定位；交另一制作者复做并记实际耗时。",
+          "对照本包判据逐项判定：复杂事件可一步构造，无需反复从头游玩"
+        ],
+        "expected": "复杂事件可一步构造，无需反复从头游玩",
+        "evidencePath": "docs/sandbox/evidence/U07.md",
+        "reviewerRole": "工具程序／技术策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "tool-cost",
+        "staffing"
+      ]
+    },
+    {
+      "id": "U08",
+      "module": "内容制作工具",
+      "name": "内容生产规范与培训",
+      "delivery": "模板、例子、审核清单、错误定位和交接文档",
+      "acceptance": "第二名制作者可独立完成并提交一条多解任务",
+      "dependencies": [
+        "U02",
+        "U03",
+        "U04",
+        "U05",
+        "U06"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "工具程序／技术策划",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "一份通过的内容样本和分别缺ID、错引用、重复奖励的坏样本。",
+        "steps": [
+          "建立并检查交付样本：模板、例子、审核清单、错误定位和交接文档",
+          "不改主程序编辑内容并导出，在运行时重载核对变化。",
+          "依次导入坏样本，确认构建前报具体定位；交另一制作者复做并记实际耗时。",
+          "对照本包判据逐项判定：第二名制作者可独立完成并提交一条多解任务"
+        ],
+        "expected": "第二名制作者可独立完成并提交一条多解任务",
+        "evidencePath": "docs/sandbox/evidence/U08.md",
+        "reviewerRole": "工具程序／技术策划＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "tool-cost",
+        "staffing"
+      ]
+    },
+    {
+      "id": "V01",
+      "module": "QA与平衡",
+      "name": "需求到验收的映射",
+      "delivery": "系统需求、内容包、风险、用例和验收负责人表",
+      "acceptance": "每个首发工作包都能找到可执行的完成判据",
+      "dependencies": [
+        "A08",
+        "A06"
+      ],
+      "stage": "S0",
+      "priority": "必需",
+      "accountableRole": "QA／体验研究／数值",
+      "approach": "新增",
+      "status": "delivery-verified",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "需求清单、构建版本、设备清单、已知问题和最小复现存档。",
+        "steps": [
+          "建立并检查交付样本：系统需求、内容包、风险、用例和验收负责人表",
+          "按本包验收矩阵逐条执行并记录版本、输入、预期、实际与证据。",
+          "复测一项历史缺陷及失败样本，确认报告能复现且不把未执行记为通过。",
+          "对照本包判据逐项判定：每个首发工作包都能找到可执行的完成判据"
+        ],
+        "expected": "每个首发工作包都能找到可执行的完成判据",
+        "evidencePath": "docs/sandbox/evidence/V01.md",
+        "reviewerRole": "QA／体验研究／数值＋QA",
+        "executed": true
+      },
+      "riskIds": [
+        "scope",
+        "hardware"
+      ]
+    },
+    {
+      "id": "V02",
+      "module": "QA与平衡",
+      "name": "规则与命令测试",
+      "delivery": "条件效果、库存、时间、武学、关系和战斗的边界用例",
+      "acceptance": "重点测试事务与状态转换，而非只检查界面出现",
+      "dependencies": [
+        "T02",
+        "C03",
+        "I02"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "QA／体验研究／数值",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "需求清单、构建版本、设备清单、已知问题和最小复现存档。",
+        "steps": [
+          "建立并检查交付样本：条件效果、库存、时间、武学、关系和战斗的边界用例",
+          "按本包验收矩阵逐条执行并记录版本、输入、预期、实际与证据。",
+          "复测一项历史缺陷及失败样本，确认报告能复现且不把未执行记为通过。",
+          "对照本包判据逐项判定：重点测试事务与状态转换，而非只检查界面出现"
+        ],
+        "expected": "重点测试事务与状态转换，而非只检查界面出现",
+        "evidencePath": "docs/sandbox/evidence/V02.md",
+        "reviewerRole": "QA／体验研究／数值＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "scope",
+        "hardware"
+      ]
+    },
+    {
+      "id": "V03",
+      "module": "QA与平衡",
+      "name": "存档与长期世界测试",
+      "delivery": "跨日、退出、坏档恢复、版本升级及长流程存档集",
+      "acceptance": "人物、物品、任务和事件在存读档后保持一致",
+      "dependencies": [
+        "T05",
+        "D04",
+        "L01"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "QA／体验研究／数值",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "需求清单、构建版本、设备清单、已知问题和最小复现存档。",
+        "steps": [
+          "建立并检查交付样本：跨日、退出、坏档恢复、版本升级及长流程存档集",
+          "按本包验收矩阵逐条执行并记录版本、输入、预期、实际与证据。",
+          "复测一项历史缺陷及失败样本，确认报告能复现且不把未执行记为通过。",
+          "对照本包判据逐项判定：人物、物品、任务和事件在存读档后保持一致"
+        ],
+        "expected": "人物、物品、任务和事件在存读档后保持一致",
+        "evidencePath": "docs/sandbox/evidence/V03.md",
+        "reviewerRole": "QA／体验研究／数值＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "scope",
+        "hardware"
+      ]
+    },
+    {
+      "id": "V04",
+      "module": "QA与平衡",
+      "name": "任务与顺序组合测试",
+      "delivery": "提前拿物、晚接任务、NPC入队死亡和阵营切换矩阵",
+      "acceptance": "所有关键依赖都有至少一个异常顺序用例",
+      "dependencies": [
+        "J05",
+        "J06",
+        "N03",
+        "G02",
+        "U07"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "QA／体验研究／数值",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "需求清单、构建版本、设备清单、已知问题和最小复现存档。",
+        "steps": [
+          "建立并检查交付样本：提前拿物、晚接任务、NPC入队死亡和阵营切换矩阵",
+          "按本包验收矩阵逐条执行并记录版本、输入、预期、实际与证据。",
+          "复测一项历史缺陷及失败样本，确认报告能复现且不把未执行记为通过。",
+          "对照本包判据逐项判定：所有关键依赖都有至少一个异常顺序用例"
+        ],
+        "expected": "所有关键依赖都有至少一个异常顺序用例",
+        "evidencePath": "docs/sandbox/evidence/V04.md",
+        "reviewerRole": "QA／体验研究／数值＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "scope",
+        "hardware"
+      ]
+    },
+    {
+      "id": "V05",
+      "module": "QA与平衡",
+      "name": "外部玩家体验测试",
+      "delivery": "开局、找路、任务理解、首战、失败与回访观察记录",
+      "acceptance": "使用目标玩家实玩数据，不以团队熟练度代替体验",
+      "dependencies": [
+        "R06",
+        "B06",
+        "I06"
+      ],
+      "stage": "S1",
+      "priority": "必需",
+      "accountableRole": "QA／体验研究／数值",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "需求清单、构建版本、设备清单、已知问题和最小复现存档。",
+        "steps": [
+          "建立并检查交付样本：开局、找路、任务理解、首战、失败与回访观察记录",
+          "按本包验收矩阵逐条执行并记录版本、输入、预期、实际与证据。",
+          "复测一项历史缺陷及失败样本，确认报告能复现且不把未执行记为通过。",
+          "对照本包判据逐项判定：使用目标玩家实玩数据，不以团队熟练度代替体验"
+        ],
+        "expected": "使用目标玩家实玩数据，不以团队熟练度代替体验",
+        "evidencePath": "docs/sandbox/evidence/V05.md",
+        "reviewerRole": "QA／体验研究／数值＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "scope",
+        "hardware"
+      ]
+    },
+    {
+      "id": "V06",
+      "module": "QA与平衡",
+      "name": "经济构筑与节奏测试",
+      "delivery": "流派、队伍、装备、收入支出和成长曲线的抽样矩阵",
+      "acceptance": "多条合理路线可完成，无必须刷取的意外数值墙",
+      "dependencies": [
+        "H08",
+        "L07",
+        "F06",
+        "I09"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "QA／体验研究／数值",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "需求清单、构建版本、设备清单、已知问题和最小复现存档。",
+        "steps": [
+          "建立并检查交付样本：流派、队伍、装备、收入支出和成长曲线的抽样矩阵",
+          "按本包验收矩阵逐条执行并记录版本、输入、预期、实际与证据。",
+          "复测一项历史缺陷及失败样本，确认报告能复现且不把未执行记为通过。",
+          "对照本包判据逐项判定：多条合理路线可完成，无必须刷取的意外数值墙"
+        ],
+        "expected": "多条合理路线可完成，无必须刷取的意外数值墙",
+        "evidencePath": "docs/sandbox/evidence/V06.md",
+        "reviewerRole": "QA／体验研究／数值＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "scope",
+        "hardware"
+      ]
+    },
+    {
+      "id": "V07",
+      "module": "QA与平衡",
+      "name": "设备与性能测试",
+      "delivery": "目标配置、分辨率、输入设备、读盘及满负载场景",
+      "acceptance": "帧时、内存、加载时间及卡顿达到立项确定预算",
+      "dependencies": [
+        "T06",
+        "O06",
+        "Q06"
+      ],
+      "stage": "S3",
+      "priority": "必需",
+      "accountableRole": "QA／体验研究／数值",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "需求清单、构建版本、设备清单、已知问题和最小复现存档。",
+        "steps": [
+          "建立并检查交付样本：目标配置、分辨率、输入设备、读盘及满负载场景",
+          "按本包验收矩阵逐条执行并记录版本、输入、预期、实际与证据。",
+          "复测一项历史缺陷及失败样本，确认报告能复现且不把未执行记为通过。",
+          "对照本包判据逐项判定：帧时、内存、加载时间及卡顿达到立项确定预算"
+        ],
+        "expected": "帧时、内存、加载时间及卡顿达到立项确定预算",
+        "evidencePath": "docs/sandbox/evidence/V07.md",
+        "reviewerRole": "QA／体验研究／数值＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "scope",
+        "hardware"
+      ]
+    },
+    {
+      "id": "V08",
+      "module": "QA与平衡",
+      "name": "内容一致性与质量巡检",
+      "delivery": "文本、头像、动作、音效、地图状态和任务结果检查",
+      "acceptance": "无阻断流程的错配；缺失资产有明确阻断等级",
+      "dependencies": [
+        "J09",
+        "P07",
+        "O07",
+        "S06"
+      ],
+      "stage": "S3",
+      "priority": "必需",
+      "accountableRole": "QA／体验研究／数值",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "需求清单、构建版本、设备清单、已知问题和最小复现存档。",
+        "steps": [
+          "建立并检查交付样本：文本、头像、动作、音效、地图状态和任务结果检查",
+          "按本包验收矩阵逐条执行并记录版本、输入、预期、实际与证据。",
+          "复测一项历史缺陷及失败样本，确认报告能复现且不把未执行记为通过。",
+          "对照本包判据逐项判定：无阻断流程的错配；缺失资产有明确阻断等级"
+        ],
+        "expected": "无阻断流程的错配；缺失资产有明确阻断等级",
+        "evidencePath": "docs/sandbox/evidence/V08.md",
+        "reviewerRole": "QA／体验研究／数值＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "scope",
+        "hardware"
+      ]
+    },
+    {
+      "id": "V09",
+      "module": "QA与平衡",
+      "name": "发布候选完整回归",
+      "delivery": "安装更新、完整通关、主要分支与旧档回归报告",
+      "acceptance": "阻断与严重缺陷清零，其他缺陷经负责人接受",
+      "dependencies": [
+        "V03",
+        "V04",
+        "V06",
+        "V07",
+        "V08",
+        "W03"
+      ],
+      "stage": "S3",
+      "priority": "必需",
+      "accountableRole": "QA／体验研究／数值",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "需求清单、构建版本、设备清单、已知问题和最小复现存档。",
+        "steps": [
+          "建立并检查交付样本：安装更新、完整通关、主要分支与旧档回归报告",
+          "按本包验收矩阵逐条执行并记录版本、输入、预期、实际与证据。",
+          "复测一项历史缺陷及失败样本，确认报告能复现且不把未执行记为通过。",
+          "对照本包判据逐项判定：阻断与严重缺陷清零，其他缺陷经负责人接受"
+        ],
+        "expected": "阻断与严重缺陷清零，其他缺陷经负责人接受",
+        "evidencePath": "docs/sandbox/evidence/V09.md",
+        "reviewerRole": "QA／体验研究／数值＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "scope",
+        "hardware"
+      ]
+    },
+    {
+      "id": "V10",
+      "module": "QA与平衡",
+      "name": "上线问题复现与修复回归",
+      "delivery": "缺陷分级、玩家存档、补丁回归及回滚操作规范",
+      "acceptance": "已修复问题进入永久回归集，补丁不破坏有效存档",
+      "dependencies": [
+        "V09",
+        "T09",
+        "W05"
+      ],
+      "stage": "S3",
+      "priority": "必需",
+      "accountableRole": "QA／体验研究／数值",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "需求清单、构建版本、设备清单、已知问题和最小复现存档。",
+        "steps": [
+          "建立并检查交付样本：缺陷分级、玩家存档、补丁回归及回滚操作规范",
+          "按本包验收矩阵逐条执行并记录版本、输入、预期、实际与证据。",
+          "复测一项历史缺陷及失败样本，确认报告能复现且不把未执行记为通过。",
+          "对照本包判据逐项判定：已修复问题进入永久回归集，补丁不破坏有效存档"
+        ],
+        "expected": "已修复问题进入永久回归集，补丁不破坏有效存档",
+        "evidencePath": "docs/sandbox/evidence/V10.md",
+        "reviewerRole": "QA／体验研究／数值＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "scope",
+        "hardware"
+      ]
+    },
+    {
+      "id": "W01",
+      "module": "发行与运维",
+      "name": "发行路线与商店准备",
+      "delivery": "目标平台、商店定位、语言、演示版和页面素材计划",
+      "acceptance": "平台要求由负责人核实，宣传承诺与首发范围一致",
+      "dependencies": [
+        "A02",
+        "A06"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "制作／发行／QA",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "带源码版本和内容版本的候选包、旧档、离线环境和回滚包。",
+        "steps": [
+          "建立并检查交付样本：目标平台、商店定位、语言、演示版和页面素材计划",
+          "按交付规范检查安装、启动、存档、素材和对应发行流程。",
+          "模拟更新失败或不满足发布门，确认停止发布并可恢复上一有效版本。",
+          "对照本包判据逐项判定：平台要求由负责人核实，宣传承诺与首发范围一致"
+        ],
+        "expected": "平台要求由负责人核实，宣传承诺与首发范围一致",
+        "evidencePath": "docs/sandbox/evidence/W01.md",
+        "reviewerRole": "制作／发行／QA＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "asset-rights",
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "W02",
+      "module": "发行与运维",
+      "name": "可独立交付的演示版",
+      "delivery": "切片打包、退出点、反馈入口及存档继承策略",
+      "acceptance": "陌生玩家可独立安装游玩并反馈可复现问题",
+      "dependencies": [
+        "V05",
+        "T07",
+        "R06"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "制作／发行／QA",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "带源码版本和内容版本的候选包、旧档、离线环境和回滚包。",
+        "steps": [
+          "建立并检查交付样本：切片打包、退出点、反馈入口及存档继承策略",
+          "按交付规范检查安装、启动、存档、素材和对应发行流程。",
+          "模拟更新失败或不满足发布门，确认停止发布并可恢复上一有效版本。",
+          "对照本包判据逐项判定：陌生玩家可独立安装游玩并反馈可复现问题"
+        ],
+        "expected": "陌生玩家可独立安装游玩并反馈可复现问题",
+        "evidencePath": "docs/sandbox/evidence/W02.md",
+        "reviewerRole": "制作／发行／QA＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "asset-rights",
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "W03",
+      "module": "发行与运维",
+      "name": "发行集成与安装更新",
+      "delivery": "目标平台成就、云存档、安装卸载与控制器说明",
+      "acceptance": "离线可玩；同步冲突与首次启动失败有恢复流程",
+      "dependencies": [
+        "T05",
+        "T07",
+        "W01"
+      ],
+      "stage": "S3",
+      "priority": "必需",
+      "accountableRole": "制作／发行／QA",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "带源码版本和内容版本的候选包、旧档、离线环境和回滚包。",
+        "steps": [
+          "建立并检查交付样本：目标平台成就、云存档、安装卸载与控制器说明",
+          "按交付规范检查安装、启动、存档、素材和对应发行流程。",
+          "模拟更新失败或不满足发布门，确认停止发布并可恢复上一有效版本。",
+          "对照本包判据逐项判定：离线可玩；同步冲突与首次启动失败有恢复流程"
+        ],
+        "expected": "离线可玩；同步冲突与首次启动失败有恢复流程",
+        "evidencePath": "docs/sandbox/evidence/W03.md",
+        "reviewerRole": "制作／发行／QA＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "asset-rights",
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "W04",
+      "module": "发行与运维",
+      "name": "商店素材与宣传实机",
+      "delivery": "截图、预告、说明、功能清单和媒体资料",
+      "acceptance": "展示实际可玩的内容，生成概念图不冒充实机",
+      "dependencies": [
+        "W02",
+        "O07",
+        "P07",
+        "I11"
+      ],
+      "stage": "S3",
+      "priority": "必需",
+      "accountableRole": "制作／发行／QA",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "带源码版本和内容版本的候选包、旧档、离线环境和回滚包。",
+        "steps": [
+          "建立并检查交付样本：截图、预告、说明、功能清单和媒体资料",
+          "按交付规范检查安装、启动、存档、素材和对应发行流程。",
+          "模拟更新失败或不满足发布门，确认停止发布并可恢复上一有效版本。",
+          "对照本包判据逐项判定：展示实际可玩的内容，生成概念图不冒充实机"
+        ],
+        "expected": "展示实际可玩的内容，生成概念图不冒充实机",
+        "evidencePath": "docs/sandbox/evidence/W04.md",
+        "reviewerRole": "制作／发行／QA＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "asset-rights",
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "W05",
+      "module": "发行与运维",
+      "name": "补丁与版本策略",
+      "delivery": "存档兼容窗口、热修流程、版本说明和回滚包",
+      "acceptance": "旧版本退路可执行；修复不依赖破坏玩家进度",
+      "dependencies": [
+        "T05",
+        "T07",
+        "T09"
+      ],
+      "stage": "S3",
+      "priority": "必需",
+      "accountableRole": "制作／发行／QA",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "带源码版本和内容版本的候选包、旧档、离线环境和回滚包。",
+        "steps": [
+          "建立并检查交付样本：存档兼容窗口、热修流程、版本说明和回滚包",
+          "按交付规范检查安装、启动、存档、素材和对应发行流程。",
+          "模拟更新失败或不满足发布门，确认停止发布并可恢复上一有效版本。",
+          "对照本包判据逐项判定：旧版本退路可执行；修复不依赖破坏玩家进度"
+        ],
+        "expected": "旧版本退路可执行；修复不依赖破坏玩家进度",
+        "evidencePath": "docs/sandbox/evidence/W05.md",
+        "reviewerRole": "制作／发行／QA＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "asset-rights",
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "W06",
+      "module": "发行与运维",
+      "name": "外部资产与AI资产登记",
+      "delivery": "来源、授权、制作记录、人工修改和可交付源文件清单",
+      "acceptance": "所有进入首发的资源可追溯且通过人工质量审核",
+      "dependencies": [
+        "A08",
+        "U06"
+      ],
+      "stage": "S2",
+      "priority": "必需",
+      "accountableRole": "制作／发行／QA",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "带源码版本和内容版本的候选包、旧档、离线环境和回滚包。",
+        "steps": [
+          "建立并检查交付样本：来源、授权、制作记录、人工修改和可交付源文件清单",
+          "按交付规范检查安装、启动、存档、素材和对应发行流程。",
+          "模拟更新失败或不满足发布门，确认停止发布并可恢复上一有效版本。",
+          "对照本包判据逐项判定：所有进入首发的资源可追溯且通过人工质量审核"
+        ],
+        "expected": "所有进入首发的资源可追溯且通过人工质量审核",
+        "evidencePath": "docs/sandbox/evidence/W06.md",
+        "reviewerRole": "制作／发行／QA＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "asset-rights",
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "W07",
+      "module": "发行与运维",
+      "name": "上线与支持准备",
+      "delivery": "缺陷入口、常见问题、客服材料、发布时间和值班分工",
+      "acceptance": "发现严重问题时能定位负责人、暂停发布和回滚",
+      "dependencies": [
+        "W01",
+        "W03",
+        "W05"
+      ],
+      "stage": "S3",
+      "priority": "必需",
+      "accountableRole": "制作／发行／QA",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "带源码版本和内容版本的候选包、旧档、离线环境和回滚包。",
+        "steps": [
+          "建立并检查交付样本：缺陷入口、常见问题、客服材料、发布时间和值班分工",
+          "按交付规范检查安装、启动、存档、素材和对应发行流程。",
+          "模拟更新失败或不满足发布门，确认停止发布并可恢复上一有效版本。",
+          "对照本包判据逐项判定：发现严重问题时能定位负责人、暂停发布和回滚"
+        ],
+        "expected": "发现严重问题时能定位负责人、暂停发布和回滚",
+        "evidencePath": "docs/sandbox/evidence/W07.md",
+        "reviewerRole": "制作／发行／QA＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "asset-rights",
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "W08",
+      "module": "发行与运维",
+      "name": "首发内容冻结与放行",
+      "delivery": "内容清单、已知问题、恢复方案及质量签署记录",
+      "acceptance": "通过发布阶段门后才生成正式发布候选",
+      "dependencies": [
+        "V09",
+        "W04",
+        "W06",
+        "W07"
+      ],
+      "stage": "S3",
+      "priority": "必需",
+      "accountableRole": "制作／发行／QA",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "带源码版本和内容版本的候选包、旧档、离线环境和回滚包。",
+        "steps": [
+          "建立并检查交付样本：内容清单、已知问题、恢复方案及质量签署记录",
+          "按交付规范检查安装、启动、存档、素材和对应发行流程。",
+          "模拟更新失败或不满足发布门，确认停止发布并可恢复上一有效版本。",
+          "对照本包判据逐项判定：通过发布阶段门后才生成正式发布候选"
+        ],
+        "expected": "通过发布阶段门后才生成正式发布候选",
+        "evidencePath": "docs/sandbox/evidence/W08.md",
+        "reviewerRole": "制作／发行／QA＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "asset-rights",
+        "duplicate-state"
+      ]
+    },
+    {
+      "id": "X01",
+      "module": "后续扩展候选",
+      "name": "帮派经营与据点争夺",
+      "delivery": "据点资源、经营、人员和攻防的独立提案",
+      "acceptance": "首发证实势力系统稳定后再评估，单独排期",
+      "dependencies": [
+        "F09",
+        "D07"
+      ],
+      "stage": "S4",
+      "priority": "后续",
+      "accountableRole": "制作人／主策",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "首发证据与独立扩展提案，未纳入首发预算。",
+        "steps": [
+          "建立并检查交付样本：据点资源、经营、人员和攻防的独立提案",
+          "写出新增玩家价值、可玩验证、人员成本和额外回归范围。",
+          "检查与本体存档及系统边界，未获立项不得标为首发必需。",
+          "对照本包判据逐项判定：首发证实势力系统稳定后再评估，单独排期"
+        ],
+        "expected": "首发证实势力系统稳定后再评估，单独排期",
+        "evidencePath": "docs/sandbox/evidence/X01.md",
+        "reviewerRole": "制作人／主策＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "scope",
+        "staffing"
+      ]
+    },
+    {
+      "id": "X02",
+      "module": "后续扩展候选",
+      "name": "深度动态江湖",
+      "delivery": "更大范围NPC自主行动、势力战争与继任提案",
+      "acceptance": "复杂度与玩家可读性经过区域模拟测试",
+      "dependencies": [
+        "E09",
+        "D07",
+        "F09"
+      ],
+      "stage": "S4",
+      "priority": "后续",
+      "accountableRole": "制作人／主策",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "首发证据与独立扩展提案，未纳入首发预算。",
+        "steps": [
+          "建立并检查交付样本：更大范围NPC自主行动、势力战争与继任提案",
+          "写出新增玩家价值、可玩验证、人员成本和额外回归范围。",
+          "检查与本体存档及系统边界，未获立项不得标为首发必需。",
+          "对照本包判据逐项判定：复杂度与玩家可读性经过区域模拟测试"
+        ],
+        "expected": "复杂度与玩家可读性经过区域模拟测试",
+        "evidencePath": "docs/sandbox/evidence/X02.md",
+        "reviewerRole": "制作人／主策＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "scope",
+        "staffing"
+      ]
+    },
+    {
+      "id": "X03",
+      "module": "后续扩展候选",
+      "name": "第二战斗制式",
+      "delivery": "即时或半即时模式的规则、AI、输入与平衡验证",
+      "acceptance": "有新增用户价值证据，并承担完整额外回归成本",
+      "dependencies": [
+        "I12",
+        "V09"
+      ],
+      "stage": "S4",
+      "priority": "后续",
+      "accountableRole": "制作人／主策",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "首发证据与独立扩展提案，未纳入首发预算。",
+        "steps": [
+          "建立并检查交付样本：即时或半即时模式的规则、AI、输入与平衡验证",
+          "写出新增玩家价值、可玩验证、人员成本和额外回归范围。",
+          "检查与本体存档及系统边界，未获立项不得标为首发必需。",
+          "对照本包判据逐项判定：有新增用户价值证据，并承担完整额外回归成本"
+        ],
+        "expected": "有新增用户价值证据，并承担完整额外回归成本",
+        "evidencePath": "docs/sandbox/evidence/X03.md",
+        "reviewerRole": "制作人／主策＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "scope",
+        "staffing"
+      ]
+    },
+    {
+      "id": "X04",
+      "module": "后续扩展候选",
+      "name": "更多生活技艺与小游戏",
+      "delivery": "钓鱼、书画、锻造等独立玩法评估",
+      "acceptance": "有探索或角色价值，制作与维护成本单独成立",
+      "dependencies": [
+        "M07",
+        "V05"
+      ],
+      "stage": "S4",
+      "priority": "后续",
+      "accountableRole": "制作人／主策",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "首发证据与独立扩展提案，未纳入首发预算。",
+        "steps": [
+          "建立并检查交付样本：钓鱼、书画、锻造等独立玩法评估",
+          "写出新增玩家价值、可玩验证、人员成本和额外回归范围。",
+          "检查与本体存档及系统边界，未获立项不得标为首发必需。",
+          "对照本包判据逐项判定：有探索或角色价值，制作与维护成本单独成立"
+        ],
+        "expected": "有探索或角色价值，制作与维护成本单独成立",
+        "evidencePath": "docs/sandbox/evidence/X04.md",
+        "reviewerRole": "制作人／主策＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "scope",
+        "staffing"
+      ]
+    },
+    {
+      "id": "X05",
+      "module": "后续扩展候选",
+      "name": "模组支持",
+      "delivery": "数据接口、内容隔离、版本兼容和崩溃定位方案",
+      "acceptance": "用户模组不损坏本体存档，版本边界可理解",
+      "dependencies": [
+        "U08",
+        "T05",
+        "W05"
+      ],
+      "stage": "S4",
+      "priority": "后续",
+      "accountableRole": "制作人／主策",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "首发证据与独立扩展提案，未纳入首发预算。",
+        "steps": [
+          "建立并检查交付样本：数据接口、内容隔离、版本兼容和崩溃定位方案",
+          "写出新增玩家价值、可玩验证、人员成本和额外回归范围。",
+          "检查与本体存档及系统边界，未获立项不得标为首发必需。",
+          "对照本包判据逐项判定：用户模组不损坏本体存档，版本边界可理解"
+        ],
+        "expected": "用户模组不损坏本体存档，版本边界可理解",
+        "evidencePath": "docs/sandbox/evidence/X05.md",
+        "reviewerRole": "制作人／主策＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "scope",
+        "staffing"
+      ]
+    },
+    {
+      "id": "X06",
+      "module": "后续扩展候选",
+      "name": "主机移动与联网扩展",
+      "delivery": "各平台输入性能验证、同步与服务成本立项",
+      "acceptance": "独立论证，不将联网和移动商业化隐性塞入首发",
+      "dependencies": [
+        "A02",
+        "V09",
+        "W08"
+      ],
+      "stage": "S4",
+      "priority": "后续",
+      "accountableRole": "制作人／主策",
+      "approach": "新增",
+      "status": "not-started",
+      "owner": null,
+      "estimateDays": null,
+      "actualDays": null,
+      "verification": {
+        "precondition": "首发证据与独立扩展提案，未纳入首发预算。",
+        "steps": [
+          "建立并检查交付样本：各平台输入性能验证、同步与服务成本立项",
+          "写出新增玩家价值、可玩验证、人员成本和额外回归范围。",
+          "检查与本体存档及系统边界，未获立项不得标为首发必需。",
+          "对照本包判据逐项判定：独立论证，不将联网和移动商业化隐性塞入首发"
+        ],
+        "expected": "独立论证，不将联网和移动商业化隐性塞入首发",
+        "evidencePath": "docs/sandbox/evidence/X06.md",
+        "reviewerRole": "制作人／主策＋QA",
+        "executed": false
+      },
+      "riskIds": [
+        "scope",
+        "staffing"
+      ]
+    }
+  ]
+}

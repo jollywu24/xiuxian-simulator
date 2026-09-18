@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "counting": {
+    "map": "一个有唯一ID、独立导航边界、出入口及验收记录的可玩空间；昼夜和事件变体不另计。",
+    "questPackage": "一个稳定目标及其多解、失败和回流的整体；分支不另计。",
+    "namedNpc": "唯一身份ID；同一人入队前后和换装不另计。",
+    "martial": "独立学习与装配实体；等级、品阶和强化不另计。",
+    "animation": "角色母版×方向×动作；共享图集和插值帧不冒充独立完成动作。"
+  },
+  "launch": {
+    "regions": 5,
+    "maps": {
+      "street": 6,
+      "interior": 8,
+      "wild": 8,
+      "faction": 6,
+      "dungeon": 8
+    },
+    "joinableSchools": 4,
+    "otherFactions": 2,
+    "namedNpc": 40,
+    "companionsIncludedInNamedNpc": 8,
+    "backgroundInstances": 60,
+    "partyLimit": 4,
+    "enemyArchetypes": 12,
+    "bossArchetypes": 6,
+    "martials": {
+      "active": 30,
+      "inner": 12,
+      "light": 8,
+      "body": 10
+    },
+    "quests": {
+      "world": 16,
+      "school": 24,
+      "local": 24,
+      "companion": 24
+    },
+    "encounterTemplates": 12,
+    "secrets": 30,
+    "equipment": 60,
+    "consumables": 20,
+    "materials": 24,
+    "recipes": 16,
+    "firstPlayHoursTarget": [
+      20,
+      30
+    ]
+  },
+  "S1": {
+    "maps": 6,
+    "namedNpc": 10,
+    "companionsIncludedInNamedNpc": 2,
+    "schools": 1,
+    "questPackages": 8,
+    "martials": 12,
+    "mainPathMinutesTarget": [
+      60,
+      90
+    ]
+  },
+  "S2": {
+    "maps": 12,
+    "namedNpc": 20,
+    "companionsIncludedInNamedNpc": 4,
+    "schools": 2,
+    "questPackages": 28,
+    "martials": 30
+  },
+  "S0Actual": {
+    "playableMaps": 1,
+    "calibrationPartyActors": 4,
+    "calibrationEnemies": 3,
+    "damageSkills": 3,
+    "healingSkills": 1,
+    "generatedBackdrops": 1,
+    "generatedAtlases": 1
+  },
+  "costPolicy": "数量是范围上限基线；成本与周期须由S1实测单位产能及实际成员排期推导，不把未知人日填零。"
+}

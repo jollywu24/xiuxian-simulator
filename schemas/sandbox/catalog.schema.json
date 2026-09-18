@@ -1,0 +1,22 @@
+{
+ "$schema":"https://json-schema.org/draft/2020-12/schema",
+ "$id":"urn:wudao:sandbox:catalog:v1",
+ "title":"武道沙盒内容目录 v1",
+ "type":"object",
+ "required":["schemaVersion","regions","routes","maps","factions","actors","skills","items","quests","events","assets"],
+ "additionalProperties":false,
+ "properties":{
+  "schemaVersion":{"const":1},
+  "regions":{"type":"array","items":{"$ref":"#/$defs/entity"}},
+  "routes":{"type":"array","items":{"type":"object","required":["id","from","to","timeKe","risk","alternative"],"properties":{"id":{"type":"string","pattern":"^route\\.[a-z][a-z0-9-]*$"},"timeKe":{"type":"integer","minimum":1}}}},
+  "maps":{"type":"array","items":{"allOf":[{"$ref":"#/$defs/entity"},{"type":"object","required":["regionId","kind","neighbors","status"],"properties":{"neighbors":{"type":"array","uniqueItems":true,"items":{"type":"string"}},"kind":{"enum":["street","interior","wild","faction","dungeon"]}}}]}},
+  "factions":{"type":"array","items":{"allOf":[{"$ref":"#/$defs/entity"},{"type":"object","required":["joinable","status"],"properties":{"joinable":{"type":"boolean"}}}]}},
+  "actors":{"type":"array","items":{"allOf":[{"$ref":"#/$defs/entity"},{"type":"object","required":["side","position","maxHp","skillId","factionId","mapId","lifePolicy"],"properties":{"side":{"enum":["party","enemy"]},"position":{"type":"array","minItems":2,"maxItems":2,"items":{"type":"integer","minimum":0}},"maxHp":{"type":"number","exclusiveMinimum":0},"lifePolicy":{"enum":["player","protected","ordinary"]}}}]}},
+  "skills":{"type":"array","items":{"allOf":[{"$ref":"#/$defs/entity"},{"type":"object","required":["category","kind","range","cost","power","effect","assetId"],"properties":{"effect":{"enum":["damage","heal"]},"cost":{"type":"integer","minimum":1,"maximum":3},"range":{"type":"integer","minimum":1}}}]}},
+  "items":{"type":"array","items":{"allOf":[{"$ref":"#/$defs/entity"},{"type":"object","required":["kind","unique"],"properties":{"unique":{"type":"boolean"}}}]}},
+  "quests":{"type":"array","items":{"allOf":[{"$ref":"#/$defs/entity"},{"type":"object","required":["mapId","actorIds","itemIds","eventIds","rewardKey","fallback","status"]}]}},
+  "events":{"type":"array","items":{"allOf":[{"$ref":"#/$defs/entity"},{"type":"object","required":["questId","status"]}]}},
+  "assets":{"type":"array","items":{"type":"object","required":["id","kind","source"],"properties":{"id":{"type":"string","pattern":"^asset\\.[a-z][a-z0-9-]*$"},"source":{"type":"string","minLength":1},"kind":{"enum":["atlas","backdrop","procedural"]}}}}
+ },
+ "$defs":{"entity":{"type":"object","required":["id","name"],"properties":{"id":{"type":"string","pattern":"^[a-z]+\\.[a-z][a-z0-9-]*$"},"name":{"type":"string","minLength":1}}}}
+}
