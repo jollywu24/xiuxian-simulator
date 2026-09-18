@@ -84,10 +84,12 @@ test("automated verification owns the browser and gates Pages deployment", () =>
   assert.equal(packageJson.scripts["smoke:online"], "node scripts/run-browser-regression.mjs online");
   assert.match(verification, /workflow_call:/);
   assert.match(verification, /fetch-depth: 2/);
+  assert.match(verification, /package-manager-cache: false/);
   assert.match(verification, /npm run verify/);
   assert.match(deployment, /quality:\s*\n\s+uses: \.\/\.github\/workflows\/test-web\.yml/);
   assert.match(deployment, /deploy:\s*\n\s+needs: quality/);
   assert.match(deployment, /node scripts\/smoke-deployed\.mjs/);
+  assert.match(deployment, /package-manager-cache: false/);
   assert.match(deployment, /npm run smoke:online/);
 });
 
