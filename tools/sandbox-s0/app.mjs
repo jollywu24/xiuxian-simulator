@@ -27,7 +27,10 @@ try{
  function send(command){const result=applyCommand(state,catalog,command);if(!result.ok){$('#feedback').textContent=result.reason;return false;}state=result.state;renderer.consume(state.events,performance.now());update();$('#feedback').textContent=command.type==='move'?'脚步落定，可继续选择下一步。':command.type==='select'?`已转向${actorById(state,state.selectedId).name}。`:state.log.at(-1);return true;}
  let raf;
  function tick(time){renderer.draw(state,time,{reachable:mode==='move'?reachable:[],hover});raf=requestAnimationFrame(tick);}requestAnimationFrame(tick);
- async function report(kind,payload){const r=await fetch('/__s0/report',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({kind,payload})});if(!r.ok)throw Error('报告未能保存，请复制页面上的结果。');}
+ async function report(kind,payload){
+  if(document.querySelector('meta[name="wudao-s0-static"]'))return;
+  const r=await fetch('/__s0/report',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({kind,payload})});if(!r.ok)throw Error('报告未能保存，请复制页面上的结果。');
+ }
  async function benchmark(){
   if(benchmarking)return;benchmarking=true;const original=renderer.kind,count=renderer.stressCount,results=[];
   try{
@@ -80,7 +83,7 @@ try{
  addEventListener('keydown',e=>{if(benchmarking||e.target.matches('input,select,textarea')||e.altKey||e.ctrlKey||e.metaKey)return;const moves={ArrowUp:[0,-1],w:[0,-1],ArrowDown:[0,1],s:[0,1],ArrowLeft:[-1,0],a:[-1,0],ArrowRight:[1,0],d:[1,0]};if(moves[e.key]){e.preventDefault();const a=actorById(state,state.selectedId),d=moves[e.key];send({type:'move',target:[a.position[0]+d[0],a.position[1]+d[1]]});}else if(/^[1-4]$/.test(e.key)){e.preventDefault();send({type:'select',actorId:state.actors[Number(e.key)-1].id});}else if(e.key===' '&&e.target===stage){e.preventDefault();send({type:'end'});}});
  $('#topology').addEventListener('change',()=>{state=createSession(catalog,{topology:$('#topology').value});renderer.motion.clear();renderer.effects=[];update();$('#feedback').textContent='对照场地已重新布置。';});
  $('#backend').addEventListener('change',async()=>{try{await renderer.setBackend($('#backend').value);}catch(e){$('#backend').value=renderer.kind;$('#feedback').textContent=e.message;}});
- $('#viewport').addEventListener('change',()=>{const value=$('#viewport').value;if(window.top===window)location.href=value==='auto'?'/':`/?viewport=${value}`;else window.top.location.href=value==='auto'?'/':`/?viewport=${value}`;});
+ $('#viewport').addEventListener('change',()=>{const value=$('#viewport').value,url=new URL(location.href);if(value==='auto')url.searchParams.delete('viewport');else url.searchParams.set('viewport',value);if(window.top===window)location.href=url;else window.top.location.href=url;});
  addEventListener('pagehide',()=>{cancelAnimationFrame(raf);renderer.dispose();});
  update();document.body.dataset.ready='true';
 }catch(e){$('#fatal').hidden=false;$('#fatal-message').textContent=e.message;recordError(e.message);}

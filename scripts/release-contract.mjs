@@ -1,5 +1,13 @@
 export const RELEASE_CONTRACT_VERSION = 10;
 
+export const SANDBOX_S0_DEPLOY_RESOURCES = Object.freeze([
+  { path: "sandbox-s0/index.html", contentType: "text/html", minBytes: 1024 },
+  { path: "sandbox-s0/app.mjs", contentType: "text/javascript", minBytes: 4096 },
+  { path: "sandbox-s0/data/catalog.json", contentType: "application/json", minBytes: 1024 },
+  { path: "sandbox-s0/assets/qinghe-courtyard-v1.png", contentType: "image/png", minBytes: 100000 },
+  { path: "sandbox-s0/assets/party-motion-atlas-v1.png", contentType: "image/png", minBytes: 100000 },
+]);
+
 export const RELEASE_ENTRY_RESOURCES = Object.freeze([
   { path: "world3d.mjs", contentType: "text/javascript", minBytes: 1024 },
   { path: "world3d-models.mjs", contentType: "text/javascript", minBytes: 1024 },

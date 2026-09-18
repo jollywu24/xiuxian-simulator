@@ -1,6 +1,7 @@
 import {
   RELEASE_CONTRACT_VERSION,
   RELEASE_CRITICAL_RESOURCES,
+  SANDBOX_S0_DEPLOY_RESOURCES,
   cacheBustedUrl,
 } from "./release-contract.mjs";
 
@@ -63,7 +64,7 @@ async function verifyResource(resource) {
 
 const published = await waitForPublishedBuild();
 const resources = await Promise.all(
-  RELEASE_CRITICAL_RESOURCES
+  [...RELEASE_CRITICAL_RESOURCES, ...SANDBOX_S0_DEPLOY_RESOURCES]
     .filter((resource) => resource.path !== "index.html")
     .map(verifyResource),
 );

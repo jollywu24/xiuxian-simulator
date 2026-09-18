@@ -29,3 +29,5 @@ npm run verify:quick
 ![青河渡口实机](evidence/day.jpg)
 
 已知边界：无完整多解任务、门派、治安、全方向角色动画、音频或桌面发行包；这些属于S1及以后。旧存档键不变，练武记录使用wudao.s0.workbench.v1。当前交付未部署为线上新版。
+
+GitHub Pages 部署时会运行 `npm run build:s0-pages`，将工作台生成到独立的 `/sandbox-s0/` 子路径；根路径仍是正式游戏。静态体验中的验收演练和性能采样只在页面显示结果，不向仓库回写证据。

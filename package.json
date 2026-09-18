@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "node scripts/sandbox/serve-s0.mjs",
     "serve:s0": "node scripts/sandbox/serve-s0.mjs",
+    "build:s0-pages": "node scripts/build-sandbox-s0-site.mjs",
     "validate:s0": "node scripts/sandbox/validate-s0.mjs",
     "test:s0": "node --test tests/sandbox-s0.test.mjs",
     "test": "node --test",

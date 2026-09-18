@@ -1052,8 +1052,8 @@ function sceneContextHtml() {
 // Keep the narrative engine authoritative; the 3D layer owns only presentation.
 let threeWorld = null;
 let threeLoading = null;
-let worldView = 'three';
-try { worldView = localStorage.getItem('wudao-world-view') === 'flat' ? 'flat' : 'three'; } catch {}
+let worldView = 'flat';
+try { worldView = localStorage.getItem('wudao-world-view') === 'three' ? 'three' : 'flat'; } catch {}
 
 function currentWorldPresentation() {
   const scene = getScenePresentation(state.screen, state);

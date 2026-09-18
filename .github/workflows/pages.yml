@@ -41,6 +41,9 @@ jobs:
         run: |
           mkdir -p published/web/combat-lab
           cp -R combat-preview/web/. published/web/combat-lab/
+      - name: Build S0 sandbox experience
+        working-directory: published
+        run: node scripts/build-sandbox-s0-site.mjs
       - name: Stamp published build
         id: build
         shell: bash

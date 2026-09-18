@@ -23,7 +23,11 @@ export function collectRuntimeAssetReferences(webRoot) {
   for (const source of sources) {
     const contents = fs.readFileSync(source, "utf8");
     for (const match of contents.matchAll(/(?:\.\/)?assets\/[^"'`()\s?]+\.(?:jpeg|jpg|png|svg|webp|woff2)/gi)) {
-      if (!match[0].includes("${")) references.add(match[0].replace(/^\.\//, ""));
+      if (!match[0].includes("${")) {
+        const target = path.resolve(path.dirname(source), match[0]);
+        const relative = path.relative(webRoot, target).split(path.sep).join("/");
+        if (!relative.startsWith("../") && !path.isAbsolute(relative)) references.add(relative);
+      }
     }
   }
   for (const asset of APPEARANCE_RUNTIME_ASSETS) references.add(asset.replace(/^\.\//, ""));

@@ -33,6 +33,14 @@ test("runtime and critical release resources resolve through one contract", () =
   assert.ok(collectPublishedAssetFiles(webRoot).every((resource) => !resource.includes("/UI_Renderings/")));
 });
 
+test("nested static experiences resolve assets relative to their own source files", () => {
+  const references = collectRuntimeAssetReferences(webRoot);
+  if (fs.existsSync(path.join(webRoot, "sandbox-s0", "app.mjs"))) {
+    assert.ok(references.includes("sandbox-s0/assets/qinghe-courtyard-v1.png"));
+    assert.ok(references.includes("sandbox-s0/assets/party-motion-atlas-v1.png"));
+  }
+});
+
 test("runtime modules and entry assets share one cache version", () => {
   const versions = collectRuntimeCacheVersions(webRoot);
   assert.equal(versions.length, 1, `mixed runtime cache versions: ${versions.join(", ")}`);
@@ -55,6 +63,13 @@ test("debug state interface is opt-in and exposes the stamped build", () => {
   assert.match(app, /commands,/);
   assert.match(app, /dataset\.appReady = "true"/);
   assert.match(app, /buildSha: BUILD_SHA/);
+});
+
+test("the experimental 3D world is opt-in and preserves the published flat scene by default", () => {
+  const app = read("web/wudao-app.mjs");
+  assert.match(app, /let worldView = 'flat'/);
+  assert.match(app, /getItem\('wudao-world-view'\) === 'three' \? 'three' : 'flat'/);
+  assert.match(app, /data-action="enable-three-world"/);
 });
 
 test("automated verification owns the browser and gates Pages deployment", () => {
