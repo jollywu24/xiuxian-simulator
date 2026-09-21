@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#273a33"><link rel="icon" href="data:,"> <title>武道 · 临水镇</title><link rel="stylesheet" href="./style.css?v=1"></head>
+<body>
+<canvas id="world" aria-label="临水镇，可用方向键行走，E与附近人物交谈"></canvas>
+<div id="veil"></div>
+<header><div class="brand"><span class="seal">武道</span><div><h1>临水镇</h1><p id="location">大曜 · 东南水乡</p></div></div><div class="top-actions"><button data-action="journal" aria-label="查看行录">行录 <kbd>J</kbd></button><button data-action="settings" aria-label="查看行旅设置">☷</button></div></header>
+<aside id="quest"><span class="eyebrow">江湖事 · 壹</span><h2>渡口旧账</h2><p id="objective">先去茶摊，向周伯打听渡口的争执</p><div class="quest-rule"></div><span class="small" id="clue-count">一盏茶，半日江湖</span></aside>
+<button id="map-button" data-action="map" aria-label="打开临水镇行路图"><canvas id="minimap" width="180" height="180"></canvas><span>临水镇 <kbd>M</kbd></span></button>
+<div id="chapter"><span>初 秋 · 午 后</span><strong>一水分两岸，旧事入新茶。</strong></div>
+<div id="prompt" hidden><button data-action="interact"><kbd>E</kbd> <span></span></button></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<footer><div class="vitals"><div class="portrait">叶</div><div><strong>叶无尘 <small>初入江湖</small></strong><div class="meter"><i id="hp-bar"></i><span id="hp">气血 120 / 120</span></div><div class="meter qi"><i id="mp-bar"></i><span id="mp">内力 36 / 36</span></div></div></div><div class="controls">W A S D 行走<span>Shift 快走 · 点击地面寻路 · E 交谈</span></div><nav><button data-action="inventory">行囊 <kbd>I</kbd></button><button data-action="map">行路 <kbd>M</kbd></button><button data-action="journal">见闻 <kbd>J</kbd></button></nav></footer>
+<div id="touch-pad" aria-label="方向控制"><button data-move="w" aria-label="向前走">↑</button><button data-move="a" aria-label="向左走">←</button><button data-move="s" aria-label="向后走">↓</button><button data-move="d" aria-label="向右走">→</button></div>
+<section id="battle" hidden aria-label="仓院交锋"></section>
+<div id="overlay" hidden><section id="panel" role="dialog" aria-modal="true" aria-labelledby="panel-title" tabindex="-1"></section></div>
+<div id="loading"><span class="seal">武道</span><h2>水声渐近，临水已到。</h2><p>正在铺开眼前山河……</p><a href="../../index.html">返回大曜江湖</a></div>
+<input id="import-file" type="file" accept="application/json,.json" hidden>
+<script type="module">
+import('./src/main.mjs?v=1').catch(error=>{console.error(error);const el=document.querySelector('#loading');el.hidden=false;el.querySelector('h2').textContent='山河暂未展开';el.querySelector('p').textContent='请使用支持 WebGL2 的浏览器，开启图形加速后重试。';const a=document.createElement('button');a.textContent='重新入镇';a.onclick=()=>location.reload();el.append(a);});
+</script>
+</body></html>

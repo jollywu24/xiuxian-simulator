@@ -21,7 +21,8 @@
     "smoke:online": "node scripts/run-browser-regression.mjs online",
     "test:browser": "node scripts/run-browser-regression.mjs all",
     "serve": "node scripts/serve-web.mjs",
-    "build": "node scripts/build-three-site.mjs"
+    "build": "node scripts/build-three-site.mjs",
+    "smoke:hd2d": "node scripts/run-browser-regression.mjs hd2d"
   },
   "dependencies": {
     "three": "0.186.0"

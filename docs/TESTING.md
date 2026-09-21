@@ -108,3 +108,7 @@ npm run verify
 - 线上失败：按`docs/RELEASE.md`区分构建号、HTTP资源和真实浏览器启动三层。
 
 不得用规则测试替代真实浏览器布局检查，也不得声称未实际执行的测试已经通过。
+
+## 临水镇 HD-2D
+
+`node --test tests/hd2d.test.mjs` 检查独立任务、导航、碰撞、战斗与存档。`npm run smoke:hd2d` 自启 HTTP 与隔离 Chrome，走完调查、交易、桥面往返、双敌战斗、交付和重载，检查三种视口与运行异常。该重三维流程独立于正篇 `smoke`，发布本切片时与 `npm run verify` 分别执行。可设 `HD2D_FAST=1` 使用低画质通关；高画质截图需另行检查。证据默认位于 `/tmp/wudao-hd2d-evidence/`，具体边界见 [实现说明](hd2d/IMPLEMENTATION.md)。

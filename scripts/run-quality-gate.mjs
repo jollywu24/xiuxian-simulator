@@ -5,6 +5,12 @@ import { fileURLToPath } from "node:url";
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 const syntaxTargets = [
+  "web/demos/jiangnan-hd2d/src/main.mjs",
+  "web/demos/jiangnan-hd2d/src/render.mjs",
+  "web/demos/jiangnan-hd2d/src/art.mjs",
+  "web/demos/jiangnan-hd2d/src/world.mjs",
+  "web/demos/jiangnan-hd2d/src/rules.mjs",
+  "scripts/cdp-hd2d.mjs",
   "web/wudao-app.mjs",
   "web/world3d.mjs",
   "web/world3d-models.mjs",

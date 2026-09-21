@@ -15,6 +15,7 @@ const suites = {
   origins: ["scripts/cdp-origins.mjs"],
   combat: ["scripts/cdp-combat-lab.mjs"],
   appearance: ["scripts/cdp-appearance.mjs"],
+  hd2d: ["scripts/cdp-hd2d.mjs"],
   online: ["scripts/cdp-online-smoke.mjs"],
   all: ["scripts/cdp-smoke.mjs", "scripts/cdp-origins.mjs", "scripts/cdp-combat-lab.mjs", "scripts/cdp-appearance.mjs"],
 };
@@ -162,6 +163,7 @@ try {
     "--disable-default-apps",
     "--disable-dev-shm-usage",
     "--disable-gpu",
+    "--enable-unsafe-swiftshader",
     "--disable-extensions",
     "--no-default-browser-check",
     "--no-first-run",
