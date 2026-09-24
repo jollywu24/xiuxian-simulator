@@ -1,0 +1,27 @@
+{
+  "status": "static_style_candidate_unaccepted",
+  "parent": "style-gate-v2/hero-before-style-gate.blend",
+  "master": "hero-v2.blend",
+  "method": "incremental editable 3D mesh and material revision; same rig and frozen camera",
+  "changed": [
+    "hair silhouette",
+    "sleeve volume",
+    "skirt volume",
+    "collar",
+    "belt"
+  ],
+  "unchanged": [
+    "camera 35 degrees",
+    "orthographic scale 3.1",
+    "root anchor 80,112",
+    "animation actions",
+    "right-hand sword",
+    "left-hip sheath"
+  ],
+  "renders": [
+    "s-idle-source-01.png",
+    "se-idle-source-01.png"
+  ],
+  "visual_approved": false,
+  "local_review": "rejected after normal-size Godot comparison: still reads as a simplified model"
+}

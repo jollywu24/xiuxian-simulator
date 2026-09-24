@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/validation/composition-refined.tscn" id="1_82dqa"]
+
+[node name="LinshuiP2TwoDBatchPreview" instance=ExtResource("1_82dqa")]
+character_2d_scene_source = "res://assets/characters/hero/2d-batch-v1"

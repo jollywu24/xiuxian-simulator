@@ -1,0 +1,239 @@
+{
+  "status": "incomplete_motion_review_not_p2_accepted",
+  "format": "independent_complete_2d_png",
+  "canvas": [
+    256,
+    256
+  ],
+  "foot_pivot": [
+    128,
+    220
+  ],
+  "fixed_translation": [
+    48,
+    108
+  ],
+  "per_frame_alignment": false,
+  "sequences": {
+    "s-idle": 4,
+    "se-idle": 4,
+    "s-walk": 5,
+    "se-thrust": 1
+  },
+  "required_for_p2": {
+    "s-idle": 4,
+    "se-idle": 4,
+    "s-walk": 8,
+    "se-thrust": 12
+  },
+  "missing": {
+    "s-idle": 0,
+    "se-idle": 0,
+    "s-walk": 3,
+    "se-thrust": 11
+  },
+  "frames": [
+    {
+      "sequence": "s-idle",
+      "index": 1,
+      "source_index": 1,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/review-normalized/s/idle/01.png",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-motion-review-v1/frames/s-idle-001.png",
+      "alpha_bbox": [
+        107,
+        140,
+        148,
+        220
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "s-idle",
+      "index": 2,
+      "source_index": 2,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/review-normalized/s/idle/02.png",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-motion-review-v1/frames/s-idle-002.png",
+      "alpha_bbox": [
+        107,
+        141,
+        149,
+        219
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "s-idle",
+      "index": 3,
+      "source_index": 3,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/review-normalized/s/idle/03.png",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-motion-review-v1/frames/s-idle-003.png",
+      "alpha_bbox": [
+        107,
+        140,
+        149,
+        220
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "s-idle",
+      "index": 4,
+      "source_index": 4,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/review-normalized/s/idle/04.png",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-motion-review-v1/frames/s-idle-004.png",
+      "alpha_bbox": [
+        107,
+        140,
+        149,
+        220
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "se-idle",
+      "index": 1,
+      "source_index": 1,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/review-normalized/se/idle/01.png",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-motion-review-v1/frames/se-idle-001.png",
+      "alpha_bbox": [
+        111,
+        140,
+        151,
+        219
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "se-idle",
+      "index": 2,
+      "source_index": 2,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/review-normalized/se/idle/02.png",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-motion-review-v1/frames/se-idle-002.png",
+      "alpha_bbox": [
+        110,
+        140,
+        151,
+        219
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "se-idle",
+      "index": 3,
+      "source_index": 3,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/review-normalized/se/idle/03.png",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-motion-review-v1/frames/se-idle-003.png",
+      "alpha_bbox": [
+        110,
+        139,
+        151,
+        219
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "se-idle",
+      "index": 4,
+      "source_index": 4,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/review-normalized/se/idle/04.png",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-motion-review-v1/frames/se-idle-004.png",
+      "alpha_bbox": [
+        110,
+        139,
+        151,
+        219
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "s-walk",
+      "index": 1,
+      "source_index": 1,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/review-normalized/s/walk/01.png",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-motion-review-v1/frames/s-walk-001.png",
+      "alpha_bbox": [
+        108,
+        140,
+        150,
+        219
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "s-walk",
+      "index": 2,
+      "source_index": 2,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/review-normalized/s/walk/02.png",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-motion-review-v1/frames/s-walk-002.png",
+      "alpha_bbox": [
+        107,
+        140,
+        150,
+        220
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "s-walk",
+      "index": 3,
+      "source_index": 3,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/review-normalized/s/walk/03.png",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-motion-review-v1/frames/s-walk-003.png",
+      "alpha_bbox": [
+        108,
+        140,
+        150,
+        218
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "s-walk",
+      "index": 4,
+      "source_index": 4,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/review-normalized/s/walk/04.png",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-motion-review-v1/frames/s-walk-004.png",
+      "alpha_bbox": [
+        107,
+        140,
+        151,
+        219
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "s-walk",
+      "index": 5,
+      "source_index": 5,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/review-normalized/s/walk/05.png",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-motion-review-v1/frames/s-walk-005.png",
+      "alpha_bbox": [
+        107,
+        140,
+        150,
+        218
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "se-thrust",
+      "index": 1,
+      "source_index": 7,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/review-normalized/se/thrust/07.png",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-motion-review-v1/frames/se-thrust-001.png",
+      "alpha_bbox": [
+        101,
+        150,
+        184,
+        218
+      ],
+      "safe": true
+    }
+  ],
+  "all_safe": true,
+  "limitations": [
+    "S walk has only five drawn frames, not the required eight.",
+    "SE thrust contains only the seventh key pose, not an animation.",
+    "Existing S walk frames have not passed continuous motion review."
+  ]
+}

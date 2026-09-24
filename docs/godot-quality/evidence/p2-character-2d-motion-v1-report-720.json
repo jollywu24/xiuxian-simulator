@@ -1,0 +1,83 @@
+{
+	"adapter": "NVIDIA GeForce RTX 5060",
+	"attack_input": {},
+	"candidate_thrust_frames": 1,
+	"candidate_walk_frames": 5,
+	"frames": [
+		{
+			"actor_position": "(-5.0, 0.000107, 2.6)",
+			"actual_frame": 0,
+			"file": "p2-character-2d-motion-v1-walk-01-720.png",
+			"index": 1,
+			"offset": "(0.0, 92.0)",
+			"pixel_size": 0.0219999998807907,
+			"playing": false,
+			"saved": true,
+			"sequence": "s-walk",
+			"sprite_scale": "(1.0, 1.0, 1.0)"
+		},
+		{
+			"actor_position": "(-5.0, 0.000107, 2.6)",
+			"actual_frame": 1,
+			"file": "p2-character-2d-motion-v1-walk-02-720.png",
+			"index": 2,
+			"offset": "(0.0, 92.0)",
+			"pixel_size": 0.0219999998807907,
+			"playing": false,
+			"saved": true,
+			"sequence": "s-walk",
+			"sprite_scale": "(1.0, 1.0, 1.0)"
+		},
+		{
+			"actor_position": "(-5.0, 0.000107, 2.6)",
+			"actual_frame": 2,
+			"file": "p2-character-2d-motion-v1-walk-03-720.png",
+			"index": 3,
+			"offset": "(0.0, 92.0)",
+			"pixel_size": 0.0219999998807907,
+			"playing": false,
+			"saved": true,
+			"sequence": "s-walk",
+			"sprite_scale": "(1.0, 1.0, 1.0)"
+		},
+		{
+			"actor_position": "(-5.0, 0.000107, 2.6)",
+			"actual_frame": 3,
+			"file": "p2-character-2d-motion-v1-walk-04-720.png",
+			"index": 4,
+			"offset": "(0.0, 92.0)",
+			"pixel_size": 0.0219999998807907,
+			"playing": false,
+			"saved": true,
+			"sequence": "s-walk",
+			"sprite_scale": "(1.0, 1.0, 1.0)"
+		},
+		{
+			"actor_position": "(-5.0, 0.000107, 2.6)",
+			"actual_frame": 4,
+			"file": "p2-character-2d-motion-v1-walk-05-720.png",
+			"index": 5,
+			"offset": "(0.0, 92.0)",
+			"pixel_size": 0.0219999998807907,
+			"playing": false,
+			"saved": true,
+			"sequence": "s-walk",
+			"sprite_scale": "(1.0, 1.0, 1.0)"
+		}
+	],
+	"method": "AnimatedSprite3D timed playback checked separately, then each independent PNG captured from real Forward+ viewport with sprite stopped and fixed actor transform",
+	"playback_observed": {
+		"s-walk": [
+			0,
+			1,
+			2,
+			3,
+			4
+		]
+	},
+	"renderer": "forward_plus",
+	"required_thrust_frames": 12,
+	"required_walk_frames": 8,
+	"stage": "P2-incomplete-motion-diagnostic",
+	"visual_approved": false
+}

@@ -5,11 +5,19 @@
   "blockers": [
     {
       "id": "CHR-MOTION-SHEET-003",
-      "status": "sheet_route_paused_controlled_rig_sample_in_review",
+      "status": "complete_2d_batch_visual_unaccepted",
       "impact": "P2 motion acceptance and dependent character production",
-      "evidence": "review/p2-recomposition-review.md; art_source/linshui-quality/v1/characters/hero-v2/motion-samples/",
-      "cause": "Three whole-sheet generation/edit attempts still lack clear passing poses; fixed-grid frames have 4-6 logical pixels of row-to-row foot drift.",
-      "resolution": "User selected retaining identity and controllable skeletal animation. Existing true 3D master refined; 22 bounded sample renders produced, not accepted. No paperdoll and no per-frame transform correction."
+      "evidence": "review/p2-2d-batch-v1.md; evidence/p2-character-2d-batch-v1-report-1080.json; evidence/p2-character-2d-batch-v1-report-720.json",
+      "cause": "Current 8-frame S walk and 12-frame SE thrust batch plays technically, but the walk loop is not visually accepted and SE thrust 03-04-05 changes visible height and sword direction abruptly. P2 still lacks SE walk 8 and S thrust 12.",
+      "resolution": "Revise only identified complete-2D source frames and recheck at fixed engine scale; then make the remaining 20 P2 slots. Do not apply per-frame runtime transform fixes or return to the rejected 3D body route."
+    },
+    {
+      "id": "CHR-STYLE-GATE-002",
+      "status": "local_visual_rejected",
+      "impact": "P2 character art, key-pose and continuous-motion gates",
+      "evidence": "review/style-gate-v2.md; evidence/style-gate-v2-before-after-1080.png; evidence/p2-style-gate-v2-report-1080.json",
+      "cause": "The editable rig source remains visibly simplified at normal game size: round-cap hair, tubular sleeves, flat white front panels and weak material separation. Repeated simple geometry refinements did not close the style-target gap.",
+      "resolution": "User corrected the art direction to complete 2D character frames. Stop 3D modeling route. A 28-frame independent-PNG candidate now runs in Godot, but editable layered 2D source and accepted animation remain pending."
     },
     {
       "id": "P2-VISUAL-UNACCEPTED",
@@ -20,7 +28,7 @@
     }
   ],
   "pending_work": [
-    "Accepted S/SE idle/walk/thrust 48-slot set",
+    "Targeted revisions and art acceptance of the current 28-frame 2D batch, then remaining 20 P2 frames and editable layered source",
     "Accepted environment P2 appearance and sunlight-to-eaves character integration",
     "Remaining P3 assets and directions",
     "P4 real interactions, feedback, and audio",
@@ -29,6 +37,6 @@
     "30-second warmup and 120-second Release performance sample",
     "Full distribution/license review"
   ],
-  "not_blocked_by": "Built-in image_gen successfully produced four source outputs this turn; no current quota failure observed.",
+  "not_blocked_by": "Built-in image_gen produced 19 new complete action frames and three targeted revisions this turn; no current quota failure observed.",
   "historical_blocker_record": "Prior 2026-09-23 failures preserved in review/defects.md and STATUS.md; old quotas are not asserted current."
 }

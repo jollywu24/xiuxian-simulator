@@ -2,9 +2,13 @@
 
 ## 当前生产口径（2026-09-24）
 
-以下旧母版说明保留为历史。当前以 `docs/godot-quality/CHARACTER_PRODUCTION_STANDARD.md` v3 为准：用户已解除“必须逐帧生成”和“必须同rig渲染”，先以动作连续、造型稳定的小样选择管线。`hero-v2.blend` 不是强制唯一主管线；被拒的 `hero-v2-puppet.blend` 不恢复使用。
+最新：用户明确要求以**二维完整人物图**为美术源，并先生成整组再修坏帧。`2d-batch-v1/`现有S步行8张、SE直刺12张完整人物源图及3张定向第二稿；连同既有S/SE待机各4张，统一采样为28张独立256×256候选PNG，脚锚(128,220)。来源哈希和边界在 `2d-batch-v1/frame-contract.json`，提示词在 `2d-batch-v1/generation-record.md`，实机缺陷与技术检查见 `docs/godot-quality/review/p2-2d-batch-v1.md`。动作艺术尚未通过，P2另缺SE步行8张和S直刺12张。旧 `2d-png-256-v1/` 与 `2d-motion-review-v1/` 仅作静止/5帧历史诊断。`hero-v2.blend`及`style-gate-v2/`只保留失败三维路线对照，不是当前人物源。
 
-`generated-frames/` 有未验收的整体人物AI候选；`review-normalized/` 是固定采样预览，不能宣称逐帧已精修。`review-normalized/s/idle/01.png` 的精确副本被独立P1场景作为静止身份/尺寸试片使用，属于明确标记的灰盒评审，不是正式图集、完整动画或用户已批准造型。后续先做完整步行与直刺小样，再冻结源管线。部分历史生成帧的精确提示词记录仍缺失，须在生成清单中如实标识。
+历史：曾选择可控骨骼路线，`hero-v2.blend`保留当时的可编辑母版，`style-gate-v2/hero-before-style-gate.blend`保留修订前状态。`scripts/godot-quality/refine_hero_style_gate.py`、`package_style_gate.py`和`docs/godot-quality/review/style-gate-v2.md`记录该试验及拒收；用户之后已改选以完整二维画作为主线，不能将这份三维母版当成现行角色美术母版。
+
+以下旧母版说明保留为历史。当前以 `docs/godot-quality/CHARACTER_PRODUCTION_STANDARD.md` v3 为准：用户已解除“必须逐帧生成”和“必须同rig渲染”，被拒的 `hero-v2-puppet.blend` 不恢复使用。
+
+`generated-frames/` 有未验收的整体人物AI候选；`review-normalized/` 是固定采样预览，不能宣称逐帧已精修。`review-normalized/s/idle/01.png` 的精确副本曾作P1静止试片。当前批量帧也只是候选，不是正式验收图集或用户已批准造型；先逐问题修订和实机复测。部分更早历史帧的精确提示词仍缺失，须在清单中如实标识。
 
 ## 历史：2026-09-23 同rig尝试（已拒收，约束已被取代）
 

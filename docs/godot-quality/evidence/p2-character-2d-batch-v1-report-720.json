@@ -1,0 +1,30 @@
+{
+	"adapter": "NVIDIA GeForce RTX 5060",
+	"character": "complete 2D S walk 8 and SE thrust 12; NOT ACCEPTED",
+	"checks": [
+		{
+			"details": {},
+			"id": "forward_plus",
+			"pass": true
+		},
+		{
+			"details": {},
+			"id": "fixed_actor_scale",
+			"pass": true
+		},
+		{
+			"details": {},
+			"id": "capture_overview",
+			"pass": true
+		}
+	],
+	"failures": [],
+	"projected_hero_body_px": 67.4043579101563,
+	"renderer": "forward_plus",
+	"stage": "P2-2D-batch-art-candidate",
+	"viewport": [
+		1280.0,
+		720.0
+	],
+	"visual_approved": false
+}

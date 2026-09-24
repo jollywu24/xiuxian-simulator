@@ -1,0 +1,25 @@
+{
+	"adapter": "NVIDIA GeForce RTX 5060",
+	"frames": [
+		{
+			"actor_position": "(-5.0, 0.000107, 2.6)",
+			"direction": "s",
+			"file": "p2-style-gate-v2-s-720.png",
+			"offset": "(0.0, 48.0)",
+			"pixel_size": 0.0219999998807907,
+			"saved": true
+		},
+		{
+			"actor_position": "(-5.0, 0.000107, 2.6)",
+			"direction": "se",
+			"file": "p2-style-gate-v2-se-720.png",
+			"offset": "(0.0, 48.0)",
+			"pixel_size": 0.0219999998807907,
+			"saved": true
+		}
+	],
+	"method": "real Forward+ captures; fixed actor transform and camera",
+	"renderer": "forward_plus",
+	"stage": "P2-static-style-gate",
+	"visual_approved": false
+}

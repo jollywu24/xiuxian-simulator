@@ -1,0 +1,519 @@
+{
+  "status": "complete_s_walk_and_se_thrust_batch_candidate_not_art_accepted",
+  "production": "whole 2D images; built-in image_gen; one source drawing per action frame except SE thrust 07 reused from prior generated key",
+  "canvas": [
+    256,
+    256
+  ],
+  "foot_pivot": [
+    128,
+    220
+  ],
+  "source_canvas": [
+    1402,
+    1122
+  ],
+  "uniform_resized_size": [
+    126,
+    101
+  ],
+  "fixed_paste": [
+    70,
+    126
+  ],
+  "per_frame_bbox_alignment": false,
+  "sequences": {
+    "s-idle": 4,
+    "se-idle": 4,
+    "s-walk": 8,
+    "se-thrust": 12
+  },
+  "required_for_p2": {
+    "s-idle": 4,
+    "se-idle": 4,
+    "s-walk": 8,
+    "se-walk": 8,
+    "s-thrust": 12,
+    "se-thrust": 12
+  },
+  "frames": [
+    {
+      "sequence": "s-idle",
+      "frame": 1,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/review-normalized/s/idle/01.png",
+      "source_sha256": "1bcf87554e52d08bb051ec53731232da14505f9a29d53c17c5f0f9b9ba23df1d",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/frames/s-idle-001.png",
+      "alpha_bbox": [
+        107,
+        140,
+        148,
+        220
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "s-idle",
+      "frame": 2,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/review-normalized/s/idle/02.png",
+      "source_sha256": "e1e8c32f1df22a322ed9fd21af6ee023780f7dc916335147311d648f95ee3fd8",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/frames/s-idle-002.png",
+      "alpha_bbox": [
+        107,
+        141,
+        149,
+        219
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "s-idle",
+      "frame": 3,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/review-normalized/s/idle/03.png",
+      "source_sha256": "61a0ee6a1a5b858bf453cd4ce6ec13e820c680dbc34b61261112fb834b8e8d6f",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/frames/s-idle-003.png",
+      "alpha_bbox": [
+        107,
+        140,
+        149,
+        220
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "s-idle",
+      "frame": 4,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/review-normalized/s/idle/04.png",
+      "source_sha256": "9852567b36813e94ba1d425b7cf68d394f5ede7e4e5fb5cbdaf88b480b32ef30",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/frames/s-idle-004.png",
+      "alpha_bbox": [
+        107,
+        140,
+        149,
+        220
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "se-idle",
+      "frame": 1,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/review-normalized/se/idle/01.png",
+      "source_sha256": "8529fc05fde4578e73213eeaf2a06fe1eb1f726515ce01e289609f0555d0fdf1",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/frames/se-idle-001.png",
+      "alpha_bbox": [
+        111,
+        140,
+        151,
+        219
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "se-idle",
+      "frame": 2,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/review-normalized/se/idle/02.png",
+      "source_sha256": "3189aad3e75ab22349aa3e4f0294bcbf6f385f0dbca8aa09b0759f2855cd8bfc",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/frames/se-idle-002.png",
+      "alpha_bbox": [
+        110,
+        140,
+        151,
+        219
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "se-idle",
+      "frame": 3,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/review-normalized/se/idle/03.png",
+      "source_sha256": "fc2afa419adceaf08d7135aa2b0a396896336edcddcea62d946a529a2b21fe65",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/frames/se-idle-003.png",
+      "alpha_bbox": [
+        110,
+        139,
+        151,
+        219
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "se-idle",
+      "frame": 4,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/review-normalized/se/idle/04.png",
+      "source_sha256": "b8ddc732cad05626b1e05e23aba0e666ab70afa8382f4cd08d9a51b91b606a5c",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/frames/se-idle-004.png",
+      "alpha_bbox": [
+        110,
+        139,
+        151,
+        219
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "s-walk",
+      "frame": 1,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/source/s/walk/01.png",
+      "source_canvas": [
+        1402,
+        1122
+      ],
+      "source_sha256": "72c54359a19efb5d3be09ec537f70e6907cf989a4f2bea873e8ebcaa8f7f66ab",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/frames/s-walk-001.png",
+      "alpha_bbox": [
+        106,
+        139,
+        148,
+        221
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "s-walk",
+      "frame": 2,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/source/s/walk/02.png",
+      "source_canvas": [
+        1402,
+        1122
+      ],
+      "source_sha256": "2d3099582cd3e88cbc3d9843ad1b439139d717f4e8374ce21035742f2c01a201",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/frames/s-walk-002.png",
+      "alpha_bbox": [
+        106,
+        139,
+        149,
+        221
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "s-walk",
+      "frame": 3,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/source/s/walk/03.png",
+      "source_canvas": [
+        1402,
+        1122
+      ],
+      "source_sha256": "2e26386297aab0b63a1358ed7aee87510edbedc67642f89bad208b54f9da83f5",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/frames/s-walk-003.png",
+      "alpha_bbox": [
+        107,
+        138,
+        148,
+        219
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "s-walk",
+      "frame": 4,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/source/s/walk/04.png",
+      "source_canvas": [
+        1402,
+        1122
+      ],
+      "source_sha256": "532cc12a1c154e97940518c54fdc19a8338f1e8bc7ebf9496211629480cb737f",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/frames/s-walk-004.png",
+      "alpha_bbox": [
+        105,
+        136,
+        149,
+        221
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "s-walk",
+      "frame": 5,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/revisions/s/walk/05-r2.png",
+      "source_canvas": [
+        1402,
+        1122
+      ],
+      "source_sha256": "e7b1266709bdedf380852a58c2ee916674a926b6632f2bb3d33ca79f0aea47e4",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/frames/s-walk-005.png",
+      "alpha_bbox": [
+        106,
+        139,
+        150,
+        221
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "s-walk",
+      "frame": 6,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/source/s/walk/06.png",
+      "source_canvas": [
+        1402,
+        1122
+      ],
+      "source_sha256": "d1b38223bde3796693a444410c09a8ac32b7a21ee139a4ed31b911fedffd9df7",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/frames/s-walk-006.png",
+      "alpha_bbox": [
+        105,
+        138,
+        150,
+        221
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "s-walk",
+      "frame": 7,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/source/s/walk/07.png",
+      "source_canvas": [
+        1401,
+        1123
+      ],
+      "source_sha256": "cf1ea49f65c71d99b142e9217a8e54ab6a2ec0648ac7e2e2de3f6c3e5df42e95",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/frames/s-walk-007.png",
+      "alpha_bbox": [
+        107,
+        139,
+        148,
+        220
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "s-walk",
+      "frame": 8,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/revisions/s/walk/08-r2.png",
+      "source_canvas": [
+        1402,
+        1122
+      ],
+      "source_sha256": "fb98ec365b4dc2ed6b23bec35109ecbe984ac88af8b3c41234bee7956e89ce8e",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/frames/s-walk-008.png",
+      "alpha_bbox": [
+        105,
+        139,
+        151,
+        221
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "se-thrust",
+      "frame": 1,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/source/se/thrust/01.png",
+      "source_canvas": [
+        1402,
+        1122
+      ],
+      "source_sha256": "dd6aa54976956e53c9d3029c47db2fee01e3477d956b5aad3c01eeb7b38069dc",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/frames/se-thrust-001.png",
+      "alpha_bbox": [
+        93,
+        141,
+        158,
+        219
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "se-thrust",
+      "frame": 2,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/source/se/thrust/02.png",
+      "source_canvas": [
+        1402,
+        1122
+      ],
+      "source_sha256": "387870427be65c891c2851a5474a7a37d7439d0d0d30987791379c4e7df907ad",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/frames/se-thrust-002.png",
+      "alpha_bbox": [
+        85,
+        145,
+        169,
+        218
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "se-thrust",
+      "frame": 3,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/source/se/thrust/03.png",
+      "source_canvas": [
+        1402,
+        1122
+      ],
+      "source_sha256": "07d943472831059f14519b0f328946a68eb3f7eee56ec390bc02a823111c2dbc",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/frames/se-thrust-003.png",
+      "alpha_bbox": [
+        86,
+        146,
+        172,
+        219
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "se-thrust",
+      "frame": 4,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/revisions/se/thrust/04-r2.png",
+      "source_canvas": [
+        1402,
+        1122
+      ],
+      "source_sha256": "955330a1dfc9cc09e1dc21eaa4bc159760db21bc4ed8e68ffda10083adc1aae1",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/frames/se-thrust-004.png",
+      "alpha_bbox": [
+        100,
+        138,
+        177,
+        221
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "se-thrust",
+      "frame": 5,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/source/se/thrust/05.png",
+      "source_canvas": [
+        1402,
+        1122
+      ],
+      "source_sha256": "7c198abc76254fed647306528b6b4ec409c78b75c7af47700e0ee2d7b1ec6f3d",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/frames/se-thrust-005.png",
+      "alpha_bbox": [
+        98,
+        145,
+        189,
+        219
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "se-thrust",
+      "frame": 6,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/source/se/thrust/06.png",
+      "source_canvas": [
+        1402,
+        1122
+      ],
+      "source_sha256": "4b594ed810f9ede361ef1a71995e42c2768401d807d3a4837a150813162cb1f1",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/frames/se-thrust-006.png",
+      "alpha_bbox": [
+        91,
+        147,
+        192,
+        218
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "se-thrust",
+      "frame": 7,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/source/se/thrust/07.png",
+      "source_canvas": [
+        1402,
+        1122
+      ],
+      "source_sha256": "678074995082227f290d4428f1f8e3e636dc07611e06949f8e60ee2042300bcf",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/frames/se-thrust-007.png",
+      "alpha_bbox": [
+        101,
+        150,
+        184,
+        218
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "se-thrust",
+      "frame": 8,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/source/se/thrust/08.png",
+      "source_canvas": [
+        1402,
+        1122
+      ],
+      "source_sha256": "a687d7054ed78bbd0ffa67a2113c3e5efc912647f59796500ceb165d72ab3782",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/frames/se-thrust-008.png",
+      "alpha_bbox": [
+        98,
+        144,
+        192,
+        220
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "se-thrust",
+      "frame": 9,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/source/se/thrust/09.png",
+      "source_canvas": [
+        1402,
+        1122
+      ],
+      "source_sha256": "018044e774fdf053ec4dcf0944ce563298189837ad16cda9cb649192e2a90549",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/frames/se-thrust-009.png",
+      "alpha_bbox": [
+        104,
+        140,
+        186,
+        219
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "se-thrust",
+      "frame": 10,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/source/se/thrust/10.png",
+      "source_canvas": [
+        1402,
+        1122
+      ],
+      "source_sha256": "bd7ec4c5e0e5ec9c823d7b620714343ab73ee56d79d2ecd99a2ad67a21edff35",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/frames/se-thrust-010.png",
+      "alpha_bbox": [
+        106,
+        137,
+        159,
+        220
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "se-thrust",
+      "frame": 11,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/source/se/thrust/11.png",
+      "source_canvas": [
+        1402,
+        1122
+      ],
+      "source_sha256": "0a41d74d501f37159dcde5918207135573c056008aba7ac5a2dc84adf2984ee4",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/frames/se-thrust-011.png",
+      "alpha_bbox": [
+        107,
+        138,
+        155,
+        220
+      ],
+      "safe": true
+    },
+    {
+      "sequence": "se-thrust",
+      "frame": 12,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/source/se/thrust/12.png",
+      "source_canvas": [
+        1402,
+        1122
+      ],
+      "source_sha256": "85a465d750e1cafff5f33ac03efb2b04fef99517299d8bb4d6b291d7cd8cbe2b",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/frames/se-thrust-012.png",
+      "alpha_bbox": [
+        112,
+        139,
+        151,
+        220
+      ],
+      "safe": true
+    }
+  ],
+  "all_safe": true,
+  "limitations": [
+    "Candidate art has not passed actual-size motion/identity review.",
+    "S thrust and SE walk are still absent; P2 48 slots are incomplete.",
+    "All action source PNGs must be reviewed frame-by-frame; no published game asset is replaced."
+  ]
+}

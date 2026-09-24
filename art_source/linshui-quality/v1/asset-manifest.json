@@ -371,7 +371,40 @@
       "sha256": null,
       "visual_evidence": [],
       "approved_by": null,
-      "notes": "Old actual_outputs remain rejected historical evidence, not current approved output. P1 uses one static candidate only. Existing direct frames are incomplete and unapproved; source method pending continuous motion sample.",
+      "notes": "Old actual_outputs remain rejected historical evidence, not current approved output. Current complete-2D batch runs in Godot SpriteFrames: S/SE idle each 4, S walk 8, SE thrust 12, total 28 independent PNG candidates. Forward+ playback is a technical pass only; motion art and P2 remain rejected. 3D style-gate is historical.",
+      "current_2d_candidate": {
+        "state": "batch_playback_technical_pass_motion_unaccepted",
+        "format": "independent complete 2D PNG, 256x256 candidate canvas, pivot 128,220",
+        "source_contract": "art_source/linshui-quality/v1/characters/hero-v2/2d-png-256-v1/frame-contract.json",
+        "godot_report": "docs/godot-quality/evidence/p2-character-2d-256-v1-report-1080.json",
+        "motion_review_contract": "art_source/linshui-quality/v1/characters/hero-v2/2d-motion-review-v1/frame-contract.json",
+        "motion_review_report": "docs/godot-quality/evidence/p2-character-2d-motion-v1-report-1080.json",
+        "motion_review": "docs/godot-quality/review/p2-2d-motion-review-v1.md",
+        "batch_contract": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/frame-contract.json",
+        "batch_generation_record": "art_source/linshui-quality/v1/characters/hero-v2/2d-batch-v1/generation-record.md",
+        "batch_report_1080": "docs/godot-quality/evidence/p2-character-2d-batch-v1-report-1080.json",
+        "batch_report_720": "docs/godot-quality/evidence/p2-character-2d-batch-v1-report-720.json",
+        "batch_review": "docs/godot-quality/review/p2-2d-batch-v1.md",
+        "current_candidate_frames": 28,
+        "p2_required_frames": 48,
+        "decision": "docs/godot-quality/CHARACTER_FORMAT_DECISION.md",
+        "missing": ["editable layered 2D source", "art acceptance of S walk and SE thrust", "SE walk 8 frames", "S thrust 12 frames"],
+        "user_approved": false
+      },
+      "current_style_gate": {
+        "state": "local_visual_rejected",
+        "master": "art_source/linshui-quality/v1/characters/hero-v2/hero-v2.blend",
+        "source_record": "art_source/linshui-quality/v1/characters/hero-v2/style-gate-v2/source-record.json",
+        "sampling_check": "art_source/linshui-quality/v1/characters/hero-v2/style-gate-v2/sampling-check.json",
+        "review": "docs/godot-quality/review/style-gate-v2.md",
+        "engine_evidence": [
+          "docs/godot-quality/evidence/p2-style-gate-v2-s-1080.png",
+          "docs/godot-quality/evidence/p2-style-gate-v2-se-1080.png",
+          "docs/godot-quality/evidence/p2-style-gate-v2-s-720.png",
+          "docs/godot-quality/evidence/p2-style-gate-v2-se-720.png"
+        ],
+        "user_approved": false
+      },
       "stage_evidence": {
         "p2": {
           "state": "motion_sample_rejected_after_three_attempts",

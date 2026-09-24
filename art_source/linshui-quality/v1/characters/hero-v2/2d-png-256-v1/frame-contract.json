@@ -1,0 +1,78 @@
+{
+  "status": "2d_static_and_attack_key_candidate_not_animation_pass",
+  "runtime_format": "independent_complete_2d_png",
+  "production_method": "fixed padding of existing complete 2D artwork; no new generation, per-frame scaling, or body-part compositing",
+  "source_provenance": "OpenAI image_gen artwork in generated-frames; some exact historical prompts missing",
+  "canvas": [
+    256,
+    256
+  ],
+  "foot_pivot": [
+    128,
+    220
+  ],
+  "source_canvas": [
+    160,
+    128
+  ],
+  "source_pivot": [
+    80,
+    112
+  ],
+  "fixed_translation": [
+    48,
+    108
+  ],
+  "uniform_pixel_scale": 1.0,
+  "per_frame_bbox_alignment": false,
+  "frames": [
+    {
+      "direction": "s",
+      "action": "idle",
+      "frame": 1,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/review-normalized/s/idle/01.png",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-png-256-v1/frames/s-idle-001.png",
+      "bbox": [
+        107,
+        140,
+        148,
+        220
+      ],
+      "safe": true
+    },
+    {
+      "direction": "se",
+      "action": "idle",
+      "frame": 1,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/review-normalized/se/idle/01.png",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-png-256-v1/frames/se-idle-001.png",
+      "bbox": [
+        111,
+        140,
+        151,
+        219
+      ],
+      "safe": true
+    },
+    {
+      "direction": "se",
+      "action": "thrust",
+      "frame": 7,
+      "source": "art_source/linshui-quality/v1/characters/hero-v2/review-normalized/se/thrust/07.png",
+      "output": "art_source/linshui-quality/v1/characters/hero-v2/2d-png-256-v1/frames/se-thrust-007.png",
+      "bbox": [
+        101,
+        150,
+        184,
+        218
+      ],
+      "safe": true
+    }
+  ],
+  "all_safe": true,
+  "limitations": [
+    "Only S/SE static and one SE thrust key are present",
+    "Existing AI source frame prompts are incomplete",
+    "Foot contact and animation continuity remain unverified"
+  ]
+}

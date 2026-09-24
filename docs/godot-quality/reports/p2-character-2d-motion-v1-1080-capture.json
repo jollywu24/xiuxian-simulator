@@ -1,0 +1,25 @@
+{
+  "command": [
+    "D:\\Godot_v4.7.2-stable_win64.exe",
+    "--path",
+    "C:\\Users\\wujialei\\Documents\\xiuxian\\godot\\linshui-quality",
+    "res://scenes/validation/composition-refined.tscn",
+    "--resolution",
+    "1920x1080",
+    "--position",
+    "0,0",
+    "--log-file",
+    "C:\\Users\\wujialei\\Documents\\xiuxian\\docs\\godot-quality\\reports\\p2-character-2d-motion-v1-1080-engine.log",
+    "--",
+    "--composition-evidence=C:\\Users\\wujialei\\Documents\\xiuxian\\docs\\godot-quality\\evidence",
+    "--character-2d-source=C:\\Users\\wujialei\\Documents\\xiuxian\\art_source\\linshui-quality\\v1\\characters\\hero-v2\\2d-motion-review-v1",
+    "--motion-2d-capture=C:\\Users\\wujialei\\Documents\\xiuxian\\docs\\godot-quality\\evidence"
+  ],
+  "exit_code": 0,
+  "fresh_evidence": true,
+  "script_errors": [],
+  "route_test_requested": false,
+  "structural_pass": true,
+  "visual_approved": false,
+  "approval_required": "P2 art/motion remains unapproved; P1 composition was approved by user on 2026-09-24."
+}
