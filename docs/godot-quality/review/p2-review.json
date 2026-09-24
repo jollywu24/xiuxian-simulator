@@ -1,0 +1,16 @@
+{
+  "gate": "rejected",
+  "status": "r4_inspected_after_user_feedback_still_rejected",
+  "reviewer": "Codex visual inspection; not user approval",
+  "evidence": ["docs/godot-quality/evidence/p2-readability.png", "docs/godot-quality/evidence/p2-thrust_se.png", "art_source/linshui-quality/v1/characters/hero/p2-contact-sheet.png"],
+  "passed_observations": ["Real Godot Forward+ on RTX 5060", "No DOF or Glow", "Runtime hero is AnimatedSprite3D, not visible 3D rig", "Shared Blender master produces distinct S and SE views", "Tea shop has authored tile courses, rafters, joinery, doors, lattices and stone bases"],
+  "defects": [
+    {"id":"CHR-01-003","severity":"gate_blocker","detail":"r4 已收窄袖口、压暗衣摆亮边、去除眼白碎亮点并禁有损压缩；实际引擎截图的亮色噪点减少，但肩袖分段、脸部像素簇仍未达标。不能把量化缩图称为精修像素。","source_revision":4},
+    {"id":"CHR-01-004","severity":"gate_blocker","detail":"直刺起手、命中、收势与步行动画需要逐帧修整；已变化不代表自然，尚未完成滑步和动作节奏的连续实机验收。"},
+    {"id":"TX-04-001","severity":"open","detail":"石路3×3平铺可见重复及接缝；不放行正式材质。法线目前明确为平面法线，不冒充石缝浮雕。"},
+    {"id":"ENV-01-001","severity":"open","detail":"茶铺结构已导入，灰瓦数据贴图、木纹方向和日光/檐下动态对照未完成；中性结构图不是最终美术通过。"}
+  ],
+  "scores_subjective_out_of_5": {"character":2,"architecture_material":3,"space_occlusion":"not fully tested","lighting":3,"complete_screen":"not applicable at P2"},
+  "not_authorized_to_advance": ["G3", "G4", "G5", "G6"],
+  "requested_review": "User feedback received: blurry character, research GitHub then continue. r4 source and engine captures inspected; continue focused corrections without lowering G2 criteria. Unshaded screenshot is diagnostic only, never an accepted lighting setup."
+}

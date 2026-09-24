@@ -1,0 +1,45 @@
+{
+  "godot": {
+    "path": "D:\\Godot_v4.7.2-stable_win64.exe",
+    "probe": {
+      "exit_code": 0,
+      "output": "4.7.2.stable.official.ed1daf0bf"
+    },
+    "templates_found": [],
+    "templates_match": false
+  },
+  "blender": {
+    "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\blender.exe",
+    "probe": {
+      "exit_code": 0,
+      "output": "Blender 5.2.1 LTS\n\tbuild date: 2026-08-25\n\tbuild time: 02:38:20\n\tbuild commit date: 2026-08-24\n\tbuild commit time: 16:50\n\tbuild hash: 9e2066aef7ef\n\tbuild branch: blender-v5.2-release\n\tbuild platform: Windows\n\tbuild type: Release\n\tbuild c flags:  /W3 -Werror=implicit-function-declaration -Werror=return-type -Wno-tautological-compare -Wno-unknown-pragmas -Wno-char-subscripts -Wstrict-prototypes -Wmissing-prototypes -Wunused-parameter -Wundef -Wundef-prefix -Werror=unguarded-availability-new /DWIN32 /D_WINDOWS /MP /nologo /J /Gy /Gd /showFilenames -Wno-unused-command-line-argument -Wno-microsoft-enum-forward-reference /clang:-funsigned-char /clang:-fno-strict-aliasing /clang:-ffp-contract=off -march=x86-64-v2 \n\tbuild c++ flags:  /W3 -Wno-tautological-compare -Wno-unknown-pragmas -Wno-char-subscripts -Wno-overloaded-virtual -Wno-sign-compare -Wno-invalid-offsetof -Wno-suggest-override -Wundef -Wundef-prefix -Wunused-parameter -Wmismatched-tags -Werror=unguarded-availability-new /DWIN32 /D_WINDOWS /EHsc  /Gy /MP /nologo /J /Gd /showFilenames /EHsc -Wno-unused-command-line-argument -Wno-microsoft-enum-forward-reference /clang:-funsigned-char /clang:-fno-strict-aliasing /clang:-ffp-contract=off -march=x86-64-v2 \n\tbuild link flags: /MACHINE:X64  /SUBSYSTEM:CONSOLE /STACK:2097152 /ignore:4049 /ignore:4217 /ignore:4221\n\tbuild system: CMake"
+    }
+  },
+  "python": {
+    "path": "C:\\Users\\wujialei\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+    "version": "3.12.14 (main, Aug 25 2026, 14:01:42) [MSC v.1944 64 bit (AMD64)]",
+    "pillow_available": true
+  },
+  "image_generation": {
+    "available_in_assistant": true,
+    "method": "built-in image_gen",
+    "actual_call_verified": true,
+    "new_paid_service_authorized": false,
+    "successful_calls": 5
+  },
+  "graphics": {
+    "probe": {
+      "exit_code": 0,
+      "output": "NVIDIA GeForce RTX 5060, 595.95, 8151 MiB"
+    },
+    "forward_plus_verified": true,
+    "evidence": "docs/godot-quality/reports/p2-engine.log"
+  },
+  "screen_capture": {
+    "engine_viewport_pending": false,
+    "realtime_recorder": null
+  },
+  "reference_snapshot": {
+    "baseline": "docs/godot-quality/reports/reference-baseline.json"
+  }
+}

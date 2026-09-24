@@ -1,0 +1,62 @@
+[
+  {
+    "revision": 0,
+    "result": "rejected",
+    "defects": [
+      "fringe covers eyes",
+      "rounded shoulder silhouette",
+      "incorrect frame scale"
+    ]
+  },
+  {
+    "revision": 1,
+    "result": "rejected",
+    "changes": [
+      "shortened bangs",
+      "narrowed sleeves",
+      "smoothed facial normals"
+    ],
+    "defects": [
+      "identical direction exports",
+      "anchor not verified",
+      "toy-like face"
+    ]
+  },
+  {
+    "revision": 2,
+    "result": "rejected",
+    "changes": [
+      "real shared-master direction pivot",
+      "global-axis bone rotations",
+      "eye proportions",
+      "foot projection 80,112"
+    ],
+    "defects": [
+      "low-poly-downsample appearance",
+      "cloth silhouette overly rounded",
+      "weak value separation"
+    ]
+  },
+  {
+    "revision": 3,
+    "result": "pending_in_engine_review",
+    "changes": [
+      "angular narrow cloth sleeves",
+      "smaller tied hair knot",
+      "stronger robe/linen/hair palette hierarchy"
+    ],
+    "next_if_failed": "Stop further art iterations and request review under execution-plan three-revision rule"
+  },
+  {
+    "revision": 4,
+    "authorization": "User rejected blurry character and requested GitHub pipeline research then continuation",
+    "changes": [
+      "narrow cuff geometry on existing master",
+      "muted collar and hem",
+      "remove eye-white flecks",
+      "reduce source specular highlights"
+    ],
+    "result": "pending_engine_review",
+    "rig_replaced": false
+  }
+]

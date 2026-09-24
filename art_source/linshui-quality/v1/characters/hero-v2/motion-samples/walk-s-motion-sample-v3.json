@@ -1,0 +1,156 @@
+{
+  "status": "candidate_not_accepted",
+  "source": "art_source\\linshui-quality\\v1\\characters\\hero-v2\\motion-samples\\walk-s-sheet-v3.png",
+  "source_sha256": "c29aa6c69ce1d983c158b9be440df9132380a24565e95871210734789aa5e2c0",
+  "method": "whole-sheet imagegen followed by fixed regular-grid crop/resample; not same-rig output",
+  "frame_size": [
+    160,
+    128
+  ],
+  "foot_anchor": [
+    80,
+    112
+  ],
+  "fps": 8,
+  "fixed_transform": {
+    "source_cell": [
+      416,
+      443
+    ],
+    "resized": [
+      83,
+      89
+    ],
+    "paste": [
+      38,
+      26
+    ]
+  },
+  "frames": [
+    {
+      "frame": 0,
+      "source_rect": [
+        68,
+        0,
+        416,
+        443
+      ],
+      "alpha_bbox": [
+        50,
+        33,
+        98,
+        113
+      ]
+    },
+    {
+      "frame": 1,
+      "source_rect": [
+        484,
+        0,
+        416,
+        443
+      ],
+      "alpha_bbox": [
+        49,
+        33,
+        95,
+        113
+      ]
+    },
+    {
+      "frame": 2,
+      "source_rect": [
+        900,
+        0,
+        416,
+        443
+      ],
+      "alpha_bbox": [
+        49,
+        32,
+        95,
+        113
+      ]
+    },
+    {
+      "frame": 3,
+      "source_rect": [
+        1316,
+        0,
+        416,
+        443
+      ],
+      "alpha_bbox": [
+        49,
+        33,
+        96,
+        114
+      ]
+    },
+    {
+      "frame": 4,
+      "source_rect": [
+        68,
+        443,
+        416,
+        443
+      ],
+      "alpha_bbox": [
+        51,
+        29,
+        97,
+        109
+      ]
+    },
+    {
+      "frame": 5,
+      "source_rect": [
+        484,
+        443,
+        416,
+        443
+      ],
+      "alpha_bbox": [
+        48,
+        29,
+        95,
+        108
+      ]
+    },
+    {
+      "frame": 6,
+      "source_rect": [
+        900,
+        443,
+        416,
+        443
+      ],
+      "alpha_bbox": [
+        50,
+        29,
+        95,
+        108
+      ]
+    },
+    {
+      "frame": 7,
+      "source_rect": [
+        1316,
+        443,
+        416,
+        443
+      ],
+      "alpha_bbox": [
+        50,
+        29,
+        96,
+        108
+      ]
+    }
+  ],
+  "defects": [
+    "Passing poses remain insufficiently distinct from contact poses; cannot claim accepted gait.",
+    "Row-to-row foot and head registration differs; no per-frame runtime compensation is applied.",
+    "Eight-frame loop only; no SE/thrust/8-direction completion."
+  ]
+}

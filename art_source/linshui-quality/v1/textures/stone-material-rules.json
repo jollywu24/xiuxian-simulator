@@ -1,0 +1,16 @@
+{
+  "source": "art_source\\linshui-quality\\v1\\textures\\stone-albedo-source-v1.png",
+  "source_sha256": "8c2639350cbe646f50b5749f135a4be2eef004d138d97e1c13af61f39f542b91",
+  "normal": "flat tangent normal; relief supplied by geometry, no color-to-height inference",
+  "orm": {
+    "r": "AO=1, no baked AO",
+    "g": 0.9019607843137255,
+    "b": "metallic=0"
+  },
+  "color_space": {
+    "albedo": "sRGB",
+    "normal": "linear",
+    "orm": "linear"
+  },
+  "seam_review": "pending"
+}

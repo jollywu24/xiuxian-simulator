@@ -1,0 +1,229 @@
+{
+	"method": "idle and attack viewport screenshots at fixed world origin; pixel densities calibrated by measured body height and feet, not cell height",
+	"samples": [
+		{
+			"action": "idle",
+			"direction": "s",
+			"frame": 0,
+			"pixel_size": 0.00667418260127306,
+			"screenshot": "attack-scale-fixed-s-idle.png",
+			"sprite_offset": [
+				0.0,
+				104.222503662109
+			],
+			"world_origin": [
+				-4.0,
+				-0.00000000186264514923096,
+				3.0
+			]
+		},
+		{
+			"action": "attack",
+			"direction": "s",
+			"frame": 0,
+			"pixel_size": 0.00903971586376429,
+			"screenshot": "attack-row-fixed-s-0.png",
+			"sprite_offset": [
+				0.0,
+				79.5801620483398
+			],
+			"world_origin": [
+				-4.0,
+				-0.00000000186264514923096,
+				3.0
+			]
+		},
+		{
+			"action": "attack",
+			"direction": "s",
+			"frame": 1,
+			"pixel_size": 0.00903971586376429,
+			"screenshot": "attack-row-fixed-s-1.png",
+			"sprite_offset": [
+				0.0,
+				79.5801620483398
+			],
+			"world_origin": [
+				-4.0,
+				-0.00000000186264514923096,
+				3.0
+			]
+		},
+		{
+			"action": "attack",
+			"direction": "s",
+			"frame": 2,
+			"pixel_size": 0.00903971586376429,
+			"screenshot": "attack-row-fixed-s-2.png",
+			"sprite_offset": [
+				0.0,
+				79.5801620483398
+			],
+			"world_origin": [
+				-4.0,
+				-0.00000000186264514923096,
+				3.0
+			]
+		},
+		{
+			"action": "attack",
+			"direction": "s",
+			"frame": 3,
+			"pixel_size": 0.00903971586376429,
+			"screenshot": "attack-row-fixed-s-3.png",
+			"sprite_offset": [
+				0.0,
+				79.5801620483398
+			],
+			"world_origin": [
+				-4.0,
+				-0.00000000186264514923096,
+				3.0
+			]
+		},
+		{
+			"action": "attack",
+			"direction": "s",
+			"frame": 4,
+			"pixel_size": 0.00903971586376429,
+			"screenshot": "attack-row-fixed-s-4.png",
+			"sprite_offset": [
+				0.0,
+				79.5801620483398
+			],
+			"world_origin": [
+				-4.0,
+				-0.00000000186264514923096,
+				3.0
+			]
+		},
+		{
+			"action": "attack",
+			"direction": "s",
+			"frame": 5,
+			"pixel_size": 0.00903971586376429,
+			"screenshot": "attack-row-fixed-s-5.png",
+			"sprite_offset": [
+				0.0,
+				79.5801620483398
+			],
+			"world_origin": [
+				-4.0,
+				-0.00000000186264514923096,
+				3.0
+			]
+		},
+		{
+			"action": "idle",
+			"direction": "se",
+			"frame": 0,
+			"pixel_size": 0.00667418260127306,
+			"screenshot": "attack-scale-fixed-se-idle.png",
+			"sprite_offset": [
+				0.0,
+				104.222503662109
+			],
+			"world_origin": [
+				-4.0,
+				-0.00000000186264514923096,
+				3.0
+			]
+		},
+		{
+			"action": "attack",
+			"direction": "se",
+			"frame": 0,
+			"pixel_size": 0.00903971586376429,
+			"screenshot": "attack-row-fixed-se-0.png",
+			"sprite_offset": [
+				0.0,
+				79.5801620483398
+			],
+			"world_origin": [
+				-4.0,
+				-0.00000000186264514923096,
+				3.0
+			]
+		},
+		{
+			"action": "attack",
+			"direction": "se",
+			"frame": 1,
+			"pixel_size": 0.00903971586376429,
+			"screenshot": "attack-row-fixed-se-1.png",
+			"sprite_offset": [
+				0.0,
+				79.5801620483398
+			],
+			"world_origin": [
+				-4.0,
+				-0.00000000186264514923096,
+				3.0
+			]
+		},
+		{
+			"action": "attack",
+			"direction": "se",
+			"frame": 2,
+			"pixel_size": 0.00903971586376429,
+			"screenshot": "attack-row-fixed-se-2.png",
+			"sprite_offset": [
+				0.0,
+				79.5801620483398
+			],
+			"world_origin": [
+				-4.0,
+				-0.00000000186264514923096,
+				3.0
+			]
+		},
+		{
+			"action": "attack",
+			"direction": "se",
+			"frame": 3,
+			"pixel_size": 0.00903971586376429,
+			"screenshot": "attack-row-fixed-se-3.png",
+			"sprite_offset": [
+				0.0,
+				79.5801620483398
+			],
+			"world_origin": [
+				-4.0,
+				-0.00000000186264514923096,
+				3.0
+			]
+		},
+		{
+			"action": "attack",
+			"direction": "se",
+			"frame": 4,
+			"pixel_size": 0.00903971586376429,
+			"screenshot": "attack-row-fixed-se-4.png",
+			"sprite_offset": [
+				0.0,
+				79.5801620483398
+			],
+			"world_origin": [
+				-4.0,
+				-0.00000000186264514923096,
+				3.0
+			]
+		},
+		{
+			"action": "attack",
+			"direction": "se",
+			"frame": 5,
+			"pixel_size": 0.00903971586376429,
+			"screenshot": "attack-row-fixed-se-5.png",
+			"sprite_offset": [
+				0.0,
+				79.5801620483398
+			],
+			"world_origin": [
+				-4.0,
+				-0.00000000186264514923096,
+				3.0
+			]
+		}
+	]
+}

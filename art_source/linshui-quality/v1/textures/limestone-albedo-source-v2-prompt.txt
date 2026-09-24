@@ -1,0 +1,5 @@
+Use case: stylized-concept
+Asset type: seamless albedo texture for real individually modeled blue limestone paving slabs and riverside masonry in an HD-2D wuxia game.
+Primary request: a single continuous surface of weathered blue-gray limestone, orthographic straight top-down, completely flat evenly lit base color texture. Cool slate-gray with restrained muted sage/mineral undertones, subtle broad cloudy mineral variation, occasional shallow worn streaks, small chipped grain flecks. Mid-dark rather than pale white.
+Style: carefully hand-painted game material, readable broad color clusters and modest pixel-art-friendly detail, no photographic noise. The game geometry supplies stone boundaries and bevels, so DO NOT draw slabs, tiles, bricks, mortar joints, outlines, ground shadows, perspective, objects or vegetation. No dark repeated cracks and no focal motif.
+Composition: square, seamless tiling across all four edges, identical lighting across the image. No baked highlights or directional shadows. Opaque material texture, no text or watermark.

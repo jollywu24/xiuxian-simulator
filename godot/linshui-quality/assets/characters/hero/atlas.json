@@ -1,0 +1,1392 @@
+{
+  "stage": "P2",
+  "status": "exported_not_visual_pass",
+  "frame_size": [
+    160,
+    128
+  ],
+  "foot_anchor": [
+    80,
+    112
+  ],
+  "directions": [
+    "s",
+    "se"
+  ],
+  "missing_directions": [
+    "e",
+    "ne",
+    "n",
+    "nw",
+    "w",
+    "sw"
+  ],
+  "palette_colors": 40,
+  "animations": {
+    "idle": {
+      "frames": [
+        {
+          "direction": "s",
+          "index": 0,
+          "rect": [
+            0,
+            0,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            57,
+            35,
+            103,
+            117
+          ],
+          "sha256": "184de7de84068c2e6c938bb253702a043e485789d0f4cd7d7f24d2f47544283e",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            98.441,
+            114.117
+          ]
+        },
+        {
+          "direction": "s",
+          "index": 1,
+          "rect": [
+            160,
+            0,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            57,
+            35,
+            103,
+            117
+          ],
+          "sha256": "04a40163edd9bc807798e6886f5d9feb3adb634b91a624b0ddf560dc34bed4eb",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            98.441,
+            113.698
+          ]
+        },
+        {
+          "direction": "s",
+          "index": 2,
+          "rect": [
+            320,
+            0,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            57,
+            35,
+            103,
+            117
+          ],
+          "sha256": "08b65f7f8bf0f560720b2cbc49ca80959c7cb530c2aa637d64f874240f332dd0",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            98.441,
+            114.117
+          ]
+        },
+        {
+          "direction": "s",
+          "index": 3,
+          "rect": [
+            480,
+            0,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            57,
+            35,
+            103,
+            117
+          ],
+          "sha256": "88d4b602af1a6c7b9fedf955c105f2912f504023a2f77800665e022828b59ec7",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            98.441,
+            114.528
+          ]
+        },
+        {
+          "direction": "se",
+          "index": 0,
+          "rect": [
+            0,
+            128,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            62,
+            36,
+            97,
+            121
+          ],
+          "sha256": "a8c51246cfdd06e6b2d2ec5efe30903a6f9058834672a31e88bba9489f34a53a",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            90.163,
+            122.045
+          ]
+        },
+        {
+          "direction": "se",
+          "index": 1,
+          "rect": [
+            160,
+            128,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            62,
+            37,
+            97,
+            121
+          ],
+          "sha256": "03b0cc0f891c66aaa4425e52cab8fa3131bf14f1d37759e66e58239a57bad34e",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            90.65,
+            121.761
+          ]
+        },
+        {
+          "direction": "se",
+          "index": 2,
+          "rect": [
+            320,
+            128,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            62,
+            36,
+            97,
+            121
+          ],
+          "sha256": "affc8329f2dcd1d9dd57fa13077763939d94f722ebcd1ca9abb0656bac39994c",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            90.163,
+            122.045
+          ]
+        },
+        {
+          "direction": "se",
+          "index": 3,
+          "rect": [
+            480,
+            128,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            62,
+            36,
+            97,
+            121
+          ],
+          "sha256": "458914b00bbcd528ebdc79d45dfdd03966d0ccc0d8438c5bdaea0f4c0dbce986",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            89.677,
+            122.321
+          ]
+        }
+      ],
+      "loop": true,
+      "count_per_direction": 4,
+      "fps": 12
+    },
+    "walk": {
+      "frames": [
+        {
+          "direction": "s",
+          "index": 0,
+          "rect": [
+            0,
+            0,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            57,
+            35,
+            103,
+            117
+          ],
+          "sha256": "8850086dd22c0cd5fcf151cebac2452b1f30e38ae73f978efda2d9576295c5ff",
+          "foot_contact": true,
+          "strike_contact": false,
+          "weapon_tip": [
+            98.441,
+            114.117
+          ]
+        },
+        {
+          "direction": "s",
+          "index": 1,
+          "rect": [
+            160,
+            0,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            57,
+            35,
+            103,
+            121
+          ],
+          "sha256": "7351990a14a3b06ea7b7f46fbb4c078f432f4bbaf5e88306cdc8b581e61d5ab5",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            98.441,
+            105.752
+          ]
+        },
+        {
+          "direction": "s",
+          "index": 2,
+          "rect": [
+            320,
+            0,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            57,
+            36,
+            103,
+            122
+          ],
+          "sha256": "c26d2c8f17f796d4c141cc12d9d6b53e24ae8d0e84485087748143c46fd47095",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            98.441,
+            101.987
+          ]
+        },
+        {
+          "direction": "s",
+          "index": 3,
+          "rect": [
+            480,
+            0,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            57,
+            35,
+            103,
+            119
+          ],
+          "sha256": "e05b08f94a2690e5ddc8db025a123220aba28af4a9ddaa4696b53316069e13d7",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            98.441,
+            105.752
+          ]
+        },
+        {
+          "direction": "s",
+          "index": 4,
+          "rect": [
+            640,
+            0,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            57,
+            35,
+            103,
+            117
+          ],
+          "sha256": "49ee773b72adadf0faa66f1f52ae8a3508301150270c84f4ca657d0a414f866a",
+          "foot_contact": true,
+          "strike_contact": false,
+          "weapon_tip": [
+            98.441,
+            114.117
+          ]
+        },
+        {
+          "direction": "s",
+          "index": 5,
+          "rect": [
+            800,
+            0,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            57,
+            35,
+            103,
+            121
+          ],
+          "sha256": "e447d957cdd6f47a67b37d7d184307d319d3caa4e445a22cb380eecb76bc7bbc",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            98.441,
+            121.195
+          ]
+        },
+        {
+          "direction": "s",
+          "index": 6,
+          "rect": [
+            960,
+            0,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            57,
+            36,
+            103,
+            123
+          ],
+          "sha256": "6368edc3dee8667dfc34f5a40d2ffaf8b067970947e9a12ae44f11b446c3e512",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            98.441,
+            123.685
+          ]
+        },
+        {
+          "direction": "s",
+          "index": 7,
+          "rect": [
+            1120,
+            0,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            57,
+            35,
+            103,
+            120
+          ],
+          "sha256": "570674e082ef93ef720ad0b26c0e9575e8095e02cce5a3d601ff00888ee77a3f",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            98.441,
+            121.195
+          ]
+        },
+        {
+          "direction": "se",
+          "index": 0,
+          "rect": [
+            0,
+            128,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            62,
+            36,
+            97,
+            121
+          ],
+          "sha256": "33742b46b82a0a73a781ee706755416a34125be756e5f11709429ea3cf9c36bb",
+          "foot_contact": true,
+          "strike_contact": false,
+          "weapon_tip": [
+            90.163,
+            122.045
+          ]
+        },
+        {
+          "direction": "se",
+          "index": 1,
+          "rect": [
+            160,
+            128,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            58,
+            37,
+            99,
+            121
+          ],
+          "sha256": "817c40dee8b11c4149ba7ad415abd59117bcc8a0e6ad7ea0bb1d8c50bfb86e11",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            98.663,
+            116.035
+          ]
+        },
+        {
+          "direction": "se",
+          "index": 2,
+          "rect": [
+            320,
+            128,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            57,
+            37,
+            102,
+            122
+          ],
+          "sha256": "5ba3da755a57826f4207794927c9b60c7da61bd17f8fff2a5198abf5fa19b07d",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            101.932,
+            113.177
+          ]
+        },
+        {
+          "direction": "se",
+          "index": 3,
+          "rect": [
+            480,
+            128,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            58,
+            37,
+            99,
+            120
+          ],
+          "sha256": "a30f617f3784406402145cac6acae70586e58e8a61de23aa42f1a432bef7c430",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            98.663,
+            116.035
+          ]
+        },
+        {
+          "direction": "se",
+          "index": 4,
+          "rect": [
+            640,
+            128,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            62,
+            36,
+            98,
+            121
+          ],
+          "sha256": "adb34aa790038745b297695e5966550f4f9d5bb267ac56123ca2fb56533f0b41",
+          "foot_contact": true,
+          "strike_contact": false,
+          "weapon_tip": [
+            90.163,
+            122.045
+          ]
+        },
+        {
+          "direction": "se",
+          "index": 5,
+          "rect": [
+            800,
+            128,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            60,
+            37,
+            98,
+            126
+          ],
+          "sha256": "b02fe331223c3c0cc0b301bd7273e97e96de673addddf0efcd0ad97fe18c5510",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            81.086,
+            126.607
+          ]
+        },
+        {
+          "direction": "se",
+          "index": 6,
+          "rect": [
+            960,
+            128,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            58,
+            37,
+            98,
+            127
+          ],
+          "sha256": "1a0ac6a790c3b9e45e60409bd9f6bf20395d8e8614319b781f7a573af5ab7ce0",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            77.237,
+            128.03
+          ]
+        },
+        {
+          "direction": "se",
+          "index": 7,
+          "rect": [
+            1120,
+            128,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            63,
+            37,
+            98,
+            126
+          ],
+          "sha256": "8d78000f1a9eace9912ba6b3e43f50bfaed2893c21029c07e9084f0aa2b6efce",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            81.086,
+            126.607
+          ]
+        }
+      ],
+      "loop": true,
+      "count_per_direction": 8,
+      "fps": 12
+    },
+    "thrust": {
+      "frames": [
+        {
+          "direction": "s",
+          "index": 0,
+          "rect": [
+            0,
+            0,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            57,
+            35,
+            103,
+            117
+          ],
+          "sha256": "184de7de84068c2e6c938bb253702a043e485789d0f4cd7d7f24d2f47544283e",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            98.441,
+            114.117
+          ]
+        },
+        {
+          "direction": "s",
+          "index": 1,
+          "rect": [
+            160,
+            0,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            57,
+            35,
+            103,
+            119
+          ],
+          "sha256": "63a061856d853d61b4cbf80d4ea041fa8ea4515032264fd279793d3ee9eea03e",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            98.441,
+            119.342
+          ]
+        },
+        {
+          "direction": "s",
+          "index": 2,
+          "rect": [
+            320,
+            0,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            57,
+            35,
+            103,
+            124
+          ],
+          "sha256": "54dff1fe404f69914ab9f4d654de3325c82153560857d7e4491c30aabfb40987",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            98.441,
+            124.998
+          ]
+        },
+        {
+          "direction": "s",
+          "index": 3,
+          "rect": [
+            480,
+            0,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            57,
+            36,
+            103,
+            127
+          ],
+          "sha256": "6727070b43fbc8c064119cdef4d943b0daad8f29ff6bb671eab89ccc72cc3255",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            98.441,
+            127.813
+          ]
+        },
+        {
+          "direction": "s",
+          "index": 4,
+          "rect": [
+            640,
+            0,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            57,
+            36,
+            103,
+            121
+          ],
+          "sha256": "1bac9c4245751eee2d5f624f3d9e4a0caa1a8e791036d3a4284a0262f8788779",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            98.441,
+            120.922
+          ]
+        },
+        {
+          "direction": "s",
+          "index": 5,
+          "rect": [
+            800,
+            0,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            57,
+            37,
+            103,
+            121
+          ],
+          "sha256": "ebd353b623d63673bf2669066eb4c6c06c8d03ba8815a7ef84f17f4c56d52436",
+          "foot_contact": false,
+          "strike_contact": true,
+          "weapon_tip": [
+            98.441,
+            110.246
+          ]
+        },
+        {
+          "direction": "s",
+          "index": 6,
+          "rect": [
+            960,
+            0,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            57,
+            37,
+            103,
+            121
+          ],
+          "sha256": "e3d7b0e6dd1ad796d89d9906107102f6218dd801f589ff6f9d36edc477a90b86",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            98.441,
+            110.246
+          ]
+        },
+        {
+          "direction": "s",
+          "index": 7,
+          "rect": [
+            1120,
+            0,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            57,
+            37,
+            103,
+            121
+          ],
+          "sha256": "6959d1f56441951aabdd66dabeef4083048129920f489aaf905862d547d553ed",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            98.441,
+            116.116
+          ]
+        },
+        {
+          "direction": "s",
+          "index": 8,
+          "rect": [
+            1280,
+            0,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            57,
+            36,
+            103,
+            126
+          ],
+          "sha256": "9c7048907711db2a7c7ae9b257bb7840be2a70b99b7a8c0661c3da7f5977e68d",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            98.441,
+            126.952
+          ]
+        },
+        {
+          "direction": "s",
+          "index": 9,
+          "rect": [
+            1440,
+            0,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            57,
+            36,
+            103,
+            125
+          ],
+          "sha256": "8b1284c3edc199fbec92913efae1c9eee0c4141019bd09f0d7ade83d04497246",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            98.441,
+            126.261
+          ]
+        },
+        {
+          "direction": "s",
+          "index": 10,
+          "rect": [
+            1600,
+            0,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            57,
+            35,
+            103,
+            119
+          ],
+          "sha256": "57bfb15ae6fd5b6b12d2ce9c64171c691a8379523dbd4cda39881054221e26b2",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            98.441,
+            119.342
+          ]
+        },
+        {
+          "direction": "s",
+          "index": 11,
+          "rect": [
+            1760,
+            0,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            57,
+            35,
+            103,
+            117
+          ],
+          "sha256": "dfc3904c2cba3955d40c81b56ac9dd5d5e4e9f84a0ff7f027a415b2c5a420bc9",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            98.441,
+            114.117
+          ]
+        },
+        {
+          "direction": "se",
+          "index": 0,
+          "rect": [
+            0,
+            128,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            62,
+            36,
+            97,
+            121
+          ],
+          "sha256": "a8c51246cfdd06e6b2d2ec5efe30903a6f9058834672a31e88bba9489f34a53a",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            90.163,
+            122.045
+          ]
+        },
+        {
+          "direction": "se",
+          "index": 1,
+          "rect": [
+            160,
+            128,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            62,
+            37,
+            97,
+            124
+          ],
+          "sha256": "a52dc115349017a056319fe0f085eaf4916e608ecc206fd4d780b88830ebb497",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            83.659,
+            125.467
+          ]
+        },
+        {
+          "direction": "se",
+          "index": 2,
+          "rect": [
+            320,
+            128,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            62,
+            37,
+            97,
+            128
+          ],
+          "sha256": "4413e5150829c0ac43da7faf0c1bcaa439cea40d303d27a8939714574bbc4a8c",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            74.311,
+            128.532
+          ]
+        },
+        {
+          "direction": "se",
+          "index": 3,
+          "rect": [
+            480,
+            128,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            63,
+            37,
+            96,
+            128
+          ],
+          "sha256": "4b20b08616397e37ce0d70e84d4d1d86e64ad0ae260e6185705cd4d5b8916182",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            65.836,
+            128.999
+          ]
+        },
+        {
+          "direction": "se",
+          "index": 4,
+          "rect": [
+            640,
+            128,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            51,
+            37,
+            96,
+            121
+          ],
+          "sha256": "168e85396cd6ef06162b3a4d76a709e9688dc9adefded1450384a2fec0c99ec7",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            50.302,
+            117.802
+          ]
+        },
+        {
+          "direction": "se",
+          "index": 5,
+          "rect": [
+            800,
+            128,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            48,
+            38,
+            95,
+            121
+          ],
+          "sha256": "e2e55849b69224409088d9bc6c90c56db595eef25f80484bbbf4cfb46bea367e",
+          "foot_contact": false,
+          "strike_contact": true,
+          "weapon_tip": [
+            47.548,
+            106.362
+          ]
+        },
+        {
+          "direction": "se",
+          "index": 6,
+          "rect": [
+            960,
+            128,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            48,
+            38,
+            95,
+            121
+          ],
+          "sha256": "0f59f6f50b19a33d29dbab56254f718834900a88805055ffb1adeb859dac7f87",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            47.548,
+            106.362
+          ]
+        },
+        {
+          "direction": "se",
+          "index": 7,
+          "rect": [
+            1120,
+            128,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            49,
+            38,
+            95,
+            121
+          ],
+          "sha256": "7003be75b93263b4e36369396f813356b012977eae385c2c991fbe8ffb83cbee",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            48.465,
+            112.487
+          ]
+        },
+        {
+          "direction": "se",
+          "index": 8,
+          "rect": [
+            1280,
+            128,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            57,
+            37,
+            96,
+            125
+          ],
+          "sha256": "d9f9e5428007e62b2c9ff59c5b0a31ce671bb5e8ce8af616f3f7e584eb79daf2",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            56.566,
+            125.568
+          ]
+        },
+        {
+          "direction": "se",
+          "index": 9,
+          "rect": [
+            1440,
+            128,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            63,
+            37,
+            97,
+            128
+          ],
+          "sha256": "95e7da9767f5bdaba24d224550026271b6878bf6038d217ae0c3d1a48e34370b",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            71.368,
+            128.98
+          ]
+        },
+        {
+          "direction": "se",
+          "index": 10,
+          "rect": [
+            1600,
+            128,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            62,
+            37,
+            97,
+            124
+          ],
+          "sha256": "2d1c867011164d497810a0618bedcd9cde142e2bf224e8765d365a154569cfee",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            83.659,
+            125.467
+          ]
+        },
+        {
+          "direction": "se",
+          "index": 11,
+          "rect": [
+            1760,
+            128,
+            160,
+            128
+          ],
+          "duration": 0.08333333333333333,
+          "foot_anchor": [
+            80,
+            112
+          ],
+          "alpha_bbox": [
+            62,
+            36,
+            97,
+            121
+          ],
+          "sha256": "a477d9b35ce478feefebd944655096144e6c7fa7e3de0db9d148c20409b4dd5d",
+          "foot_contact": false,
+          "strike_contact": false,
+          "weapon_tip": [
+            90.163,
+            122.045
+          ]
+        }
+      ],
+      "loop": false,
+      "count_per_direction": 12,
+      "fps": 12
+    }
+  }
+}

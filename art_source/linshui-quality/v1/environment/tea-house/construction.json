@@ -1,0 +1,18 @@
+{
+  "dimensions_m": [
+    6,
+    5,
+    4.3
+  ],
+  "front": "Blender -Y / Godot +Z",
+  "modules": [
+    "walls",
+    "roof",
+    "facade",
+    "foundation"
+  ],
+  "tile_courses": 24,
+  "tiles_per_course": 33,
+  "provenance": "Original authored geometry; image_gen tea-guide-v1 used for structural direction only",
+  "status": "exported, in-engine review pending"
+}

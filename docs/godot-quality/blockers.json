@@ -1,0 +1,34 @@
+{
+  "stage": "P2",
+  "updated_on": "2026-09-24",
+  "p1": "user_approved_layout_and_scale",
+  "blockers": [
+    {
+      "id": "CHR-MOTION-SHEET-003",
+      "status": "sheet_route_paused_controlled_rig_sample_in_review",
+      "impact": "P2 motion acceptance and dependent character production",
+      "evidence": "review/p2-recomposition-review.md; art_source/linshui-quality/v1/characters/hero-v2/motion-samples/",
+      "cause": "Three whole-sheet generation/edit attempts still lack clear passing poses; fixed-grid frames have 4-6 logical pixels of row-to-row foot drift.",
+      "resolution": "User selected retaining identity and controllable skeletal animation. Existing true 3D master refined; 22 bounded sample renders produced, not accepted. No paperdoll and no per-frame transform correction."
+    },
+    {
+      "id": "P2-VISUAL-UNACCEPTED",
+      "status": "not_accepted",
+      "impact": "P2 release gate",
+      "evidence": "evidence/p2-refined-overview-1080.png",
+      "cause": "Environment candidate produced, but timber/roof/detail scale, natural paving edges and lighting sampling still require visual refinement; other objects intentionally graybox."
+    }
+  ],
+  "pending_work": [
+    "Accepted S/SE idle/walk/thrust 48-slot set",
+    "Accepted environment P2 appearance and sunlight-to-eaves character integration",
+    "Remaining P3 assets and directions",
+    "P4 real interactions, feedback, and audio",
+    "Windows export templates and Release package",
+    "90-second continuous real operation recording",
+    "30-second warmup and 120-second Release performance sample",
+    "Full distribution/license review"
+  ],
+  "not_blocked_by": "Built-in image_gen successfully produced four source outputs this turn; no current quota failure observed.",
+  "historical_blocker_record": "Prior 2026-09-23 failures preserved in review/defects.md and STATUS.md; old quotas are not asserted current."
+}

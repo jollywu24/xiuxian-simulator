@@ -1,0 +1,73 @@
+{
+  "files": [
+    {
+      "path": "godot/linshui-quality/assets/characters/hero/character1.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "alpha_extrema": [
+        0,
+        254
+      ],
+      "sha256": "53f08a3a12e6c2c9661c9c4c2b99398290d5f326d9d6f368a6d4858eb1b2315d",
+      "upload_unchanged": true
+    },
+    {
+      "path": "godot/linshui-quality/assets/characters/hero/character2.png",
+      "size": [
+        887,
+        1774
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "sha256": "053db4436293e71dcdaf8d3b2f2527ddbcec95d96556274e1ccc87af729496f2",
+      "upload_unchanged": true
+    },
+    {
+      "path": "godot/linshui-quality/assets/characters/hero/character3.png",
+      "size": [
+        1086,
+        1448
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "sha256": "58324c09c5548159c610dc93ddd47fa3df5f5e369a03d9fcb896d32355499977",
+      "upload_unchanged": true
+    },
+    {
+      "path": "godot/linshui-quality/assets/characters/hero/character4.png",
+      "size": [
+        1086,
+        1448
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "sha256": "017506822455b6f4da2997acf0b58ea71fae2b01a144ea982d277dbab28473b0",
+      "upload_unchanged": true
+    },
+    {
+      "path": "godot/linshui-quality/assets/characters/hero/character5.png",
+      "size": [
+        1086,
+        1448
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "sha256": "baec0522af249c3ab67a5e0a934901e833f94fd3db7c379a0cc8bc56e68d3ab1",
+      "upload_unchanged": true
+    }
+  ],
+  "all_uploads_unchanged": true,
+  "visual_pass": false,
+  "generated_repair": "attack-repair-v1 rejected; not installed",
+  "provenance": "user supplied PNGs, author/license/rig unverified"
+}

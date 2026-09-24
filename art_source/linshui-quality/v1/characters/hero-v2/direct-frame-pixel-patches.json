@@ -1,0 +1,6 @@
+{
+  "version": 2,
+  "status": "pending_individual_cluster_review",
+  "patches": [],
+  "note": "Only replayable per-frame pixel corrections go here. A 48-color quantize is not visual acceptance."
+}

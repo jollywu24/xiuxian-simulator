@@ -1,0 +1,19 @@
+{
+  "command": [
+    "D:\\Godot_v4.7.2-stable_win64.exe",
+    "--path",
+    "C:\\Users\\wujialei\\Documents\\xiuxian\\godot\\linshui-quality",
+    "res://scenes/main.tscn",
+    "--resolution",
+    "1920x1080",
+    "--log-file",
+    "C:\\Users\\wujialei\\Documents\\xiuxian\\docs\\godot-quality\\reports\\p2-engine.log",
+    "--",
+    "--evidence=C:\\Users\\wujialei\\Documents\\xiuxian\\docs\\godot-quality\\evidence"
+  ],
+  "exit_code": 0,
+  "fresh_engine_screenshot": true,
+  "screenshot": "docs\\godot-quality\\evidence\\default-entry-new-hero.png",
+  "visual_pass": false,
+  "note": "Capture success is not visual acceptance. No offline Movie Maker was used."
+}

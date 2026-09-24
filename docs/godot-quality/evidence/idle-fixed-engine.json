@@ -1,0 +1,117 @@
+{
+	"method": "same fixed world origin, same offset, four real engine frame captures; no per-frame transform correction",
+	"samples": [
+		{
+			"direction": "s",
+			"frame": 0,
+			"screenshot": "idle-fixed-s-0.png",
+			"sprite_offset": [
+				0.0,
+				104.222503662109
+			],
+			"world_origin": [
+				-4.0,
+				0.00000121816992759705,
+				3.0
+			]
+		},
+		{
+			"direction": "s",
+			"frame": 1,
+			"screenshot": "idle-fixed-s-1.png",
+			"sprite_offset": [
+				0.0,
+				104.222503662109
+			],
+			"world_origin": [
+				-4.0,
+				0.00000121816992759705,
+				3.0
+			]
+		},
+		{
+			"direction": "s",
+			"frame": 2,
+			"screenshot": "idle-fixed-s-2.png",
+			"sprite_offset": [
+				0.0,
+				104.222503662109
+			],
+			"world_origin": [
+				-4.0,
+				0.00000121816992759705,
+				3.0
+			]
+		},
+		{
+			"direction": "s",
+			"frame": 3,
+			"screenshot": "idle-fixed-s-3.png",
+			"sprite_offset": [
+				0.0,
+				104.222503662109
+			],
+			"world_origin": [
+				-4.0,
+				0.00000121816992759705,
+				3.0
+			]
+		},
+		{
+			"direction": "se",
+			"frame": 0,
+			"screenshot": "idle-fixed-se-0.png",
+			"sprite_offset": [
+				0.0,
+				104.222503662109
+			],
+			"world_origin": [
+				-4.0,
+				0.00000121816992759705,
+				3.0
+			]
+		},
+		{
+			"direction": "se",
+			"frame": 1,
+			"screenshot": "idle-fixed-se-1.png",
+			"sprite_offset": [
+				0.0,
+				104.222503662109
+			],
+			"world_origin": [
+				-4.0,
+				0.00000121816992759705,
+				3.0
+			]
+		},
+		{
+			"direction": "se",
+			"frame": 2,
+			"screenshot": "idle-fixed-se-2.png",
+			"sprite_offset": [
+				0.0,
+				104.222503662109
+			],
+			"world_origin": [
+				-4.0,
+				0.00000121816992759705,
+				3.0
+			]
+		},
+		{
+			"direction": "se",
+			"frame": 3,
+			"screenshot": "idle-fixed-se-3.png",
+			"sprite_offset": [
+				0.0,
+				104.222503662109
+			],
+			"world_origin": [
+				-4.0,
+				0.00000121816992759705,
+				3.0
+			]
+		}
+	]
+}

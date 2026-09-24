@@ -1,0 +1,11 @@
+{
+  "stage": "P1",
+  "approved_by": "user",
+  "date": "2026-09-24",
+  "message": "合适，继续执行计划",
+  "scope": ["whole-screen layout", "actor on-screen size"],
+  "does_not_approve": ["final art", "animation", "P2", "release"],
+  "screenshot": "docs/godot-quality/evidence/composition-overview-1080.png",
+  "camera": {"projection": "orthographic", "size": 18.8, "position": [5,24,33.5], "target": [-2,0,0]},
+  "actor": {"frame_size": [160,128], "foot_anchor": [80,112], "pixel_size": 0.022, "sprite_offset": [0,48], "standing_height_1080_px": 101.1}
+}

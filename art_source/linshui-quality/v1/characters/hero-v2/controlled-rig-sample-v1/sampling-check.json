@@ -1,0 +1,239 @@
+{
+  "status": "technical_sample_only_not_visual_acceptance",
+  "canvas": [
+    160,
+    128
+  ],
+  "uniform_scale": 0.25,
+  "translation": [
+    0,
+    0
+  ],
+  "root_anchor": [
+    80,
+    112
+  ],
+  "safe_margin_pass": true,
+  "frames": [
+    {
+      "source": "art_source\\linshui-quality\\v1\\characters\\hero-v2\\controlled-rig-sample-v1\\s-controlled_idle-01.png",
+      "bbox": [
+        56,
+        30,
+        104,
+        115
+      ],
+      "safe": true
+    },
+    {
+      "source": "art_source\\linshui-quality\\v1\\characters\\hero-v2\\controlled-rig-sample-v1\\se-controlled_idle-01.png",
+      "bbox": [
+        61,
+        32,
+        99,
+        117
+      ],
+      "safe": true
+    },
+    {
+      "source": "art_source\\linshui-quality\\v1\\characters\\hero-v2\\controlled-rig-sample-v1\\s-controlled_walk-01.png",
+      "bbox": [
+        55,
+        33,
+        104,
+        119
+      ],
+      "safe": true
+    },
+    {
+      "source": "art_source\\linshui-quality\\v1\\characters\\hero-v2\\controlled-rig-sample-v1\\s-controlled_walk-02.png",
+      "bbox": [
+        55,
+        33,
+        104,
+        117
+      ],
+      "safe": true
+    },
+    {
+      "source": "art_source\\linshui-quality\\v1\\characters\\hero-v2\\controlled-rig-sample-v1\\s-controlled_walk-03.png",
+      "bbox": [
+        56,
+        33,
+        104,
+        115
+      ],
+      "safe": true
+    },
+    {
+      "source": "art_source\\linshui-quality\\v1\\characters\\hero-v2\\controlled-rig-sample-v1\\s-controlled_walk-04.png",
+      "bbox": [
+        56,
+        33,
+        105,
+        116
+      ],
+      "safe": true
+    },
+    {
+      "source": "art_source\\linshui-quality\\v1\\characters\\hero-v2\\controlled-rig-sample-v1\\s-controlled_walk-05.png",
+      "bbox": [
+        56,
+        33,
+        105,
+        119
+      ],
+      "safe": true
+    },
+    {
+      "source": "art_source\\linshui-quality\\v1\\characters\\hero-v2\\controlled-rig-sample-v1\\s-controlled_walk-06.png",
+      "bbox": [
+        56,
+        33,
+        105,
+        117
+      ],
+      "safe": true
+    },
+    {
+      "source": "art_source\\linshui-quality\\v1\\characters\\hero-v2\\controlled-rig-sample-v1\\s-controlled_walk-07.png",
+      "bbox": [
+        56,
+        33,
+        104,
+        115
+      ],
+      "safe": true
+    },
+    {
+      "source": "art_source\\linshui-quality\\v1\\characters\\hero-v2\\controlled-rig-sample-v1\\s-controlled_walk-08.png",
+      "bbox": [
+        55,
+        33,
+        104,
+        114
+      ],
+      "safe": true
+    },
+    {
+      "source": "art_source\\linshui-quality\\v1\\characters\\hero-v2\\controlled-rig-sample-v1\\se-controlled_thrust-01.png",
+      "bbox": [
+        61,
+        32,
+        99,
+        117
+      ],
+      "safe": true
+    },
+    {
+      "source": "art_source\\linshui-quality\\v1\\characters\\hero-v2\\controlled-rig-sample-v1\\se-controlled_thrust-02.png",
+      "bbox": [
+        61,
+        32,
+        99,
+        117
+      ],
+      "safe": true
+    },
+    {
+      "source": "art_source\\linshui-quality\\v1\\characters\\hero-v2\\controlled-rig-sample-v1\\se-controlled_thrust-03.png",
+      "bbox": [
+        61,
+        32,
+        99,
+        117
+      ],
+      "safe": true
+    },
+    {
+      "source": "art_source\\linshui-quality\\v1\\characters\\hero-v2\\controlled-rig-sample-v1\\se-controlled_thrust-04.png",
+      "bbox": [
+        61,
+        32,
+        99,
+        117
+      ],
+      "safe": true
+    },
+    {
+      "source": "art_source\\linshui-quality\\v1\\characters\\hero-v2\\controlled-rig-sample-v1\\se-controlled_thrust-05.png",
+      "bbox": [
+        64,
+        32,
+        104,
+        117
+      ],
+      "safe": true
+    },
+    {
+      "source": "art_source\\linshui-quality\\v1\\characters\\hero-v2\\controlled-rig-sample-v1\\se-controlled_thrust-06.png",
+      "bbox": [
+        65,
+        32,
+        105,
+        117
+      ],
+      "safe": true
+    },
+    {
+      "source": "art_source\\linshui-quality\\v1\\characters\\hero-v2\\controlled-rig-sample-v1\\se-controlled_thrust-07.png",
+      "bbox": [
+        65,
+        32,
+        105,
+        117
+      ],
+      "safe": true
+    },
+    {
+      "source": "art_source\\linshui-quality\\v1\\characters\\hero-v2\\controlled-rig-sample-v1\\se-controlled_thrust-08.png",
+      "bbox": [
+        65,
+        32,
+        105,
+        117
+      ],
+      "safe": true
+    },
+    {
+      "source": "art_source\\linshui-quality\\v1\\characters\\hero-v2\\controlled-rig-sample-v1\\se-controlled_thrust-09.png",
+      "bbox": [
+        62,
+        32,
+        100,
+        117
+      ],
+      "safe": true
+    },
+    {
+      "source": "art_source\\linshui-quality\\v1\\characters\\hero-v2\\controlled-rig-sample-v1\\se-controlled_thrust-10.png",
+      "bbox": [
+        61,
+        32,
+        99,
+        117
+      ],
+      "safe": true
+    },
+    {
+      "source": "art_source\\linshui-quality\\v1\\characters\\hero-v2\\controlled-rig-sample-v1\\se-controlled_thrust-11.png",
+      "bbox": [
+        61,
+        32,
+        99,
+        117
+      ],
+      "safe": true
+    },
+    {
+      "source": "art_source\\linshui-quality\\v1\\characters\\hero-v2\\controlled-rig-sample-v1\\se-controlled_thrust-12.png",
+      "bbox": [
+        61,
+        32,
+        99,
+        117
+      ],
+      "safe": true
+    }
+  ]
+}

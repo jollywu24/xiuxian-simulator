@@ -74,6 +74,8 @@ npm run test:browser
 | --- | --- |
 | `README.md` | 面向试玩者的产品介绍、链接和最短启动／验证方式 |
 | `PROJECT_CONTEXT.md` | 开发导航、代码入口和文档索引 |
+| [docs/LEGACY_DEVELOPMENT.md](docs/LEGACY_DEVELOPMENT.md) | 旧版术语、内容、系统、架构及界面维护约束；按受影响章节读取 |
+| [docs/ASSET_POLICY.md](docs/ASSET_POLICY.md) | 资源目录、分发、删除授权、生产与视觉验收；仅资源相关任务读取 |
 | `docs/GAME_DESIGN.md` | 产品体验、系统边界和设计目标 |
 | `docs/STORY_BIBLE.md` | 人物、剧情顺序、揭示边界和连续性 |
 | `docs/SYSTEM_ROADMAP.md` | 已完成、待制作、依赖和优先级 |

@@ -1,0 +1,16 @@
+{
+  "source": "art_source\\linshui-quality\\v1\\textures\\plaster-albedo-source-v1.png",
+  "source_sha256": "21a3e00ee6635f9757a21745fa2457881ec60c28cc9d8febfabd5f7dccdf52c6",
+  "normal": "flat tangent normal; relief supplied by geometry, no color-to-height inference",
+  "orm": {
+    "r": "AO=1, no baked AO",
+    "g": 0.9411764705882353,
+    "b": "metallic=0"
+  },
+  "color_space": {
+    "albedo": "sRGB",
+    "normal": "linear",
+    "orm": "linear"
+  },
+  "seam_review": "pending"
+}

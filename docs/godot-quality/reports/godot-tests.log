@@ -1,0 +1,14 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+ERROR: res://scenes/validation/quality-fixture.tscn:130 - Parse Error: Can't load cached ext-resource id: 9_qxbbype=.
+   at: _printerr (scene/resources/resource_format_text.cpp:41)
+   GDScript backtrace (most recent call first):
+       [0] run (res://tests/run_tests.gd:14)
+ERROR: Failed loading resource: res://scenes/validation/quality-fixture.tscn.
+   at: _load (core/io/resource_loader.cpp:317)
+   GDScript backtrace (most recent call first):
+       [0] run (res://tests/run_tests.gd:14)
+SCRIPT ERROR: Attempt to call function 'instantiate' in base 'null instance' on a null instance.
+   at: run (res://tests/run_tests.gd:14)
+   GDScript backtrace (most recent call first):
+       [0] run (res://tests/run_tests.gd:14)

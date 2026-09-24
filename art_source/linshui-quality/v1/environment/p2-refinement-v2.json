@@ -1,0 +1,25 @@
+{
+  "tea_veranda": {
+    "triangles": 17640,
+    "vertices": 9436,
+    "source_objects": 308,
+    "sha256": "6e971f1c1ff44e40a3796ba8d1c0fdb4b335c20aec7417391a7a83b541740db0",
+    "bytes": 1127212
+  },
+  "paving": {
+    "triangles": 18360,
+    "vertices": 9520,
+    "source_objects": 170,
+    "sha256": "64332f47aeab774dc79f60f81d59591b28e964340cb75cd5f88422ab92d336f8",
+    "bytes": 3983256
+  },
+  "bank": {
+    "triangles": 18900,
+    "vertices": 9800,
+    "source_objects": 175,
+    "sha256": "4c02af3df7317a5dcbbba8d5856ce5e0dfe1eb50a7b36444e7c273ab62640a22",
+    "bytes": 3993408
+  },
+  "status": "exported_not_visual_approved",
+  "method": "existing editable Blender masters incrementally extended; actual generated limestone albedo; geometric bevel/relief, no claimed normal map"
+}

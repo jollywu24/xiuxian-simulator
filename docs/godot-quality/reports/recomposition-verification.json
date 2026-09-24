@@ -1,0 +1,22 @@
+{
+  "date": "2026-09-24",
+  "p1_composition": "user_approved",
+  "p2_visual": "not_approved",
+  "godot": "4.7.2.stable.official.ed1daf0bf",
+  "blender": "5.2.1 LTS",
+  "renderer": "Vulkan Forward+ / NVIDIA GeForce RTX 5060",
+  "native_checks": [
+    "Seven actual CharacterBody3D route legs passed",
+    "Water and roof click rejection passed; bridge click accepted",
+    "Locked input rejected navigation target",
+    "Synthetic physical D-key moved actor and river boundary prevented falling",
+    "1080p and 720p real viewport captures produced",
+    "Eight motion sample frames captured at identical actor transform"
+  ],
+  "quick_gate": {"command": "node scripts/run-quality-gate.mjs quick", "exit_code": 0, "steps": 32, "tests": 238, "passed": 238, "failed": 0, "note": "npm absent; executed package.json's identical Node entry directly"},
+  "protected_workspace": {"files": 292, "unchanged": true, "report": "docs/godot-quality/reports/reference-check.json"},
+  "known_environment_warning": "Godot could not read system certificate store; local rendering/navigation succeeded. No network capability asserted.",
+  "not_executed": ["Windows Release export", "120-second Release performance sampling", "final 90-second real-time continuous recording", "final visual acceptance"],
+  "pushed": false,
+  "deployed": false
+}

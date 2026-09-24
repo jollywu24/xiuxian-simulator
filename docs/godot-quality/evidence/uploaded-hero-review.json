@@ -1,0 +1,70 @@
+{
+	"gpu": "NVIDIA GeForce RTX 5060",
+	"missing": [
+		"attack_nw",
+		"verified rig provenance",
+		"frame-specific contact/weapon anchors",
+		"continuous motion acceptance"
+	],
+	"original_uploads_modified": false,
+	"renderer": "forward_plus",
+	"samples": [
+		{
+			"action": "idle",
+			"direction": "s",
+			"file": "uploaded-idle-s.png",
+			"frame": 0,
+			"pixel_size": 0.00667418260127306
+		},
+		{
+			"action": "idle",
+			"direction": "se",
+			"file": "uploaded-idle-se.png",
+			"frame": 0,
+			"pixel_size": 0.00667418260127306
+		},
+		{
+			"action": "walk",
+			"direction": "s",
+			"file": "uploaded-walk-s.png",
+			"frame": 0,
+			"pixel_size": 0.00817679520696402
+		},
+		{
+			"action": "walk",
+			"direction": "se",
+			"file": "uploaded-walk-se.png",
+			"frame": 0,
+			"pixel_size": 0.00817679520696402
+		},
+		{
+			"action": "run",
+			"direction": "s",
+			"file": "uploaded-run-s.png",
+			"frame": 0,
+			"pixel_size": 0.00817679520696402
+		},
+		{
+			"action": "run",
+			"direction": "se",
+			"file": "uploaded-run-se.png",
+			"frame": 0,
+			"pixel_size": 0.00817679520696402
+		},
+		{
+			"action": "attack",
+			"direction": "s",
+			"file": "uploaded-attack-s.png",
+			"frame": 2,
+			"pixel_size": 0.00817679520696402
+		},
+		{
+			"action": "attack",
+			"direction": "se",
+			"file": "uploaded-attack-se.png",
+			"frame": 2,
+			"pixel_size": 0.00817679520696402
+		}
+	],
+	"status": "review_only"
+}

@@ -1,0 +1,79 @@
+{
+  "stage": "p2",
+  "checks": [
+    {
+      "asset": "CHR-01",
+      "action": "idle",
+      "size": [
+        640,
+        256
+      ],
+      "frame_count": 8,
+      "dimensions_pass": true,
+      "directions_distinct": true
+    },
+    {
+      "asset": "CHR-01",
+      "action": "walk",
+      "size": [
+        1280,
+        256
+      ],
+      "frame_count": 16,
+      "dimensions_pass": true,
+      "directions_distinct": true
+    },
+    {
+      "asset": "CHR-01",
+      "action": "thrust",
+      "size": [
+        1920,
+        256
+      ],
+      "frame_count": 24,
+      "dimensions_pass": true,
+      "directions_distinct": true
+    },
+    {
+      "asset": "pavement-1-v1.glb",
+      "glb_header_pass": true,
+      "bytes": 1907684,
+      "mesh_count": 1,
+      "sha256": "9ebb0baac5e61b754b51be8170efa39c6a8caeec4ae779cd0eae824ebb7c840b"
+    },
+    {
+      "asset": "tea-facade-v1.glb",
+      "glb_header_pass": true,
+      "bytes": 3289744,
+      "mesh_count": 1,
+      "sha256": "36f207a011d64fc5581822c0ebbfdddef64b4fca65815d2042b1f1019aeb337c"
+    },
+    {
+      "asset": "tea-foundation-v1.glb",
+      "glb_header_pass": true,
+      "bytes": 68564,
+      "mesh_count": 1,
+      "sha256": "d6fcd9c0a383096941547bc76c0bc6533ab29ad30ad5cc6d9c5f7064c6901b3b"
+    },
+    {
+      "asset": "tea-roof-v1.glb",
+      "glb_header_pass": true,
+      "bytes": 5438772,
+      "mesh_count": 1,
+      "sha256": "df766254ac91616a3ba375757376749dadde5add8f08930fe85c649d97a9245f"
+    },
+    {
+      "asset": "tea-walls-v1.glb",
+      "glb_header_pass": true,
+      "bytes": 3093436,
+      "mesh_count": 1,
+      "sha256": "56e8878d0f2e54e199e35398e77a8bf87f194146fcd3069a111a574bf247ddc2"
+    }
+  ],
+  "failures": [
+    "CHR-01 pixel-cluster refinement not accepted",
+    "G2 visual review not passed"
+  ],
+  "structural_checks_are_not_visual_acceptance": true,
+  "gate_pass": false
+}

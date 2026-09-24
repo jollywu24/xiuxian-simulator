@@ -1,0 +1,54 @@
+{
+	"frames": [
+		{
+			"actor_position": "(-5.0, 0.000107, 2.6)",
+			"frame": 0,
+			"offset": "(0.0, 48.0)",
+			"pixel_size": 0.0219999998807907
+		},
+		{
+			"actor_position": "(-5.0, 0.000107, 2.6)",
+			"frame": 1,
+			"offset": "(0.0, 48.0)",
+			"pixel_size": 0.0219999998807907
+		},
+		{
+			"actor_position": "(-5.0, 0.000107, 2.6)",
+			"frame": 2,
+			"offset": "(0.0, 48.0)",
+			"pixel_size": 0.0219999998807907
+		},
+		{
+			"actor_position": "(-5.0, 0.000107, 2.6)",
+			"frame": 3,
+			"offset": "(0.0, 48.0)",
+			"pixel_size": 0.0219999998807907
+		},
+		{
+			"actor_position": "(-5.0, 0.000107, 2.6)",
+			"frame": 4,
+			"offset": "(0.0, 48.0)",
+			"pixel_size": 0.0219999998807907
+		},
+		{
+			"actor_position": "(-5.0, 0.000107, 2.6)",
+			"frame": 5,
+			"offset": "(0.0, 48.0)",
+			"pixel_size": 0.0219999998807907
+		},
+		{
+			"actor_position": "(-5.0, 0.000107, 2.6)",
+			"frame": 6,
+			"offset": "(0.0, 48.0)",
+			"pixel_size": 0.0219999998807907
+		},
+		{
+			"actor_position": "(-5.0, 0.000107, 2.6)",
+			"frame": 7,
+			"offset": "(0.0, 48.0)",
+			"pixel_size": 0.0219999998807907
+		}
+	],
+	"method": "real Forward+ frames, fixed actor transform; no per-frame compensation",
+	"visual_approved": false
+}

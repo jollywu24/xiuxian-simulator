@@ -1,0 +1,15 @@
+Use case: precise-object-edit
+Input image 1 is the edit target: the 8-frame south-facing walk sprite sheet. Input image 2 is a pose reference ONLY for the RIGHT-foot-forward contact. Keep image 1's canvas, strict 4x2 arrangement, transparency, character identity, every head position and head size, costume, weapon handedness, lighting and drawing style. Do not add more figures.
+Repair the walk-cycle LEGS and the lower robe only. Current image 1 mistakenly repeats the LEFT-foot-forward pose in almost every cell. This is a serious animation error. Build a genuine alternating cycle, not eight variations of a portrait.
+TOP ROW left to right:
+1 retain LEFT foot forward, viewer RIGHT boot planted lower.
+2 left leg weight-bearing, RIGHT boot moving from rear, knee bent.
+3 passing pose: two legs near each other, RIGHT boot visibly raised beside planted LEFT shin; hips above planted foot.
+4 RIGHT boot travels forward and is visibly below left boot, LEFT heel up.
+BOTTOM ROW left to right:
+5 change to RIGHT foot forward (viewer's LEFT boot lower), LEFT leg behind. Use image 2's leg configuration here.
+6 RIGHT leg weight-bearing, LEFT boot moving from rear.
+7 passing pose: LEFT boot visibly raised beside planted RIGHT shin.
+8 LEFT boot travels forward toward frame 1, RIGHT heel lifted.
+Expose enough of both boots beneath the robe to show the pose. Passing poses 3 and 7 must look narrower than the two contact poses. Keep the same root center in each cell, same limb lengths, same head-to-ground body scale; physically plausible small knee bend only. Keep sword and both hands intact, sword stays in anatomical right hand (viewer left) in EVERY cell. All eight figures stay complete with empty transparent cell gutters. No numbering, lines, cast shadows, or background.
+Do not change the number of cells or enlarge individual poses.

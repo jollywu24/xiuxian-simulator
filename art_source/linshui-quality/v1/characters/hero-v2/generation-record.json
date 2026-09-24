@@ -1,0 +1,34 @@
+{
+  "date": "2026-09-23",
+  "character": "Ye Wuchen",
+  "decision": "new-authoritative-v2-source-authorized-by-user; old-uploaded-and-v1-assets-preserved",
+  "imagegen": [
+    {
+      "output": "turnaround-guide-v2.png",
+      "prompt": "turnaround-guide-prompt-v2.txt",
+      "role": "identity-and-costume-reference-only",
+      "sha256": "60019D6271591034FE4D9D69C5043FD096A8FC627F0C2F81A7FE095B3D6AA493"
+    },
+    {
+      "output": "idle-s-style-target-v2.png",
+      "prompt": "idle-s-style-target-prompt-v2.txt",
+      "role": "pixel-style-reference-only-not-runtime-frame",
+      "sha256": "5630281E638C5FA3C750E87609E7E3EFE95A7353588AFB6A9E727C64E29E465E"
+    }
+  ],
+  "blender": {
+    "version": "5.2.1 LTS",
+    "source": "hero-v2.blend",
+    "sha256_after_r4": "5165FB45E05AC99F41D2FFAE00AEF25014BAB39025F8E59F3E5767519A023A53",
+    "scripts_in_order": [
+      "scripts/godot-quality/make_hero_v2.py",
+      "scripts/godot-quality/revise_hero_v2_camera.py",
+      "scripts/godot-quality/revise_hero_v2_silhouette.py",
+      "scripts/godot-quality/revise_hero_v2_thrust.py",
+      "scripts/godot-quality/revise_hero_v2_foot_anchor.py"
+    ],
+    "review_render": "scripts/godot-quality/render_hero_v2_contact.py",
+    "source_audit": "scripts/godot-quality/audit_hero_v2.py"
+  },
+  "g2_status": "rejected: source costume fidelity and thrust readability below standard; no runtime atlas or Godot integration"
+}

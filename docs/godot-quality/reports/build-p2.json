@@ -1,0 +1,27 @@
+[
+  {
+    "id": "ENV-01:walls",
+    "result": "exported",
+    "input_sha256": "2e2d8f7fc010ceed62f4c04b658c2a70aac7399e7d7912de27379f195180535c"
+  },
+  {
+    "id": "ENV-01:roof",
+    "result": "exported",
+    "input_sha256": "2e2d8f7fc010ceed62f4c04b658c2a70aac7399e7d7912de27379f195180535c"
+  },
+  {
+    "id": "ENV-01:facade",
+    "result": "exported",
+    "input_sha256": "2e2d8f7fc010ceed62f4c04b658c2a70aac7399e7d7912de27379f195180535c"
+  },
+  {
+    "id": "ENV-01:foundation",
+    "result": "exported",
+    "input_sha256": "2e2d8f7fc010ceed62f4c04b658c2a70aac7399e7d7912de27379f195180535c"
+  },
+  {
+    "id": "ENV-03:p2",
+    "result": "exported",
+    "input_sha256": "b2344fc0b76d96baf437fb968b053fcffe73e12a4c140b93b74fbd35c3b41777"
+  }
+]

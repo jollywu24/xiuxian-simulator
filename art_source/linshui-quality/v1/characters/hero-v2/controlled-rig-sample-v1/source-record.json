@@ -1,0 +1,298 @@
+{
+  "status": "candidate_not_accepted",
+  "method": "existing true 3D master refinement and controlled skeletal animation; offline 2D output",
+  "user_choice": "保留当前造型，改用可控骨骼动画验证",
+  "camera_pitch": 35,
+  "canvas": [
+    160,
+    128
+  ],
+  "source_canvas": [
+    640,
+    512
+  ],
+  "root_anchor": [
+    80,
+    112
+  ],
+  "per_frame_image_transform": false,
+  "contacts": [
+    {
+      "frame": 1,
+      "side": "L",
+      "stance": true,
+      "ankle": [
+        -0.14,
+        -0.15,
+        0.13
+      ]
+    },
+    {
+      "frame": 1,
+      "side": "R",
+      "stance": false,
+      "ankle": [
+        0.14,
+        0.15,
+        0.13
+      ]
+    },
+    {
+      "frame": 2,
+      "side": "L",
+      "stance": true,
+      "ankle": [
+        -0.14,
+        -0.075,
+        0.13
+      ]
+    },
+    {
+      "frame": 2,
+      "side": "R",
+      "stance": false,
+      "ankle": [
+        0.14,
+        0.075,
+        0.20071067811865478
+      ]
+    },
+    {
+      "frame": 3,
+      "side": "L",
+      "stance": true,
+      "ankle": [
+        -0.14,
+        0.0,
+        0.13
+      ]
+    },
+    {
+      "frame": 3,
+      "side": "R",
+      "stance": false,
+      "ankle": [
+        0.14,
+        0.0,
+        0.23
+      ]
+    },
+    {
+      "frame": 4,
+      "side": "L",
+      "stance": true,
+      "ankle": [
+        -0.14,
+        0.07499999999999998,
+        0.13
+      ]
+    },
+    {
+      "frame": 4,
+      "side": "R",
+      "stance": false,
+      "ankle": [
+        0.14,
+        -0.07499999999999998,
+        0.20071067811865478
+      ]
+    },
+    {
+      "frame": 5,
+      "side": "L",
+      "stance": false,
+      "ankle": [
+        -0.14,
+        0.15,
+        0.13
+      ]
+    },
+    {
+      "frame": 5,
+      "side": "R",
+      "stance": true,
+      "ankle": [
+        0.14,
+        -0.15,
+        0.13
+      ]
+    },
+    {
+      "frame": 6,
+      "side": "L",
+      "stance": false,
+      "ankle": [
+        -0.14,
+        0.075,
+        0.20071067811865478
+      ]
+    },
+    {
+      "frame": 6,
+      "side": "R",
+      "stance": true,
+      "ankle": [
+        0.14,
+        -0.075,
+        0.13
+      ]
+    },
+    {
+      "frame": 7,
+      "side": "L",
+      "stance": false,
+      "ankle": [
+        -0.14,
+        0.0,
+        0.23
+      ]
+    },
+    {
+      "frame": 7,
+      "side": "R",
+      "stance": true,
+      "ankle": [
+        0.14,
+        0.0,
+        0.13
+      ]
+    },
+    {
+      "frame": 8,
+      "side": "L",
+      "stance": false,
+      "ankle": [
+        -0.14,
+        -0.07499999999999998,
+        0.20071067811865478
+      ]
+    },
+    {
+      "frame": 8,
+      "side": "R",
+      "stance": true,
+      "ankle": [
+        0.14,
+        0.07499999999999998,
+        0.13
+      ]
+    }
+  ],
+  "rendered": [
+    [
+      "s",
+      "controlled_idle",
+      1
+    ],
+    [
+      "se",
+      "controlled_idle",
+      1
+    ],
+    [
+      "s",
+      "controlled_walk",
+      1
+    ],
+    [
+      "s",
+      "controlled_walk",
+      2
+    ],
+    [
+      "s",
+      "controlled_walk",
+      3
+    ],
+    [
+      "s",
+      "controlled_walk",
+      4
+    ],
+    [
+      "s",
+      "controlled_walk",
+      5
+    ],
+    [
+      "s",
+      "controlled_walk",
+      6
+    ],
+    [
+      "s",
+      "controlled_walk",
+      7
+    ],
+    [
+      "s",
+      "controlled_walk",
+      8
+    ],
+    [
+      "se",
+      "controlled_thrust",
+      1
+    ],
+    [
+      "se",
+      "controlled_thrust",
+      2
+    ],
+    [
+      "se",
+      "controlled_thrust",
+      3
+    ],
+    [
+      "se",
+      "controlled_thrust",
+      4
+    ],
+    [
+      "se",
+      "controlled_thrust",
+      5
+    ],
+    [
+      "se",
+      "controlled_thrust",
+      6
+    ],
+    [
+      "se",
+      "controlled_thrust",
+      7
+    ],
+    [
+      "se",
+      "controlled_thrust",
+      8
+    ],
+    [
+      "se",
+      "controlled_thrust",
+      9
+    ],
+    [
+      "se",
+      "controlled_thrust",
+      10
+    ],
+    [
+      "se",
+      "controlled_thrust",
+      11
+    ],
+    [
+      "se",
+      "controlled_thrust",
+      12
+    ]
+  ],
+  "limitations": [
+    "Unapproved source silhouette/materials",
+    "Motion and weapon trajectory require visual review",
+    "No completed pixel revision master or final animation acceptance"
+  ]
+}

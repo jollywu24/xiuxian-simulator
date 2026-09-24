@@ -1,0 +1,48 @@
+{
+  "checks": [
+    {
+      "check": "godot-tests",
+      "exit_code": 0,
+      "pass": true,
+      "log": "docs\\godot-quality\\reports\\godot-tests-run.log"
+    },
+    {
+      "check": "default-hero-contract",
+      "exit_code": 0,
+      "pass": true,
+      "log": "docs\\godot-quality\\reports\\default-hero-contract-run.log"
+    },
+    {
+      "check": "upload-integrity",
+      "exit_code": 0,
+      "pass": true,
+      "log": "docs\\godot-quality\\reports\\upload-integrity-run.log"
+    },
+    {
+      "check": "idle-registration",
+      "exit_code": 0,
+      "pass": true,
+      "log": "docs\\godot-quality\\reports\\idle-registration-run.log"
+    },
+    {
+      "check": "attack-row-separation",
+      "exit_code": 0,
+      "pass": true,
+      "log": "docs\\godot-quality\\reports\\attack-row-separation-run.log"
+    },
+    {
+      "check": "assets-p2",
+      "exit_code": 1,
+      "pass": false,
+      "log": "docs\\godot-quality\\reports\\assets-p2-run.log"
+    },
+    {
+      "check": "reference",
+      "exit_code": 0,
+      "pass": true,
+      "log": "docs\\godot-quality\\reports\\reference-run.log"
+    }
+  ],
+  "accepted_candidate": false,
+  "reason": "Requires all visual and downstream gates, not only automation"
+}

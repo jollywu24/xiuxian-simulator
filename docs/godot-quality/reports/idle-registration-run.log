@@ -1,0 +1,143 @@
+{
+  "method": "lower-body alpha envelope inside fixed 65%-90% height band; diagnostic only, not a gait score",
+  "rows": [
+    {
+      "direction": "n",
+      "before_x": [
+        137.0,
+        115.0,
+        92.0,
+        69.0
+      ],
+      "after_x": [
+        97.0,
+        97.0,
+        97.0,
+        97.0
+      ],
+      "before_span_source_px": 68.0,
+      "after_span_source_px": 0.0
+    },
+    {
+      "direction": "ne",
+      "before_x": [
+        140.5,
+        118.0,
+        97.0,
+        74.5
+      ],
+      "after_x": [
+        100.5,
+        100.0,
+        102.0,
+        102.5
+      ],
+      "before_span_source_px": 66.0,
+      "after_span_source_px": 2.5
+    },
+    {
+      "direction": "e",
+      "before_x": [
+        143.5,
+        121.0,
+        97.5,
+        74.5
+      ],
+      "after_x": [
+        103.5,
+        103.0,
+        102.5,
+        102.5
+      ],
+      "before_span_source_px": 69.0,
+      "after_span_source_px": 1.0
+    },
+    {
+      "direction": "se",
+      "before_x": [
+        154.0,
+        132.5,
+        110.0,
+        86.0
+      ],
+      "after_x": [
+        114.0,
+        114.5,
+        115.0,
+        114.0
+      ],
+      "before_span_source_px": 68.0,
+      "after_span_source_px": 1.0
+    },
+    {
+      "direction": "s",
+      "before_x": [
+        149.5,
+        126.5,
+        104.5,
+        81.5
+      ],
+      "after_x": [
+        109.5,
+        108.5,
+        109.5,
+        109.5
+      ],
+      "before_span_source_px": 68.0,
+      "after_span_source_px": 1.0
+    },
+    {
+      "direction": "sw",
+      "before_x": [
+        149.0,
+        126.0,
+        104.0,
+        81.0
+      ],
+      "after_x": [
+        109.0,
+        108.0,
+        109.0,
+        109.0
+      ],
+      "before_span_source_px": 68.0,
+      "after_span_source_px": 1.0
+    },
+    {
+      "direction": "w",
+      "before_x": [
+        149.5,
+        127.5,
+        103.5,
+        80.0
+      ],
+      "after_x": [
+        109.5,
+        109.5,
+        108.5,
+        108.0
+      ],
+      "before_span_source_px": 69.5,
+      "after_span_source_px": 1.5
+    },
+    {
+      "direction": "nw",
+      "before_x": [
+        150.5,
+        128.5,
+        106.0,
+        83.5
+      ],
+      "after_x": [
+        110.5,
+        110.5,
+        111.0,
+        111.5
+      ],
+      "before_span_source_px": 67.0,
+      "after_span_source_px": 1.0
+    }
+  ],
+  "pass": true,
+  "original_image_modified": false
+}

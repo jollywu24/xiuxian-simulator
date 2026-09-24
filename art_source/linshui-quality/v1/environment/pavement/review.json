@@ -1,0 +1,8 @@
+{
+  "status": "rejected_pending_revision",
+  "defects": [
+    "Four module sources currently share identical visual content; not four accepted variants",
+    "Generated albedo seam inspection required",
+    "Microrelief omitted rather than inferred from color"
+  ]
+}

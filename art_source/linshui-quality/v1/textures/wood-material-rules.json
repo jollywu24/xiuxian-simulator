@@ -1,0 +1,16 @@
+{
+  "source": "art_source\\linshui-quality\\v1\\textures\\wood-albedo-source-v1.png",
+  "source_sha256": "e8582c3e3cf452bd7a48016112406b31efb33290c0c0c9dc98afab43b56b5f3e",
+  "normal": "flat tangent normal; relief supplied by geometry, no color-to-height inference",
+  "orm": {
+    "r": "AO=1, no baked AO",
+    "g": 0.8627450980392157,
+    "b": "metallic=0"
+  },
+  "color_space": {
+    "albedo": "sRGB",
+    "normal": "linear",
+    "orm": "linear"
+  },
+  "seam_review": "pending"
+}

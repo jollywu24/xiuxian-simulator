@@ -1,0 +1,233 @@
+{
+  "canvas": [
+    1200,
+    1320
+  ],
+  "virtual_origin_y": 350,
+  "virtual_foot_y": 942,
+  "virtual_center_x": 700,
+  "layer_order_back_to_front": [
+    "leg_r",
+    "leg_l",
+    "skirt",
+    "torso",
+    "arm_l",
+    "arm_r",
+    "head",
+    "sword"
+  ],
+  "directions": {
+    "s": {
+      "head": {
+        "file": "puppet-parts/s-head.png",
+        "crop_box": [
+          40,
+          75,
+          510,
+          585
+        ],
+        "virtual_offset": [
+          405,
+          -335
+        ]
+      },
+      "torso": {
+        "file": "puppet-parts/s-torso.png",
+        "crop_box": [
+          500,
+          95,
+          930,
+          655
+        ],
+        "virtual_offset": [
+          0,
+          0
+        ]
+      },
+      "skirt": {
+        "file": "puppet-parts/s-skirt.png",
+        "crop_box": [
+          500,
+          95,
+          930,
+          655
+        ],
+        "virtual_offset": [
+          0,
+          0
+        ]
+      },
+      "arm_r": {
+        "file": "puppet-parts/s-arm_r.png",
+        "crop_box": [
+          930,
+          180,
+          1145,
+          605
+        ],
+        "virtual_offset": [
+          -400,
+          -25
+        ]
+      },
+      "arm_l": {
+        "file": "puppet-parts/s-arm_l.png",
+        "crop_box": [
+          1160,
+          180,
+          1350,
+          605
+        ],
+        "virtual_offset": [
+          -380,
+          -25
+        ]
+      },
+      "leg_r": {
+        "file": "puppet-parts/s-leg_r.png",
+        "crop_box": [
+          210,
+          675,
+          435,
+          1045
+        ],
+        "virtual_offset": [
+          360,
+          -90
+        ]
+      },
+      "leg_l": {
+        "file": "puppet-parts/s-leg_l.png",
+        "crop_box": [
+          635,
+          675,
+          870,
+          1045
+        ],
+        "virtual_offset": [
+          80,
+          -90
+        ]
+      },
+      "sword": {
+        "file": "puppet-parts/s-sword.png",
+        "crop_box": [
+          1055,
+          585,
+          1170,
+          1075
+        ],
+        "virtual_offset": [
+          -520,
+          -140
+        ]
+      }
+    },
+    "se": {
+      "head": {
+        "file": "puppet-parts/se-head.png",
+        "crop_box": [
+          40,
+          75,
+          510,
+          585
+        ],
+        "virtual_offset": [
+          405,
+          -335
+        ]
+      },
+      "torso": {
+        "file": "puppet-parts/se-torso.png",
+        "crop_box": [
+          500,
+          95,
+          930,
+          655
+        ],
+        "virtual_offset": [
+          0,
+          0
+        ]
+      },
+      "skirt": {
+        "file": "puppet-parts/se-skirt.png",
+        "crop_box": [
+          500,
+          95,
+          930,
+          655
+        ],
+        "virtual_offset": [
+          0,
+          0
+        ]
+      },
+      "arm_r": {
+        "file": "puppet-parts/se-arm_r.png",
+        "crop_box": [
+          930,
+          180,
+          1145,
+          605
+        ],
+        "virtual_offset": [
+          -400,
+          -25
+        ]
+      },
+      "arm_l": {
+        "file": "puppet-parts/se-arm_l.png",
+        "crop_box": [
+          1160,
+          180,
+          1350,
+          605
+        ],
+        "virtual_offset": [
+          -380,
+          -25
+        ]
+      },
+      "leg_r": {
+        "file": "puppet-parts/se-leg_r.png",
+        "crop_box": [
+          210,
+          675,
+          435,
+          1045
+        ],
+        "virtual_offset": [
+          360,
+          -90
+        ]
+      },
+      "leg_l": {
+        "file": "puppet-parts/se-leg_l.png",
+        "crop_box": [
+          635,
+          675,
+          870,
+          1045
+        ],
+        "virtual_offset": [
+          80,
+          -90
+        ]
+      },
+      "sword": {
+        "file": "puppet-parts/se-sword.png",
+        "crop_box": [
+          1055,
+          585,
+          1170,
+          1075
+        ],
+        "virtual_offset": [
+          -520,
+          -140
+        ]
+      }
+    }
+  }
+}

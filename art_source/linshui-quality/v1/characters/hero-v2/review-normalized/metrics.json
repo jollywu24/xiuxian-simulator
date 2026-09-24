@@ -1,0 +1,156 @@
+{
+  "source_size": [
+    1402,
+    1122
+  ],
+  "frame_size": [
+    160,
+    128
+  ],
+  "fixed_scale": 0.09009009009009009,
+  "fixed_resized_size": [
+    126,
+    101
+  ],
+  "fixed_paste": [
+    22,
+    18
+  ],
+  "frames": {
+    "s/idle/01": {
+      "bbox": [
+        59,
+        32,
+        100,
+        112
+      ],
+      "source": "generated-frames\\s\\idle\\01.png"
+    },
+    "s/idle/02": {
+      "bbox": [
+        59,
+        33,
+        101,
+        111
+      ],
+      "source": "generated-frames\\s\\idle\\02.png"
+    },
+    "s/idle/03": {
+      "bbox": [
+        59,
+        32,
+        101,
+        112
+      ],
+      "source": "generated-frames\\s\\idle\\03.png"
+    },
+    "s/idle/04": {
+      "bbox": [
+        59,
+        32,
+        101,
+        112
+      ],
+      "source": "generated-frames\\s\\idle\\04.png"
+    },
+    "s/walk/01": {
+      "bbox": [
+        60,
+        32,
+        102,
+        111
+      ],
+      "source": "generated-frames\\s\\walk\\01.png"
+    },
+    "s/walk/02": {
+      "bbox": [
+        59,
+        32,
+        102,
+        112
+      ],
+      "source": "generated-frames\\s\\walk\\02.png"
+    },
+    "s/walk/03": {
+      "bbox": [
+        60,
+        32,
+        102,
+        110
+      ],
+      "source": "generated-frames\\s\\walk\\03.png"
+    },
+    "s/walk/04": {
+      "bbox": [
+        59,
+        32,
+        103,
+        111
+      ],
+      "source": "generated-frames\\s\\walk\\04.png"
+    },
+    "s/walk/05": {
+      "bbox": [
+        59,
+        32,
+        102,
+        110
+      ],
+      "source": "generated-frames\\s\\walk\\05.png"
+    },
+    "s/thrust/07": {
+      "bbox": [
+        56,
+        35,
+        104,
+        112
+      ],
+      "source": "generated-frames\\s\\thrust\\07.png"
+    },
+    "se/idle/01": {
+      "bbox": [
+        63,
+        32,
+        103,
+        111
+      ],
+      "source": "generated-frames\\se\\idle\\01.png"
+    },
+    "se/idle/02": {
+      "bbox": [
+        62,
+        32,
+        103,
+        111
+      ],
+      "source": "generated-frames\\se\\idle\\02.png"
+    },
+    "se/idle/03": {
+      "bbox": [
+        62,
+        31,
+        103,
+        111
+      ],
+      "source": "generated-frames\\se\\idle\\03.png"
+    },
+    "se/idle/04": {
+      "bbox": [
+        62,
+        31,
+        103,
+        111
+      ],
+      "source": "generated-frames\\se\\idle\\04.png"
+    },
+    "se/thrust/07": {
+      "bbox": [
+        53,
+        42,
+        136,
+        110
+      ],
+      "source": "generated-frames\\se\\thrust\\07.png"
+    }
+  }
+}

@@ -1,0 +1,6 @@
+Input 1: turnaround-guide-v2.png (identity and costume reference).
+Input 2: master-preview-v2-r3.png (rig pose and framing reference).
+
+Edit image 2 (the transparent-background Blender render) into a production-quality HD-2D pixel-art game character keyframe. Image 1 is the exact costume/face/hair identity design reference. Preserve the ONE character's image-2 pose, sword-down orientation, framing, fixed centerline and foot baseline; do not invent a new pose. Draw clean deliberate pixel clusters with visible face, layered black ponytail, white crossed-collar linen, blue-gray split overskirt, brown belt, dark wrapped boots, one straight Chinese jian in right hand and left-hip scabbard. Keep full body and sword inside a single transparent 160:128-ratio frame with generous side margins; no shadows, background, labels, extra limbs, duplicate sword, glows, blur, outline halos or crop. This is only one idle-front keyframe style candidate, not a sprite sheet. Make the anatomy and silhouette much closer to image 1 than to the crude low-poly surfaces of image 2, while preserving the rig render's pose and framing.
+
+Result: idle-s-style-target-v2.png. This is a style target, NOT a runtime frame. The generated 1402x1122 image did not obey the exact 160x128 pixel contract or rig-editability contract; do not insert it into a sprite atlas.

@@ -1,0 +1,55 @@
+{
+	"adapter": "NVIDIA GeForce RTX 5060",
+	"art_status": "graybox_only",
+	"failures": [
+		"Route failed: (-3.0, 0.0, 6.0)",
+		"Route failed: (-3.0, 0.0, 3.0)"
+	],
+	"renderer": "forward_plus",
+	"route": [
+		{
+			"actual": "(-3.794549, 0.00081, 1.410901)",
+			"crossed_water": false,
+			"reached": true,
+			"target": "(-4.0, 0.0, 1.0)"
+		},
+		{
+			"actual": "(-0.463993, 0.000834, 0.172523)",
+			"crossed_water": false,
+			"reached": true,
+			"target": "(0.0, 0.0, 0.0)"
+		},
+		{
+			"actual": "(6.532459, 0.000821, 0.010807)",
+			"crossed_water": false,
+			"reached": true,
+			"target": "(7.0, 0.0, 0.0)"
+		},
+		{
+			"actual": "(0.483673, 0.000833, 0.0008)",
+			"crossed_water": false,
+			"reached": true,
+			"target": "(0.0, 0.0, 0.0)"
+		},
+		{
+			"actual": "(1.626897, -0.349168, 4.678579)",
+			"crossed_water": false,
+			"reached": true,
+			"target": "(2.0, -0.35, 5.0)"
+		},
+		{
+			"actual": "(1.280195, -0.279456, 4.790997)",
+			"crossed_water": false,
+			"reached": false,
+			"target": "(-3.0, 0.0, 6.0)"
+		},
+		{
+			"actual": "(1.280835, -0.279989, 4.739563)",
+			"crossed_water": false,
+			"reached": false,
+			"target": "(-3.0, 0.0, 3.0)"
+		}
+	],
+	"stage": "P1",
+	"viewport": "(1920.0, 1080.0)"
+}

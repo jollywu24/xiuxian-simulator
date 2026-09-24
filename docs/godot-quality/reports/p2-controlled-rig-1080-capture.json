@@ -1,0 +1,24 @@
+{
+  "command": [
+    "D:\\Godot_v4.7.2-stable_win64.exe",
+    "--path",
+    "C:\\Users\\wujialei\\Documents\\xiuxian\\godot\\linshui-quality",
+    "res://scenes/validation/composition-refined.tscn",
+    "--resolution",
+    "1920x1080",
+    "--position",
+    "0,0",
+    "--log-file",
+    "C:\\Users\\wujialei\\Documents\\xiuxian\\docs\\godot-quality\\reports\\p2-controlled-rig-1080-engine.log",
+    "--",
+    "--composition-evidence=C:\\Users\\wujialei\\Documents\\xiuxian\\docs\\godot-quality\\evidence",
+    "--controlled-source=C:\\Users\\wujialei\\Documents\\xiuxian\\art_source\\linshui-quality\\v1\\characters\\hero-v2\\controlled-rig-sample-v1\\native"
+  ],
+  "exit_code": 0,
+  "fresh_evidence": true,
+  "script_errors": [],
+  "route_test_requested": false,
+  "structural_pass": true,
+  "visual_approved": false,
+  "approval_required": "P2 art/motion remains unapproved; P1 composition was approved by user on 2026-09-24."
+}

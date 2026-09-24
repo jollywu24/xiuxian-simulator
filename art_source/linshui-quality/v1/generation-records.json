@@ -1,0 +1,46 @@
+{
+  "method": "built-in image_gen via imagegen skill; no external paid API",
+  "date": "2026-09-22",
+  "provider": "OpenAI built-in image generation",
+  "model_version": null,
+  "request_id_note": "Tool did not expose API request IDs or model version; artifact identifiers below are saved-output IDs only.",
+  "public_distribution_review": "pending",
+  "requests": [
+    {
+      "asset": "REF-02 partial: hero",
+      "artifact_id": "exec-41b40d48-7eab-4d6e-b364-0dc822c4bf7e",
+      "output": "references/hero-guide-v1.png",
+      "reference": "docs/godot-quality/references/hd2d-town-target.jpg",
+      "prompt": "Use case: stylized-concept. Production character guide, not runtime sprites. Original Jiangnan wuxia hero Ye Wuchen, compact 3.5–4 heads tall for HD-2D. Neutral off-white background, consistent front, side, back views plus walking and straight sword thrust key poses. Youthful male, black tied hair and short forelock, blue-gray short outer robe, ivory cross-collar shirt, dark cloth boots, brown belt, single straight jian sword in RIGHT hand, scabbard fixed on LEFT hip. Same face, hair, lapels, cuffs and split coat tails in every view. Clean planar game-ready forms readable at 80 pixel body height, restrained palette, neutral soft illumination. No armor, jewelry, extra weapons, scenery, text, HUD, bloom or ground shadow. This is a construction guide for ONE editable Blender rig, not an animation atlas. The supplied image is mood/proportion reference only; do not copy its characters or scenery.",
+      "observation": "Useful identity reference. Generated guide contains repeated walking poses; never used as runtime animation. Mother-model quality is evaluated independently."
+    },
+    {
+      "asset": "REF-03 partial: tea shop",
+      "artifact_id": "exec-9c27122a-ac36-4e34-9a17-110c1d70994f",
+      "output": "references/tea-guide-v1.png",
+      "prompt": "Use case: stylized-concept. Production architectural structure guide, not game screenshot. Original modest Jiangnan tea shop for a restrained HD-2D wuxia game. Neutral warm gray background. Show consistent front, side and three-quarter views of ONE single-story 6m wide x 5m deep shop: aged timber post-and-beam frame with stone footings, pale lime plaster infill, recessed central double wooden doors, two lattice service windows, dark blue-gray curved barrel-tile gable roof with modest swept eaves, visible rafters and ridge caps. Human-scaled everyday building, not palace. Physically explained supports, thick eave edge, weathered but maintained, subtle handcrafted surfaces. No people, no plants, no lanterns, no lettering, no environment, no directional cast shadows, no depth of field, no bloom. Clean readable construction for Blender modeling. Separate views of same building; do not rearrange door/window bays across views.",
+      "observation": "Generated output added diagram text despite no-lettering request; not used as runtime content. Actual geometry dimensions authored in Blender."
+    },
+    {
+      "asset": "TX-04",
+      "artifact_id": "exec-0887cce1-c808-4d05-8aa5-32b1d67430cf",
+      "output": "textures/stone-albedo-source-v1.png",
+      "prompt": "Use case: stylized-concept. Asset: square seamless albedo texture source for restrained hand-crafted HD-2D game stone paving. Orthographic flat top-down diffuse-only base color. Closely fitted irregular but deliberate large blue-gray limestone flagstones, each 35–60 cm across, subtle worn edges and muted warm-gray stone variation. About 5–7 stones across tile. Very narrow joints, no grout grid, no moss, no grass, no chips everywhere, no black crevices, no perspective, no directional light, no ambient cast shadows, no specular highlights, no text, no background. All image is usable stone texture, four edges tile seamlessly, subtle broad painterly mineral color rather than photo scan noise. This image is only base color, normals will come from controlled geometry separately.",
+      "observation": "3x3 inspection detects seams and conspicuous repetition. Rejected for final material; kept as actual P2 trial, normal currently explicitly flat."
+    },
+    {
+      "asset": "TX-02",
+      "artifact_id": "exec-93810a44-6dc3-444a-80e2-06c3a8add697",
+      "output": "textures/wood-albedo-source-v1.png",
+      "prompt": "Use case: stylized-concept. Square seamless base-color texture for original restrained HD-2D Jiangnan tea shop old timber. Texture only, straight parallel vertical fine wood grain, muted medium warm umber brown, long broad natural grain and very few subtle small knots. Neutral uniform diffuse lighting, no planks or seams, no directional highlights, no bevel shading, no cast shadow, no objects, no letters. Handcrafted painterly soft tonal variation, no photo scan noise or exaggerated black cracks. Covers 2m square in world space, seamless four edges. This is albedo only; normal and roughness authored separately from controlled material rules.",
+      "observation": "Real output applied to tea-house material. Cross-member grain orientation and repeated detail still require review."
+    },
+    {
+      "asset": "TX-01",
+      "artifact_id": "exec-e3b1e417-b1f8-4f5c-8f1d-49f39d84fb91",
+      "output": "textures/plaster-albedo-source-v1.png",
+      "prompt": "Use case: stylized-concept. Square seamless albedo-only texture of aged Jiangnan lime plaster for a handcrafted HD-2D game tea shop wall. Warm off-white and pale mineral gray, restrained broad hand-trowelled variation, very sparse tiny imperfections. Completely flat orthographic diffuse lighting, no shadows or highlights, no cracks, no objects, no text, no surrounding wall framing, no grime gradient, no moss, no photorealistic noise. Soft handcrafted material but not blank uniform paint. Match top-bottom and left-right for seamless tiling. 4m square world coverage. This is base color only, not normal/height information.",
+      "observation": "Real output applied to lime infill; source/normal/ORM and tile review stored, final material acceptance pending."
+    }
+  ]
+}

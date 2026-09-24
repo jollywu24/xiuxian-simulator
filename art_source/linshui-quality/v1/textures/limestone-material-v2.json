@@ -1,0 +1,14 @@
+{
+  "status": "integrated_candidate_not_visual_approved",
+  "source": "limestone-albedo-source-v2.png",
+  "prompt": "limestone-albedo-source-v2-prompt.txt",
+  "provider": "OpenAI built-in image_gen",
+  "method": "one generated opaque albedo, copied unchanged into Godot; no height-from-color conversion",
+  "runtime": "godot/linshui-quality/assets/textures/limestone-albedo-v2.png",
+  "base_color_space": "sRGB",
+  "roughness": 0.91,
+  "normal_map": null,
+  "relief": "editable beveled stone geometry",
+  "tile_seam_review": "not approved; evaluate on individual slab UVs in engine",
+  "public_distribution_review": "pending"
+}

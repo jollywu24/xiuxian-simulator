@@ -1,0 +1,14 @@
+{
+  "status": "not_verified",
+  "hardware": "NVIDIA GeForce RTX 5060, driver 595.95, 8151 MiB",
+  "renderer": "Forward+ / Vulkan 1.4.329",
+  "viewport": [1920,1080],
+  "warmup_30_seconds_completed": false,
+  "route_120_seconds_completed": false,
+  "p50_frame_ms": null,
+  "p95_frame_ms": null,
+  "p99_frame_ms": null,
+  "sustained_60fps_claim": false,
+  "instantaneous_sample": "../evidence/p2-engine.json",
+  "note": "P2 fixture only. Renderer monitor primitive count can include shadow passes; not an authored triangle budget or sustained performance result. No offline video used as performance evidence."
+}

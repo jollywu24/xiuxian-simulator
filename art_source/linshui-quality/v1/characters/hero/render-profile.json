@@ -1,0 +1,41 @@
+{
+  "frame_size": [
+    160,
+    128
+  ],
+  "foot_anchor": [
+    80,
+    112
+  ],
+  "body_height_target": [
+    78,
+    82
+  ],
+  "source_resolution": [
+    640,
+    512
+  ],
+  "directions": {
+    "s": 0,
+    "se": -45
+  },
+  "actions": {
+    "idle": 4,
+    "walk": 8,
+    "thrust": 12
+  },
+  "camera_pitch": 42,
+  "runtime": "2D sprite, camera-facing plane without GPU billboard",
+  "status": "first master, visual review pending",
+  "ortho_scale": 2.950000047683716,
+  "camera_location": [
+    0.0,
+    -5.999561309814453,
+    6.5928874015808105
+  ],
+  "actual_foot_anchor": [
+    80.0,
+    111.99998474121094
+  ],
+  "revision": 4
+}

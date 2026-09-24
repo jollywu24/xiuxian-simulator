@@ -1,0 +1,7 @@
+{
+  "basis": "Measured original uploaded layout, not whole-image equal division. Fixed origin and pitch for every frame of each sheet; no per-frame bounding-box centering.",
+  "idle": {"file":2,"columns":4,"rows":8,"x_origin":40,"x_pitch":199,"frame_width":199},
+  "walk": {"file":3,"columns":6,"rows":8,"x_origin":30,"x_pitch":173,"frame_width":173},
+  "run": {"file":4,"columns":6,"rows":8,"x_origin":10,"x_pitch":177,"frame_width":177},
+  "attack": {"file":5,"columns":6,"rows":7,"x_origin":0,"x_pitch":181,"frame_width":181,"row_starts":[0,180,370,560,750,940,1135],"frame_height":190,"status":"row_slicing_corrected; source weapon overlap/direction still requires review"}
+}

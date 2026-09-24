@@ -1,0 +1,114 @@
+{
+  "source": "godot/linshui-quality/assets/characters/hero/character5.png",
+  "row_separation_pass": true,
+  "row_count": 7,
+  "rows": [
+    {
+      "row": 0,
+      "slice": [
+        0,
+        190
+      ],
+      "opaque_bbox": [
+        38,
+        18,
+        1057,
+        180
+      ],
+      "top_margin": 18,
+      "bottom_margin": 10
+    },
+    {
+      "row": 1,
+      "slice": [
+        180,
+        370
+      ],
+      "opaque_bbox": [
+        34,
+        21,
+        1049,
+        179
+      ],
+      "top_margin": 21,
+      "bottom_margin": 11
+    },
+    {
+      "row": 2,
+      "slice": [
+        370,
+        560
+      ],
+      "opaque_bbox": [
+        33,
+        2,
+        1049,
+        182
+      ],
+      "top_margin": 2,
+      "bottom_margin": 8
+    },
+    {
+      "row": 3,
+      "slice": [
+        560,
+        750
+      ],
+      "opaque_bbox": [
+        32,
+        1,
+        1052,
+        180
+      ],
+      "top_margin": 1,
+      "bottom_margin": 10
+    },
+    {
+      "row": 4,
+      "slice": [
+        750,
+        940
+      ],
+      "opaque_bbox": [
+        36,
+        4,
+        1050,
+        180
+      ],
+      "top_margin": 4,
+      "bottom_margin": 10
+    },
+    {
+      "row": 5,
+      "slice": [
+        940,
+        1130
+      ],
+      "opaque_bbox": [
+        48,
+        5,
+        1060,
+        181
+      ],
+      "top_margin": 5,
+      "bottom_margin": 9
+    },
+    {
+      "row": 6,
+      "slice": [
+        1135,
+        1325
+      ],
+      "opaque_bbox": [
+        41,
+        10,
+        1053,
+        176
+      ],
+      "top_margin": 10,
+      "bottom_margin": 14
+    }
+  ],
+  "horizontal_weapon_overlap_still_open": true,
+  "original_upload_modified": false
+}

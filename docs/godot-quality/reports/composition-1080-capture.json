@@ -1,0 +1,24 @@
+{
+  "command": [
+    "D:\\Godot_v4.7.2-stable_win64.exe",
+    "--path",
+    "C:\\Users\\wujialei\\Documents\\xiuxian\\godot\\linshui-quality",
+    "res://scenes/validation/composition-review.tscn",
+    "--resolution",
+    "1920x1080",
+    "--position",
+    "0,0",
+    "--log-file",
+    "C:\\Users\\wujialei\\Documents\\xiuxian\\docs\\godot-quality\\reports\\composition-1080-engine.log",
+    "--",
+    "--composition-evidence=C:\\Users\\wujialei\\Documents\\xiuxian\\docs\\godot-quality\\evidence",
+    "--route-test"
+  ],
+  "exit_code": 0,
+  "fresh_evidence": true,
+  "script_errors": [],
+  "route_test_requested": true,
+  "structural_pass": true,
+  "visual_approved": false,
+  "approval_required": "User reviews composition and actor scale; this is still graybox."
+}

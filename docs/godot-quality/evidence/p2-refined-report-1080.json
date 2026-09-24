@@ -1,0 +1,30 @@
+{
+	"adapter": "NVIDIA GeForce RTX 5060",
+	"character": "unapproved 8-frame S walk sample; SE and attacks absent",
+	"checks": [
+		{
+			"details": {},
+			"id": "forward_plus",
+			"pass": true
+		},
+		{
+			"details": {},
+			"id": "fixed_actor_scale",
+			"pass": true
+		},
+		{
+			"details": {},
+			"id": "capture_overview",
+			"pass": true
+		}
+	],
+	"failures": [],
+	"projected_hero_body_px": 101.106536865234,
+	"renderer": "forward_plus",
+	"stage": "P2-environment-and-motion-candidate",
+	"viewport": [
+		1920.0,
+		1080.0
+	],
+	"visual_approved": false
+}

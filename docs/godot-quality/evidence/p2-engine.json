@@ -1,0 +1,17 @@
+{
+	"directions": [
+		"s",
+		"se"
+	],
+	"dof": false,
+	"draw_calls": 48.0,
+	"frames": 48,
+	"glow": false,
+	"gpu": "NVIDIA GeForce RTX 5060",
+	"notes": "Instant sample only, not sustained performance evidence",
+	"primitives": 250536.0,
+	"renderer": "forward_plus",
+	"runtime_character": "AnimatedSprite3D",
+	"stage": "P2",
+	"status": "visual_review_pending"
+}
